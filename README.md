@@ -61,7 +61,7 @@ php artisan vendor:publish --tag=":package_slug-views"
 ## Usage
 
 ```php
-$variable = new VendorName\Skeleton();
+$variable = new Thunk\Verbs();
 echo $variable->echoPhrase('Hello, VendorName!');
 ```
 

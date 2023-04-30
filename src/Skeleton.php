@@ -1,6 +1,6 @@
 <?php
 
-namespace VendorName\Skeleton;
+namespace Thunk\Verbs;
 
 class Skeleton
 {
