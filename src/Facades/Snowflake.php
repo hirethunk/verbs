@@ -2,8 +2,8 @@
 
 namespace Thunk\Verbs\Facades;
 
-use Thunk\Verbs\Snowflake as SnowflakeClass;
 use Illuminate\Support\Facades\Facade;
+use Thunk\Verbs\Snowflake as SnowflakeClass;
 
 /**
  * @see \Thunk\Verbs\Snowflake
