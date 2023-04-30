@@ -1,6 +1,6 @@
 <?php
 
-namespace VendorName\Skeleton\Commands;
+namespace Thunk\Verbs\Commands;
 
 use Illuminate\Console\Command;
 

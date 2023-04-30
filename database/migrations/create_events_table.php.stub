@@ -8,10 +8,11 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::create('migration_table_name_table', function (Blueprint $table) {
+        Schema::create('events', function (Blueprint $table) {
             $table->id();
 
-            // add fields
+            $table->string('event_type');
+            $table->json('event_data');
 
             $table->timestamps();
         });
