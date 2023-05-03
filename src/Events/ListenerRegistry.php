@@ -10,7 +10,7 @@ class ListenerRegistry
     {
         $this->listeners[] = $class_name;
     }
-    
+
     public function getListeners()
     {
         return $this->listeners;

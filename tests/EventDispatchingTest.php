@@ -1,17 +1,18 @@
 <?php
 
-use Thunk\Verbs\Events\Event;
-use Thunk\Verbs\Attributes\Once;
-use Thunk\Verbs\Events\Listener;
-use Illuminate\Support\Facades\DB;
-
-use Thunk\Verbs\Events\ListenerRegistry;
-use function Pest\Laravel\assertDatabaseHas;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Carbon;
+use function Pest\Laravel\assertDatabaseHas;
+use Thunk\Verbs\Attributes\Once;
+use Thunk\Verbs\Events\Event;
+use Thunk\Verbs\Events\Listener;
+use Thunk\Verbs\Events\ListenerRegistry;
 
-class TestEvent extends Event {}
-class TestListener extends Listener {}
+class TestEvent extends Event
+{
+}
+class TestListener extends Listener
+{
+}
 
 uses(RefreshDatabase::class);
 
@@ -30,7 +31,8 @@ it('can dispatch an event and have that event reach a registered listener', func
     global $listener_was_hit;
     $listener_was_hit = false;
 
-    class ShouldBeHit extends Listener {
+    class ShouldBeHit extends Listener
+    {
         #[TestEvent]
         public function thisShouldFire(TestEvent $event)
         {
@@ -54,7 +56,8 @@ it('only runs a listener method once if it has the "Once" attribute', function (
     global $multi_listener_was_hit;
     $multi_listener_was_hit = 0;
 
-    class ShouldBeHitOnce extends Listener {
+    class ShouldBeHitOnce extends Listener
+    {
         #[Once(TestEvent::class)]
         public function thisShouldFireOnce(TestEvent $event)
         {
