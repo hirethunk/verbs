@@ -6,7 +6,6 @@ use Godruoyi\Snowflake\LaravelSequenceResolver;
 use Godruoyi\Snowflake\Snowflake;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
-use Thunk\Verbs\Commands\SkeletonCommand;
 
 class VerbsServiceProvider extends PackageServiceProvider
 {
@@ -16,8 +15,7 @@ class VerbsServiceProvider extends PackageServiceProvider
             ->name('verbs')
             ->hasConfigFile()
             ->hasViews()
-            ->hasMigration('create_events_table')
-            ->hasCommand(SkeletonCommand::class);
+            ->hasMigration('create_events_table');
     }
 
     public function register()
