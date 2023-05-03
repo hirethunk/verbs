@@ -6,6 +6,6 @@ class EventDispatcher
 {
     public function __construct()
     {
-        
+
     }
 }

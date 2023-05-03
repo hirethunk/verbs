@@ -7,7 +7,7 @@ use Thunk\Verbs\Facades\Snowflake;
 
 class Event
 {
-    public static function fire (ListenerRegistry $registry = null): bool
+    public static function fire(ListenerRegistry $registry = null): bool
     {
         if ($registry) {
             $registry->passEventToListeners(new static());
@@ -22,7 +22,7 @@ class Event
         return true;
     }
 
-    public static function replay (ListenerRegistry $registry): void
+    public static function replay(ListenerRegistry $registry): void
     {
         DB::table('events')
             ->get()
