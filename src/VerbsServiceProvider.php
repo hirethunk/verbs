@@ -2,11 +2,11 @@
 
 namespace Thunk\Verbs;
 
+use Godruoyi\Snowflake\LaravelSequenceResolver;
 use Godruoyi\Snowflake\Snowflake;
 use Spatie\LaravelPackageTools\Package;
-use Thunk\Verbs\Commands\SkeletonCommand;
-use Godruoyi\Snowflake\LaravelSequenceResolver;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Thunk\Verbs\Commands\SkeletonCommand;
 
 class VerbsServiceProvider extends PackageServiceProvider
 {
@@ -23,7 +23,7 @@ class VerbsServiceProvider extends PackageServiceProvider
     public function register()
     {
         parent::register();
-        
+
         $this->app->singleton('snowflake', function ($app) {
             return (new Snowflake())
                 ->setStartTimeStamp(
