@@ -28,9 +28,7 @@ class TestCase extends Orchestra
     {
         config()->set('database.default', 'testing');
 
-        /*
-        $migration = include __DIR__.'/../database/migrations/create_Verbs_table.php.stub';
+        $migration = include __DIR__.'/../database/migrations/create_events_table.php.stub';
         $migration->up();
-        */
     }
 }
