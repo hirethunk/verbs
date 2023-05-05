@@ -27,8 +27,13 @@ class TestCase extends Orchestra
     public function getEnvironmentSetUp($app)
     {
         config()->set('database.default', 'testing');
+	    config()->set('database.connections.testing', [
+		    'driver' => 'sqlite',
+		    'database' => ':memory:',
+		    'prefix' => '',
+	    ]);
 
-        $migration = include __DIR__.'/../database/migrations/create_events_table.php.stub';
+        $migration = include __DIR__.'/../database/migrations/create_verb_events_table.php.stub';
         $migration->up();
     }
 }

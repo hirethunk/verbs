@@ -3,15 +3,14 @@
 namespace Thunk\Verbs\Facades;
 
 use Illuminate\Support\Facades\Facade;
-use Thunk\Verbs\Snowflake as SnowflakeClass;
 
 /**
- * @see \Thunk\Verbs\Snowflake
+ * @method static string id()
  */
 class Snowflake extends Facade
 {
-    protected static function getFacadeAccessor()
-    {
-        return SnowflakeClass::class;
-    }
+	protected static function getFacadeAccessor()
+	{
+		return \Thunk\Verbs\Support\Snowflake::class;
+	}
 }

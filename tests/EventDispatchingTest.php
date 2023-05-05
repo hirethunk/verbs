@@ -1,95 +1,95 @@
 <?php
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Thunk\Verbs\Events\Dispatcher;
+use Thunk\Verbs\Events\Playback;
 use function Pest\Laravel\assertDatabaseHas;
 use Thunk\Verbs\Attributes\Once;
 use Thunk\Verbs\Events\Event;
-use Thunk\Verbs\Events\Listener;
-use Thunk\Verbs\Events\ListenerRegistry;
-
-class TestEvent extends Event
-{
-}
-class TestListener extends Listener
-{
-}
 
 uses(RefreshDatabase::class);
 
-it('can dispatch an event', function () {
-    expect(TestEvent::fire())->toBeTrue();
+class EventWasFired extends Event
+{
+	public function __construct(public string $name)
+	{
+	}
+}
+
+beforeEach(fn() => $GLOBALS['heard_events'] = []);
+
+it('can store an event', function() {
+	EventWasFired::fire('testing');
+	
+	assertDatabaseHas('verb_events', [
+		'event_type' => EventWasFired::class,
+		'event_data' => json_encode(['name' => 'testing']),
+	]);
 });
 
-it('can register a listener', function () {
-    $registry = new ListenerRegistry();
-    $registry->register(TestListener::class);
+it('can fire an event and have that event reach a listener', function () {
+	app(Dispatcher::class)
+		->registerListener(new class() {
+			public function thisShouldFire(EventWasFired $event)
+			{
+				$GLOBALS['heard_events'][] = $event->name;
+			}
+		});
 
-    expect($registry->getListeners())->toBe([TestListener::class]);
+    EventWasFired::fire('hello!');
+
+    expect($GLOBALS['heard_events'][0])->toBe('hello!');
 });
 
-it('can dispatch an event and have that event reach a registered listener', function () {
-    global $listener_was_hit;
-    $listener_was_hit = false;
-
-    class ShouldBeHit extends Listener
-    {
-        #[TestEvent]
-        public function thisShouldFire(TestEvent $event)
-        {
-            global $listener_was_hit;
-            $listener_was_hit = true;
-        }
-    }
-
-    $registry = new ListenerRegistry();
-    $registry->register(ShouldBeHit::class);
-
-    TestEvent::fire($registry);
-
-    expect($listener_was_hit)->toBeTrue();
+it('listeners marked with Once annotation should not be replayed', function() {
+	app(Dispatcher::class)
+		->registerListener(new class() {
+			public function alwaysFire(EventWasFired $event)
+			{
+				$GLOBALS['heard_events'][] = "always:{$event->name}";
+			}
+			
+			#[Once]
+			public function fireOnce(EventWasFired $event)
+			{
+				$GLOBALS['heard_events'][] = "once:{$event->name}";
+			}
+		});
+	
+	EventWasFired::fire('foo');
+	
+	expect($GLOBALS['heard_events'])->toBe(['always:foo', 'once:foo']);
+	
+	Playback::for(EventWasFired::class)->run();
+	
+	expect($GLOBALS['heard_events'])->toBe(['always:foo', 'once:foo', 'always:foo']);
 });
 
-it('only runs a listener method once if it has the "Once" attribute', function () {
-    global $once_listener_was_hit;
-    $once_listener_was_hit = 0;
-
-    global $multi_listener_was_hit;
-    $multi_listener_was_hit = 0;
-
-    class ShouldBeHitOnce extends Listener
-    {
-        #[Once(TestEvent::class)]
-        public function thisShouldFireOnce(TestEvent $event)
-        {
-            global $once_listener_was_hit;
-            $once_listener_was_hit++;
-        }
-
-        #[TestEvent]
-        public function thisShouldFireTwice(TestEvent $event)
-        {
-            global $multi_listener_was_hit;
-            $multi_listener_was_hit++;
-        }
-    }
-
-    $registry = new ListenerRegistry();
-    $registry->register(ShouldBeHitOnce::class);
-
-    TestEvent::fire($registry);
-    Event::replay($registry);
-
-    expect($once_listener_was_hit)->toBe(1);
-    expect($multi_listener_was_hit)->toBe(2);
-});
-
-it('can store an event', function () {
-    $registry = new ListenerRegistry();
-    $registry->register(TestListener::class);
-
-    TestEvent::fire($registry);
-
-    assertDatabaseHas('events', [
-        'event_type' => TestEvent::class,
-    ]);
+it('self-firing event with Once annotation should not be replayed', function() {
+	
+	class SelfFiringEventWasFired extends EventWasFired
+	{
+		public function onFire()
+		{
+			$GLOBALS['heard_events'][] = "onfire:{$this->name}";
+		}
+	}
+	
+	class OneTimeSelfFiringEventWasFired extends EventWasFired
+	{
+		#[Once]
+		public function onFire()
+		{
+			$GLOBALS['heard_events'][] = "onfire:once:{$this->name}";
+		}
+	}
+	
+	SelfFiringEventWasFired::fire('foo');
+	OneTimeSelfFiringEventWasFired::fire('bar');
+	
+	expect($GLOBALS['heard_events'])->toBe(['onfire:foo', 'onfire:once:bar']);
+	
+	Playback::all()->run();
+	
+	expect($GLOBALS['heard_events'])->toBe(['onfire:foo', 'onfire:once:bar', 'onfire:foo']);
 });
