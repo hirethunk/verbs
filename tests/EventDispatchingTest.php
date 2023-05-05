@@ -7,14 +7,14 @@ use Thunk\Verbs\Events\Event;
 use Thunk\Verbs\Events\Listener;
 use Thunk\Verbs\Events\ListenerRegistry;
 
+uses(RefreshDatabase::class);
+
 class TestEvent extends Event
 {
 }
 class TestListener extends Listener
 {
 }
-
-uses(RefreshDatabase::class);
 
 it('can dispatch an event', function () {
     expect(TestEvent::fire())->toBeTrue();
@@ -56,7 +56,7 @@ it('only runs a listener method once if it has the "Once" attribute', function (
     global $multi_listener_was_hit;
     $multi_listener_was_hit = 0;
 
-    class ShouldBeHitOnce extends Listener
+    class ShouldBeHitTwice extends Listener
     {
         #[Once(TestEvent::class)]
         public function thisShouldFireOnce(TestEvent $event)
@@ -74,7 +74,7 @@ it('only runs a listener method once if it has the "Once" attribute', function (
     }
 
     $registry = new ListenerRegistry();
-    $registry->register(ShouldBeHitOnce::class);
+    $registry->register(ShouldBeHitTwice::class);
 
     TestEvent::fire($registry);
     Event::replay($registry);
