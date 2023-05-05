@@ -6,5 +6,4 @@ use InvalidArgumentException;
 
 class EventNotValidInContext extends InvalidArgumentException
 {
-	
 }

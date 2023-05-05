@@ -9,8 +9,8 @@ use Illuminate\Support\Facades\Facade;
  */
 class Snowflake extends Facade
 {
-	protected static function getFacadeAccessor()
-	{
-		return \Thunk\Verbs\Support\Snowflake::class;
-	}
+    protected static function getFacadeAccessor()
+    {
+        return \Thunk\Verbs\Support\Snowflake::class;
+    }
 }
