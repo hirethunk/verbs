@@ -46,3 +46,17 @@ it('self-firing events are triggered', function () {
 
     expect($GLOBALS['heard_events'])->toBe(['self-always:a', 'self-once:b', 'self-always:a']);
 });
+
+it('can register Closures as listeners', function() {
+	registerListener(function(EventWasFired $event) {
+		$GLOBALS['heard_events'][] = "closure:{$event->name}";
+	});
+	
+	EventWasFired::fire('a');
+	
+	expect($GLOBALS['heard_events'])->toBe(['closure:a']);
+	
+	Broker::replay();
+	
+	expect($GLOBALS['heard_events'])->toBe(['closure:a', 'closure:a']);
+});

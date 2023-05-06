@@ -16,9 +16,9 @@ class Broker implements Contracts\Broker
     public function fire(Event $event): void
     {
         Guards::for($event)->check();
-
+	    
+	    $this->store->save($event);
         $this->bus->dispatch($event);
-        $this->store->save($event);
     }
 
     public function replay(array|string $event_types = null, int $chunk_size = 1000): void

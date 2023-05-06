@@ -5,6 +5,7 @@ namespace Thunk\Verbs\Lifecycle;
 use Closure;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Str;
+use ReflectionFunction;
 use ReflectionMethod;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Support\Reflector;
@@ -20,6 +21,16 @@ class Listener
 
         return Reflector::applyAttributes($method, $listener);
     }
+	
+	public static function fromClosure(Closure $callback): static
+	{
+		$listener = new static(
+			callback: $callback,
+			events: Reflector::getEventParameters($callback),
+		);
+		
+		return Reflector::applyAttributes($callback, $listener);
+	}
 
     public function __construct(
         public Closure $callback,
