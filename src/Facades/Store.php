@@ -7,7 +7,8 @@ use Thunk\Verbs\Contracts\Store as StoreContract;
 use Thunk\Verbs\Testing\StoreFake;
 
 /**
- * @method static assertSaved(string $event_type)
+ * @method static void assertSaved(string $event_type)
+ * @method static void assertNothingSaved()
  */
 class Store extends Facade
 {
