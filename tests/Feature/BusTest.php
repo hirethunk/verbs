@@ -13,7 +13,7 @@ beforeEach(function () {
 });
 
 it('firing an events delivers them listeners', function () {
-    registerListener(new class()
+    listen(new class()
     {
         public function always(EventWasFired $event)
         {
@@ -48,7 +48,7 @@ it('self-firing events are triggered', function () {
 });
 
 it('can register Closures as listeners', function () {
-    registerListener(function (EventWasFired $event) {
+    listen(function (EventWasFired $event) {
         $GLOBALS['heard_events'][] = "closure:{$event->name}";
     });
 
