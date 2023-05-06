@@ -1,12 +1,13 @@
 <?php
 
-namespace Thunk\Verbs\Events;
+namespace Thunk\Verbs\Lifecycle;
 
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\Access\Response;
+use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\EventNotValidInContext;
 
-class Lifecycle
+class Guards
 {
     public static function for(Event $event): static
     {

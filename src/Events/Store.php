@@ -22,7 +22,7 @@ class Store
         return $id;
     }
 
-    /** @return LazyCollection<int, \Thunk\Verbs\Events\Event> */
+    /** @return LazyCollection<int, \Thunk\Verbs\Event> */
     public function get(?array $event_types = null, int $chunk_size = 1000): LazyCollection
     {
         return DB::table('verb_events')

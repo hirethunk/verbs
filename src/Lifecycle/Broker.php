@@ -1,6 +1,8 @@
 <?php
 
-namespace Thunk\Verbs\Events;
+namespace Thunk\Verbs\Lifecycle;
+
+use Thunk\Verbs\Event;
 
 class Broker
 {
@@ -12,10 +14,10 @@ class Broker
 
     public function fire(Event $event): void
     {
-        Lifecycle::for($event)->authorize()->validate();
+        Guards::for($event)->authorize()->validate();
 
         $this->bus->dispatch($event);
-        $this->store->insert($event);
+        $this->store->save($event);
     }
 
     public function replay(array|string $event_types = null, int $chunk_size = 1000): void

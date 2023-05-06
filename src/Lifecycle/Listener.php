@@ -1,10 +1,11 @@
 <?php
 
-namespace Thunk\Verbs\Events;
+namespace Thunk\Verbs\Lifecycle;
 
 use Closure;
 use Illuminate\Contracts\Container\Container;
 use ReflectionMethod;
+use Thunk\Verbs\Event;
 use Thunk\Verbs\Support\Reflector;
 
 class Listener

@@ -6,8 +6,8 @@ use Illuminate\Support\Collection;
 use ReflectionClass;
 use ReflectionMethod;
 use Thunk\Verbs\Attributes\ListenerAttribute;
-use Thunk\Verbs\Events\Event;
-use Thunk\Verbs\Events\Listener;
+use Thunk\Verbs\Event;
+use Thunk\Verbs\Lifecycle\Listener;
 
 class Reflector extends \Illuminate\Support\Reflector
 {

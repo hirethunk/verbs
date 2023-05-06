@@ -3,9 +3,9 @@
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use function Pest\Laravel\assertDatabaseHas;
 use Thunk\Verbs\Attributes\Once;
-use Thunk\Verbs\Events\Broker;
-use Thunk\Verbs\Events\Bus;
-use Thunk\Verbs\Events\Event;
+use Thunk\Verbs\Lifecycle\Broker;
+use Thunk\Verbs\Lifecycle\Bus;
+use Thunk\Verbs\Event;
 
 uses(RefreshDatabase::class);
 
@@ -39,6 +39,7 @@ it('can fire an event and have that event reach a listener', function () {
 
     EventWasFired::fire('hello!');
 
+    expect($GLOBALS['heard_events'])->toHaveCount(1);
     expect($GLOBALS['heard_events'][0])->toBe('hello!');
 });
 

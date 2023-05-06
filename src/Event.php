@@ -1,6 +1,8 @@
 <?php
 
-namespace Thunk\Verbs\Events;
+namespace Thunk\Verbs;
+
+use Thunk\Verbs\Lifecycle\Broker;
 
 abstract class Event
 {

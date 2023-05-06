@@ -1,9 +1,10 @@
 <?php
 
-namespace Thunk\Verbs\Events;
+namespace Thunk\Verbs\Lifecycle;
 
 use Illuminate\Contracts\Container\Container;
 use ReflectionMethod;
+use Thunk\Verbs\Event;
 use Thunk\Verbs\Support\Reflector;
 
 class Bus
@@ -38,7 +39,7 @@ class Bus
         }
     }
 
-    /** @return \Thunk\Verbs\Events\Listener[] */
+    /** @return \Thunk\Verbs\Lifecycle\Listener[] */
     protected function getListeners(Event $event): array
     {
         $listeners = $this->listeners[$event::class] ?? [];
