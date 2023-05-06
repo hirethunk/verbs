@@ -6,8 +6,8 @@ use Thunk\Verbs\Event;
 
 class EventWasFired extends Event
 {
-	public function __construct(
-		public string $name
-	) {
-	}
+    public function __construct(
+        public string $name
+    ) {
+    }
 }

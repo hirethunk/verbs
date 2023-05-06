@@ -11,17 +11,17 @@ use Thunk\Verbs\Testing\StoreFake;
  */
 class Store extends Facade
 {
-	public static function fake(): StoreFake
-	{
-		if (! static::isFake()) {
-			static::swap(new StoreFake());
-		}
-		
-		return static::getFacadeRoot();
-	}
-	
-	protected static function getFacadeAccessor()
-	{
-		return StoreContract::class;
-	}
+    public static function fake(): StoreFake
+    {
+        if (! static::isFake()) {
+            static::swap(new StoreFake());
+        }
+
+        return static::getFacadeRoot();
+    }
+
+    protected static function getFacadeAccessor()
+    {
+        return StoreContract::class;
+    }
 }

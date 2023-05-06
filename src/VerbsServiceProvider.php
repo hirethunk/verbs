@@ -7,7 +7,6 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Facades\Date;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
-use Thunk\Verbs\Contracts\Store as StoreContract;
 use Thunk\Verbs\Lifecycle\Broker;
 use Thunk\Verbs\Lifecycle\Bus;
 use Thunk\Verbs\Lifecycle\Store;
@@ -27,13 +26,13 @@ class VerbsServiceProvider extends PackageServiceProvider
     public function packageRegistered()
     {
         $this->app->singleton(Bus::class);
-	    $this->app->alias(Bus::class, Contracts\Bus::class);
+        $this->app->alias(Bus::class, Contracts\Bus::class);
 
         $this->app->singleton(Store::class);
-		$this->app->alias(Store::class, Contracts\Store::class);
+        $this->app->alias(Store::class, Contracts\Store::class);
 
         $this->app->singleton(Broker::class);
-	    $this->app->alias(Broker::class, Contracts\Broker::class);
+        $this->app->alias(Broker::class, Contracts\Broker::class);
 
         $this->app->singleton(Snowflake::class, function (Container $app) {
             $datacenter = config('verbs.snowflake_datacenter_id');

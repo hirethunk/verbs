@@ -11,8 +11,8 @@ use Thunk\Verbs\Contracts\Broker as BrokerContract;
  */
 class Broker extends Facade
 {
-	protected static function getFacadeAccessor()
-	{
-		return BrokerContract::class;
-	}
+    protected static function getFacadeAccessor()
+    {
+        return BrokerContract::class;
+    }
 }
