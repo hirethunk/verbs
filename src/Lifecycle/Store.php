@@ -4,10 +4,12 @@ namespace Thunk\Verbs\Lifecycle;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\LazyCollection;
+use Thunk\Verbs\Contracts\Store as StoreContract;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Snowflake;
+use Thunk\Verbs\Testing\StoreFake;
 
-class Store
+class Store implements StoreContract
 {
 	public function save(Event $event): string
 	{
