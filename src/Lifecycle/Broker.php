@@ -16,8 +16,8 @@ class Broker implements Contracts\Broker
     public function fire(Event $event): void
     {
         Guards::for($event)->check();
-	    
-	    $this->store->save($event);
+
+        $this->store->save($event);
         $this->bus->dispatch($event);
     }
 

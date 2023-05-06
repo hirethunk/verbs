@@ -17,10 +17,10 @@ class Reflector extends \Illuminate\Support\Reflector
     /** @return Collection<int, Listener> */
     public static function getListeners(object $target): Collection
     {
-		if ($target instanceof Closure) {
-			return collect([Listener::fromClosure($target)]);
-		}
-		
+        if ($target instanceof Closure) {
+            return collect([Listener::fromClosure($target)]);
+        }
+
         $reflect = new ReflectionClass($target);
 
         return collect($reflect->getMethods(ReflectionMethod::IS_PUBLIC))
@@ -30,8 +30,8 @@ class Reflector extends \Illuminate\Support\Reflector
 
     public static function getEventParameters(ReflectionFunctionAbstract|Closure $method): array
     {
-		$method = static::reflectFunction($method);
-		
+        $method = static::reflectFunction($method);
+
         if (empty($parameters = $method->getParameters())) {
             return [];
         }
@@ -44,8 +44,8 @@ class Reflector extends \Illuminate\Support\Reflector
 
     public static function applyAttributes(ReflectionFunctionAbstract|Closure $method, Listener $listener): Listener
     {
-	    $method = static::reflectFunction($method);
-		
+        $method = static::reflectFunction($method);
+
         foreach ($method->getAttributes() as $attribute) {
             $instance = $attribute->newInstance();
             if ($instance instanceof ListenerAttribute) {
@@ -55,13 +55,13 @@ class Reflector extends \Illuminate\Support\Reflector
 
         return $listener;
     }
-	
-	protected static function reflectFunction(ReflectionFunctionAbstract|Closure $function): ReflectionFunctionAbstract
-	{
-		if ($function instanceof Closure) {
-			return new ReflectionFunction($function);
-		}
-		
-		return $function;
-	}
+
+    protected static function reflectFunction(ReflectionFunctionAbstract|Closure $function): ReflectionFunctionAbstract
+    {
+        if ($function instanceof Closure) {
+            return new ReflectionFunction($function);
+        }
+
+        return $function;
+    }
 }
