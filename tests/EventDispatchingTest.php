@@ -1,10 +1,9 @@
 <?php
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Thunk\Verbs\Attributes\Listen;
-use Thunk\Verbs\Events\Broker;
 use function Pest\Laravel\assertDatabaseHas;
 use Thunk\Verbs\Attributes\Once;
+use Thunk\Verbs\Events\Broker;
 use Thunk\Verbs\Events\Bus;
 use Thunk\Verbs\Events\Event;
 
@@ -62,8 +61,8 @@ it('listeners marked with Once annotation should not be replayed', function () {
     EventWasFired::fire('foo');
 
     expect($GLOBALS['heard_events'])->toBe(['always:foo', 'once:foo']);
-	
-	app(Broker::class)->replay(EventWasFired::class);
+
+    app(Broker::class)->replay(EventWasFired::class);
 
     expect($GLOBALS['heard_events'])->toBe(['always:foo', 'once:foo', 'always:foo']);
 });
@@ -91,8 +90,8 @@ it('self-firing event with Once annotation should not be replayed', function () 
     OneTimeSelfFiringEventWasFired::fire('bar');
 
     expect($GLOBALS['heard_events'])->toBe(['onfire:foo', 'onfire:once:bar']);
-	
-	app(Broker::class)->replay();
+
+    app(Broker::class)->replay();
 
     expect($GLOBALS['heard_events'])->toBe(['onfire:foo', 'onfire:once:bar', 'onfire:foo']);
 });

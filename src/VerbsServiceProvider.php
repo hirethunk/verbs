@@ -9,7 +9,6 @@ use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Thunk\Verbs\Events\Broker;
 use Thunk\Verbs\Events\Bus;
-use Thunk\Verbs\Events\Playback;
 use Thunk\Verbs\Events\Store;
 use Thunk\Verbs\Support\Snowflake;
 
