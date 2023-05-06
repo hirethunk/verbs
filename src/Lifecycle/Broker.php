@@ -24,7 +24,7 @@ class Broker implements Contracts\Broker
     public function replay(array|string $event_types = null, int $chunk_size = 1000): void
     {
         $this->store
-	        ->get((array) $event_types, $chunk_size)
-	        ->each($this->bus->replay(...));
+            ->get((array) $event_types, $chunk_size)
+            ->each($this->bus->replay(...));
     }
 }

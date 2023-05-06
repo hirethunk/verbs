@@ -39,15 +39,15 @@ class Listener
             $this->handle($event, $container);
         }
     }
-	
-	protected function guessEventParameter(Event $event): array
-	{
-		// This accounts for a few different naming conventions
-		return [
-			'event' => $event,
-			$event::class => $event,
-			(string) Str::of($event::class)->classBasename()->snake() => $event,
-			(string) Str::of($event::class)->classBasename()->studly() => $event,
-		];
-	}
+
+    protected function guessEventParameter(Event $event): array
+    {
+        // This accounts for a few different naming conventions
+        return [
+            'event' => $event,
+            $event::class => $event,
+            (string) Str::of($event::class)->classBasename()->snake() => $event,
+            (string) Str::of($event::class)->classBasename()->studly() => $event,
+        ];
+    }
 }
