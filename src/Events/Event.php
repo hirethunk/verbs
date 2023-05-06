@@ -6,6 +6,6 @@ abstract class Event
 {
 	public static function fire(...$args): void
 	{
-		app(Broker::class)->deliver(new static(...$args));
+		app(Broker::class)->fire(new static(...$args));
 	}
 }

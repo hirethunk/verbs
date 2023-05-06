@@ -10,7 +10,7 @@ class Broker
 	) {
 	}
 	
-	public function deliver(Event $event): void
+	public function fire(Event $event): void
     {
 	    Lifecycle::for($event)->authorize()->validate();
 		

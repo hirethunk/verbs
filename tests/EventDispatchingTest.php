@@ -7,7 +7,6 @@ use function Pest\Laravel\assertDatabaseHas;
 use Thunk\Verbs\Attributes\Once;
 use Thunk\Verbs\Events\Bus;
 use Thunk\Verbs\Events\Event;
-use Thunk\Verbs\Events\Playback;
 
 uses(RefreshDatabase::class);
 
@@ -33,8 +32,7 @@ it('can fire an event and have that event reach a listener', function () {
     app(Bus::class)
         ->registerListener(new class()
         {
-			#[Listen(EventWasFired::class)]
-            public function thisShouldFire($event)
+            public function thisShouldFire(EventWasFired $event)
             {
                 $GLOBALS['heard_events'][] = $event->name;
             }

@@ -21,12 +21,16 @@ class Reflector extends \Illuminate\Support\Reflector
 			->map(fn(ReflectionMethod $method) => Listener::fromReflection($target, $method));
 	}
 	
-	public function getEventParameters(ReflectionMethod $method): Collection
+	public static function getEventParameters(ReflectionMethod $method): array
 	{
-		$class_names = Reflector::getParameterClassNames($method->getParameters()[0]);
+		if (empty($parameters = $method->getParameters())) {
+			return [];
+		}
 		
-		return collect($class_names)
-			->filter(fn(string $class_name) => is_a($class_name, Event::class, true));
+		return array_filter(
+			array: Reflector::getParameterClassNames($parameters[0]), 
+			callback: fn(string $class_name) => is_a($class_name, Event::class, true)
+		);
 	}
 	
 	public static function applyAttributes(ReflectionMethod $method, Listener $listener): Listener

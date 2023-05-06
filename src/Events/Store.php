@@ -23,19 +23,6 @@ class Store
         return $id;
     }
 
-    public function find(string $id): Event
-    {
-        $row = DB::table('verb_events')
-            ->where('id', $id)
-            ->first();
-
-        if (! $row) {
-            throw new InvalidArgumentException("Invalid event ID: {$id}");
-        }
-
-        return $this->hydrate($row);
-    }
-
 	/** @return LazyCollection<int, \Thunk\Verbs\Events\Event> */
     public function get(?array $event_types = null, int $chunk_size = 1000): LazyCollection
     {

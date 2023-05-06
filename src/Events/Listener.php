@@ -9,19 +9,14 @@ use Thunk\Verbs\Support\Reflector;
 
 class Listener
 {
-	public static function fromReflection(object $target, ReflectionMethod $method): Listener
+	public static function fromReflection(object $target, ReflectionMethod $method): static
 	{
-		$events = collect(Reflector::getParameterClassNames($method->getParameters()[0]))
-			->filter(fn(string $class_name) => is_a($class_name, Event::class, true));
-		
-		$listener = new Listener(
+		$listener = new static(
 			Closure::fromCallable([$target, $method->getName()]),
-			$events->all(),
+			Reflector::getEventParameters($method),
 		);
 		
-		Reflector::applyAttributes($method, $listener);
-		
-		return $listener;
+		return Reflector::applyAttributes($method, $listener);
 	}
 	
 	public function __construct(
@@ -33,7 +28,7 @@ class Listener
 	
 	public function handle(Event $event, Container $container): void
 	{
-		$container->call($this->listener, [$event]);
+		$container->call($this->listener, [$event::class => $event]);
 	}
 	
 	public function replay(Event $event, Container $container): void
