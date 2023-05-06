@@ -6,7 +6,7 @@ use Thunk\Verbs\Event;
 
 interface Bus
 {
-    public function registerListener(object $listener): void;
+    public function listen(object $listener): void;
 
     public function dispatch(Event $event): void;
 

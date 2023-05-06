@@ -46,7 +46,7 @@ class BusFake implements BusContract, Fake
         static::assertNothingReplayed();
     }
 
-    public function registerListener(object $listener): void
+    public function listen(object $listener): void
     {
         $this->registered[] = $listener::class;
     }

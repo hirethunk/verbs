@@ -7,5 +7,5 @@ uses(TestCase::class)->in(__DIR__);
 
 function registerListener($listener)
 {
-    app(Bus::class)->registerListener($listener);
+    app(Bus::class)->listen($listener);
 }

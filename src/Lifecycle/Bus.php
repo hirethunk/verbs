@@ -17,7 +17,7 @@ class Bus implements BusContract
     ) {
     }
 
-    public function registerListener(object $listener): void
+    public function listen(object $listener): void
     {
         foreach (Reflector::getListeners($listener) as $listener) {
             foreach ($listener->events as $event_type) {
