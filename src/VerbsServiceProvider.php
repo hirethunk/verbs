@@ -7,7 +7,8 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Facades\Date;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
-use Thunk\Verbs\Events\Dispatcher;
+use Thunk\Verbs\Events\Broker;
+use Thunk\Verbs\Events\Bus;
 use Thunk\Verbs\Events\Playback;
 use Thunk\Verbs\Events\Store;
 use Thunk\Verbs\Support\Snowflake;
@@ -25,11 +26,11 @@ class VerbsServiceProvider extends PackageServiceProvider
 
     public function packageRegistered()
     {
-        $this->app->singleton(Dispatcher::class);
+        $this->app->singleton(Bus::class);
 
         $this->app->singleton(Store::class);
 
-        $this->app->singleton(Playback::class);
+        $this->app->singleton(Broker::class);
 
         $this->app->singleton(Snowflake::class, function (Container $app) {
             $datacenter = config('verbs.snowflake_datacenter_id');

@@ -2,7 +2,7 @@
 
 namespace Thunk\Verbs\Attributes;
 
-use Thunk\Verbs\Events\Dispatcher\Listener;
+use Thunk\Verbs\Events\Listener;
 
 interface ListenerAttribute
 {

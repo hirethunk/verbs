@@ -3,6 +3,7 @@
 namespace Thunk\Verbs\Events;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\LazyCollection;
 use InvalidArgumentException;
 use Thunk\Verbs\Facades\Snowflake;
 
@@ -22,7 +23,7 @@ class Store
         return $id;
     }
 
-    public function get(string $id): Event
+    public function find(string $id): Event
     {
         $row = DB::table('verb_events')
             ->where('id', $id)
@@ -35,12 +36,14 @@ class Store
         return $this->hydrate($row);
     }
 
-    public function replay(callable $handler, ?string $event_type = null): void
+	/** @return LazyCollection<int, \Thunk\Verbs\Events\Event> */
+    public function get(?array $event_types = null, int $chunk_size = 1000): LazyCollection
     {
-        DB::table('verb_events')
-            ->when($event_type, fn ($query) => $query->where('event_type', $event_type))
+        return DB::table('verb_events')
+            ->when($event_types, fn ($query) => $query->whereIn('event_type', $event_types))
             ->orderBy('id')
-            ->each(fn ($row) => $handler($this->hydrate($row), $row));
+            ->lazy($chunk_size)
+            ->map($this->hydrate(...));
     }
 
     protected function hydrate($row): Event

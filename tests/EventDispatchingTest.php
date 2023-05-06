@@ -2,9 +2,10 @@
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Thunk\Verbs\Attributes\Listen;
+use Thunk\Verbs\Events\Broker;
 use function Pest\Laravel\assertDatabaseHas;
 use Thunk\Verbs\Attributes\Once;
-use Thunk\Verbs\Events\Dispatcher;
+use Thunk\Verbs\Events\Bus;
 use Thunk\Verbs\Events\Event;
 use Thunk\Verbs\Events\Playback;
 
@@ -29,7 +30,7 @@ it('can store an event', function () {
 });
 
 it('can fire an event and have that event reach a listener', function () {
-    app(Dispatcher::class)
+    app(Bus::class)
         ->registerListener(new class()
         {
 			#[Listen(EventWasFired::class)]
@@ -45,7 +46,7 @@ it('can fire an event and have that event reach a listener', function () {
 });
 
 it('listeners marked with Once annotation should not be replayed', function () {
-    app(Dispatcher::class)
+    app(Bus::class)
         ->registerListener(new class()
         {
             public function alwaysFire(EventWasFired $event)
@@ -63,8 +64,8 @@ it('listeners marked with Once annotation should not be replayed', function () {
     EventWasFired::fire('foo');
 
     expect($GLOBALS['heard_events'])->toBe(['always:foo', 'once:foo']);
-
-    Playback::for(EventWasFired::class)->run();
+	
+	app(Broker::class)->replay(EventWasFired::class);
 
     expect($GLOBALS['heard_events'])->toBe(['always:foo', 'once:foo', 'always:foo']);
 });
@@ -92,8 +93,8 @@ it('self-firing event with Once annotation should not be replayed', function () 
     OneTimeSelfFiringEventWasFired::fire('bar');
 
     expect($GLOBALS['heard_events'])->toBe(['onfire:foo', 'onfire:once:bar']);
-
-    Playback::all()->run();
+	
+	app(Broker::class)->replay();
 
     expect($GLOBALS['heard_events'])->toBe(['onfire:foo', 'onfire:once:bar', 'onfire:foo']);
 });

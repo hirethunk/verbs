@@ -1,16 +1,16 @@
 <?php
 
-namespace Thunk\Verbs\Events\Dispatcher;
+namespace Thunk\Verbs\Events;
 
 use Closure;
+use Illuminate\Contracts\Container\Container;
 use ReflectionMethod;
-use Thunk\Verbs\Events\Event;
-use Thunk\Verbs\Support\Reflection\Reflector;
+use Thunk\Verbs\Support\Reflector;
 
 class Listener
 {
-	public static function fromReflection(object $target, ReflectionMethod $method): Listener {
-		
+	public static function fromReflection(object $target, ReflectionMethod $method): Listener
+	{
 		$events = collect(Reflector::getParameterClassNames($method->getParameters()[0]))
 			->filter(fn(string $class_name) => is_a($class_name, Event::class, true));
 		
@@ -27,12 +27,19 @@ class Listener
 	public function __construct(
 		public Closure $listener,
 		public array $events = [],
-		public bool $once = false,
+		public bool $replayable = true,
 	) {
 	}
 	
-	public function __invoke(...$args)
+	public function handle(Event $event, Container $container): void
 	{
-		return call_user_func_array($this->listener, $args);
+		$container->call($this->listener, [$event]);
+	}
+	
+	public function replay(Event $event, Container $container): void
+	{
+		if ($this->replayable) {
+			$this->handle($event, $container);
+		}
 	}
 }

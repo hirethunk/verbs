@@ -3,7 +3,7 @@
 namespace Thunk\Verbs\Attributes;
 
 use Attribute;
-use Thunk\Verbs\Events\Dispatcher\Listener;
+use Thunk\Verbs\Events\Listener;
 
 /**
  * @codeCoverageIgnore
@@ -13,6 +13,6 @@ class Once implements ListenerAttribute
 {
 	public function applyToListener(Listener $listener): void
 	{
-		$listener->once = true;
+		$listener->replayable = false;
 	}
 }
