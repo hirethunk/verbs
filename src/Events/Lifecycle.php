@@ -15,7 +15,8 @@ class Lifecycle
 
     public function __construct(
         public Event $event
-    ) {}
+    ) {
+    }
 
     public function validate(): static
     {
