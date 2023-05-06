@@ -2,6 +2,7 @@
 
 use Thunk\Verbs\Attributes\Once;
 use Thunk\Verbs\Facades\Broker;
+use Thunk\Verbs\Facades\Bus;
 use Thunk\Verbs\Facades\Store;
 use Thunk\Verbs\Tests\Events\EventWasFired;
 use Thunk\Verbs\Tests\Events\SelfFiringEventFired;
@@ -13,7 +14,7 @@ beforeEach(function () {
 });
 
 it('firing an events delivers them listeners', function () {
-    listen(new class()
+    Bus::listen(new class()
     {
         public function always(EventWasFired $event)
         {
@@ -48,7 +49,7 @@ it('self-firing events are triggered', function () {
 });
 
 it('can register Closures as listeners', function () {
-    listen(function (EventWasFired $event) {
+    Bus::listen(function (EventWasFired $event) {
         $GLOBALS['heard_events'][] = "closure:{$event->name}";
     });
 
