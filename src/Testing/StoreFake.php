@@ -17,11 +17,11 @@ class StoreFake implements StoreContract, Fake
     {
         Assert::assertTrue($this->get([$event_type])->isNotEmpty());
     }
-	
-	public function assertNothingSaved()
-	{
-		Assert::assertEmpty($this->saved);
-	}
+
+    public function assertNothingSaved()
+    {
+        Assert::assertEmpty($this->saved);
+    }
 
     public function save(Event $event): string
     {

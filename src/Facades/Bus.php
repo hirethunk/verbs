@@ -4,9 +4,7 @@ namespace Thunk\Verbs\Facades;
 
 use Illuminate\Support\Facades\Facade;
 use Thunk\Verbs\Contracts\Bus as BusContract;
-use Thunk\Verbs\Contracts\Store as StoreContract;
 use Thunk\Verbs\Testing\BusFake;
-use Thunk\Verbs\Testing\StoreFake;
 
 /**
  * @method static void assertRegistered(string $listener_type)
