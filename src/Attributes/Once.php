@@ -11,8 +11,8 @@ use Thunk\Verbs\Events\Dispatcher\Listener;
 #[Attribute(Attribute::TARGET_METHOD)]
 class Once implements ListenerAttribute
 {
-	public function applyToListener(Listener $listener): void
-	{
-		$listener->once = true;
-	}
+    public function applyToListener(Listener $listener): void
+    {
+        $listener->once = true;
+    }
 }
