@@ -13,8 +13,9 @@ class Lifecycle
         return new static($event);
     }
 
-    public function __construct(public Event $event)
-    {
+    public function __construct(
+        public Event $event
+    ) {
     }
 
     public function validate(): static
