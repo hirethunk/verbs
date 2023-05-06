@@ -6,5 +6,5 @@ use Thunk\Verbs\Events\Listener;
 
 interface ListenerAttribute
 {
-	public function applyToListener(Listener $listener): void;
+    public function applyToListener(Listener $listener): void;
 }
