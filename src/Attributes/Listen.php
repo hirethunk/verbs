@@ -9,10 +9,15 @@ use Thunk\Verbs\Events\Dispatcher\Listener;
  * @codeCoverageIgnore
  */
 #[Attribute(Attribute::TARGET_METHOD)]
-class Once implements ListenerAttribute
+class Listen implements ListenerAttribute
 {
+	public function __construct(
+		protected string $event_type
+	) {
+	}
+	
 	public function applyToListener(Listener $listener): void
 	{
-		$listener->once = true;
+		$listener->events[] = $this->event_type;
 	}
 }
