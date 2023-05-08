@@ -6,6 +6,7 @@ use Illuminate\Contracts\Container\Container;
 use Thunk\Verbs\Context;
 use Thunk\Verbs\Contracts;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Snowflakes\Snowflake;
 
 class ContextRepository implements Contracts\ContextRepository
 {
@@ -30,7 +31,7 @@ class ContextRepository implements Contracts\ContextRepository
         // the timestamps. This should let us avoid an `aggregate_version`
     }
     
-    public function get(string $class_name, string $id): Context
+    public function get(string $class_name, Snowflake $id): Context
     {
         // First, load internal 'singleton' instance of snapshot
         $context = $this->contexts[$class_name][(string) $id] ?? $this->container->make($class_name);

@@ -1,13 +1,17 @@
 <?php
 
-use Thunk\Verbs\Facades\Bus;
+use Thunk\Verbs\Facades\Contexts;
 use Thunk\Verbs\Facades\Store;
+use Thunk\Verbs\Tests\Fixtures\Events\EventWasFired;
 
 beforeEach(function () {
-    Bus::fake();
     Store::fake();
 });
 
-it('contexts', function () {
-    
+it('Context is applied when events are fired', function () {
+    Contexts::fake();
+
+    EventWasFired::fire('foo');
+
+    Contexts::assertApplied(EventWasFired::class);
 });
