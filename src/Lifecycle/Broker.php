@@ -14,8 +14,7 @@ class Broker implements BrokersEvents
         protected DispatchesEvents $bus,
         protected StoresEvents $events,
         protected ManagesContext $contexts,
-    )
-    {
+    ) {
     }
 
     public function originate(Event $event): void
