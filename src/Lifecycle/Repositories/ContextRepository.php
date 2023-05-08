@@ -6,7 +6,6 @@ use Illuminate\Contracts\Container\Container;
 use Thunk\Verbs\Context;
 use Thunk\Verbs\Contracts;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Support\Snowflake;
 
 class ContextRepository implements Contracts\ContextRepository
 {

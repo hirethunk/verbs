@@ -9,7 +9,7 @@ use Thunk\Verbs\Lifecycle\Broker;
 use Thunk\Verbs\Lifecycle\Bus;
 use Thunk\Verbs\Lifecycle\Repositories\ContextRepository;
 use Thunk\Verbs\Lifecycle\Repositories\EventRepository;
-use Thunk\Verbs\Support\SnowflakeFactory;
+use Thunk\Verbs\Snowflakes\Factory;
 
 class VerbsServiceProvider extends PackageServiceProvider
 {
@@ -36,8 +36,8 @@ class VerbsServiceProvider extends PackageServiceProvider
         $this->app->singleton(Broker::class);
         $this->app->alias(Broker::class, Contracts\Broker::class);
 
-        $this->app->singleton(SnowflakeFactory::class, function () {
-            return new SnowflakeFactory(
+        $this->app->singleton(Factory::class, function () {
+            return new Factory(
                 epoch: Date::parse(config('verbs.snowflake_start_date')), 
                 datacenter_id: (int) (config('verbs.snowflake_datacenter_id') ?? random_int(0, 31)), 
                 worker_id: (int) (config('verbs.snowflake_worker_id') ?? random_int(0, 31)),

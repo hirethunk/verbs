@@ -9,7 +9,7 @@ use PHPUnit\Framework\Assert;
 use Thunk\Verbs\Contracts\EventRepository as StoreContract;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Snowflake;
-use Thunk\Verbs\Support\Snowflake as SnowflakeInstance;
+use Thunk\Verbs\Snowflakes\Snowflake as SnowflakeInstance;
 
 class EventRepositoryFake implements StoreContract, Fake
 {

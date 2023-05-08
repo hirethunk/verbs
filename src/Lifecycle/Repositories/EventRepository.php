@@ -7,7 +7,7 @@ use Illuminate\Support\LazyCollection;
 use Thunk\Verbs\Contracts\EventRepository as EventRepositoryContract;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Snowflake;
-use Thunk\Verbs\Support\Snowflake as SnowflakeInstance;
+use Thunk\Verbs\Snowflakes\Snowflake as SnowflakeInstance;
 
 class EventRepository implements EventRepositoryContract
 {

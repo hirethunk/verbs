@@ -2,7 +2,7 @@
 
 namespace Thunk\Verbs;
 
-use Thunk\Verbs\Support\Snowflake;
+use Thunk\Verbs\Snowflakes\Snowflake;
 
 abstract class Context
 {

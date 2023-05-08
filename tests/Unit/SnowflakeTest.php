@@ -1,9 +1,9 @@
 <?php
 
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Date;
 use Thunk\Verbs\Facades\Snowflake;
-use Thunk\Verbs\Support\SnowflakeFactory;
+use Thunk\Verbs\Snowflakes\Factory;
+use Thunk\Verbs\Snowflakes\SequenceResolver;
 
 it('generates unique ids', function () {
     $exists = [];
@@ -25,8 +25,8 @@ it('generates snowflakes in the expected format', function() {
 });
 
 it('generates snowflakes with the correct datacenter and worker IDs', function () {
-    $factory1 = new SnowflakeFactory(now(), random_int(0, 7), random_int(0, 7));
-    $factory2 = new SnowflakeFactory(now(), random_int(8, 15), random_int(8, 15));
+    $factory1 = new Factory(now(), random_int(0, 7), random_int(0, 7));
+    $factory2 = new Factory(now(), random_int(8, 15), random_int(8, 15));
     
     $snowflake1 = $factory1->make();
     $snowflake2 = $factory2->make();
@@ -51,8 +51,15 @@ it('generates predictable snowflakes', function() {
     
     $sequence = 0;
     
-    $factory = new SnowflakeFactory(now(), 1, 15, function() use (&$sequence) {
-        return $sequence++;
+    $factory = new Factory(now(), 1, 15, 3, new class($sequence) extends SequenceResolver {
+        public function __construct(public int &$sequence)
+        {
+        }
+        
+        public function next(int $timestamp): int
+        {
+            return $this->sequence++;
+        }
     });
 
     $snowflake_at_epoch1 = $factory->make();
@@ -87,7 +94,14 @@ it('generates predictable snowflakes', function() {
 });
 
 it('can generate a snowflake for a given timestamp', function() {
-    $factory = new SnowflakeFactory(now(), 31, 31, fn() => 4095);
+    Date::setTestNow(now());
+    
+    $factory = new Factory(now(), 31, 31, 3, new class extends SequenceResolver {
+        public function next(int $timestamp): int
+        {
+            return 4095;
+        }
+    });
     
     $a = $factory->makeFromTimestampForQuery(now()->addMinutes(30));
     

@@ -4,7 +4,7 @@ namespace Thunk\Verbs\Contracts;
 
 use Illuminate\Support\LazyCollection;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Support\Snowflake;
+use Thunk\Verbs\Snowflakes\Snowflake;
 
 interface EventRepository
 {
