@@ -1,9 +1,16 @@
 <?php
 
 use Illuminate\Support\Facades\Date;
+use Thunk\Verbs\Contracts\SequenceResolver as SequenceResolverContract;
 use Thunk\Verbs\Facades\Snowflake;
 use Thunk\Verbs\Snowflakes\Factory;
 use Thunk\Verbs\Snowflakes\SequenceResolver;
+use Thunk\Verbs\Testing\InMemorySequenceResolver;
+
+beforeEach(function() {
+    app()->instance(SequenceResolverContract::class, new InMemorySequenceResolver());
+    app()->forgetInstance(Factory::class);
+});
 
 it('generates unique ids', function () {
     $exists = [];

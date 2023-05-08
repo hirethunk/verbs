@@ -5,6 +5,7 @@ namespace Thunk\Verbs\Snowflakes;
 use Carbon\CarbonInterface;
 use InvalidArgumentException;
 use RuntimeException;
+use Thunk\Verbs\Contracts\SequenceResolver as SequenceResolverContract;
 
 class Factory
 {
@@ -15,7 +16,7 @@ class Factory
         public readonly int $datacenter_id,
         public readonly int $worker_id,
         protected int $precision = 3,
-        protected SequenceResolver $sequence = new SequenceResolver(),
+        protected SequenceResolverContract $sequence = new SequenceResolver(),
         protected Bits $bits = new Bits(),
     )
     {
