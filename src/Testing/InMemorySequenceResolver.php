@@ -2,9 +2,9 @@
 
 namespace Thunk\Verbs\Testing;
 
-use Thunk\Verbs\Contracts\SequenceResolver;
+use Thunk\Verbs\Contracts\ResolvesSequences;
 
-class InMemorySequenceResolver implements SequenceResolver
+class InMemorySequenceResolver implements ResolvesSequences
 {
     public int $timestamp = PHP_INT_MIN;
 

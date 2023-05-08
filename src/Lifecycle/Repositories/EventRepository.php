@@ -4,12 +4,12 @@ namespace Thunk\Verbs\Lifecycle\Repositories;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\LazyCollection;
-use Thunk\Verbs\Contracts\EventRepository as EventRepositoryContract;
+use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Snowflake;
 use Thunk\Verbs\Snowflakes\Snowflake as SnowflakeInstance;
 
-class EventRepository implements EventRepositoryContract
+class EventRepository implements StoresEvents
 {
     public function save(Event $event): SnowflakeInstance
     {

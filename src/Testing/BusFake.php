@@ -4,10 +4,10 @@ namespace Thunk\Verbs\Testing;
 
 use Illuminate\Support\Testing\Fakes\Fake;
 use PHPUnit\Framework\Assert;
-use Thunk\Verbs\Contracts\Bus as BusContract;
+use Thunk\Verbs\Contracts\DispatchesEvents;
 use Thunk\Verbs\Event;
 
-class BusFake implements BusContract, Fake
+class BusFake implements DispatchesEvents, Fake
 {
     protected array $registered = [];
 

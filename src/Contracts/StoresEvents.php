@@ -6,7 +6,7 @@ use Illuminate\Support\LazyCollection;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Snowflakes\Snowflake;
 
-interface EventRepository
+interface StoresEvents
 {
     public function save(Event $event): Snowflake;
 

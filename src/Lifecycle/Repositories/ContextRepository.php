@@ -4,17 +4,18 @@ namespace Thunk\Verbs\Lifecycle\Repositories;
 
 use Illuminate\Contracts\Container\Container;
 use Thunk\Verbs\Context;
-use Thunk\Verbs\Contracts;
+use Thunk\Verbs\Contracts\ManagesContext;
+use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Snowflakes\Snowflake;
 
-class ContextRepository implements Contracts\ContextRepository
+class ContextRepository implements ManagesContext
 {
     protected array $contexts = [];
 
     public function __construct(
         protected Container $container,
-        protected Contracts\EventRepository $events,
+        protected StoresEvents $events,
     ) {
     }
 

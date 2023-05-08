@@ -3,7 +3,7 @@
 namespace Thunk\Verbs\Facades;
 
 use Illuminate\Support\Facades\Facade;
-use Thunk\Verbs\Contracts\ContextRepository;
+use Thunk\Verbs\Contracts\ManagesContext;
 use Thunk\Verbs\Testing\ContextRepositoryFake;
 
 /**
@@ -23,6 +23,6 @@ class Contexts extends Facade
 
     protected static function getFacadeAccessor()
     {
-        return ContextRepository::class;
+        return ManagesContext::class;
     }
 }

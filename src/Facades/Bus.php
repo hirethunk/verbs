@@ -3,7 +3,7 @@
 namespace Thunk\Verbs\Facades;
 
 use Illuminate\Support\Facades\Facade;
-use Thunk\Verbs\Contracts\Bus as BusContract;
+use Thunk\Verbs\Contracts\DispatchesEvents;
 use Thunk\Verbs\Testing\BusFake;
 
 /**
@@ -30,6 +30,6 @@ class Bus extends Facade
 
     protected static function getFacadeAccessor()
     {
-        return BusContract::class;
+        return DispatchesEvents::class;
     }
 }

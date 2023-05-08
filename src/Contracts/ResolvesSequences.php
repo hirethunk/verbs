@@ -2,7 +2,7 @@
 
 namespace Thunk\Verbs\Contracts;
 
-interface SequenceResolver
+interface ResolvesSequences
 {
     public function next(int $timestamp): int;
 }

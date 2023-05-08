@@ -12,7 +12,7 @@ use Thunk\Verbs\Lifecycle\Repositories\ContextRepository;
 use Thunk\Verbs\Lifecycle\Repositories\EventRepository;
 use Thunk\Verbs\Snowflakes\Bits;
 use Thunk\Verbs\Snowflakes\Factory;
-use Thunk\Verbs\Snowflakes\SequenceResolver;
+use Thunk\Verbs\Snowflakes\CacheSequenceResolver;
 
 class VerbsServiceProvider extends PackageServiceProvider
 {
@@ -28,21 +28,21 @@ class VerbsServiceProvider extends PackageServiceProvider
     public function packageRegistered()
     {
         $this->app->singleton(Bus::class);
-        $this->app->alias(Bus::class, Contracts\Bus::class);
+        $this->app->alias(Bus::class, Contracts\DispatchesEvents::class);
 
         $this->app->singleton(EventRepository::class);
-        $this->app->alias(EventRepository::class, Contracts\EventRepository::class);
+        $this->app->alias(EventRepository::class, Contracts\StoresEvents::class);
 
         $this->app->singleton(ContextRepository::class);
-        $this->app->alias(ContextRepository::class, Contracts\ContextRepository::class);
+        $this->app->alias(ContextRepository::class, Contracts\ManagesContext::class);
 
         $this->app->singleton(Broker::class);
-        $this->app->alias(Broker::class, Contracts\Broker::class);
+        $this->app->alias(Broker::class, Contracts\BrokersEvents::class);
 
         $this->app->singleton(Bits::class);
 
-        $this->app->singleton(SequenceResolver::class);
-        $this->app->alias(SequenceResolver::class, Contracts\SequenceResolver::class);
+        $this->app->singleton(CacheSequenceResolver::class);
+        $this->app->alias(CacheSequenceResolver::class, Contracts\ResolvesSequences::class);
 
         $this->app->singleton(Factory::class, function (Container $container) {
             return new Factory(
@@ -50,7 +50,7 @@ class VerbsServiceProvider extends PackageServiceProvider
                 datacenter_id: (int) (config('verbs.snowflake_datacenter_id') ?? random_int(0, 31)),
                 worker_id: (int) (config('verbs.snowflake_worker_id') ?? random_int(0, 31)),
                 precision: 3,
-                sequence: $container->make(Contracts\SequenceResolver::class),
+                sequence: $container->make(Contracts\ResolvesSequences::class),
                 bits: $container->make(Bits::class),
             );
         });

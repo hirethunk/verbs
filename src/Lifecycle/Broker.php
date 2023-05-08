@@ -2,15 +2,18 @@
 
 namespace Thunk\Verbs\Lifecycle;
 
-use Thunk\Verbs\Contracts;
+use Thunk\Verbs\Contracts\BrokersEvents;
+use Thunk\Verbs\Contracts\DispatchesEvents;
+use Thunk\Verbs\Contracts\ManagesContext;
+use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
 
-class Broker implements Contracts\Broker
+class Broker implements BrokersEvents
 {
     public function __construct(
-        protected Contracts\Bus $bus,
-        protected Contracts\EventRepository $events,
-        protected Contracts\ContextRepository $contexts,
+        protected DispatchesEvents $bus,
+        protected StoresEvents $events,
+        protected ManagesContext $contexts,
     ) {
     }
 

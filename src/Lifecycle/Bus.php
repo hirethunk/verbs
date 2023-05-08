@@ -4,11 +4,11 @@ namespace Thunk\Verbs\Lifecycle;
 
 use Illuminate\Contracts\Container\Container;
 use ReflectionMethod;
-use Thunk\Verbs\Contracts\Bus as BusContract;
+use Thunk\Verbs\Contracts\DispatchesEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Support\Reflector;
 
-class Bus implements BusContract
+class Bus implements DispatchesEvents
 {
     protected array $listeners = [];
 

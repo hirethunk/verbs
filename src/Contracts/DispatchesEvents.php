@@ -4,7 +4,7 @@ namespace Thunk\Verbs\Contracts;
 
 use Thunk\Verbs\Event;
 
-interface Bus
+interface DispatchesEvents
 {
     public function listen(object $listener): void;
 

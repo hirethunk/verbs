@@ -1,10 +1,11 @@
 <?php
 
 use Illuminate\Support\Facades\Date;
-use Thunk\Verbs\Contracts\SequenceResolver as SequenceResolverContract;
+use Thunk\Verbs\Contracts\ResolvesSequences;
+use Thunk\Verbs\Contracts\ResolvesSequences as SequenceResolverContract;
 use Thunk\Verbs\Facades\Snowflake;
 use Thunk\Verbs\Snowflakes\Factory;
-use Thunk\Verbs\Snowflakes\SequenceResolver;
+use Thunk\Verbs\Snowflakes\CacheSequenceResolver;
 use Thunk\Verbs\Testing\InMemorySequenceResolver;
 
 beforeEach(function () {
@@ -58,7 +59,7 @@ it('generates predictable snowflakes', function () {
 
     $sequence = 0;
 
-    $factory = new Factory(now(), 1, 15, 3, new class($sequence) extends SequenceResolver
+    $factory = new Factory(now(), 1, 15, 3, new class($sequence) implements ResolvesSequences
     {
         public function __construct(public int &$sequence)
         {
@@ -104,7 +105,7 @@ it('generates predictable snowflakes', function () {
 it('can generate a snowflake for a given timestamp', function () {
     Date::setTestNow(now());
 
-    $factory = new Factory(now(), 31, 31, 3, new class extends SequenceResolver
+    $factory = new Factory(now(), 31, 31, 3, new class implements ResolvesSequences
     {
         public function next(int $timestamp): int
         {

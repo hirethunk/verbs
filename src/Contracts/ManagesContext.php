@@ -6,7 +6,7 @@ use Thunk\Verbs\Context;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Snowflakes\Snowflake;
 
-interface ContextRepository
+interface ManagesContext
 {
     public function apply(Event $event): void;
 

@@ -6,12 +6,12 @@ use Exception;
 use Illuminate\Support\LazyCollection;
 use Illuminate\Support\Testing\Fakes\Fake;
 use PHPUnit\Framework\Assert;
-use Thunk\Verbs\Contracts\EventRepository as StoreContract;
+use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Snowflake;
 use Thunk\Verbs\Snowflakes\Snowflake as SnowflakeInstance;
 
-class EventRepositoryFake implements StoreContract, Fake
+class EventRepositoryFake implements StoresEvents, Fake
 {
     protected array $saved = [];
 

@@ -3,7 +3,7 @@
 namespace Thunk\Verbs\Facades;
 
 use Illuminate\Support\Facades\Facade;
-use Thunk\Verbs\Contracts\Broker as BrokerContract;
+use Thunk\Verbs\Contracts\BrokersEvents;
 
 /**
  * @method static void fire(\Thunk\Verbs\Event $event)
@@ -13,6 +13,6 @@ class Broker extends Facade
 {
     protected static function getFacadeAccessor()
     {
-        return BrokerContract::class;
+        return BrokersEvents::class;
     }
 }

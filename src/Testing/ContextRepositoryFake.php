@@ -6,11 +6,11 @@ use BadMethodCallException;
 use Illuminate\Support\Testing\Fakes\Fake;
 use PHPUnit\Framework\Assert;
 use Thunk\Verbs\Context;
-use Thunk\Verbs\Contracts\ContextRepository;
+use Thunk\Verbs\Contracts\ManagesContext;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Snowflakes\Snowflake;
 
-class ContextRepositoryFake implements ContextRepository, Fake
+class ContextRepositoryFake implements ManagesContext, Fake
 {
     protected array $applied = [];
 

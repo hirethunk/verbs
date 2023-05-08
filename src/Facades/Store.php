@@ -3,7 +3,7 @@
 namespace Thunk\Verbs\Facades;
 
 use Illuminate\Support\Facades\Facade;
-use Thunk\Verbs\Contracts\EventRepository as StoreContract;
+use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Testing\EventRepositoryFake;
 
 /**
@@ -23,6 +23,6 @@ class Store extends Facade
 
     protected static function getFacadeAccessor()
     {
-        return StoreContract::class;
+        return StoresEvents::class;
     }
 }

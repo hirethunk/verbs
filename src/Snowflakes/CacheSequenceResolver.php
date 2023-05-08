@@ -3,9 +3,9 @@
 namespace Thunk\Verbs\Snowflakes;
 
 use Illuminate\Support\Facades\Cache;
-use Thunk\Verbs\Contracts\SequenceResolver as SequenceResolverContract;
+use Thunk\Verbs\Contracts\ResolvesSequences;
 
-class SequenceResolver implements SequenceResolverContract
+class CacheSequenceResolver implements ResolvesSequences
 {
     public function next(int $timestamp): int
     {
