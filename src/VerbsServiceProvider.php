@@ -2,15 +2,14 @@
 
 namespace Thunk\Verbs;
 
-use Godruoyi\Snowflake\LaravelSequenceResolver;
-use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Facades\Date;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Thunk\Verbs\Lifecycle\Broker;
 use Thunk\Verbs\Lifecycle\Bus;
-use Thunk\Verbs\Lifecycle\Store;
-use Thunk\Verbs\Support\Snowflake;
+use Thunk\Verbs\Lifecycle\Repositories\ContextRepository;
+use Thunk\Verbs\Lifecycle\Repositories\EventRepository;
+use Thunk\Verbs\Support\SnowflakeFactory;
 
 class VerbsServiceProvider extends PackageServiceProvider
 {
@@ -28,20 +27,21 @@ class VerbsServiceProvider extends PackageServiceProvider
         $this->app->singleton(Bus::class);
         $this->app->alias(Bus::class, Contracts\Bus::class);
 
-        $this->app->singleton(Store::class);
-        $this->app->alias(Store::class, Contracts\Store::class);
+        $this->app->singleton(EventRepository::class);
+        $this->app->alias(EventRepository::class, Contracts\EventRepository::class);
+
+        $this->app->singleton(ContextRepository::class);
+        $this->app->alias(ContextRepository::class, Contracts\ContextRepository::class);
 
         $this->app->singleton(Broker::class);
         $this->app->alias(Broker::class, Contracts\Broker::class);
 
-        $this->app->singleton(Snowflake::class, function (Container $app) {
-            $datacenter = config('verbs.snowflake_datacenter_id');
-            $worker = config('verbs.snowflake_worker_id');
-            $start_date = config('verbs.snowflake_start_date');
-
-            return (new Snowflake($datacenter, $worker))
-                ->setStartTimeStamp(Date::parse($start_date)->getPreciseTimestamp(3))
-                ->setSequenceResolver(new LaravelSequenceResolver($app->make('cache.store')));
+        $this->app->singleton(SnowflakeFactory::class, function () {
+            return new SnowflakeFactory(
+                epoch: Date::parse(config('verbs.snowflake_start_date')), 
+                datacenter_id: (int) (config('verbs.snowflake_datacenter_id') ?? random_int(0, 31)), 
+                worker_id: (int) (config('verbs.snowflake_worker_id') ?? random_int(0, 31)),
+            );
         });
     }
 }

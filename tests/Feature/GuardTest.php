@@ -4,7 +4,7 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Thunk\Verbs\Exceptions\EventNotValidInContext;
 use Thunk\Verbs\Facades\Bus;
 use Thunk\Verbs\Facades\Store;
-use Thunk\Verbs\Tests\Events\GuardedEventWasFired;
+use Thunk\Verbs\Tests\Fixtures\Events\GuardedEventWasFired;
 
 beforeEach(function () {
     Bus::fake();

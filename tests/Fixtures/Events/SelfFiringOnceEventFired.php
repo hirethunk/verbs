@@ -1,6 +1,6 @@
 <?php
 
-namespace Thunk\Verbs\Tests\Events;
+namespace Thunk\Verbs\Tests\Fixtures\Events;
 
 use Thunk\Verbs\Attributes\Once;
 use Thunk\Verbs\Event;

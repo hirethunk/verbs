@@ -2,14 +2,16 @@
 
 namespace Thunk\Verbs\Testing;
 
+use Exception;
 use Illuminate\Support\LazyCollection;
 use Illuminate\Support\Testing\Fakes\Fake;
 use PHPUnit\Framework\Assert;
-use Thunk\Verbs\Contracts\Store as StoreContract;
+use Thunk\Verbs\Contracts\EventRepository as StoreContract;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Snowflake;
+use Thunk\Verbs\Support\Snowflake as SnowflakeInstance;
 
-class StoreFake implements StoreContract, Fake
+class EventRepositoryFake implements StoreContract, Fake
 {
     protected array $saved = [];
 
@@ -31,9 +33,14 @@ class StoreFake implements StoreContract, Fake
     }
 
     /** @return LazyCollection<int, \Thunk\Verbs\Event> */
-    public function get(?array $event_types = null, int $chunk_size = 1000): LazyCollection
+    public function get(
+        ?array $event_types = null,
+        ?SnowflakeInstance $after = null,
+        int $chunk_size = 1000,
+    ): LazyCollection
     {
         return LazyCollection::make($this->saved)
-            ->when($event_types, fn ($query) => $query->filter(fn (Event $event) => in_array($event::class, $event_types)));
+            ->when($after, fn ($collection) => throw new Exception('"after" not implemented on fake.'))
+            ->when($event_types, fn ($collection) => $collection->filter(fn (Event $event) => in_array($event::class, $event_types)));
     }
 }

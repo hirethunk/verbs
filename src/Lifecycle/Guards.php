@@ -52,6 +52,11 @@ class Guards
 
     protected function passesValidation(): bool
     {
+        if (method_exists($this->event, 'rules')) {
+            $rules = app()->call([$this->event, 'rules']);
+            // TODO: Pass context to validator
+        }
+        
         if (method_exists($this->event, 'validate')) {
             return false !== app()->call([$this->event, 'validate']);
         }

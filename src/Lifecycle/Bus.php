@@ -45,9 +45,17 @@ class Bus implements BusContract
     {
         $listeners = $this->listeners[$event::class] ?? [];
 
+        // Maybe "always"
         if (method_exists($event, 'onFire')) {
             $onFire = Listener::fromReflection($event, new ReflectionMethod($event, 'onFire'));
             array_unshift($listeners, $onFire);
+        }
+
+        // Maybe "once"
+        if (method_exists($event, 'onFirstFire')) {
+            $onFirstFire = Listener::fromReflection($event, new ReflectionMethod($event, 'onFirstFire'));
+            $onFirstFire->replayable = false;
+            array_unshift($listeners, $onFirstFire);
         }
 
         return $listeners;

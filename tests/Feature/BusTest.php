@@ -1,12 +1,13 @@
 <?php
 
+use Thunk\Verbs\Attributes\Listen;
 use Thunk\Verbs\Attributes\Once;
 use Thunk\Verbs\Facades\Broker;
 use Thunk\Verbs\Facades\Bus;
 use Thunk\Verbs\Facades\Store;
-use Thunk\Verbs\Tests\Events\EventWasFired;
-use Thunk\Verbs\Tests\Events\SelfFiringEventFired;
-use Thunk\Verbs\Tests\Events\SelfFiringOnceEventFired;
+use Thunk\Verbs\Tests\Fixtures\Events\EventWasFired;
+use Thunk\Verbs\Tests\Fixtures\Events\SelfFiringEventFired;
+use Thunk\Verbs\Tests\Fixtures\Events\SelfFiringOnceEventFired;
 
 beforeEach(function () {
     Store::fake();

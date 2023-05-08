@@ -3,8 +3,8 @@
 namespace Thunk\Verbs\Facades;
 
 use Illuminate\Support\Facades\Facade;
-use Thunk\Verbs\Contracts\Store as StoreContract;
-use Thunk\Verbs\Testing\StoreFake;
+use Thunk\Verbs\Contracts\EventRepository as StoreContract;
+use Thunk\Verbs\Testing\EventRepositoryFake;
 
 /**
  * @method static void assertSaved(string $event_type)
@@ -12,10 +12,10 @@ use Thunk\Verbs\Testing\StoreFake;
  */
 class Store extends Facade
 {
-    public static function fake(): StoreFake
+    public static function fake(): EventRepositoryFake
     {
         if (! static::isFake()) {
-            static::swap(new StoreFake());
+            static::swap(new EventRepositoryFake());
         }
 
         return static::getFacadeRoot();
