@@ -8,7 +8,7 @@ use Thunk\Verbs\Snowflakes\Snowflake;
 
 interface EventRepository
 {
-    public function save(Event $event): string;
+    public function save(Event $event): Snowflake;
 
     public function get(
         ?array $event_types = null,

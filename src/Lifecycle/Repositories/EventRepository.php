@@ -11,9 +11,9 @@ use Thunk\Verbs\Snowflakes\Snowflake as SnowflakeInstance;
 
 class EventRepository implements EventRepositoryContract
 {
-    public function save(Event $event): string
+    public function save(Event $event): SnowflakeInstance
     {
-        $id = Snowflake::id();
+        $id = Snowflake::make();
 
         DB::table('verb_events')
             ->insert([

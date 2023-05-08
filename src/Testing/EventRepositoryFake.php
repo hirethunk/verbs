@@ -25,11 +25,11 @@ class EventRepositoryFake implements StoreContract, Fake
         Assert::assertEmpty($this->saved);
     }
 
-    public function save(Event $event): string
+    public function save(Event $event): SnowflakeInstance
     {
         $this->saved[] = $event;
 
-        return Snowflake::id();
+        return Snowflake::make();
     }
 
     /** @return LazyCollection<int, \Thunk\Verbs\Event> */
