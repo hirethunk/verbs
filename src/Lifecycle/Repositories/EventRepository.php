@@ -19,7 +19,7 @@ class EventRepository implements EventRepositoryContract
             ->insert([
                 'id' => $id,
                 'event_type' => $event::class,
-                'event_data' => json_encode((array)$event),
+                'event_data' => json_encode((array) $event),
             ]);
 
         return $id;
@@ -30,11 +30,10 @@ class EventRepository implements EventRepositoryContract
         ?array $event_types = null,
         ?SnowflakeInstance $after = null,
         int $chunk_size = 1000,
-    ): LazyCollection
-    {
+    ): LazyCollection {
         return DB::table('verb_events')
-            ->when($event_types, fn($query) => $query->whereIn('event_type', $event_types))
-            ->when($after, fn($query) => $query->where('id', '>', $after))
+            ->when($event_types, fn ($query) => $query->whereIn('event_type', $event_types))
+            ->when($after, fn ($query) => $query->where('id', '>', $after))
             ->orderBy('id')
             ->lazy($chunk_size)
             ->map($this->hydrate(...));

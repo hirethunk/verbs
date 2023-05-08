@@ -10,7 +10,7 @@ use Thunk\Verbs\Contracts\SequenceResolver as SequenceResolverContract;
 class Factory
 {
     protected float $precise_epoch;
-    
+
     public function __construct(
         public readonly CarbonInterface $epoch,
         public readonly int $datacenter_id,
@@ -18,10 +18,9 @@ class Factory
         protected int $precision = 3,
         protected SequenceResolverContract $sequence = new SequenceResolver(),
         protected Bits $bits = new Bits(),
-    )
-    {
+    ) {
         $this->validateConfiguration();
-        
+
         $this->precise_epoch = $this->epoch->getPreciseTimestamp($this->precision);
     }
 
@@ -59,12 +58,13 @@ class Factory
         // If we've used all available numbers in sequence, we'll sleep and try again
         if ($sequence > $this->bits->maxSequence()) {
             usleep(1);
+
             return $this->waitForValidTimestampAndSequence();
         }
 
         return [$timestamp, $sequence];
     }
-    
+
     protected function diffFromEpoch(CarbonInterface $timestamp): int
     {
         return round($timestamp->getPreciseTimestamp($this->precision) - $this->precise_epoch);
@@ -83,7 +83,7 @@ class Factory
         if ($this->precision < 0 || $this->precision > 6) {
             throw new InvalidArgumentException("Timestamp precision must be between 0 and 6 (got {$this->precision}).");
         }
-        
+
         $this->bits->validateDatacenterId($this->datacenter_id);
         $this->bits->validateWorkerId($this->worker_id);
     }

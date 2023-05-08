@@ -38,16 +38,16 @@ class VerbsServiceProvider extends PackageServiceProvider
 
         $this->app->singleton(Broker::class);
         $this->app->alias(Broker::class, Contracts\Broker::class);
-        
+
         $this->app->singleton(Bits::class);
-        
+
         $this->app->singleton(SequenceResolver::class);
         $this->app->alias(SequenceResolver::class, Contracts\SequenceResolver::class);
 
         $this->app->singleton(Factory::class, function (Container $container) {
             return new Factory(
-                epoch: Date::parse(config('verbs.snowflake_start_date')), 
-                datacenter_id: (int) (config('verbs.snowflake_datacenter_id') ?? random_int(0, 31)), 
+                epoch: Date::parse(config('verbs.snowflake_start_date')),
+                datacenter_id: (int) (config('verbs.snowflake_datacenter_id') ?? random_int(0, 31)),
                 worker_id: (int) (config('verbs.snowflake_worker_id') ?? random_int(0, 31)),
                 precision: 3,
                 sequence: $container->make(Contracts\SequenceResolver::class),

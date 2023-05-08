@@ -1,8 +1,8 @@
 <?php
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Thunk\Verbs\Tests\Fixtures\Events\EventWasFired;
 use function Pest\Laravel\assertDatabaseHas;
+use Thunk\Verbs\Tests\Fixtures\Events\EventWasFired;
 
 uses(RefreshDatabase::class);
 

@@ -11,8 +11,7 @@ class Broker implements Contracts\Broker
         protected Contracts\Bus $bus,
         protected Contracts\EventRepository $events,
         protected Contracts\ContextRepository $contexts,
-    )
-    {
+    ) {
     }
 
     public function fire(Event $event): void

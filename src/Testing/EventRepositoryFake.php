@@ -37,8 +37,7 @@ class EventRepositoryFake implements StoreContract, Fake
         ?array $event_types = null,
         ?SnowflakeInstance $after = null,
         int $chunk_size = 1000,
-    ): LazyCollection
-    {
+    ): LazyCollection {
         return LazyCollection::make($this->saved)
             ->when($after, fn ($collection) => throw new Exception('"after" not implemented on fake.'))
             ->when($event_types, fn ($collection) => $collection->filter(fn (Event $event) => in_array($event::class, $event_types)));

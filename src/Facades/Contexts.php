@@ -14,7 +14,7 @@ class Contexts extends Facade
 {
     public static function fake(): ContextRepositoryFake
     {
-        if (!static::isFake()) {
+        if (! static::isFake()) {
             static::swap(new ContextRepositoryFake());
         }
 

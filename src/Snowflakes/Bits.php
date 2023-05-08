@@ -2,36 +2,38 @@
 
 namespace Thunk\Verbs\Snowflakes;
 
-use Illuminate\Contracts\Database\Query\Expression;
-use Illuminate\Database\Grammar;
 use InvalidArgumentException;
 
 class Bits
 {
     protected int $timestamp_shift;
+
     protected int $datacenter_shift;
+
     protected int $worker_shift;
-    
+
     protected int $timestamp_mask;
+
     protected int $datacenter_mask;
+
     protected int $worker_mask;
+
     protected int $sequence_mask;
-    
+
     public function __construct(
         protected int $pad = 1,
         protected int $timestamp = 41,
         protected int $datacenter = 5,
         protected int $worker = 5,
         protected int $sequence = 12,
-    )
-    {
+    ) {
         $this->validateConfiguration();
-        
+
         // Determine how far each element needs to be shifted from the right
         $this->worker_shift = $this->sequence;
         $this->datacenter_shift = $this->worker_shift + $this->worker;
         $this->timestamp_shift = $this->datacenter_shift + $this->datacenter;
-        
+
         // Masks for isolating discreet portions of the bits
         $this->sequence_mask = $this->maxSequence();
         $this->worker_mask = $this->maxWorkerId() << $this->worker_shift;
@@ -49,7 +51,7 @@ class Bits
             ($id & $this->sequence_mask),
         ];
     }
-    
+
     public function combine(int $timestamp, int $datacenter, int $worker, int $sequence): int
     {
         return (($timestamp << $this->timestamp_shift) & $this->timestamp_mask)
@@ -77,7 +79,7 @@ class Bits
     {
         return (2 ** $this->sequence) - 1;
     }
-    
+
     public function validateTimestamp(int $timestamp): void
     {
         if ($timestamp < 0 || $timestamp > $this->maxTimestamp()) {
@@ -109,7 +111,7 @@ class Bits
     protected function validateConfiguration(): void
     {
         $bits = $this->pad + $this->timestamp + $this->datacenter + $this->worker + $this->sequence;
-        
+
         if ($bits !== 64) {
             throw new InvalidArgumentException("The total number of bits in a snowflake must equal 64 (got {$bits}).");
         }

@@ -10,7 +10,7 @@ class SnowflakeCast implements CastsAttributes
 {
     public function get(Model $model, string $key, mixed $value, array $attributes)
     {
-        if (!($value instanceof Snowflake)) {
+        if (! ($value instanceof Snowflake)) {
             $value = SnowflakeFacade::fromId($value);
         }
 

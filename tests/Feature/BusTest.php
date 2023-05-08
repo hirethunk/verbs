@@ -1,6 +1,5 @@
 <?php
 
-use Thunk\Verbs\Attributes\Listen;
 use Thunk\Verbs\Attributes\Once;
 use Thunk\Verbs\Facades\Broker;
 use Thunk\Verbs\Facades\Bus;

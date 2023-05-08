@@ -7,6 +7,7 @@ use Thunk\Verbs\Contracts\SequenceResolver;
 class InMemorySequenceResolver implements SequenceResolver
 {
     public int $timestamp = PHP_INT_MIN;
+
     public int $sequence = 0;
 
     public function next(int $timestamp): int
