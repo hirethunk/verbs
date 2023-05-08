@@ -5,7 +5,6 @@ use Thunk\Verbs\Contracts\ResolvesSequences;
 use Thunk\Verbs\Contracts\ResolvesSequences as SequenceResolverContract;
 use Thunk\Verbs\Facades\Snowflake;
 use Thunk\Verbs\Snowflakes\Factory;
-use Thunk\Verbs\Snowflakes\CacheSequenceResolver;
 use Thunk\Verbs\Testing\InMemorySequenceResolver;
 
 beforeEach(function () {

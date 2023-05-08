@@ -11,8 +11,8 @@ use Thunk\Verbs\Lifecycle\Bus;
 use Thunk\Verbs\Lifecycle\Repositories\ContextRepository;
 use Thunk\Verbs\Lifecycle\Repositories\EventRepository;
 use Thunk\Verbs\Snowflakes\Bits;
-use Thunk\Verbs\Snowflakes\Factory;
 use Thunk\Verbs\Snowflakes\CacheSequenceResolver;
+use Thunk\Verbs\Snowflakes\Factory;
 
 class VerbsServiceProvider extends PackageServiceProvider
 {
