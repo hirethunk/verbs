@@ -8,6 +8,6 @@ abstract class Event
 {
     public static function fire(...$args): void
     {
-        Broker::fire(new static(...$args));
+        Broker::originate(new static(...$args));
     }
 }

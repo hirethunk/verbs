@@ -14,10 +14,11 @@ class Broker implements BrokersEvents
         protected DispatchesEvents $bus,
         protected StoresEvents $events,
         protected ManagesContext $contexts,
-    ) {
+    )
+    {
     }
 
-    public function fire(Event $event): void
+    public function originate(Event $event): void
     {
         Guards::for($event)->check();
 
@@ -30,6 +31,9 @@ class Broker implements BrokersEvents
     {
         $this->events
             ->get((array) $event_types, null, $chunk_size)
-            ->each($this->bus->replay(...));
+            ->each(function (Event $event) {
+                $this->contexts->apply($event);
+                $this->bus->replay($event);
+            });
     }
 }
