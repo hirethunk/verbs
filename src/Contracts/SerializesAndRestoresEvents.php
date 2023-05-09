@@ -11,5 +11,5 @@ interface SerializesAndRestoresEvents
 {
     public function serializeEvent(Event $event): string;
 
-    public function deserializeEvent(string $event_type, array $data): Event;
+    public function deserializeEvent(string $event_type, string $data): Event;
 }

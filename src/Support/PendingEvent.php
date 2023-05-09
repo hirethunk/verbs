@@ -36,7 +36,7 @@ class PendingEvent
         $event = new $this->event_type(...$args);
         
         if ($this->context) {
-            $event->context = $this->context->id;
+            $event->context_id = $this->context->id;
         }
         
         Broker::originate($event, $this->context);

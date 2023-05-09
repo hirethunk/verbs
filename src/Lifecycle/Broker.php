@@ -2,7 +2,6 @@
 
 namespace Thunk\Verbs\Lifecycle;
 
-use Ev;
 use Thunk\Verbs\Context;
 use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Contracts\DispatchesEvents;
@@ -26,17 +25,10 @@ class Broker implements BrokersEvents
 
     public function originate(Event $event, ?Context $context = null): void
     {
-        $context = $this->getContext($event, $context);
+        $context = $this->syncOrCreateContext($event, $context);
 
-        // First we'll check that the event CAN be fired
-        Guards::for($event, $context)->check();
+        $this->guardEvent($event, $context);
         
-        // Then, if there is a context, we'll validate the event for concurrency issues
-        if ($context) {
-            $this->contexts->validate($context, $event);
-        }
-        
-        // If all goes well, we can store the event and dispatch it
         $this->events->save($event);
         $this->bus->dispatch($event);
     }
@@ -47,19 +39,33 @@ class Broker implements BrokersEvents
             ->get((array) $event_types, null, null, $chunk_size)
             ->each($this->bus->replay(...));
     }
-    
-    protected function getContext(Event $event, ?Context $existing = null): ?Context
+
+    protected function syncOrCreateContext(Event $event, ?Context $context = null): ?Context
     {
-        if (! $creates = Reflector::getContextForCreation($event)) {
-            return $existing;
-        }
-        
-        if ($existing) {
-            throw new ContextAlreadyExists($event, $existing, $creates);
+        if ($creates = Reflector::getContextForCreation($event)) {
+            // If we've been provided a context, but the event that we're firing also
+            // creates a new context, we want to trigger an error before the event fires
+            if ($context) {
+                throw new ContextAlreadyExists($event, $context, $creates);
+            }
+
+            $context = new $creates($this->snowflakes->make());
         }
 
-        $context = new $creates($this->snowflakes->make());
+        if ($context) {
+            $event->context_id = $context->id;
+            $this->contexts->register($context);
+        }
 
-        return $this->contexts->register($context);
+        return $context;
+    }
+
+    protected function guardEvent(Event $event, ?Context $context): void
+    {
+        Guards::for($event, $context)->check();
+
+        if ($context) {
+            $this->contexts->validate($context, $event);
+        }
     }
 }

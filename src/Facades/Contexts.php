@@ -9,8 +9,8 @@ use Thunk\Verbs\Testing\ContextRepositoryFake;
 
 /**
  * @method static Context sync(Context $context)
- * @method static void assertApplied(string $event_type)
- * @method static void assertNothingApplied()
+ * @method static void assertSynced(string $event_type)
+ * @method static void assertNothingSynced()
  */
 class Contexts extends Facade
 {

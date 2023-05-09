@@ -14,66 +14,61 @@ use Thunk\Verbs\Tests\Fixtures\Events\EventCreatedContext;
 use Thunk\Verbs\Tests\Fixtures\Events\EventWasFired;
 
 beforeEach(function () {
+    Bus::fake();
     Store::fake();
 });
 
-it('Context is applied when events are fired', function () {
+it('does not sync context when an event is fired without any', function () {
     Contexts::fake();
 
     EventWasFired::fire('foo');
 
-    // Contexts::assertSynced(EventWasFired::class);
+    Contexts::assertNothingSynced();
 });
 
 it('creates context', function() {
-    Bus::fake();
-    
     EventCreatedContext::fire('bar');
     
     Bus::assertDispatched(function (EventCreatedContext $event) {
-        return $event->context_id instanceof GenericContext;
+        return null !== $event->context_id;
     });
 });
 
 it('can have context attached', function () {
-    Bus::fake();
-
     $context_id = Snowflake::make();
     
     EventWasFired::withContext(new GenericContext($context_id))->fire('bar');
 
     Bus::assertDispatched(function (EventWasFired $event) use ($context_id) {
-        return $event->context_id->is($context_id);
+        return $event->context_id?->is($context_id);
     });
 });
 
 it('can attach parent/child context', function () {
-    Bus::fake();
-
     $parent = new ParentContext(Snowflake::make());
     $child = new ChildContext(Snowflake::make());
     
     $parent->attachChild($child);
 
     Bus::assertDispatched(function (AttachedToParent $event) use ($parent, $child) {
-        return $event->context_id->is($child->id) 
+        return $event->context_id?->is($child->id) 
             && $event->parent_id->is($parent->id);
     });
 
     Bus::assertDispatched(function (ChildAttached $event) use ($parent, $child) {
-        return $event->context_id->is($parent->id) 
+        return $event->context_id?->is($parent->id) 
             && $event->child_id->is($child->id);
     });
     
     Broker::replay();
 
     Bus::assertReplayed(function (AttachedToParent $event) use ($parent, $child) {
-        return $event->context_id->is($child->id)
+        return $event->context_id?->is($child->id)
             && $event->parent_id->is($parent->id);
     });
 
     Bus::assertReplayed(function (ChildAttached $event) use ($parent, $child) {
-        return $event->context_id->is($parent->id)
+        return $event->context_id?->is($parent->id)
             && $event->child_id->is($child->id);
     });
 });

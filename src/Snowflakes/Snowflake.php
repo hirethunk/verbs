@@ -12,14 +12,15 @@ class Snowflake implements Expression, Castable
     {
         return SnowflakeCast::class;
     }
-    
+
     public function __construct(
         public readonly int $timestamp,
         public readonly int $datacenter_id,
         public readonly int $worker_id,
         public readonly int $sequence,
         protected Bits $bits = new Bits(),
-    ) {
+    )
+    {
         $this->validateConfiguration();
     }
 
@@ -27,7 +28,7 @@ class Snowflake implements Expression, Castable
     {
         return $this->bits->combine($this->timestamp, $this->datacenter_id, $this->worker_id, $this->sequence);
     }
-    
+
     public function is(Snowflake $other): bool
     {
         return $other->id() === $this->id();

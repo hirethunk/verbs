@@ -22,7 +22,7 @@ class Serializer implements SerializesAndRestoresEvents
         ]);
     }
 
-    public function deserializeEvent(string $event_type, array $data): Event
+    public function deserializeEvent(string $event_type, string $data): Event
     {
         return $this->serializer->deserialize($data, $event_type, 'json');
     }
