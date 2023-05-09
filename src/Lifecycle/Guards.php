@@ -4,6 +4,7 @@ namespace Thunk\Verbs\Lifecycle;
 
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\Access\Response;
+use Illuminate\Contracts\Validation\Factory as ValidationFactory;
 use Thunk\Verbs\Context;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\EventNotValidInContext;
@@ -33,7 +34,7 @@ class Guards
         }
 
         if (method_exists($this->event, 'failedValidation')) {
-            $this->event->failedValidation();
+            $this->event->failedValidation($this->context);
         }
 
         throw new EventNotValidInContext();
@@ -46,7 +47,7 @@ class Guards
         }
 
         if (method_exists($this->event, 'failedAuthorization')) {
-            $this->event->failedAuthorization();
+            $this->event->failedAuthorization($this->context);
         }
 
         throw new AuthorizationException();
@@ -56,7 +57,13 @@ class Guards
     {
         if (method_exists($this->event, 'rules')) {
             $rules = app()->call([$this->event, 'rules']);
-            // TODO: Pass context to validator
+            $factory = app()->make(ValidationFactory::class);
+
+            $validator = $factory->make((array) $this->context, $rules);
+            
+            if ($validator->fails()) {
+                return false;
+            }
         }
 
         if (method_exists($this->event, 'validate')) {

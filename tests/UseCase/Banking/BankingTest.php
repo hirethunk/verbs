@@ -5,6 +5,7 @@ namespace Thunk\Verbs\Tests\UseCase\Banking;
 use Thunk\Verbs\Attributes\CreatesContext;
 use Thunk\Verbs\Context;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Exceptions\EventNotValidInContext;
 use Thunk\Verbs\Facades\Broker;
 use Thunk\Verbs\HasChildContext;
 use Thunk\Verbs\HasParentContext;
@@ -24,6 +25,18 @@ it('handles typical a banking implementation', function () {
 
     expect($GLOBALS['test_banking_accounts'])->toHaveCount(1)
         ->and($GLOBALS['test_banking_accounts'][$context_id]['balance'])->toBe(15_000);
+    
+    $overdraft_failed = false;
+    try {
+        FundsWithdrawn::withContext(AccountContext::load($context_id))->fire(100_000);    
+    } catch (EventNotValidInContext) {
+        $overdraft_failed = true;
+    }
+    
+    expect($overdraft_failed)->toBeTrue()
+        ->and($GLOBALS['test_banking_accounts'])->toHaveCount(1)
+        ->and($GLOBALS['test_banking_accounts'][$context_id]['balance'])->toBe(15_000)
+        ->and($GLOBALS['test_banking_accounts'][$context_id]['overdraft_attempts'])->toBe(1);
 
     FundsWithdrawn::withContext(AccountContext::load($context_id))->fire(15_000);
 
@@ -103,9 +116,30 @@ class FundsWithdrawn extends Event
     )
     {
     }
+    
+    public function rules(): array
+    {
+        return [
+            'balance' => "gte:{$this->amount}",
+        ];
+    }
+    
+    public function failedValidation(AccountContext $context)
+    {
+        AttemptedOverdraft::withContext($context)->fire();
+    }
 
     public function onFire()
     {
         $GLOBALS['test_banking_accounts'][$this->context_id->id()]['balance'] -= $this->amount;
+    }
+}
+
+class AttemptedOverdraft extends Event
+{
+    public function onFire()
+    {
+        $GLOBALS['test_banking_accounts'][$this->context_id->id()]['overdraft_attempts'] ??= 0;
+        $GLOBALS['test_banking_accounts'][$this->context_id->id()]['overdraft_attempts'] += 1;
     }
 }
