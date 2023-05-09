@@ -10,14 +10,14 @@ use Thunk\Verbs\Events\ChildAttached;
 trait HasChildContext
 {
     protected array $child_context_ids = [];
-    
+
     public function attachChild(Context $child): static
     {
         DB::transaction(function () use ($child) {
             ChildAttached::withContext($this)->fire($child->id);
             AttachedToParent::withContext($child)->fire($this->id);
         });
-        
+
         return $this;
     }
 

@@ -48,13 +48,13 @@ class Factory
 
         return new Snowflake($timestamp, $datacenter_id, $worker_id, $sequence, $this->bits);
     }
-    
+
     public function coerce(int|string|Snowflake $value): Snowflake
     {
-        if (!($value instanceof Snowflake)) {
+        if (! ($value instanceof Snowflake)) {
             $value = $this->fromId($value);
         }
-        
+
         return $value;
     }
 

@@ -10,7 +10,7 @@ use Thunk\Verbs\Facades\Broker;
 use Thunk\Verbs\HasChildContext;
 use Thunk\Verbs\HasParentContext;
 
-beforeEach(fn() => $GLOBALS['test_banking_accounts'] = []);
+beforeEach(fn () => $GLOBALS['test_banking_accounts'] = []);
 
 it('handles typical a banking implementation', function () {
     AccountWasOpened::fire(10_000);
@@ -25,14 +25,14 @@ it('handles typical a banking implementation', function () {
 
     expect($GLOBALS['test_banking_accounts'])->toHaveCount(1)
         ->and($GLOBALS['test_banking_accounts'][$context_id]['balance'])->toBe(15_000);
-    
+
     $overdraft_failed = false;
     try {
-        FundsWithdrawn::withContext(AccountContext::load($context_id))->fire(100_000);    
+        FundsWithdrawn::withContext(AccountContext::load($context_id))->fire(100_000);
     } catch (EventNotValidInContext) {
         $overdraft_failed = true;
     }
-    
+
     expect($overdraft_failed)->toBeTrue()
         ->and($GLOBALS['test_banking_accounts'])->toHaveCount(1)
         ->and($GLOBALS['test_banking_accounts'][$context_id]['balance'])->toBe(15_000)
@@ -44,7 +44,7 @@ it('handles typical a banking implementation', function () {
         ->and($GLOBALS['test_banking_accounts'][$context_id]['balance'])->toBe(0);
 
     $GLOBALS['test_banking_accounts'] = [];
-    
+
     Broker::replay();
 
     expect($GLOBALS['test_banking_accounts'])->toHaveCount(1)
@@ -83,8 +83,7 @@ class AccountWasOpened extends Event
 {
     public function __construct(
         public int $starting_balance
-    )
-    {
+    ) {
     }
 
     public function onFire()
@@ -99,8 +98,7 @@ class FundsDeposited extends Event
 {
     public function __construct(
         public int $amount
-    )
-    {
+    ) {
     }
 
     public function onFire()
@@ -113,17 +111,16 @@ class FundsWithdrawn extends Event
 {
     public function __construct(
         public int $amount
-    )
-    {
+    ) {
     }
-    
+
     public function rules(): array
     {
         return [
             'balance' => "gte:{$this->amount}",
         ];
     }
-    
+
     public function failedValidation(AccountContext $context)
     {
         AttemptedOverdraft::withContext($context)->fire();

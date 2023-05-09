@@ -47,11 +47,11 @@ class VerbsServiceProvider extends PackageServiceProvider
 
         $this->app->singleton(CacheSequenceResolver::class);
         $this->app->alias(CacheSequenceResolver::class, Contracts\ResolvesSequences::class);
-        
+
         $this->app->singleton(Serializer::class, function () {
             $encoders = [new JsonEncoder()];
             $normalizers = [new ObjectNormalizer()];
-            
+
             return new Serializer(new SymfonySerializer($normalizers, $encoders));
         });
         $this->app->alias(Serializer::class, Contracts\SerializesAndRestoresEvents::class);

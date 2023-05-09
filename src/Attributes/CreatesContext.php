@@ -3,7 +3,6 @@
 namespace Thunk\Verbs\Attributes;
 
 use Attribute;
-use Thunk\Verbs\Lifecycle\Listener;
 
 /**
  * @codeCoverageIgnore

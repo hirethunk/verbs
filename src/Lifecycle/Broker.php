@@ -19,8 +19,7 @@ class Broker implements BrokersEvents
         protected StoresEvents $events,
         protected ManagesContext $contexts,
         protected Factory $snowflakes,
-    )
-    {
+    ) {
     }
 
     public function originate(Event $event, ?Context $context = null): void
@@ -28,7 +27,7 @@ class Broker implements BrokersEvents
         $context = $this->syncOrCreateContext($event, $context);
 
         $this->guardEvent($event, $context);
-        
+
         $this->events->save($event);
         $this->bus->dispatch($event);
     }

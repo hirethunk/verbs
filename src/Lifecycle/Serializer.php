@@ -11,8 +11,7 @@ class Serializer implements SerializesAndRestoresEvents
 {
     public function __construct(
         protected SymfonySerializer $serializer
-    )
-    {
+    ) {
     }
 
     public function serializeEvent(Event $event): string

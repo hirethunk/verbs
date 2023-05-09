@@ -12,7 +12,7 @@ use Thunk\Verbs\Support\PendingEvent;
 abstract class Event
 {
     public Snowflake $id;
-    
+
     public ?Snowflake $context_id = null;
 
     public static function __callStatic(string $name, array $arguments)

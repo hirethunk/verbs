@@ -60,7 +60,7 @@ class Guards
             $factory = app()->make(ValidationFactory::class);
 
             $validator = $factory->make((array) $this->context, $rules);
-            
+
             if ($validator->fails()) {
                 return false;
             }

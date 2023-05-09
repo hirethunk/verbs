@@ -14,8 +14,7 @@ class EventRepository implements StoresEvents
 {
     public function __construct(
         protected SerializesAndRestoresEvents $serializer,
-    )
-    {
+    ) {
     }
 
     public function save(Event $event): SnowflakeInstance
@@ -39,12 +38,11 @@ class EventRepository implements StoresEvents
         ?SnowflakeInstance $context_id = null,
         ?SnowflakeInstance $after = null,
         int $chunk_size = 1000,
-    ): LazyCollection
-    {
+    ): LazyCollection {
         return DB::table('verb_events')
-            ->when($event_types, fn($query) => $query->whereIn('event_type', $event_types))
-            ->when($context_id, fn($query) => $query->where('context_id', $context_id))
-            ->when($after, fn($query) => $query->where('id', '>', $after))
+            ->when($event_types, fn ($query) => $query->whereIn('event_type', $event_types))
+            ->when($context_id, fn ($query) => $query->where('context_id', $context_id))
+            ->when($after, fn ($query) => $query->where('id', '>', $after))
             ->orderBy('id')
             ->lazy($chunk_size)
             ->map(function (object $row) {

@@ -12,7 +12,7 @@ use Thunk\Verbs\Event;
 class BusFake implements DispatchesEvents, Fake
 {
     use ReflectsClosures;
-    
+
     protected array $registered = [];
 
     protected array $dispatched = [];
@@ -27,11 +27,11 @@ class BusFake implements DispatchesEvents, Fake
     public function assertDispatched(string|Closure $event, ?callable $callback = null)
     {
         [$event, $callback] = $this->prepareEventAndCallback($event, $callback);
-        
+
         $matched = collect($this->dispatched)
-            ->filter(fn(Event $dispatched) => $dispatched instanceof $event)
+            ->filter(fn (Event $dispatched) => $dispatched instanceof $event)
             ->filter($callback);
-        
+
         Assert::assertTrue($matched->isNotEmpty(), "{$event} was not dispatched");
     }
 
@@ -45,7 +45,7 @@ class BusFake implements DispatchesEvents, Fake
         [$event, $callback] = $this->prepareEventAndCallback($event, $callback);
 
         $matched = collect($this->replayed)
-            ->filter(fn(Event $dispatched) => $dispatched instanceof $event)
+            ->filter(fn (Event $dispatched) => $dispatched instanceof $event)
             ->filter($callback);
 
         Assert::assertTrue($matched->isNotEmpty(), "{$event} was not replayed");

@@ -19,8 +19,7 @@ class Snowflake implements Expression, Castable
         public readonly int $worker_id,
         public readonly int $sequence,
         protected Bits $bits = new Bits(),
-    )
-    {
+    ) {
         $this->validateConfiguration();
     }
 

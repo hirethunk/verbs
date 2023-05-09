@@ -25,8 +25,8 @@ class Reflector extends \Illuminate\Support\Reflector
         $reflect = new ReflectionClass($target);
 
         return collect($reflect->getMethods(ReflectionMethod::IS_PUBLIC))
-            ->filter(fn(ReflectionMethod $method) => $method->getNumberOfParameters())
-            ->map(fn(ReflectionMethod $method) => Listener::fromReflection($target, $method));
+            ->filter(fn (ReflectionMethod $method) => $method->getNumberOfParameters())
+            ->map(fn (ReflectionMethod $method) => Listener::fromReflection($target, $method));
     }
 
     public static function getContextForCreation(object $target): ?string
@@ -34,7 +34,7 @@ class Reflector extends \Illuminate\Support\Reflector
         $reflect = new ReflectionClass($target);
         $attributes = $reflect->getAttributes(CreatesContext::class);
 
-        if (!count($attributes)) {
+        if (! count($attributes)) {
             return null;
         }
 
@@ -51,7 +51,7 @@ class Reflector extends \Illuminate\Support\Reflector
 
         return array_filter(
             array: Reflector::getParameterClassNames($parameters[0]),
-            callback: fn(string $class_name) => is_a($class_name, Event::class, true)
+            callback: fn (string $class_name) => is_a($class_name, Event::class, true)
         );
     }
 

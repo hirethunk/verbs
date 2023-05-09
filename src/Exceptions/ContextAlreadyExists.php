@@ -16,7 +16,7 @@ class ContextAlreadyExists extends InvalidArgumentException
             class_basename($new_context),
             class_basename($existing_context),
         );
-        
+
         parent::__construct($message);
     }
 }

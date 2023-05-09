@@ -44,7 +44,7 @@ class Bus implements DispatchesEvents
     protected function getListeners(Event $event): array
     {
         $listeners = $this->listeners[$event::class] ?? [];
-        
+
         // Maybe "always"
         if (method_exists($event, 'onFire')) {
             $onFire = Listener::fromReflection($event, new ReflectionMethod($event, 'onFire'));

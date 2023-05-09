@@ -38,7 +38,7 @@ class Listener
         public bool $replayable = true,
     ) {
     }
-    
+
     public function handles(Event $event): bool
     {
         return in_array($event::class, $this->events);
@@ -52,7 +52,7 @@ class Listener
     public function apply(Event $event, Context $context, Container $container): void
     {
         $this->handle($event, $container);
-        
+
         $context->last_event_id = $event->id;
     }
 

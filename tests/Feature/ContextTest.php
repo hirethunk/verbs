@@ -26,9 +26,9 @@ it('does not sync context when an event is fired without any', function () {
     Contexts::assertNothingSynced();
 });
 
-it('creates context', function() {
+it('creates context', function () {
     EventCreatedContext::fire('bar');
-    
+
     Bus::assertDispatched(function (EventCreatedContext $event) {
         return null !== $event->context_id;
     });
@@ -36,7 +36,7 @@ it('creates context', function() {
 
 it('can have context attached', function () {
     $context_id = Snowflake::make();
-    
+
     EventWasFired::withContext(new GenericContext($context_id))->fire('bar');
 
     Bus::assertDispatched(function (EventWasFired $event) use ($context_id) {
@@ -47,19 +47,19 @@ it('can have context attached', function () {
 it('can attach parent/child context', function () {
     $parent = new ParentContext(Snowflake::make());
     $child = new ChildContext(Snowflake::make());
-    
+
     $parent->attachChild($child);
 
     Bus::assertDispatched(function (AttachedToParent $event) use ($parent, $child) {
-        return $event->context_id?->is($child->id) 
+        return $event->context_id?->is($child->id)
             && $event->parent_id->is($parent->id);
     });
 
     Bus::assertDispatched(function (ChildAttached $event) use ($parent, $child) {
-        return $event->context_id?->is($parent->id) 
+        return $event->context_id?->is($parent->id)
             && $event->child_id->is($child->id);
     });
-    
+
     Broker::replay();
 
     Bus::assertReplayed(function (AttachedToParent $event) use ($parent, $child) {
