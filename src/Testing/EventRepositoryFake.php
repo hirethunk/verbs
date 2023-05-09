@@ -40,6 +40,7 @@ class EventRepositoryFake implements StoresEvents, Fake
     ): LazyCollection {
         return LazyCollection::make($this->saved)
             ->when($after, fn ($collection) => throw new Exception('"after" not implemented on fake.'))
-            ->when($event_types, fn ($collection) => $collection->filter(fn (Event $event) => in_array($event::class, $event_types)));
+            ->when($event_types, fn ($collection) => $collection->filter(fn (Event $event) => in_array($event::class, $event_types)))
+            ->each(fn(Event $event) => $event->context = null);
     }
 }

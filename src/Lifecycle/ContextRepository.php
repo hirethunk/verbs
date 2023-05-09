@@ -1,6 +1,6 @@
 <?php
 
-namespace Thunk\Verbs\Lifecycle\Repositories;
+namespace Thunk\Verbs\Lifecycle;
 
 use Illuminate\Contracts\Container\Container;
 use Thunk\Verbs\Context;

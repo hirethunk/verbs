@@ -14,9 +14,7 @@ class Store extends Facade
 {
     public static function fake(): EventRepositoryFake
     {
-        if (! static::isFake()) {
-            static::swap(new EventRepositoryFake());
-        }
+        static::swap(new EventRepositoryFake());
 
         return static::getFacadeRoot();
     }

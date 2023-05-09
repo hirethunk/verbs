@@ -2,12 +2,20 @@
 
 namespace Thunk\Verbs;
 
-use Thunk\Verbs\Facades\Broker;
+use Thunk\Verbs\Support\PendingEvent;
 
+/**
+ * @method static PendingEvent withContext(Context ...$contexts)
+ * @method static void fire(...$args)
+ */
 abstract class Event
 {
-    public static function fire(...$args): void
+    use HasContext;
+
+    public static function __callStatic(string $name, array $arguments)
     {
-        Broker::originate(new static(...$args));
+        $pending = new PendingEvent(static::class);
+
+        return $pending->$name(...$arguments);
     }
 }

@@ -1,7 +1,8 @@
 <?php
 
-namespace Thunk\Verbs\Lifecycle\Repositories;
+namespace Thunk\Verbs\Lifecycle;
 
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\LazyCollection;
 use Thunk\Verbs\Contracts\StoresEvents;
@@ -18,8 +19,9 @@ class EventRepository implements StoresEvents
         DB::table('verb_events')
             ->insert([
                 'id' => $id,
+                'context_id' => $event->context?->id,
                 'event_type' => $event::class,
-                'event_data' => json_encode((array) $event),
+                'event_data' => json_encode(Arr::except(get_object_vars($event), ['context'])),
             ]);
 
         return $id;
