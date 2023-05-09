@@ -2,6 +2,7 @@
 
 namespace Thunk\Verbs;
 
+use Thunk\Verbs\Snowflakes\Snowflake;
 use Thunk\Verbs\Support\PendingEvent;
 
 /**
@@ -10,7 +11,9 @@ use Thunk\Verbs\Support\PendingEvent;
  */
 abstract class Event
 {
-    use HasContext;
+    public Snowflake $id;
+    
+    public ?Snowflake $context_id = null;
 
     public static function __callStatic(string $name, array $arguments)
     {

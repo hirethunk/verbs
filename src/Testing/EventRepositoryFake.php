@@ -35,12 +35,13 @@ class EventRepositoryFake implements StoresEvents, Fake
     /** @return LazyCollection<int, \Thunk\Verbs\Event> */
     public function get(
         ?array $event_types = null,
+        ?SnowflakeInstance $context_id = null,
         ?SnowflakeInstance $after = null,
         int $chunk_size = 1000,
     ): LazyCollection {
         return LazyCollection::make($this->saved)
             ->when($after, fn ($collection) => throw new Exception('"after" not implemented on fake.'))
-            ->when($event_types, fn ($collection) => $collection->filter(fn (Event $event) => in_array($event::class, $event_types)))
-            ->each(fn(Event $event) => $event->context = null);
+            ->when($context_id, fn ($collection) => $collection->filter(fn(Event $event) => $event->context_id->is($context_id)))
+            ->when($event_types, fn ($collection) => $collection->filter(fn (Event $event) => in_array($event::class, $event_types)));
     }
 }

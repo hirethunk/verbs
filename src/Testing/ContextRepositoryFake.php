@@ -2,35 +2,44 @@
 
 namespace Thunk\Verbs\Testing;
 
-use BadMethodCallException;
 use Illuminate\Support\Testing\Fakes\Fake;
 use PHPUnit\Framework\Assert;
 use Thunk\Verbs\Context;
 use Thunk\Verbs\Contracts\ManagesContext;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Snowflakes\Snowflake;
 
 class ContextRepositoryFake implements ManagesContext, Fake
 {
-    protected array $applied = [];
+    protected array $registered = [];
 
-    public function assertApplied(string $event_type)
+    protected array $synced = [];
+
+    public function assertSynced(string $event_type)
     {
-        Assert::assertContains($event_type, $this->applied);
+        Assert::assertContains($event_type, $this->synced);
     }
 
-    public function assertNothingSaved()
+    public function assertNothingSynced()
     {
-        Assert::assertEmpty($this->applied);
+        Assert::assertEmpty($this->synced);
     }
 
-    public function apply(Event $event): void
+    public function register(Context $context): Context
     {
-        $this->applied[] = $event::class;
+        $this->registered[] = $context;
+
+        return $context;
     }
 
-    public function get(string $class_name, Snowflake $id): Context
+    public function validate(Context $context, Event $event): void
     {
-        throw new BadMethodCallException('Cannot get context from fake.');
+        // TODO
+    }
+
+    public function sync(Context $context): Context
+    {
+        $this->synced[] = $context::class;
+
+        return $context;
     }
 }

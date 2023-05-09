@@ -4,11 +4,12 @@ namespace Thunk\Verbs\Contracts;
 
 use Thunk\Verbs\Context;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Snowflakes\Snowflake;
 
 interface ManagesContext
 {
-    public function apply(Event $event): void;
+    public function register(Context $context): Context;
 
-    public function get(string $class_name, Snowflake $id): Context;
+    public function validate(Context $context, Event $event): void;
+
+    public function sync(Context $context): Context;
 }

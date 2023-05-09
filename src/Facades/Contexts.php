@@ -3,10 +3,12 @@
 namespace Thunk\Verbs\Facades;
 
 use Illuminate\Support\Facades\Facade;
+use Thunk\Verbs\Context;
 use Thunk\Verbs\Contracts\ManagesContext;
 use Thunk\Verbs\Testing\ContextRepositoryFake;
 
 /**
+ * @method static Context sync(Context $context)
  * @method static void assertApplied(string $event_type)
  * @method static void assertNothingApplied()
  */

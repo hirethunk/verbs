@@ -4,18 +4,20 @@ namespace Thunk\Verbs\Lifecycle;
 
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\Access\Response;
+use Thunk\Verbs\Context;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\EventNotValidInContext;
 
 class Guards
 {
-    public static function for(Event $event): static
+    public static function for(Event $event, ?Context $context = null): static
     {
-        return new static($event);
+        return new static($event, $context);
     }
 
     public function __construct(
-        public Event $event
+        public Event $event,
+        public ?Context $context = null,
     ) {
     }
 

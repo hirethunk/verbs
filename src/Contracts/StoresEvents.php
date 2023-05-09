@@ -12,6 +12,7 @@ interface StoresEvents
 
     public function get(
         ?array $event_types = null,
+        ?Snowflake $context_id = null,
         ?Snowflake $after = null,
         int $chunk_size = 1000,
     ): LazyCollection;

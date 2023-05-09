@@ -8,6 +8,11 @@ use Illuminate\Database\Grammar;
 
 class Snowflake implements Expression, Castable
 {
+    public static function castUsing(array $arguments): string
+    {
+        return SnowflakeCast::class;
+    }
+    
     public function __construct(
         public readonly int $timestamp,
         public readonly int $datacenter_id,
@@ -22,15 +27,15 @@ class Snowflake implements Expression, Castable
     {
         return $this->bits->combine($this->timestamp, $this->datacenter_id, $this->worker_id, $this->sequence);
     }
+    
+    public function is(Snowflake $other): bool
+    {
+        return $other->id() === $this->id();
+    }
 
     public function getValue(Grammar $grammar)
     {
         return $this->id();
-    }
-
-    public static function castUsing(array $arguments): string
-    {
-        return SnowflakeCast::class;
     }
 
     public function __toString(): string

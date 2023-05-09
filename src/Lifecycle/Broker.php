@@ -2,16 +2,16 @@
 
 namespace Thunk\Verbs\Lifecycle;
 
-use ReflectionClass;
-use ReflectionMethod;
-use RuntimeException;
-use Thunk\Verbs\Attributes\CreatesContext;
+use Ev;
+use Thunk\Verbs\Context;
 use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Contracts\DispatchesEvents;
 use Thunk\Verbs\Contracts\ManagesContext;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Facades\Snowflake;
+use Thunk\Verbs\Exceptions\ContextAlreadyExists;
+use Thunk\Verbs\Snowflakes\Factory;
+use Thunk\Verbs\Support\Reflector;
 
 class Broker implements BrokersEvents
 {
@@ -19,25 +19,24 @@ class Broker implements BrokersEvents
         protected DispatchesEvents $bus,
         protected StoresEvents $events,
         protected ManagesContext $contexts,
-    ) {
+        protected Factory $snowflakes,
+    )
+    {
     }
 
-    public function originate(Event $event): void
+    public function originate(Event $event, ?Context $context = null): void
     {
-        // TODO: This is ugly just to prove the concept
-        if (count($attributes = (new ReflectionClass($event))->getAttributes(CreatesContext::class))) {
-            $context = $attributes[0]->getArguments()[0];
-            
-            if ($event->context) {
-                throw new RuntimeException('Trying to create context when on is already attached.');
-            }
-            
-            $event->context = new $context(Snowflake::make());
+        $context = $this->getContext($event, $context);
+
+        // First we'll check that the event CAN be fired
+        Guards::for($event, $context)->check();
+        
+        // Then, if there is a context, we'll validate the event for concurrency issues
+        if ($context) {
+            $this->contexts->validate($context, $event);
         }
         
-        Guards::for($event)->check();
-
-        $this->contexts->apply($event);
+        // If all goes well, we can store the event and dispatch it
         $this->events->save($event);
         $this->bus->dispatch($event);
     }
@@ -45,11 +44,22 @@ class Broker implements BrokersEvents
     public function replay(array|string $event_types = null, int $chunk_size = 1000): void
     {
         $this->events
-            ->get((array) $event_types, null, $chunk_size)
-            ->each(function (Event $event) {
-                // FIXME: We need the context ID here
-                $this->contexts->apply($event);
-                $this->bus->replay($event);
-            });
+            ->get((array) $event_types, null, null, $chunk_size)
+            ->each($this->bus->replay(...));
+    }
+    
+    protected function getContext(Event $event, ?Context $existing = null): ?Context
+    {
+        if (! $creates = Reflector::getContextForCreation($event)) {
+            return $existing;
+        }
+        
+        if ($existing) {
+            throw new ContextAlreadyExists($event, $existing, $creates);
+        }
+
+        $context = new $creates($this->snowflakes->make());
+
+        return $this->contexts->register($context);
     }
 }

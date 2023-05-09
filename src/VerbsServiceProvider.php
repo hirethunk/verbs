@@ -6,10 +6,14 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Facades\Date;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use Symfony\Component\Serializer\Serializer as SymfonySerializer;
 use Thunk\Verbs\Lifecycle\Broker;
 use Thunk\Verbs\Lifecycle\Bus;
 use Thunk\Verbs\Lifecycle\ContextRepository;
 use Thunk\Verbs\Lifecycle\EventRepository;
+use Thunk\Verbs\Lifecycle\Serializer;
 use Thunk\Verbs\Snowflakes\Bits;
 use Thunk\Verbs\Snowflakes\CacheSequenceResolver;
 use Thunk\Verbs\Snowflakes\Factory;
@@ -43,6 +47,14 @@ class VerbsServiceProvider extends PackageServiceProvider
 
         $this->app->singleton(CacheSequenceResolver::class);
         $this->app->alias(CacheSequenceResolver::class, Contracts\ResolvesSequences::class);
+        
+        $this->app->singleton(Serializer::class, function () {
+            $encoders = [new JsonEncoder()];
+            $normalizers = [new ObjectNormalizer()];
+            
+            return new Serializer(new SymfonySerializer($normalizers, $encoders));
+        });
+        $this->app->alias(Serializer::class, Contracts\SerializesAndRestoresEvents::class);
 
         $this->app->singleton(Factory::class, function (Container $container) {
             return new Factory(

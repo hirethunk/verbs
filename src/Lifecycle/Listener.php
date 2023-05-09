@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Str;
 use ReflectionMethod;
+use Thunk\Verbs\Context;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Support\Reflector;
 
@@ -37,10 +38,22 @@ class Listener
         public bool $replayable = true,
     ) {
     }
+    
+    public function handles(Event $event): bool
+    {
+        return in_array($event::class, $this->events);
+    }
 
     public function handle(Event $event, Container $container): void
     {
         $container->call($this->callback, $this->guessEventParameter($event));
+    }
+
+    public function apply(Event $event, Context $context, Container $container): void
+    {
+        $this->handle($event, $container);
+        
+        $context->last_event_id = $event->id;
     }
 
     public function replay(Event $event, Container $container): void

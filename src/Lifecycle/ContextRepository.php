@@ -7,7 +7,7 @@ use Thunk\Verbs\Context;
 use Thunk\Verbs\Contracts\ManagesContext;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Snowflakes\Snowflake;
+use Thunk\Verbs\Support\Reflector;
 
 class ContextRepository implements ManagesContext
 {
@@ -16,28 +16,35 @@ class ContextRepository implements ManagesContext
     public function __construct(
         protected Container $container,
         protected StoresEvents $events,
-    ) {
+    )
+    {
     }
 
-    public function apply(Event $event): void
+    public function register(Context $context): Context
     {
-        // Apply this event to all loaded snapshots, checking versions somehow,
-        // and throw an exception on version mismatches.
+        $this->contexts[$context::class][$context->id->id()] = $context;
+        
+        // FIXME: Check that there are no events already stored for this context, since it should be completely new
 
-        // We probably first need to pull new events from the event repository,
-        // which most likely happens by just calling get()
-
-        // Snapshots can have a `last_applied_event_id` that we can use to compare
-        // the timestamps. This should let us avoid an `aggregate_version`
+        return $context;
     }
 
-    public function get(string $class_name, Snowflake $id): Context
+    public function validate(Context $context, Event $event): void
     {
-        // First, load internal 'singleton' instance of snapshot
-        $context = $this->contexts[$class_name][(string) $id] ?? $this->container->make($class_name);
+        // FIXME
+    }
 
-        // Then, query database for events that happened since the most recent
-        // event that was applied to the snapshot, and apply those events
-        // in order
+    public function sync(Context $context): Context
+    {
+        $listeners = Reflector::getListeners($context);
+
+        $this->events->get(context_id: $context->id)
+            ->each(fn(Event $event) => $listeners
+                ->filter(fn(Listener $listener) => $listener->handles($event))
+                ->each(fn(Listener $listener) => $listener->apply($event, $context, $this->container)));
+
+        $this->register($context);
+        
+        return $context;
     }
 }
