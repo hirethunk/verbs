@@ -12,8 +12,10 @@ use Thunk\Verbs\Tests\Fixtures\Models\BankAccount;
 
 it('handles typical a banking implementation', function () {
 
+    // Register projector
     Bus::listen(new AccountProjector());
 
+    // Open account
     $aggregate = AccountAggregateRoot::load(Snowflake::make());
 
     $aggregate->open(10_000);
@@ -23,25 +25,23 @@ it('handles typical a banking implementation', function () {
     expect(BankAccount::count())->toBe(1)
         ->and($account->balance)->toBe(10_000);
 
+    // Initial deposit
     $aggregate->deposit(5_000);
 
     expect($account->refresh()->balance)->toBe(15_000);
 
-    $overdraft_failed = false;
-    try {
-        $aggregate->withdraw(100_000);
-    } catch (EventNotValidInContext) {
-        $overdraft_failed = true;
-    }
-
-    expect($overdraft_failed)->toBeTrue()
+    // Attempt overdraft
+    expect(fn() => $aggregate->withdraw(100_000))
+        ->toThrow(EventNotValidInContext::class)
         ->and($account->refresh()->balance)->toBe(15_000)
         ->and($account->overdraft_attempts)->toBe(1);
 
+    // Working withdrawal
     $aggregate->withdraw(15_000);
 
     expect($account->refresh()->balance)->toBe(0);
 
+    // Replay
     BankAccount::truncate();
     Broker::replay();
 

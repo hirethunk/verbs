@@ -11,6 +11,7 @@ use Thunk\Verbs\Tests\Fixtures\Models\BankAccount;
 
 it('handles typical a banking implementation', function () {
 
+    // Open account
     $event = AccountWasOpened::fire(10_000);
 
     $account = BankAccount::forContext($event->context_id);
@@ -18,25 +19,23 @@ it('handles typical a banking implementation', function () {
     expect(BankAccount::count())->toBe(1)
         ->and($account->balance)->toBe(10_000);
 
+    // Initial deposit
     $account->context()->fire(new FundsDeposited(5_000));
 
     expect($account->refresh()->balance)->toBe(15_000);
-
-    $overdraft_failed = false;
-    try {
-        $account->context()->fire(new FundsWithdrawn(100_000));
-    } catch (EventNotValidInContext) {
-        $overdraft_failed = true;
-    }
-
-    expect($overdraft_failed)->toBeTrue()
+    
+    // Attempt overdraft
+    expect(fn() => $account->context()->fire(new FundsWithdrawn(100_000)))
+        ->toThrow(EventNotValidInContext::class)
         ->and($account->refresh()->balance)->toBe(15_000)
         ->and($account->overdraft_attempts)->toBe(1);
 
+    // Working withdrawal
     $account->context()->fire(new FundsWithdrawn(15_000));
 
     expect($account->refresh()->balance)->toBe(0);
 
+    // Replay
     BankAccount::truncate();
     Broker::replay();
 
