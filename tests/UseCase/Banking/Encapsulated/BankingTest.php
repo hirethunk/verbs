@@ -23,9 +23,9 @@ it('handles typical a banking implementation', function () {
     $account->context()->fire(new FundsDeposited(5_000));
 
     expect($account->refresh()->balance)->toBe(15_000);
-    
+
     // Attempt overdraft
-    expect(fn() => $account->context()->fire(new FundsWithdrawn(100_000)))
+    expect(fn () => $account->context()->fire(new FundsWithdrawn(100_000)))
         ->toThrow(EventNotValidInContext::class)
         ->and($account->refresh()->balance)->toBe(15_000)
         ->and($account->overdraft_attempts)->toBe(1);

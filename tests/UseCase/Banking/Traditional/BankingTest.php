@@ -31,7 +31,7 @@ it('handles typical a banking implementation', function () {
     expect($account->refresh()->balance)->toBe(15_000);
 
     // Attempt overdraft
-    expect(fn() => $aggregate->withdraw(100_000))
+    expect(fn () => $aggregate->withdraw(100_000))
         ->toThrow(EventNotValidInContext::class)
         ->and($account->refresh()->balance)->toBe(15_000)
         ->and($account->overdraft_attempts)->toBe(1);
