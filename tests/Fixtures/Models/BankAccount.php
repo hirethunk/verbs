@@ -4,7 +4,7 @@ namespace Thunk\Verbs\Tests\Fixtures\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Thunk\Verbs\Snowflakes\Snowflake;
-use Thunk\Verbs\Tests\UseCase\Banking\AccountContext;
+use Thunk\Verbs\Tests\UseCase\Banking\Encapsulated\AccountContext;
 
 class BankAccount extends Model
 {
