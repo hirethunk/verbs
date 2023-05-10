@@ -19,13 +19,13 @@ abstract class Context
     public function __construct(public Snowflake $id)
     {
     }
-    
+
     public function fire(Event $event): static
     {
         (new PendingEvent($event::class))->withContext($this)->fire($event);
 
         Facades\Contexts::sync($this);
-        
+
         return $this;
     }
 }

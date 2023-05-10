@@ -14,7 +14,7 @@ it('handles typical a banking implementation', function () {
     $event = AccountWasOpened::fire(10_000);
 
     $account = BankAccount::forContext($event->context_id);
-    
+
     expect(BankAccount::count())->toBe(1)
         ->and($account->balance)->toBe(10_000);
 
@@ -71,8 +71,7 @@ class AccountWasOpened extends Event
 {
     public function __construct(
         public int $starting_balance
-    )
-    {
+    ) {
     }
 
     public function onFire()
@@ -88,8 +87,7 @@ class FundsDeposited extends Event
 {
     public function __construct(
         public int $amount
-    )
-    {
+    ) {
     }
 
     public function onFire()
@@ -102,8 +100,7 @@ class FundsWithdrawn extends Event
 {
     public function __construct(
         public int $amount
-    )
-    {
+    ) {
     }
 
     public function rules(): array

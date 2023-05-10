@@ -28,7 +28,7 @@ class EventRepositoryFake implements StoresEvents, Fake
     public function save(Event $event): SnowflakeInstance
     {
         $event->id = Snowflake::make();
-        
+
         $this->saved[] = $event;
 
         return $event->id;

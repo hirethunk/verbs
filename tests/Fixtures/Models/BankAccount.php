@@ -12,7 +12,7 @@ class BankAccount extends Model
     {
         return static::firstWhere(['context_id' => $context_id]);
     }
-    
+
     public function context(): AccountContext
     {
         return AccountContext::load($this->context_id);

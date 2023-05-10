@@ -2,7 +2,6 @@
 
 namespace Thunk\Verbs\Tests\UseCase\Banking\Traditional;
 
-use Thunk\Verbs\Attributes\CreatesContext;
 use Thunk\Verbs\Context;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\EventNotValidInContext;
@@ -14,16 +13,16 @@ use Thunk\Verbs\Tests\Fixtures\Models\BankAccount;
 it('handles typical a banking implementation', function () {
 
     Bus::listen(new AccountProjector());
-    
+
     $aggregate = AccountAggregateRoot::load(Snowflake::make());
-    
+
     $aggregate->open(10_000);
 
     $account = BankAccount::forContext($aggregate->id);
-    
+
     expect(BankAccount::count())->toBe(1)
         ->and($account->balance)->toBe(10_000);
-    
+
     $aggregate->deposit(5_000);
 
     expect($account->refresh()->balance)->toBe(15_000);
@@ -38,7 +37,7 @@ it('handles typical a banking implementation', function () {
     expect($overdraft_failed)->toBeTrue()
         ->and($account->refresh()->balance)->toBe(15_000)
         ->and($account->overdraft_attempts)->toBe(1);
-    
+
     $aggregate->withdraw(15_000);
 
     expect($account->refresh()->balance)->toBe(0);
@@ -55,7 +54,7 @@ it('handles typical a banking implementation', function () {
 class AccountAggregateRoot extends Context
 {
     public ?int $balance = null;
-    
+
     public function open(int $starting_balance)
     {
         $this->fire(new AccountWasOpened($starting_balance));
@@ -70,10 +69,10 @@ class AccountAggregateRoot extends Context
     {
         if ($this->balance < $amount) {
             $this->fire(new AttemptedOverdraft());
-            
+
             throw new EventNotValidInContext();
         }
-        
+
         $this->fire(new FundsWithdrawn($amount));
     }
 
@@ -102,7 +101,7 @@ class AccountProjector
             'balance' => $event->starting_balance,
         ]);
     }
-    
+
     public function onDeposit(FundsDeposited $event)
     {
         BankAccount::forContext($event->context_id)->increment('balance', $event->amount);
@@ -112,7 +111,7 @@ class AccountProjector
     {
         BankAccount::forContext($event->context_id)->decrement('balance', $event->amount);
     }
-    
+
     public function onOverdraft(AttemptedOverdraft $event)
     {
         BankAccount::forContext($event->context_id)->increment('overdraft_attempts');
@@ -123,8 +122,7 @@ class AccountWasOpened extends Event
 {
     public function __construct(
         public int $starting_balance
-    )
-    {
+    ) {
     }
 }
 
@@ -132,8 +130,7 @@ class FundsDeposited extends Event
 {
     public function __construct(
         public int $amount
-    )
-    {
+    ) {
     }
 }
 
@@ -141,8 +138,7 @@ class FundsWithdrawn extends Event
 {
     public function __construct(
         public int $amount
-    )
-    {
+    ) {
     }
 }
 
