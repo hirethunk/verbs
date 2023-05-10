@@ -31,6 +31,18 @@ class Factory
         return new Snowflake($timestamp, $this->datacenter_id, $this->worker_id, $sequence, $this->bits);
     }
 
+    public function makeFromTimestamp(CarbonInterface $timestamp): Snowflake
+    {
+        $timestamp = $this->diffFromEpoch($timestamp);
+        $sequence = $this->sequence->next($timestamp);
+
+        if ($sequence > $this->bits->maxSequence()) {
+            throw new InvalidArgumentException('Hit sequence limit for timestamp.');
+        }
+
+        return new Snowflake($timestamp, $this->datacenter_id, $this->worker_id, $sequence, $this->bits);
+    }
+
     public function makeFromTimestampForQuery(CarbonInterface $timestamp): Snowflake
     {
         return new Snowflake(
@@ -76,7 +88,7 @@ class Factory
 
     protected function diffFromEpoch(CarbonInterface $timestamp): int
     {
-        return round($timestamp->getPreciseTimestamp($this->precision) - $this->precise_epoch);
+        return (int) round($timestamp->getPreciseTimestamp($this->precision) - $this->precise_epoch);
     }
 
     protected function validateConfiguration(): void

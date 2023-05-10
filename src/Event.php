@@ -7,7 +7,7 @@ use Thunk\Verbs\Support\PendingEvent;
 
 /**
  * @method static PendingEvent withContext(Context ...$contexts)
- * @method static void fire(...$args)
+ * @method static Event fire(...$args)
  */
 abstract class Event
 {

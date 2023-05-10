@@ -19,17 +19,17 @@ class EventRepository implements StoresEvents
 
     public function save(Event $event): SnowflakeInstance
     {
-        $id = Snowflake::make();
+        $event->id = Snowflake::make();
 
         DB::table('verb_events')
             ->insert([
-                'id' => $id,
+                'id' => $event->id,
                 'context_id' => $event->context_id,
                 'event_type' => $event::class,
                 'event_data' => $this->serializer->serializeEvent($event),
             ]);
 
-        return $id;
+        return $event->id;
     }
 
     /** @return LazyCollection<int, \Thunk\Verbs\Event> */
