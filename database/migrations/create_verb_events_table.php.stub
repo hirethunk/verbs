@@ -8,10 +8,11 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::create('events', function (Blueprint $table) {
-            $table->string('id', 64)->primary();
+        Schema::create('verb_events', function (Blueprint $table) {
+            $table->bigInteger('id')->unsigned()->primary();
+            $table->bigInteger('context_id')->unsigned()->nullable()->index();
 
-            $table->string('event_type');
+            $table->string('event_type')->index();
             $table->json('event_data');
 
             $table->timestamps();
