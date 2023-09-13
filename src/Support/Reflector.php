@@ -8,7 +8,7 @@ use ReflectionClass;
 use ReflectionFunction;
 use ReflectionFunctionAbstract;
 use ReflectionMethod;
-use Thunk\Verbs\Attributes\CreatesContext;
+use Thunk\Verbs\Attributes\InitializesState;
 use Thunk\Verbs\Attributes\ListenerAttribute;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\Listener;
@@ -32,7 +32,7 @@ class Reflector extends \Illuminate\Support\Reflector
     public static function getContextForCreation(object $target): ?string
     {
         $reflect = new ReflectionClass($target);
-        $attributes = $reflect->getAttributes(CreatesContext::class);
+        $attributes = $reflect->getAttributes(InitializesState::class);
 
         if (! count($attributes)) {
             return null;
