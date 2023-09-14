@@ -2,6 +2,7 @@
 
 namespace Thunk\Verbs\Examples\Bank\Events;
 
+use Thunk\Verbs\Examples\Bank\Mail\WelcomeEmail;
 use Illuminate\Support\Facades\Mail;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Examples\Bank\Models\Account;
@@ -33,12 +34,12 @@ class AccountOpened extends Event
         Account::create([
             'id' => $this->account_state->id(),
             'user_id' => $this->user_id, // User::find($this->user_id)->getKey(),
-            'balance' => $this->initial_deposit_in_cents,
+            'balance_in_cents' => $this->initial_deposit_in_cents,
         ]);
     }
 
     public function onCommit()
     {
-        Mail::send('your-account-is-ready');
+        Mail::send(new WelcomeEmail($this->user_id));
     }
 }
