@@ -26,21 +26,21 @@ class Dispatcher
             }
         }
     }
-	
-	public function validate(Event $event, State $state): void
-	{
-		// FIXME
-		foreach ($this->getHooks($event) as $listener) {
-			$listener->validate($this->container, $event);
-		}
-	}
-	
-	public function apply(Event $event, State $state): void
-	{
-		foreach ($this->getAggregators($event, $state) as $listener) {
-			$listener->apply($this->container, $event, $state);
-		}
-	}
+
+    public function validate(Event $event, State $state): void
+    {
+        // FIXME
+        foreach ($this->getHooks($event) as $listener) {
+            $listener->validate($this->container, $event);
+        }
+    }
+
+    public function apply(Event $event, State $state): void
+    {
+        foreach ($this->getAggregators($event, $state) as $listener) {
+            $listener->apply($this->container, $event, $state);
+        }
+    }
 
     public function fire(Event $event): void
     {
@@ -48,7 +48,7 @@ class Dispatcher
             $listener->fire($this->container, $event);
         }
     }
-	
+
     public function replay(Event $event): void
     {
         foreach ($this->getHooks($event) as $listener) {
@@ -59,17 +59,17 @@ class Dispatcher
     /** @return \Thunk\Verbs\Lifecycle\Hook[] */
     protected function getHooks(Event $event): array
     {
-		// FIXME: We need to handle interfaces, too
-	    
+        // FIXME: We need to handle interfaces, too
+
         $listeners = $this->hooks[$event::class] ?? [];
-		
-		// FIXME: We can lazily auto-discover here
-		
+
+        // FIXME: We can lazily auto-discover here
+
         if (method_exists($event, 'onFire')) {
             $onFire = Hook::fromClassMethod($event, new ReflectionMethod($event, 'onFire'));
             array_unshift($listeners, $onFire);
         }
-		
+
         if (method_exists($event, 'onCommit')) {
             $onCommit = Hook::fromClassMethod($event, new ReflectionMethod($event, 'onCommit'));
             $onCommit->replayable = false;
@@ -78,22 +78,22 @@ class Dispatcher
 
         return $listeners;
     }
-	
-	/** @return \Thunk\Verbs\Lifecycle\Hook[] */
-	protected function getAggregators(Event $event, State $state): array
-	{
-		$listeners = $this->hooks[$event::class] ?? [];
-		
-		// FIXME: We need to filter listeners down to just those that apply this state
-		
-		collect(get_class_methods($event))
-			->filter(fn(string $name) => Str::startsWith($name, 'apply'))
-			->filter() // FIXME: We need to filter down to aggregators that handle this state
-			->each(function(string $name) use (&$listeners, $event, $state) {
-				$hook = Hook::fromClassMethod($event, new ReflectionMethod($event, $name));
-				array_unshift($listeners, $hook);
-			});
-		
-		return $listeners;
-	}
+
+    /** @return \Thunk\Verbs\Lifecycle\Hook[] */
+    protected function getAggregators(Event $event, State $state): array
+    {
+        $listeners = $this->hooks[$event::class] ?? [];
+
+        // FIXME: We need to filter listeners down to just those that apply this state
+
+        collect(get_class_methods($event))
+            ->filter(fn (string $name) => Str::startsWith($name, 'apply'))
+            ->filter() // FIXME: We need to filter down to aggregators that handle this state
+            ->each(function (string $name) use (&$listeners, $event) {
+                $hook = Hook::fromClassMethod($event, new ReflectionMethod($event, $name));
+                array_unshift($listeners, $hook);
+            });
+
+        return $listeners;
+    }
 }
