@@ -1,9 +1,9 @@
 <?php
 
-use Thunk\Verbs\Tests\TestCase;
-use Symfony\Component\Finder\Finder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Symfony\Component\Finder\Finder;
+use Thunk\Verbs\Tests\TestCase;
 
 Model::unguard();
 
