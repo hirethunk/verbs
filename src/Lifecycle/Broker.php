@@ -13,6 +13,8 @@ class Broker
 
         $states->each(fn($state) => Guards::for($event, $state)->check());
         $states->each(fn($state) => app(Dispatcher::class)->apply($event, $state));
+        
+        app(EventQueue::class)->queue($event);
 		
 		return $event;
     }
