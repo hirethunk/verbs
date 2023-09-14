@@ -26,7 +26,7 @@ class AccountOpened extends Event
 
     public function apply(AccountState $state)
     {
-        $this->account_state->balance_in_cents = $this->initial_deposit_in_cents;
+        $state->balance_in_cents = $this->initial_deposit_in_cents;
     }
 
     public function onFire()
