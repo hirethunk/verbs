@@ -2,9 +2,8 @@
 
 namespace Thunk\Verbs\Lifecycle;
 
-use Thunk\Verbs\Event;
-use Thunk\Verbs\VerbEvent;
 use Thunk\Verbs\Support\Reflector;
+use Thunk\Verbs\VerbEvent;
 
 class Store
 {

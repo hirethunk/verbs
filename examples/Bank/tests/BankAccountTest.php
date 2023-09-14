@@ -21,11 +21,11 @@ test('a bank account can be opened', function () {
 
     expect(
         VerbEvent::type(AccountOpened::class)->whereDataContains([
-                'initial_deposit_in_cents' => 1000_00,
-                'user_id' => User::first()->id,
-            ])
+            'initial_deposit_in_cents' => 1000_00,
+            'user_id' => User::first()->id,
+        ])
     )->not->toBeNull();
-    
+
     expect(Account::count())->toBe(1);
     expect(Account::first()->balance_in_cents)->toBe(1000_00);
 
