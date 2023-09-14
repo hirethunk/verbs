@@ -5,7 +5,7 @@ namespace Thunk\Verbs\Lifecycle;
 use Thunk\Verbs\Support\Reflector;
 use Thunk\Verbs\VerbEvent;
 
-class Store
+class EventStore
 {
     public function write(array $events)
     {

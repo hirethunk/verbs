@@ -17,7 +17,7 @@ class Queue
     {
         $events = $this->event_queue;
 
-        if (! app(Store::class)->write($events)) {
+        if (! app(EventStore::class)->write($events)) {
             throw new \Exception('Failed to write events to store.');
         }
 

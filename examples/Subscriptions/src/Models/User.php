@@ -7,6 +7,8 @@ use Illuminate\Auth\Authenticatable as AuthenticatableTrait;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Thunk\Verbs\Examples\Subscriptions\Events\SubscriptionCancelled;
+use Thunk\Verbs\Examples\Subscriptions\Events\SubscriptionStarted;
 use Thunk\Verbs\FromState;
 
 class User extends Model implements AuthenticatableContract
@@ -15,13 +17,25 @@ class User extends Model implements AuthenticatableContract
 
     protected $guarded = [];
 
-    public function subscribe()
+    public function subscribe(Plan $plan)
     {
-        UserSubscribed::fire($this);
+        SubscriptionStarted::fire($this->id, $plan->id);
     }
 
-    public function unsubscribe()
+    public function activeSubscription(Plan $plan): ?Subscription
     {
-        UserUnsubscribed::fire($this);
+        return $this->active_subscriptions()->firstWhere([
+            'plan_id' => $plan->id,
+        ]);
+    }
+
+    public function subscriptions()
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
+    public function active_subscriptions()
+    {
+        return $this->subscriptions()->where('is_active', true);
     }
 }

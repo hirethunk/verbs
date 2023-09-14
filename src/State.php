@@ -4,10 +4,23 @@ namespace Thunk\Verbs;
 
 use Glhd\Bits\Snowflake;
 use Illuminate\Contracts\Support\Arrayable;
+use Thunk\Verbs\Lifecycle\StateStore;
 
 abstract class State implements Arrayable
 {
-    protected int|string|null $id;
+    public int|string|null $id;
+
+    public static function hydrate(int|string $id, array $data): static
+    {
+        $state = new static();
+        $state->id = $id;
+
+        foreach ($data as $key => $value) {
+            $state->{$key} = $value;
+        }
+
+        return $state;
+    }
 
     public static function initialize(): static
     {
@@ -20,31 +33,27 @@ abstract class State implements Arrayable
             ? $from->getVerbsStateKey()
             : $from;
 
-        static::loadByKey($key);
+        return static::loadByKey($key);
     }
 
     public static function loadByKey($from): static
     {
-        // FIXME
+        return app(StateStore::class)->load($from, static::class);
     }
 
     public static function singleton(): static
     {
-        // FIXME
+        // FIXME: don't use "0"
+        return app(StateStore::class)->load(0, static::class);
     }
 
     public function id(): int|string
     {
-        return $this->id ??= Snowflake::make()->id();
+        return $this->id;
     }
 
     public function toArray(): array
     {
         return get_object_vars($this);
-    }
-
-    public function toValidationArray(): array
-    {
-        return $this->toArray();
     }
 }

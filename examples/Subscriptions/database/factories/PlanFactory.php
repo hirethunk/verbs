@@ -5,7 +5,7 @@ namespace Thunk\Verbs\Examples\Subscriptions\Database\Factories;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Thunk\Verbs\Examples\Subscriptions\Models\Plan;
 
-class UserFactory extends Factory
+class PlanFactory extends Factory
 {
     protected $model = Plan::class;
 

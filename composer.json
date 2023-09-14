@@ -48,7 +48,11 @@
 
             "Thunk\\Verbs\\Examples\\Bank\\": "examples/bank/src/",
             "Thunk\\Verbs\\Examples\\Bank\\Tests\\": "examples/bank/tests/",
-            "Thunk\\Verbs\\Examples\\Bank\\Database\\Factories\\": "examples/bank/database/factories/"
+            "Thunk\\Verbs\\Examples\\Bank\\Database\\Factories\\": "examples/bank/database/factories/",
+
+            "Thunk\\Verbs\\Examples\\Subscriptions\\": "examples/subscriptions/src/",
+            "Thunk\\Verbs\\Examples\\Subscriptions\\Tests\\": "examples/subscriptions/tests/",
+            "Thunk\\Verbs\\Examples\\Subscriptions\\Database\\Factories\\": "examples/subscriptions/database/factories/"
         }
     },
     "scripts": {

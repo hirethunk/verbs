@@ -39,7 +39,7 @@ class SubscriptionStarted extends Event
     public function onFire()
     {
         Subscription::create([
-            'id' => $this->subscription_state->id(),
+            'id' => $this->subscription_state->id,
             'user_id' => $this->user_id,
         ]);
     }

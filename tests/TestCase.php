@@ -47,7 +47,10 @@ class TestCase extends Orchestra
             'prefix' => '',
         ]);
 
-        $migration = include __DIR__.'/../database/migrations/create_verb_events_table.php.stub';
-        $migration->up();
+        $events = include __DIR__.'/../database/migrations/create_verb_events_table.php.stub';
+        $events->up();
+
+        $snapshots = include __DIR__.'/../database/migrations/create_verb_snapshots_table.php.stub';
+        $snapshots->up();
     }
 }

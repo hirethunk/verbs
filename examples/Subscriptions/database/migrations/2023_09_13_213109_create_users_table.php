@@ -6,13 +6,14 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up()
+    public function up(): void
     {
-        Schema::create('verb_events', function (Blueprint $table) {
-            $table->bigInteger('id')->unsigned()->primary();
+        Schema::create('users', function (Blueprint $table) {
+            $table->id();
 
-            $table->string('type')->index();
-            $table->json('data');
+            $table->string('name');
+            $table->string('email');
+            $table->string('password');
 
             $table->timestamps();
         });

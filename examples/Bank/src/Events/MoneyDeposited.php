@@ -25,7 +25,7 @@ class MoneyDeposited
 
     public function onFire()
     {
-        Account::find($this->account_state->id())
+        Account::find($this->account_state->id)
             ->update([
                 'balance' => $this->account_state->balance_in_cents,
             ]);

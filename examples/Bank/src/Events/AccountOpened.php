@@ -32,7 +32,7 @@ class AccountOpened extends Event
     public function onFire()
     {
         Account::create([
-            'id' => $this->account_state->id(),
+            'id' => $this->account_state->id,
             'user_id' => $this->user_id, // User::find($this->user_id)->getKey(),
             'balance_in_cents' => $this->initial_deposit_in_cents,
         ]);

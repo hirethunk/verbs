@@ -4,9 +4,9 @@ namespace Thunk\Verbs;
 
 use Illuminate\Database\Eloquent\Model;
 
-class VerbEvent extends Model
+class VerbSnapshot extends Model
 {
-    public $table = 'verb_events';
+    public $table = 'verb_snapshots';
 
     public $guarded = [];
 
