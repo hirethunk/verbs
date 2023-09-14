@@ -1,5 +1,6 @@
 <?php
 
+use InterNACHI\Modular\Support\ModuleRegistry;
 use Thunk\Verbs\Examples\Bank\Models\Account;
 use Thunk\Verbs\Examples\Bank\Models\User;
 

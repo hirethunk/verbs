@@ -1,0 +1,15 @@
+{
+    "name": "examples/bank",
+    "description": "",
+    "type": "library",
+    "version": "1.0",
+    "license": "proprietary",
+    "require": {},
+    "autoload": {
+        "psr-4": {
+            "Thunk\\Verbs\\Examples\\Bank\\": "src/",
+            "Thunk\\Verbs\\Examples\\Bank\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "stable"
+}
