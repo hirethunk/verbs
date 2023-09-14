@@ -47,7 +47,8 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Thunk\\Verbs\\Tests\\": "tests/"
+            "Thunk\\Verbs\\Tests\\": "tests/",
+            "Thunk\\Verbs\\Examples\\": "examples/"
         }
     },
     "scripts": {
