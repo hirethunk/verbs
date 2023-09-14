@@ -54,7 +54,7 @@ class Hook
 	
 	public function handle(Container $container, Event $event, ?State $state): void
 	{
-		// FIXME: This maybe replaces the apply method
+		// FIXME: This maybe replaces the apply method, but probably not.
 		
 		$container->call($this->callback, $this->guessParameters($event, $state));
 	}
