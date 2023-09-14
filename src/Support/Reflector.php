@@ -18,20 +18,20 @@ class Reflector extends BaseReflector
 {
 	/** @return Collection<int, Hook> */
 	public static function getHooks(object $target): Collection
-	{
-		if ($target instanceof Closure) {
+    {
+        if ($target instanceof Closure) {
 			return collect([Hook::fromClosure($target)]);
-		}
-		
-		$reflect = new ReflectionClass($target);
-		
-		return collect($reflect->getMethods(ReflectionMethod::IS_PUBLIC))
-			->filter(fn(ReflectionMethod $method) => $method->getNumberOfParameters() > 0)
+        }
+
+        $reflect = new ReflectionClass($target);
+
+        return collect($reflect->getMethods(ReflectionMethod::IS_PUBLIC))
+            ->filter(fn (ReflectionMethod $method) => $method->getNumberOfParameters() > 0)
 			->map(fn(ReflectionMethod $method) => Hook::fromClassMethod($target, $method));
-	}
-	
-	public static function getEventParameters(ReflectionFunctionAbstract|Closure $method): array
-	{
+    }
+
+    public static function getEventParameters(ReflectionFunctionAbstract|Closure $method): array
+    {
 		return static::getParametersOfType(Event::class, $method);
 	}
 	
@@ -56,24 +56,24 @@ class Reflector extends BaseReflector
 	
 	public static function getParametersOfType(string $type, ReflectionFunctionAbstract|Closure $method): array
 	{
-		$method = static::reflectFunction($method);
-		
-		if (empty($parameters = $method->getParameters())) {
-			return [];
-		}
-		
-		return array_filter(
+        $method = static::reflectFunction($method);
+
+        if (empty($parameters = $method->getParameters())) {
+            return [];
+        }
+
+        return array_filter(
 			array: static::getParameterClassNames($parameters[0]),
 			callback: fn(string $class_name) => is_a($class_name, $type, true)
-		);
+        );
 	}
-	
-	protected static function reflectFunction(ReflectionFunctionAbstract|Closure $function): ReflectionFunctionAbstract
-	{
-		if ($function instanceof Closure) {
-			return new ReflectionFunction($function);
-		}
-		
-		return $function;
-	}
+
+    protected static function reflectFunction(ReflectionFunctionAbstract|Closure $function): ReflectionFunctionAbstract
+    {
+        if ($function instanceof Closure) {
+            return new ReflectionFunction($function);
+        }
+
+        return $function;
+    }
 }
