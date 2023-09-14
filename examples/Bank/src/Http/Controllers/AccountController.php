@@ -14,7 +14,7 @@ class AccountController
     {
         AccountOpened::fire(
             Auth::id(),
-            $request->integer('initial_balance_in_cents')
+            $request->integer('initial_deposit_in_cents')
         );
     }
 
