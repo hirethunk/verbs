@@ -12,7 +12,7 @@ class Broker
         $states = $this->enumerateStates($event);
 
         $states->each(fn($state) => Guards::for($event, $state)->check());
-        $states->each(fn($state) => app(Dispatcher::class)->apply($event, $state));
+        $states->each(fn ($state) => app(Dispatcher::class)->apply($event, $state));
         
         app(EventQueue::class)->queue($event);
 		
@@ -22,6 +22,6 @@ class Broker
     public function enumerateStates(Event $event)
     {
         return Reflector::getPublicStateProperties($event)
-            ->map(fn($_, $property_name) => $event->{$property_name});
+            ->map(fn ($_, $property_name) => $event->{$property_name});
     }
 }

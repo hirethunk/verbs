@@ -8,12 +8,9 @@ use Illuminate\Support\Reflector as BaseReflector;
 use ReflectionClass;
 use ReflectionFunction;
 use ReflectionFunctionAbstract;
-use ReflectionIntersectionType;
 use ReflectionMethod;
 use ReflectionNamedType;
 use ReflectionProperty;
-use ReflectionType;
-use ReflectionUnionType;
 use Thunk\Verbs\Attributes\Hooks\HookAttribute;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\Hook;
@@ -61,7 +58,6 @@ class Reflector extends BaseReflector
     {
         return static::getParametersOfType(State::class, $method);
     }
-    
 
     public static function applyAttributes(ReflectionFunctionAbstract|Closure $method, Hook $hook): Hook
     {

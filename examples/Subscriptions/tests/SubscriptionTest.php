@@ -19,4 +19,3 @@ test('a user can subscribe to multiple plans and unsubscribe', function () {
 
     expect($daniel->subscriptions)->not->toContain($silly_plan);
 });
-
