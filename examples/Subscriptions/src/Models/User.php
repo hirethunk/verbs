@@ -7,7 +7,6 @@ use Illuminate\Auth\Authenticatable as AuthenticatableTrait;
 use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Thunk\Verbs\Examples\Subscriptions\Events\SubscriptionCancelled;
 use Thunk\Verbs\Examples\Subscriptions\Events\SubscriptionStarted;
 use Thunk\Verbs\FromState;
 

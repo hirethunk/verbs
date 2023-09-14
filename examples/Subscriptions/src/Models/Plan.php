@@ -9,8 +9,8 @@ use Thunk\Verbs\FromState;
 
 class Plan extends Model
 {
-    use HasFactory;
     use FromState;
+    use HasFactory;
 
     public function generateReport()
     {
