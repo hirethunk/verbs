@@ -3,9 +3,9 @@
 namespace Thunk\Verbs\Examples\Bank\Events;
 
 use Illuminate\Support\Facades\Mail;
+use Thunk\Verbs\Event;
 use Thunk\Verbs\Examples\Bank\Models\Account;
 use Thunk\Verbs\Examples\Bank\States\AccountState;
-use Thunk\Verbs\Event;
 
 class AccountOpened extends Event
 {

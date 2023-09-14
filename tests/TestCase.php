@@ -2,11 +2,11 @@
 
 namespace Thunk\Verbs\Tests;
 
-use Thunk\Verbs\VerbsServiceProvider;
 use Glhd\Bits\Support\BitsServiceProvider;
-use Orchestra\Testbench\TestCase as Orchestra;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use InterNACHI\Modular\Support\ModularServiceProvider;
+use Orchestra\Testbench\TestCase as Orchestra;
+use Thunk\Verbs\VerbsServiceProvider;
 
 class TestCase extends Orchestra
 {
