@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Database\Eloquent\Model;
+use InterNACHI\Modular\Support\AutoDiscoveryHelper;
 use InterNACHI\Modular\Support\ModuleRegistry;
 use Symfony\Component\Finder\Finder;
 use Thunk\Verbs\Tests\TestCase;
@@ -13,11 +14,4 @@ $examples = collect(Finder::create()->directories()->in(__DIR__.'/../examples/')
     ->all();
 
 uses(TestCase::class)
-	->beforeEach(function() {
-		$registry = app(ModuleRegistry::class);
-		$reflection = new \ReflectionClass($registry);
-		$property = $reflection->getProperty('modules_path');
-		$property->setAccessible(true);
-		$property->setValue($registry, realpath(__DIR__.'/../examples'));
-	})
 	->in(__DIR__, ...$examples);

@@ -2,6 +2,7 @@
 
 namespace Thunk\Verbs;
 
+use InterNACHI\Modular\Support\ModuleRegistry;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 
@@ -18,6 +19,11 @@ class VerbsServiceProvider extends PackageServiceProvider
 
     public function packageRegistered()
     {
-
+	    $this->app->singleton(ModuleRegistry::class, function() {
+		    return new ModuleRegistry(
+			    realpath(__DIR__.'/../examples'),
+			    $this->app->bootstrapPath('cache/modules.php')
+		    );
+	    });
     }
 }

@@ -21,8 +21,8 @@ class TestCase extends Orchestra
     protected function getPackageProviders($app)
     {
         return [
+	        ModularServiceProvider::class, // This must register first
             VerbsServiceProvider::class,
-	        ModularServiceProvider::class,
         ];
     }
 
