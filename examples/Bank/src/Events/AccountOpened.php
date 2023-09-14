@@ -2,9 +2,9 @@
 
 namespace Thunk\Verbs\Examples\Bank\Events;
 
-use Thunk\Verbs\Examples\Bank\Mail\WelcomeEmail;
 use Illuminate\Support\Facades\Mail;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Examples\Bank\Mail\WelcomeEmail;
 use Thunk\Verbs\Examples\Bank\Models\Account;
 use Thunk\Verbs\Examples\Bank\States\AccountState;
 

@@ -9,11 +9,12 @@ use Thunk\Verbs\Examples\Bank\Models\User;
 class WelcomeEmail extends Mailable
 {
     use SerializesModels;
-    
+
     public function __construct(
         public int $user_id
-    ) { }
-    
+    ) {
+    }
+
     public function build()
     {
         return $this->to(User::find($this->user_id))
