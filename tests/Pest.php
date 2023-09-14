@@ -1,8 +1,6 @@
 <?php
 
 use Illuminate\Database\Eloquent\Model;
-use InterNACHI\Modular\Support\AutoDiscoveryHelper;
-use InterNACHI\Modular\Support\ModuleRegistry;
 use Symfony\Component\Finder\Finder;
 use Thunk\Verbs\Tests\TestCase;
 
@@ -14,4 +12,4 @@ $examples = collect(Finder::create()->directories()->in(__DIR__.'/../examples/')
     ->all();
 
 uses(TestCase::class)
-	->in(__DIR__, ...$examples);
+    ->in(__DIR__, ...$examples);
