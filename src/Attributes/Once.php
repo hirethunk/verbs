@@ -3,13 +3,13 @@
 namespace Thunk\Verbs\Attributes;
 
 use Attribute;
-use Thunk\Verbs\Lifecycle\Listener;
+use Thunk\Verbs\Lifecycle\Hook;
 
 #[Attribute(Attribute::TARGET_METHOD)]
-class Once implements ListenerAttribute
+class Once implements HookAttribute
 {
-    public function applyToListener(Listener $listener): void
+    public function applyToHook(Hook $hook): void
     {
-        $listener->replayable = false;
+        $hook->replayable = false;
     }
 }

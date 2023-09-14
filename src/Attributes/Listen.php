@@ -3,18 +3,23 @@
 namespace Thunk\Verbs\Attributes;
 
 use Attribute;
-use Thunk\Verbs\Lifecycle\Listener;
+use InvalidArgumentException;
+use Thunk\Verbs\Event;
+use Thunk\Verbs\Lifecycle\Hook;
 
 #[Attribute(Attribute::TARGET_METHOD)]
-class Listen implements ListenerAttribute
+class Listen implements HookAttribute
 {
-    public function __construct(
-        protected string $event_type
-    ) {
-    }
-
-    public function applyToListener(Listener $listener): void
-    {
-        $listener->events[] = $this->event_type;
-    }
+	public function __construct(
+		protected string $event_type
+	) {
+		if (! is_a($this->event_type, Event::class, true)) {
+			throw new InvalidArgumentException('You must pass event class names to the "Listen" attribute.');
+		}
+	}
+	
+	public function applyToHook(Hook $hook): void
+	{
+		$hook->events[] = $this->event_type;
+	}
 }
