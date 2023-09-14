@@ -1,7 +1,7 @@
 <?php
 
-use Thunk\Verbs\Examples\Bank\Models\User;
 use Thunk\Verbs\Examples\Bank\Models\Account;
+use Thunk\Verbs\Examples\Bank\Models\User;
 
 test('a bank account can be opened', function () {
     $this->actingAs(User::factory()->create())
