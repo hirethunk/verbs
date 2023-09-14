@@ -1,8 +1,9 @@
 <?php
 
-use Illuminate\Database\Eloquent\Model;
-use Symfony\Component\Finder\Finder;
 use Thunk\Verbs\Tests\TestCase;
+use Symfony\Component\Finder\Finder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 Model::unguard();
 
@@ -11,5 +12,5 @@ $examples = collect(Finder::create()->directories()->in(__DIR__.'/../examples/')
     ->values()
     ->all();
 
-uses(TestCase::class)
+uses(TestCase::class, RefreshDatabase::class)
     ->in(__DIR__, ...$examples);

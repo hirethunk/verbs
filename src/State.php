@@ -10,7 +10,7 @@ abstract class State
 
     public static function initialize(): static
     {
-        // FIXME
+        return new static();
     }
 
     public static function load($from): static

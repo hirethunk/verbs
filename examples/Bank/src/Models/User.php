@@ -2,12 +2,16 @@
 
 namespace Thunk\Verbs\Examples\Bank\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Glhd\Bits\Database\HasSnowflakes;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Auth\Authenticatable as AuthenticatableTrait;
+use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
+use Thunk\Verbs\FromState;
 
-class User extends Model
+class User extends Model implements AuthenticatableContract
 {
-    use HasFactory;
+    use AuthenticatableTrait, HasFactory, HasSnowflakes;
 
     protected $guarded = [];
 }
