@@ -5,7 +5,7 @@
       <directory>tests</directory>
     </testsuite>
     <testsuite name="Examples Test Suite">
-      <directory>examples/bank/tests</directory>
+      <directory>examples/*/tests</directory>
     </testsuite>
   </testsuites>
   <coverage>
