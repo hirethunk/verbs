@@ -45,11 +45,11 @@ class Hook
         public ?string $name = null,
     ) {
     }
-	
-	public function validate(Container $container, Event $event, State $state): bool
-	{
-		return $container->call($this->callback, $this->guessParameters($event, $state));
-	}
+
+    public function validate(Container $container, Event $event, State $state): bool
+    {
+        return $container->call($this->callback, $this->guessParameters($event, $state));
+    }
 
     public function fire(Container $container, Event $event, State $state = null): void
     {
@@ -80,18 +80,18 @@ class Hook
             (string) Str::of($event::class)->classBasename()->snake() => $event,
             (string) Str::of($event::class)->classBasename()->studly() => $event,
         ];
-		
-		if ($state) {
-			$parameters = [
-				...$parameters,
-				's' => $state,
-				'state' => $state,
-				$state::class => $state,
-				(string) Str::of($state::class)->classBasename()->snake() => $state,
-				(string) Str::of($state::class)->classBasename()->studly() => $state,
-			];
-		}
-		
-		return $parameters;
+
+        if ($state) {
+            $parameters = [
+                ...$parameters,
+                's' => $state,
+                'state' => $state,
+                $state::class => $state,
+                (string) Str::of($state::class)->classBasename()->snake() => $state,
+                (string) Str::of($state::class)->classBasename()->studly() => $state,
+            ];
+        }
+
+        return $parameters;
     }
 }

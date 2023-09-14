@@ -11,12 +11,12 @@ class Broker
     {
         $states = $this->enumerateStates($event);
 
-        $states->each(fn($state) => Guards::for($event, $state)->check());
+        $states->each(fn ($state) => Guards::for($event, $state)->check());
         $states->each(fn ($state) => app(Dispatcher::class)->apply($event, $state));
-        
+
         app(EventQueue::class)->queue($event);
-		
-		return $event;
+
+        return $event;
     }
 
     public function enumerateStates(Event $event)

@@ -68,6 +68,6 @@ class Guards
     protected function passesValidation(): bool
     {
         return app(Dispatcher::class)
-	        ->validate($this->event, $this->state);
+            ->validate($this->event, $this->state);
     }
 }
