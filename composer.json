@@ -48,7 +48,10 @@
     "autoload-dev": {
         "psr-4": {
             "Thunk\\Verbs\\Tests\\": "tests/",
-            "Thunk\\Verbs\\Examples\\": "examples/"
+
+            "Thunk\\Verbs\\Examples\\Bank\\": "examples/bank/src/",
+            "Thunk\\Verbs\\Examples\\Bank\\Tests\\": "examples/bank/tests/",
+            "Thunk\\Verbs\\Examples\\Bank\\Database\\Factories\\": "examples/bank/database/factories/"
         }
     },
     "scripts": {
