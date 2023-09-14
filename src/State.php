@@ -37,14 +37,14 @@ abstract class State implements Arrayable
     {
         return $this->id ??= Snowflake::make()->id();
     }
-	
-	public function toArray(): array
-	{
-		return get_object_vars($this);
-	}
-	
-	public function toValidationArray(): array
-	{
-		return $this->toArray();
-	}
+
+    public function toArray(): array
+    {
+        return get_object_vars($this);
+    }
+
+    public function toValidationArray(): array
+    {
+        return $this->toArray();
+    }
 }
