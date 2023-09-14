@@ -2,11 +2,11 @@
 
 namespace Thunk\Verbs;
 
-use Thunk\Verbs\Lifecycle\Queue as EventQueue;
-use Spatie\LaravelPackageTools\Package;
 use InterNACHI\Modular\Support\ModuleRegistry;
+use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Thunk\Verbs\Lifecycle\Broker;
+use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 
 class VerbsServiceProvider extends PackageServiceProvider
 {
@@ -43,5 +43,4 @@ class VerbsServiceProvider extends PackageServiceProvider
             app(Broker::class)->fireQueuedEvents();
         });
     }
-
 }
