@@ -13,11 +13,11 @@ $examples = collect(Finder::create()->directories()->in(__DIR__.'/../examples/')
     ->all();
 
 uses(TestCase::class)
-	->beforeEach(function() {
-		$registry = app(ModuleRegistry::class);
-		$reflection = new \ReflectionClass($registry);
-		$property = $reflection->getProperty('modules_path');
-		$property->setAccessible(true);
-		$property->setValue($registry, realpath(__DIR__.'/../examples'));
-	})
-	->in(__DIR__, ...$examples);
+    ->beforeEach(function () {
+        $registry = app(ModuleRegistry::class);
+        $reflection = new \ReflectionClass($registry);
+        $property = $reflection->getProperty('modules_path');
+        $property->setAccessible(true);
+        $property->setValue($registry, realpath(__DIR__.'/../examples'));
+    })
+    ->in(__DIR__, ...$examples);

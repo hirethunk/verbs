@@ -22,7 +22,7 @@ class TestCase extends Orchestra
     {
         return [
             VerbsServiceProvider::class,
-	        ModularServiceProvider::class,
+            ModularServiceProvider::class,
         ];
     }
 
