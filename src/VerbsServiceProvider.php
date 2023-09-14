@@ -18,6 +18,6 @@ class VerbsServiceProvider extends PackageServiceProvider
 
     public function packageRegistered()
     {
-       
+
     }
 }

@@ -17,12 +17,12 @@ class AccountController
             $request->integer('initial_balance_in_cents')
         );
     }
-	
-	public function deposit(Request $request, Account $account)
-	{
-		MoneyDeposited::fire(
-			$account->id,
-			$request->integer('deposit_in_cents')
-		);
-	}
+
+    public function deposit(Request $request, Account $account)
+    {
+        MoneyDeposited::fire(
+            $account->id,
+            $request->integer('deposit_in_cents')
+        );
+    }
 }

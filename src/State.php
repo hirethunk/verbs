@@ -6,19 +6,19 @@ use Glhd\Bits\Snowflake;
 
 abstract class State
 {
-	protected int|string|null $id;
-	
+    protected int|string|null $id;
+
     public static function initialize(): static
     {
         // FIXME
     }
-    
+
     public static function load($from): static
     {
-        $key = is_object($from) && method_exists($from, 'getVerbsStateKey') 
+        $key = is_object($from) && method_exists($from, 'getVerbsStateKey')
             ? $from->getVerbsStateKey()
             : $from;
-        
+
         static::loadByKey($key);
     }
 
@@ -26,9 +26,9 @@ abstract class State
     {
         // FIXME
     }
-	
-	public function id(): int|string
-	{
-		return $this->id ??= Snowflake::make()->id();
-	}
+
+    public function id(): int|string
+    {
+        return $this->id ??= Snowflake::make()->id();
+    }
 }
