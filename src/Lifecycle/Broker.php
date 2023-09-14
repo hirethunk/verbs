@@ -11,13 +11,13 @@ class Broker
     {
         $states = $this->enumerateStates($event);
 
-        $states->each(fn($state) => app(Dispatcher::class)->validate($event, $state));
-        $states->each(fn($state) => app(Dispatcher::class)->apply($event, $state));
+        $states->each(fn ($state) => app(Dispatcher::class)->validate($event, $state));
+        $states->each(fn ($state) => app(Dispatcher::class)->apply($event, $state));
     }
 
     public function enumerateStates(Event $event)
     {
         return Reflector::getPublicStateProperties($event)
-            ->map(fn($_, $property_name) => $event->{$property_name});
+            ->map(fn ($_, $property_name) => $event->{$property_name});
     }
 }
