@@ -13,9 +13,14 @@ class TestCase extends Orchestra
     {
         parent::setUp();
 
-        // Factory::guessFactoryNamesUsing(
-        //     fn (string $modelName) => 'Thunk\\Verbs\\Database\\Factories\\'.class_basename($modelName).'Factory'
-        // );
+        Factory::guessFactoryNamesUsing(
+            function(string $modelName) {
+	            return str($modelName)
+		            ->replace('\\Models\\', '\\Database\\Factories\\')
+		            ->append('Factory')
+		            ->toString();
+            }
+        );
     }
 
     protected function getPackageProviders($app)
