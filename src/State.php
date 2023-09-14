@@ -3,8 +3,9 @@
 namespace Thunk\Verbs;
 
 use Glhd\Bits\Snowflake;
+use Illuminate\Contracts\Support\Arrayable;
 
-abstract class State
+abstract class State implements Arrayable
 {
     protected int|string|null $id;
 
@@ -36,4 +37,14 @@ abstract class State
     {
         return $this->id ??= Snowflake::make()->id();
     }
+	
+	public function toArray(): array
+	{
+		return get_object_vars($this);
+	}
+	
+	public function toValidationArray(): array
+	{
+		return $this->toArray();
+	}
 }
