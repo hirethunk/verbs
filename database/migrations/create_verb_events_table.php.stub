@@ -10,7 +10,6 @@ return new class extends Migration
     {
         Schema::create('verb_events', function (Blueprint $table) {
             $table->bigInteger('id')->unsigned()->primary();
-            $table->bigInteger('state_id')->unsigned()->nullable()->index();
 
             $table->string('event_type')->index();
             $table->json('event_data');

@@ -49,6 +49,23 @@ class Reflector extends BaseReflector
             ]);
     }
 
+    public static function getNonStatePublicPropertiesAndValues(Event $event)
+    {
+        $properties = get_object_vars($event);
+        $reflect = new ReflectionClass($event);
+
+        return collect($reflect->getProperties(ReflectionMethod::IS_PUBLIC))
+            ->filter(function (ReflectionProperty $prop) {
+                $type = $prop->getType();
+
+                return $type instanceof ReflectionNamedType &&
+                    ! is_a($type->getName(), State::class, true);
+            })
+            ->mapWithKeys(fn (ReflectionProperty $prop) => [
+                $prop->getName() => $properties[$prop->getName()] ?? null,
+            ]);
+    }
+
     public static function getEventParameters(ReflectionFunctionAbstract|Closure $method): array
     {
         return static::getParametersOfType(Event::class, $method);
