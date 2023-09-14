@@ -5,6 +5,7 @@ use Thunk\Verbs\Examples\Bank\Models\User;
 
 test('a bank account can be opened', function () {
     $this->actingAs(User::factory()->create())
+        ->withoutExceptionHandling()
         ->post(
             route('bank.accounts.store'),
             [

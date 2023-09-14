@@ -2,10 +2,14 @@
 
 namespace Thunk\Verbs;
 
+use Thunk\Verbs\Lifecycle\Broker;
+
 abstract class Event
 {
     public static function fire(...$args): static
     {
-        return new static(...$args);
+        $event = new static(...$args);
+
+        return app(Broker::class)->fire($event);
     }
 }

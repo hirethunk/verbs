@@ -8,7 +8,12 @@ use Illuminate\Support\Reflector as BaseReflector;
 use ReflectionClass;
 use ReflectionFunction;
 use ReflectionFunctionAbstract;
+use ReflectionIntersectionType;
 use ReflectionMethod;
+use ReflectionNamedType;
+use ReflectionProperty;
+use ReflectionType;
+use ReflectionUnionType;
 use Thunk\Verbs\Attributes\Hooks\HookAttribute;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\Hook;
@@ -30,6 +35,23 @@ class Reflector extends BaseReflector
             ->map(fn (ReflectionMethod $method) => Hook::fromClassMethod($target, $method));
     }
 
+    public static function getPublicStateProperties(Event $event)
+    {
+        $reflect = new ReflectionClass($event);
+
+        return collect($reflect->getProperties(ReflectionMethod::IS_PUBLIC))
+            ->filter(function (ReflectionProperty $prop) {
+                $type = $prop->getType();
+
+                return $type instanceof ReflectionNamedType
+                    && ! $type->isBuiltin()
+                    && is_a($type->getName(), State::class, true);
+            })
+            ->mapWithKeys(fn (ReflectionProperty $prop) => [
+                $prop->getName() => $prop->getType()->getName(),
+            ]);
+    }
+
     public static function getEventParameters(ReflectionFunctionAbstract|Closure $method): array
     {
         return static::getParametersOfType(Event::class, $method);
@@ -39,6 +61,7 @@ class Reflector extends BaseReflector
     {
         return static::getParametersOfType(State::class, $method);
     }
+    
 
     public static function applyAttributes(ReflectionFunctionAbstract|Closure $method, Hook $hook): Hook
     {
