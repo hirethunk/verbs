@@ -40,9 +40,16 @@ class Hook
         public array $events = [],
         public array $states = [],
         public bool $replayable = true,
+        public bool $validates_state = false,
+        public bool $aggregates_state = false,
         public ?string $name = null,
     ) {
     }
+	
+	public function validate(Container $container, Event $event, State $state): bool
+	{
+		return $container->call($this->callback, $this->guessParameters($event, $state));
+	}
 
     public function fire(Container $container, Event $event, State $state = null): void
     {
@@ -66,26 +73,25 @@ class Hook
 
     protected function guessParameters(Event $event, ?State $state): array
     {
-        return [
-            // Daniel is a monster
+        $parameters = [
             'e' => $event,
-            's' => $state,
-
-            // Basic name
             'event' => $event,
-            'state' => $state,
-
-            // Typehint
             $event::class => $event,
-            $state::class => $state,
-
-            // Snake-case name (i.e. MoneyAdded -> $money_added)
             (string) Str::of($event::class)->classBasename()->snake() => $event,
-            (string) Str::of($state::class)->classBasename()->snake() => $state,
-
-            // Studly-case name (i.e. MoneyAdded -> $moneyAdded)
             (string) Str::of($event::class)->classBasename()->studly() => $event,
-            (string) Str::of($state::class)->classBasename()->studly() => $state,
         ];
+		
+		if ($state) {
+			$parameters = [
+				...$parameters,
+				's' => $state,
+				'state' => $state,
+				$state::class => $state,
+				(string) Str::of($state::class)->classBasename()->snake() => $state,
+				(string) Str::of($state::class)->classBasename()->studly() => $state,
+			];
+		}
+		
+		return $parameters;
     }
 }

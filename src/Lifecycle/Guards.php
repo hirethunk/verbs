@@ -67,12 +67,7 @@ class Guards
 
     protected function passesValidation(): bool
     {
-        // FIXME: We need to get the state and pass this to the dispatcher
-
-        if (method_exists($this->event, 'validate')) {
-            return app()->call([$this->event, 'validate']) !== false;
-        }
-
-        return true;
+        return app(Dispatcher::class)
+	        ->validate($this->event, $this->state);
     }
 }

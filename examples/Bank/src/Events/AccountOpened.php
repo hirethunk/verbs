@@ -17,8 +17,13 @@ class AccountOpened extends Event
     ) {
         $this->account_state = AccountState::initialize();
     }
+	
+	public function validate(AccountState $state): bool
+	{
+		return ($state->balance_in_cents + $this->initial_deposit_in_cents) > 0;
+	}
 
-    public function apply()
+    public function apply(AccountState $state)
     {
         $this->account_state->balance_in_cents = $this->initial_deposit_in_cents;
     }
