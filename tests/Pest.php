@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Symfony\Component\Finder\Finder;
 use Thunk\Verbs\Tests\TestCase;
 
@@ -11,5 +12,5 @@ $examples = collect(Finder::create()->directories()->in(__DIR__.'/../examples/')
     ->values()
     ->all();
 
-uses(TestCase::class)
+uses(TestCase::class, RefreshDatabase::class)
     ->in(__DIR__, ...$examples);

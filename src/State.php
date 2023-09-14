@@ -10,7 +10,7 @@ abstract class State
 
     public static function initialize(): static
     {
-        // FIXME
+        return new static();
     }
 
     public static function load($from): static
@@ -23,6 +23,11 @@ abstract class State
     }
 
     public static function loadByKey($from): static
+    {
+        // FIXME
+    }
+
+    public static function singleton(): static
     {
         // FIXME
     }

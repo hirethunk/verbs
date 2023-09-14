@@ -2,18 +2,17 @@
 
 namespace Thunk\Verbs\Examples\Bank\Events;
 
-use Illuminate\Foundation\Auth\User;
 use Illuminate\Support\Facades\Mail;
+use Thunk\Verbs\Event;
 use Thunk\Verbs\Examples\Bank\Models\Account;
 use Thunk\Verbs\Examples\Bank\States\AccountState;
-use Thunk\Verbs\Facades\Snowflake;
 
-class AccountOpened
+class AccountOpened extends Event
 {
     public AccountState $account_state;
 
     public function __construct(
-        public Snowflake $user_id,
+        public int $user_id,
         public int $initial_deposit_in_cents = 0,
     ) {
         $this->account_state = AccountState::initialize();

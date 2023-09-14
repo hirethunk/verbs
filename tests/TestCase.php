@@ -2,6 +2,7 @@
 
 namespace Thunk\Verbs\Tests;
 
+use Glhd\Bits\Support\BitsServiceProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use InterNACHI\Modular\Support\ModularServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
@@ -14,11 +15,11 @@ class TestCase extends Orchestra
         parent::setUp();
 
         Factory::guessFactoryNamesUsing(
-            function(string $modelName) {
-	            return str($modelName)
-		            ->replace('\\Models\\', '\\Database\\Factories\\')
-		            ->append('Factory')
-		            ->toString();
+            function (string $modelName) {
+                return str($modelName)
+                    ->replace('\\Models\\', '\\Database\\Factories\\')
+                    ->append('Factory')
+                    ->toString();
             }
         );
     }
@@ -26,8 +27,9 @@ class TestCase extends Orchestra
     protected function getPackageProviders($app)
     {
         return [
-	        ModularServiceProvider::class, // This must register first
+            ModularServiceProvider::class, // This must register first
             VerbsServiceProvider::class,
+            BitsServiceProvider::class,
         ];
     }
 
