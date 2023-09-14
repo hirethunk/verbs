@@ -24,7 +24,7 @@ class BusFake implements DispatchesEvents, Fake
         Assert::assertContains($listener_type, $this->registered);
     }
 
-    public function assertDispatched(string|Closure $event, ?callable $callback = null)
+    public function assertDispatched(string|Closure $event, callable $callback = null)
     {
         [$event, $callback] = $this->prepareEventAndCallback($event, $callback);
 
@@ -40,7 +40,7 @@ class BusFake implements DispatchesEvents, Fake
         Assert::assertEmpty($this->dispatched);
     }
 
-    public function assertReplayed(string|Closure $event, ?callable $callback = null)
+    public function assertReplayed(string|Closure $event, callable $callback = null)
     {
         [$event, $callback] = $this->prepareEventAndCallback($event, $callback);
 

@@ -11,7 +11,7 @@ use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Snowflake;
 use Thunk\Verbs\Snowflakes\Snowflake as SnowflakeInstance;
 
-class EventRepositoryFake implements StoresEvents, Fake
+class EventRepositoryFake implements Fake, StoresEvents
 {
     protected array $saved = [];
 
@@ -36,9 +36,9 @@ class EventRepositoryFake implements StoresEvents, Fake
 
     /** @return LazyCollection<int, \Thunk\Verbs\Event> */
     public function get(
-        ?array $event_types = null,
-        ?SnowflakeInstance $context_id = null,
-        ?SnowflakeInstance $after = null,
+        array $event_types = null,
+        SnowflakeInstance $context_id = null,
+        SnowflakeInstance $after = null,
         int $chunk_size = 1000,
     ): LazyCollection {
         return LazyCollection::make($this->saved)

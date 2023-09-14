@@ -10,10 +10,10 @@ use Thunk\Verbs\Facades\Snowflake;
 
 class AccountOpened
 {
-	public AccountState $account_state;
-	
+    public AccountState $account_state;
+
     public function __construct(
-		public Snowflake $user_id,
+        public Snowflake $user_id,
         public int $initial_deposit_in_cents = 0,
     ) {
         $this->account_state = AccountState::initialize();
@@ -27,14 +27,14 @@ class AccountOpened
     public function onFire()
     {
         Account::create([
-	        'id' => $this->account_state->id(),
+            'id' => $this->account_state->id(),
             'user_id' => $this->user_id, // User::find($this->user_id)->getKey(),
             'balance' => $this->initial_deposit_in_cents,
         ]);
     }
-	
-	public function onCommit()
-	{
-		Mail::send('your-account-is-ready');
-	}
+
+    public function onCommit()
+    {
+        Mail::send('your-account-is-ready');
+    }
 }

@@ -8,7 +8,7 @@ use Thunk\Verbs\Context;
 use Thunk\Verbs\Contracts\ManagesContext;
 use Thunk\Verbs\Event;
 
-class ContextRepositoryFake implements ManagesContext, Fake
+class ContextRepositoryFake implements Fake, ManagesContext
 {
     protected array $registered = [];
 
