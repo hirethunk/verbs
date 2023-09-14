@@ -1,6 +1,6 @@
 <?php
 
-namespace Thunk\Verbs\Attributes;
+namespace Thunk\Verbs\Attributes\Hooks;
 
 use Attribute;
 use Thunk\Verbs\Lifecycle\Hook;

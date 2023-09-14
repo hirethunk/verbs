@@ -44,24 +44,14 @@ class Hook
 	) {
 	}
 	
-	public function receives(Event|State $object): bool
+	public function fire(Container $container, Event $event, ?State $state = null): void
 	{
-		return match (get_debug_type($object)) {
-			Event::class => in_array($object::class, $this->events),
-			State::class => in_array($object::class, $this->states),
-		};
-	}
-	
-	public function handle(Container $container, Event $event, ?State $state): void
-	{
-		// FIXME: This maybe replaces the apply method, but probably not.
-		
 		$container->call($this->callback, $this->guessParameters($event, $state));
 	}
 	
-	public function apply(Event $event, State $state, Container $container): void
+	public function apply(Container $container, Event $event, State $state): void
 	{
-		$this->handle($container, $event, null);
+		$this->fire($container, $event, null);
 		
 		// FIXME:
 		// $state->last_event_id = $event->id;
@@ -70,13 +60,17 @@ class Hook
 	public function replay(Event $event, Container $container): void
 	{
 		if ($this->replayable) {
-			$this->handle($container, $event, null);
+			$this->fire($container, $event, null);
 		}
 	}
 	
 	protected function guessParameters(Event $event, ?State $state): array
 	{
 		return [
+			// Daniel is a monster
+			'e' => $event,
+			's' => $state,
+			
 			// Basic name
 			'event' => $event,
 			'state' => $state,

@@ -4,7 +4,6 @@ namespace Thunk\Verbs\Lifecycle;
 
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\Access\Response;
-use Illuminate\Contracts\Validation\Factory as ValidationFactory;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
 use Thunk\Verbs\State;
@@ -68,16 +67,7 @@ class Guards
 	
 	protected function passesValidation(): bool
 	{
-		if (method_exists($this->event, 'rules')) {
-			$rules = app()->call([$this->event, 'rules']);
-			$factory = app()->make(ValidationFactory::class);
-			
-			$validator = $factory->make($this->state->toValidationArray(), $rules);
-			
-			if ($validator->fails()) {
-				return false;
-			}
-		}
+		// FIXME: We need to get the state and pass this to the dispatcher
 		
 		if (method_exists($this->event, 'validate')) {
 			return false !== app()->call([$this->event, 'validate']);

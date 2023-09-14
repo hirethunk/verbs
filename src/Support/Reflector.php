@@ -9,7 +9,7 @@ use ReflectionClass;
 use ReflectionFunction;
 use ReflectionFunctionAbstract;
 use ReflectionMethod;
-use Thunk\Verbs\Attributes\HookAttribute;
+use Thunk\Verbs\Attributes\Hooks\HookAttribute;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\Hook;
 use Thunk\Verbs\State;
@@ -63,7 +63,7 @@ class Reflector extends BaseReflector
 		}
 		
 		return array_filter(
-			array: Reflector::getParameterClassNames($parameters[0]),
+			array: static::getParameterClassNames($parameters[0]),
 			callback: fn(string $class_name) => is_a($class_name, $type, true)
 		);
 	}
