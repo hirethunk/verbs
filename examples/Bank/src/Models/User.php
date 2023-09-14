@@ -9,4 +9,6 @@ use Thunk\Verbs\FromState;
 class User extends Model
 {
     use HasFactory;
+
+    protected $guarded = [];
 }
