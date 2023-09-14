@@ -8,7 +8,9 @@ use Thunk\Verbs\State;
 class GlobalReportState extends State
 {
     public int $total_subscriptions = 0;
+
     public int $subscribes_since_last_report = 0;
+
     public int $unsubscribes_since_last_report = 0;
 
     public Carbon $last_reported_at;

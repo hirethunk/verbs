@@ -2,15 +2,17 @@
 
 namespace Thunk\Verbs\Examples\Subscriptions\States;
 
-use Thunk\Verbs\State;
 use Illuminate\Support\Carbon;
-use Thunk\Verbs\Examples\Subscriptions\Events\SubscriptionStarted;
 use Thunk\Verbs\Examples\Subscriptions\Events\SubscriptionCancelled;
+use Thunk\Verbs\Examples\Subscriptions\Events\SubscriptionStarted;
+use Thunk\Verbs\State;
 
 class PlanReportState extends State
 {
     public int $total_subscriptions = 0;
+
     public int $subscribes_since_last_report = 0;
+
     public int $unsubscribes_since_last_report = 0;
 
     public Carbon $last_reported_at;

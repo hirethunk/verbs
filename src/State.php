@@ -21,13 +21,12 @@ abstract class State
 
         static::loadByKey($key);
     }
-    
 
     public static function loadByKey($from): static
     {
         // FIXME
     }
-    
+
     public static function singleton(): static
     {
         // FIXME

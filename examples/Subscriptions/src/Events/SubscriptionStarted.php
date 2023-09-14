@@ -3,17 +3,18 @@
 namespace Thunk\Verbs\Examples\Subscriptions\Events;
 
 use Thunk\Verbs\Event;
-
 use Thunk\Verbs\Examples\Subscriptions\Models\Subscription;
-use Thunk\Verbs\Examples\Subscriptions\States\PlanReportState;
 use Thunk\Verbs\Examples\Subscriptions\States\GlobalReportState;
+use Thunk\Verbs\Examples\Subscriptions\States\PlanReportState;
 use Thunk\Verbs\Examples\Subscriptions\States\SubscriptionState;
 
 class SubscriptionStarted extends Event
 {
-    public SubscriptionState    $subscription_state;
-    public GlobalReportState    $global_report_state;
-    public PlanReportState      $plan_report_state;
+    public SubscriptionState $subscription_state;
+
+    public GlobalReportState $global_report_state;
+
+    public PlanReportState $plan_report_state;
 
     public function __construct(
         public int $user_id,

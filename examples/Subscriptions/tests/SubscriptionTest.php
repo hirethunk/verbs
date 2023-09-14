@@ -1,9 +1,7 @@
 <?php
 
-use Illuminate\Support\Facades\DB;
 use Thunk\Verbs\Examples\Subscriptions\Models\Plan;
 use Thunk\Verbs\Examples\Subscriptions\Models\User;
-use Thunk\Verbs\Examples\Subscriptions\Models\Account;
 
 test('a user can subscribe to multiple plans and unsubscribe', function () {
     $daniel = User::factory()->create();
@@ -38,4 +36,3 @@ test('a user can subscribe to multiple plans and unsubscribe', function () {
 
     expect($daniel->subscriptions)->not->toContain($silly_plan);
 });
-
