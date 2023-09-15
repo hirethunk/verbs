@@ -6,7 +6,10 @@ use InterNACHI\Modular\Support\ModuleRegistry;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Thunk\Verbs\Lifecycle\Broker;
+use Thunk\Verbs\Lifecycle\Dispatcher;
+use Thunk\Verbs\Lifecycle\EventStore;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
+use Thunk\Verbs\Lifecycle\StateStore;
 
 class VerbsServiceProvider extends PackageServiceProvider
 {
@@ -34,13 +37,16 @@ class VerbsServiceProvider extends PackageServiceProvider
         }
 
         $this->app->singleton(Broker::class);
+        $this->app->singleton(Dispatcher::class);
+        $this->app->singleton(EventStore::class);
         $this->app->singleton(EventQueue::class);
+        $this->app->singleton(StateStore::class);
     }
 
     public function boot()
     {
         $this->app->terminating(function () {
-            app(Broker::class)->fireQueuedEvents();
+            app(Broker::class)->commit();
         });
     }
 }

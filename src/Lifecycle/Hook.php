@@ -58,17 +58,10 @@ class Hook
 
     public function apply(Container $container, Event $event, State $state): void
     {
-        $this->fire($container, $event, null);
+        $this->fire($container, $event, $state);
 
         // FIXME:
         // $state->last_event_id = $event->id;
-    }
-
-    public function replay(Event $event, Container $container): void
-    {
-        if ($this->replayable) {
-            $this->fire($container, $event, null);
-        }
     }
 
     protected function guessParameters(Event $event, ?State $state): array

@@ -7,6 +7,7 @@ use Thunk\Verbs\Examples\Subscriptions\Models\Subscription;
 use Thunk\Verbs\Examples\Subscriptions\States\GlobalReportState;
 use Thunk\Verbs\Examples\Subscriptions\States\PlanReportState;
 use Thunk\Verbs\Examples\Subscriptions\States\SubscriptionState;
+use Thunk\Verbs\Lifecycle\StateStore;
 
 class SubscriptionStarted extends Event
 {
@@ -41,6 +42,9 @@ class SubscriptionStarted extends Event
         Subscription::create([
             'id' => $this->subscription_state->id,
             'user_id' => $this->user_id,
+            'plan_id' => $this->plan_id,
+            'is_active' => true,
         ]);
     }
+
 }

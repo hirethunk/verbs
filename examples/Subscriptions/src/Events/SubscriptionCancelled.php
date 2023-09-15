@@ -36,8 +36,15 @@ class SubscriptionCancelled extends Event
 
     public function onFire()
     {
-        Subscription::find($this->subscription_id)->update([
-            'cancelled_at' => now(),
-        ]);
+        $subscription = Subscription::find($this->subscription_id);
+
+        $subscription->is_active = false;
+        $subscription->cancelled_at = now();
+        $subscription->save();
+
+//        $subscription->update([
+//            'is_active' => false,
+//            'cancelled_at' => now(),
+//        ]);
     }
 }

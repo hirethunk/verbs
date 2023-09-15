@@ -23,8 +23,8 @@ class EventStore
                 );
 
                 return [
-                    'event_type' => $event::class,
-                    'event_data' => $event_properties_as_json,
+                    'type' => $event::class,
+                    'data' => $event_properties_as_json,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ];

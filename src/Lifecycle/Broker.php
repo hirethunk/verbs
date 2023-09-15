@@ -5,12 +5,16 @@ namespace Thunk\Verbs\Lifecycle;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 use Thunk\Verbs\Support\Reflector;
+use Thunk\Verbs\VerbSnapshot;
 
 class Broker
 {
-    public function fireQueuedEvents()
+    public function commit()
     {
         $events = app(EventQueue::class)->flush();
+
+        // FIXME: Only write changes + handle aggregate versioning
+        app(StateStore::class)->writeLoaded();
 
         if (empty($events)) {
             return;
@@ -20,7 +24,7 @@ class Broker
             app(Dispatcher::class)->fire($event);
         }
 
-        return $this->fireQueuedEvents();
+        return $this->commit();
     }
 
     public function fire(Event $event)
@@ -37,7 +41,6 @@ class Broker
 
     public function enumerateStates(Event $event)
     {
-        return Reflector::getPublicStateProperties($event)
-            ->map(fn ($_, $property_name) => $event->{$property_name});
+        return Reflector::getPublicStateProperties($event);
     }
 }

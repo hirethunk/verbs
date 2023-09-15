@@ -45,7 +45,7 @@ class Reflector extends BaseReflector
                     && is_a($type->getName(), State::class, true);
             })
             ->mapWithKeys(fn (ReflectionProperty $prop) => [
-                $prop->getName() => $prop->getType()->getName(),
+                $prop->getName() => $prop->getValue($event),
             ]);
     }
 

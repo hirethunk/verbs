@@ -40,8 +40,8 @@ class Dispatcher
 
     public function apply(Event $event, State $state): void
     {
-        foreach ($this->getApplyHooks($event, $state) as $listener) {
-            $listener->apply($this->container, $event, $state);
+        foreach ($this->getApplyHooks($event, $state) as $hook) {
+            $hook->apply($this->container, $event, $state);
         }
     }
 
@@ -64,12 +64,18 @@ class Dispatcher
     {
         $hooks = collect($this->hooks[$event::class] ?? []);
 
-        if (method_exists($event, 'validate')) {
-            $hook = Hook::fromClassMethod($event, new ReflectionMethod($event, 'validate'));
-            $hook->validates_state = true;
+        collect(get_class_methods($event))
+            ->filter(fn (string $name) => Str::startsWith($name, 'validate'))
+            ->filter(function (string $name) use ($event, $state) {
+                $method = new ReflectionMethod($event, $name);
 
-            $hooks->push($hook);
-        }
+                return ! empty(Reflector::getParametersOfType($state::class, $method));
+            })
+            ->each(function (string $name) use (&$hooks, $event) {
+                $hook = Hook::fromClassMethod($event, new ReflectionMethod($event, $name));
+                $hook->validates_state = true;
+                $hooks->push($hook);
+            });
 
         return $hooks
             ->filter(fn (Hook $hook) => $hook->validates_state)
