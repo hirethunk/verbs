@@ -25,6 +25,9 @@ class Dispatcher
             foreach ($hook->events as $event_type) {
                 $this->hooks[$event_type][] = $hook;
             }
+            foreach ($hook->states as $state_type) {
+                $this->hooks[$state_type][] = $hook;
+            }
         }
     }
 
