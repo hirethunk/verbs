@@ -47,9 +47,9 @@ class SubscriptionCancelled extends Event
         $subscription->cancelled_at = now();
         $subscription->save();
 
-//        $subscription->update([
-//            'is_active' => false,
-//            'cancelled_at' => now(),
-//        ]);
+        //        $subscription->update([
+        //            'is_active' => false,
+        //            'cancelled_at' => now(),
+        //        ]);
     }
 }

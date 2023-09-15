@@ -7,7 +7,6 @@ use Thunk\Verbs\Examples\Subscriptions\Models\Subscription;
 use Thunk\Verbs\Examples\Subscriptions\States\GlobalReportState;
 use Thunk\Verbs\Examples\Subscriptions\States\PlanReportState;
 use Thunk\Verbs\Examples\Subscriptions\States\SubscriptionState;
-use Thunk\Verbs\Lifecycle\StateStore;
 
 class SubscriptionStarted extends Event
 {
@@ -51,5 +50,4 @@ class SubscriptionStarted extends Event
             'is_active' => true,
         ]);
     }
-
 }
