@@ -18,7 +18,10 @@ class User extends Model implements AuthenticatableContract
 
     public function subscribe(Plan $plan)
     {
-        SubscriptionStarted::fire($this->id, $plan->id);
+        SubscriptionStarted::fire(
+            user_id: $this->id,
+            plan_id: $plan->id
+        );
     }
 
     public function activeSubscription(Plan $plan): ?Subscription

@@ -7,12 +7,11 @@ use Thunk\Verbs\Examples\Subscriptions\States\PlanReportState;
 
 class PlanReportGenerated extends Event
 {
-    public PlanReportState $state;
+    public int $plan_id;
 
-    public function __construct(
-        public int $plan_id,
-    ) {
-        $this->state = PlanReportState::load($this->plan_id);
+    public function states(): array
+    {
+        return [PlanReportState::load($this->plan_id)];
     }
 
     public function apply(PlanReportState $state)

@@ -2,6 +2,7 @@
 
 namespace Thunk\Verbs\Examples\Subscriptions\Events;
 
+use Glhd\Bits\Snowflake;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Examples\Subscriptions\Models\Subscription;
 use Thunk\Verbs\Examples\Subscriptions\States\GlobalReportState;
@@ -10,19 +11,21 @@ use Thunk\Verbs\Examples\Subscriptions\States\SubscriptionState;
 
 class SubscriptionStarted extends Event
 {
-    public SubscriptionState $subscription_state;
+    public int $user_id;
 
-    public GlobalReportState $global_report_state;
+    public int $plan_id;
 
-    public PlanReportState $plan_report_state;
+    public ?int $subscription_id = null;
 
-    public function __construct(
-        public int $user_id,
-        public int $plan_id,
-    ) {
-        $this->subscription_state = SubscriptionState::initialize();
-        $this->plan_report_state = PlanReportState::load($plan_id);
-        $this->global_report_state = GlobalReportState::singleton();
+    public function states(): array
+    {
+        $this->subscription_id ??= Snowflake::make()->id();
+
+        return [
+            SubscriptionState::load($this->subscription_id),
+            PlanReportState::load($this->plan_id),
+            GlobalReportState::singleton(),
+        ];
     }
 
     public function validate(SubscriptionState $state)
@@ -38,8 +41,10 @@ class SubscriptionStarted extends Event
 
     public function onFire()
     {
+        [$subscription_state] = $this->states();
+
         Subscription::create([
-            'id' => $this->subscription_state->id,
+            'id' => $subscription_state->id,
             'user_id' => $this->user_id,
             'plan_id' => $this->plan_id,
             'is_active' => true,

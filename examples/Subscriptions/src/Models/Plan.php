@@ -19,7 +19,7 @@ class Plan extends Model
 
     public function generateReport(): PlanReportState
     {
-        return PlanReportGenerated::fire($this->id)
+        return PlanReportGenerated::fire(plan_id: $this->id)
             ->state;
     }
 

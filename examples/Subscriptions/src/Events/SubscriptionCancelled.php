@@ -10,18 +10,15 @@ use Thunk\Verbs\Examples\Subscriptions\States\SubscriptionState;
 
 class SubscriptionCancelled extends Event
 {
-    public SubscriptionState $subscription_state;
+    public int $subscription_id;
 
-    public GlobalReportState $global_report_state;
-
-    public PlanReportState $plan_report_state;
-
-    public function __construct(
-        public int $subscription_id,
-    ) {
-        $this->subscription_state = SubscriptionState::load($subscription_id);
-        $this->plan_report_state = PlanReportState::load($this->subscription_state->plan_id);
-        $this->global_report_state = GlobalReportState::singleton();
+    public function states(): array
+    {
+        return [
+            $subscription_state = SubscriptionState::load($this->subscription_id),
+            PlanReportState::load($subscription_state->plan_id),
+            GlobalReportState::singleton(),
+        ];
     }
 
     public function validate(SubscriptionState $state)

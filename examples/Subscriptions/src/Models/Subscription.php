@@ -19,6 +19,6 @@ class Subscription extends Model
 
     public function cancel()
     {
-        SubscriptionCancelled::fire($this->id);
+        SubscriptionCancelled::fire(subscription_id: $this->id);
     }
 }

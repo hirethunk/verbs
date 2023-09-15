@@ -7,11 +7,9 @@ use Thunk\Verbs\Examples\Subscriptions\States\GlobalReportState;
 
 class GlobalReportGenerated extends Event
 {
-    public GlobalReportState $state;
-
-    public function __construct()
+    public function states(): array
     {
-        $this->state = GlobalReportState::singleton();
+        return [GlobalReportState::singleton()];
     }
 
     public function apply(GlobalReportState $state)
