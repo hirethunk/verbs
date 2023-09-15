@@ -1,14 +1,18 @@
 <?php
 
-namespace Thunk\Verbs;
+namespace Thunk\Verbs\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class VerbSnapshot extends Model
+class VerbEvent extends Model
 {
-    public $table = 'verb_snapshots';
+    public $table = 'verb_events';
 
     public $guarded = [];
+
+    protected $casts = [
+        'data' => 'array',
+    ];
 
     public function scopeType($query, string $type)
     {

@@ -4,8 +4,8 @@ namespace Thunk\Verbs\Lifecycle;
 
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
+use Thunk\Verbs\Models\VerbEvent;
 use Thunk\Verbs\Support\Reflector;
-use Thunk\Verbs\VerbEvent;
 
 class Broker
 {

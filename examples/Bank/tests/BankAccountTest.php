@@ -5,10 +5,9 @@ use Illuminate\Support\Facades\Mail;
 use Thunk\Verbs\Examples\Bank\Events\AccountOpened;
 use Thunk\Verbs\Examples\Bank\Mail\DepositAvailable;
 use Thunk\Verbs\Examples\Bank\Mail\WelcomeEmail;
-use Thunk\Verbs\Examples\Bank\Models\Account;
 use Thunk\Verbs\Examples\Bank\Models\User;
 use Thunk\Verbs\Facades\Verbs;
-use Thunk\Verbs\VerbEvent;
+use Thunk\Verbs\Models\VerbEvent;
 
 test('a bank account can be opened and interacted with', function () {
     Mail::fake();

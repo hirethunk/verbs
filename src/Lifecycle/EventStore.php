@@ -3,8 +3,8 @@
 namespace Thunk\Verbs\Lifecycle;
 
 use Illuminate\Support\LazyCollection;
+use Thunk\Verbs\Models\VerbEvent;
 use Thunk\Verbs\Support\Reflector;
-use Thunk\Verbs\VerbEvent;
 
 class EventStore
 {
