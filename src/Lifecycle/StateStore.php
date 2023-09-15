@@ -45,7 +45,14 @@ class StateStore
 
     public function write(array $states): bool
     {
-        return VerbSnapshot::insert(self::formatForWrite($states));
+        return VerbSnapshot::insert(static::formatForWrite($states));
+    }
+
+    public function reset(): bool
+    {
+        VerbSnapshot::truncate();
+
+        return true;
     }
 
     protected function remember(State $state): State

@@ -5,7 +5,9 @@ use Illuminate\Support\Facades\Mail;
 use Thunk\Verbs\Examples\Bank\Events\AccountOpened;
 use Thunk\Verbs\Examples\Bank\Mail\DepositAvailable;
 use Thunk\Verbs\Examples\Bank\Mail\WelcomeEmail;
+use Thunk\Verbs\Examples\Bank\Models\Account;
 use Thunk\Verbs\Examples\Bank\Models\User;
+use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\VerbEvent;
 
 test('a bank account can be opened and interacted with', function () {
@@ -58,4 +60,18 @@ test('a bank account can be opened and interacted with', function () {
     )->assertSuccessful();
 
     expect($account->refresh()->balance_in_cents)->toBe(100_00);
+
+    // Finally, let's replay everything and make sure we get what's expected
+
+    Mail::fake();
+
+    $account->delete();
+
+    Verbs::replay();
+
+    $account = Auth::user()->accounts()->sole();
+
+    expect($account->balance_in_cents)->toBe(100_00);
+
+    Mail::assertNothingOutgoing();
 });

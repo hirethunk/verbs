@@ -10,6 +10,10 @@ class VerbEvent extends Model
 
     public $guarded = [];
 
+    protected $casts = [
+        'data' => 'array',
+    ];
+
     public function scopeType($query, string $type)
     {
         return $query->where('type', $type);
