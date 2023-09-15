@@ -6,7 +6,6 @@ use Glhd\Bits\Support\BitsServiceProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Database\Migrations\Migrator;
-use Illuminate\Encryption\Encrypter;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
