@@ -2,14 +2,14 @@
 
 namespace Thunk\Verbs\Examples\Subscriptions\Models;
 
-use Thunk\Verbs\FromState;
 use Glhd\Bits\Database\HasSnowflakes;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Thunk\Verbs\Examples\Subscriptions\States\PlanReportState;
-use Thunk\Verbs\Examples\Subscriptions\States\GlobalReportState;
-use Thunk\Verbs\Examples\Subscriptions\Events\PlanReportGenerated;
+use Illuminate\Database\Eloquent\Model;
 use Thunk\Verbs\Examples\Subscriptions\Events\GlobalReportGenerated;
+use Thunk\Verbs\Examples\Subscriptions\Events\PlanReportGenerated;
+use Thunk\Verbs\Examples\Subscriptions\States\GlobalReportState;
+use Thunk\Verbs\Examples\Subscriptions\States\PlanReportState;
+use Thunk\Verbs\FromState;
 
 class Plan extends Model
 {

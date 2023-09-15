@@ -2,10 +2,10 @@
 
 namespace Thunk\Verbs\Examples\Subscriptions\States;
 
-use Thunk\Verbs\State;
 use Illuminate\Support\Carbon;
-use Thunk\Verbs\Examples\Subscriptions\Events\SubscriptionStarted;
 use Thunk\Verbs\Examples\Subscriptions\Events\SubscriptionCancelled;
+use Thunk\Verbs\Examples\Subscriptions\Events\SubscriptionStarted;
+use Thunk\Verbs\State;
 
 class GlobalReportState extends State
 {

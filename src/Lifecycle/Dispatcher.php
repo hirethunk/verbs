@@ -6,8 +6,6 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Str;
 use ReflectionMethod;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Examples\Subscriptions\Events\SubscriptionStarted;
-use Thunk\Verbs\Examples\Subscriptions\States\SubscriptionState;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\ReflectionMethodSignature;
 use Thunk\Verbs\Support\Reflector;

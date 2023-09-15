@@ -10,6 +10,7 @@ class ReflectionMethodSignature
     public object $reflect;
 
     public ?string $prefix = null;
+
     public array $params = [];
 
     public static function make(object|string $instance_or_classname)
@@ -29,7 +30,7 @@ class ReflectionMethodSignature
         return $this;
     }
 
-    public function param(string $type, ?string $name = null)
+    public function param(string $type, string $name = null)
     {
         $this->params[] = compact('type', 'name');
 
@@ -46,7 +47,7 @@ class ReflectionMethodSignature
                 fn ($method) => str_starts_with($method->getName(), $this->prefix)
             )
         )->when(
-            !empty($this->params),
+            ! empty($this->params),
             fn ($methods) => $methods->filter(
                 fn ($method) => $this->includesParams($method, $this->params)
             )
@@ -58,11 +59,10 @@ class ReflectionMethodSignature
         $method_params = collect($method->getParameters());
 
         return collect($params)->every(
-            fn($param) => $method_params->contains(
+            fn ($param) => $method_params->contains(
                 fn ($method_param) => $method_param->getType()->getName() === $param['type']
                     && ($param['name'] ? $method_param->getName() === $param['name'] : true)
             )
         );
     }
-    
 }
