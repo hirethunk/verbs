@@ -9,8 +9,8 @@ use Thunk\Verbs\FromState;
 
 class Subscription extends Model
 {
-    use HasSnowflakes;
     use FromState;
+    use HasSnowflakes;
 
     protected $casts = [
         'is_active' => 'bool',

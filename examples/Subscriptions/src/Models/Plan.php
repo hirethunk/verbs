@@ -10,8 +10,8 @@ use Thunk\Verbs\FromState;
 
 class Plan extends Model
 {
-    use HasFactory;
     use FromState;
+    use HasFactory;
     use HasSnowflakes;
 
     public function generateReport()

@@ -5,11 +5,9 @@ namespace Thunk\Verbs\Tests;
 use Glhd\Bits\Support\BitsServiceProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Events\QueryExecuted;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use InterNACHI\Modular\Support\ModularServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
-use SqlFormatter;
 use Symfony\Component\Console\Formatter\OutputFormatter;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Output\ConsoleOutput;
@@ -68,7 +66,7 @@ class TestCase extends Orchestra
         $output = new ConsoleOutput(ConsoleOutput::VERBOSITY_NORMAL, null, $formatter);
         $style = new SymfonyStyle(new ArgvInput(), $output);
 
-        DB::listen(function(QueryExecuted $event) use ($style) {
+        DB::listen(function (QueryExecuted $event) use ($style) {
             $when = now()->toTimeString();
             $style->section("[{$when}] Executed in {$event->time}ms on via '{$event->connectionName}' connection:");
             $style->writeln($event->sql);

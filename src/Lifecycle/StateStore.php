@@ -12,7 +12,7 @@ class StateStore
 {
     protected array $stores = [];
 
-    public function initialize(string $type, int|string|null $id = null): State
+    public function initialize(string $type, int|string $id = null): State
     {
         $state = new $type();
         $state->id = $id ?? Snowflake::make()->id();
