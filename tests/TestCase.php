@@ -5,35 +5,25 @@ namespace Thunk\Verbs\Tests;
 use Glhd\Bits\Support\BitsServiceProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Events\QueryExecuted;
+use Illuminate\Database\Migrations\Migrator;
+use Illuminate\Encryption\Encrypter;
+use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\DB;
-use InterNACHI\Modular\Support\ModularServiceProvider;
+use Illuminate\Support\Str;
+use InterNACHI\Modular\Support\FinderCollection;
 use Orchestra\Testbench\TestCase as Orchestra;
 use Symfony\Component\Console\Formatter\OutputFormatter;
 use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\Finder\SplFileInfo;
 use Thunk\Verbs\VerbsServiceProvider;
 
 class TestCase extends Orchestra
 {
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        Factory::guessFactoryNamesUsing(
-            function (string $modelName) {
-                return str($modelName)
-                    ->replace('\\Models\\', '\\Database\\Factories\\')
-                    ->append('Factory')
-                    ->toString();
-            }
-        );
-    }
-
     protected function getPackageProviders($app)
     {
         return [
-            ModularServiceProvider::class, // This must register first
             VerbsServiceProvider::class,
             BitsServiceProvider::class,
         ];
@@ -44,14 +34,34 @@ class TestCase extends Orchestra
         $this->loadMigrationsFrom(__DIR__.'/database/migrations');
     }
 
+    /** @param  Application  $app */
     public function getEnvironmentSetUp($app)
     {
-        config()->set('database.default', 'testing');
-        config()->set('database.connections.testing', [
-            'driver' => 'sqlite',
-            'database' => ':memory:',
-            'prefix' => '',
-        ]);
+        Factory::guessFactoryNamesUsing(
+            function (string $modelName) {
+                return str($modelName)
+                    ->replace('\\Models\\', '\\Database\\Factories\\')
+                    ->append('Factory')
+                    ->toString();
+            }
+        );
+
+        $example = Str::of(static::class)->after('Examples\\')->before('\\');
+        $example_path = realpath(__DIR__.'/../examples/'.$example);
+
+        $app->resolving(Migrator::class, fn (Migrator $migrator) => $migrator->path("{$example_path}/database/migrations"));
+
+        FinderCollection::forFiles()
+            ->depth(0)
+            ->name('*.php')
+            ->sortByName()
+            ->inOrEmpty("{$example_path}/routes/")
+            ->each(fn (SplFileInfo $file) => require $file->getRealPath());
+
+        // TODO: Factories
+        // TODO: Views
+        // TODO: Blade Components
+        // TODO: Commands
 
         $events = include __DIR__.'/../database/migrations/create_verb_events_table.php.stub';
         $events->up();

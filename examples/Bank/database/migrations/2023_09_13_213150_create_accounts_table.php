@@ -12,7 +12,7 @@ return new class extends Migration
         Schema::create('accounts', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignIdFor(User::class);
+            $table->unsignedBigInteger('user_id')->index();
             $table->integer('balance_in_cents');
 
             $table->timestamps();

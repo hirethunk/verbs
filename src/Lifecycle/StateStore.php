@@ -20,6 +20,7 @@ class StateStore
         return $this->remember($state);
     }
 
+    /** @param  class-string<State>  $type */
     public function load(int|string $id, string $type): State
     {
         if ($loaded = $this->stores[$type][(string) $id] ?? null) {

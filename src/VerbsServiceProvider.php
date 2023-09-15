@@ -24,18 +24,6 @@ class VerbsServiceProvider extends PackageServiceProvider
 
     public function packageRegistered()
     {
-        if ($this->app->runningUnitTests()) {
-            // This tricks `internachi/modular` into treating the `examples` directory
-            // as though it were an app module. Using modular allows us to easily
-            // autoload and auto-discover example code as though it were a Laravel app.
-            $this->app->singleton(ModuleRegistry::class, function () {
-                return new ModuleRegistry(
-                    realpath(__DIR__.'/../examples'),
-                    $this->app->bootstrapPath('cache/modules.php')
-                );
-            });
-        }
-
         $this->app->singleton(Broker::class);
         $this->app->singleton(Dispatcher::class);
         $this->app->singleton(EventStore::class);

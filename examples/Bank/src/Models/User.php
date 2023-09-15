@@ -12,5 +12,8 @@ class User extends Model implements AuthenticatableContract
 {
     use AuthenticatableTrait, HasFactory, HasSnowflakes;
 
-    protected $guarded = [];
+    public function accounts()
+    {
+        return $this->hasMany(Account::class);
+    }
 }

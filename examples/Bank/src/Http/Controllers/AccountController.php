@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Thunk\Verbs\Examples\Bank\Events\AccountOpened;
 use Thunk\Verbs\Examples\Bank\Events\MoneyDeposited;
+use Thunk\Verbs\Examples\Bank\Events\MoneyWithdrawn;
 use Thunk\Verbs\Examples\Bank\Models\Account;
 
 class AccountController
@@ -23,6 +24,14 @@ class AccountController
         MoneyDeposited::fire(
             $account->id,
             $request->integer('deposit_in_cents')
+        );
+    }
+
+    public function withdraw(Request $request, Account $account)
+    {
+        MoneyWithdrawn::fire(
+            $account->id,
+            $request->integer('withdrawal_in_cents')
         );
     }
 }

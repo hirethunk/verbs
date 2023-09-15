@@ -1,23 +1,27 @@
 <?php
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
 use Thunk\Verbs\Examples\Bank\Events\AccountOpened;
+use Thunk\Verbs\Examples\Bank\Mail\DepositAvailable;
 use Thunk\Verbs\Examples\Bank\Mail\WelcomeEmail;
-use Thunk\Verbs\Examples\Bank\Models\Account;
 use Thunk\Verbs\Examples\Bank\Models\User;
 use Thunk\Verbs\VerbEvent;
 
-test('a bank account can be opened', function () {
+test('a bank account can be opened and interacted with', function () {
     Mail::fake();
 
     $this->actingAs(User::factory()->create())
-        ->withoutExceptionHandling()
-        ->post(
-            route('bank.accounts.store'),
-            [
-                'initial_deposit_in_cents' => 1000_00,
-            ]
-        )->assertSuccessful();
+        ->withoutExceptionHandling();
+
+    // First we'll open the account
+
+    $this->post(
+        route('bank.accounts.store'),
+        [
+            'initial_deposit_in_cents' => 1000_00,
+        ]
+    )->assertSuccessful();
 
     expect(
         VerbEvent::type(AccountOpened::class)->whereDataContains([
@@ -26,8 +30,32 @@ test('a bank account can be opened', function () {
         ])
     )->not->toBeNull();
 
-    expect(Account::count())->toBe(1);
-    expect(Account::first()->balance_in_cents)->toBe(1000_00);
+    $account = Auth::user()->accounts()->sole();
+    expect($account->balance_in_cents)->toBe(1000_00);
 
-    expect(Mail::sent(WelcomeEmail::class)->count())->toBe(1);
+    Mail::assertSent(fn (WelcomeEmail $email) => $email->user_id === Auth::id());
+
+    // Then we'll deposit some money
+
+    $this->post(
+        route('bank.accounts.deposits.store', $account),
+        [
+            'deposit_in_cents' => 499_99,
+        ]
+    )->assertSuccessful();
+
+    expect($account->refresh()->balance_in_cents)->toBe(1499_99);
+
+    Mail::assertSent(fn (DepositAvailable $email) => $email->user_id === Auth::id());
+
+    // Now we'll withdraw an amount that we have available to us
+
+    $this->post(
+        route('bank.accounts.withdrawals.store', $account),
+        [
+            'withdrawal_in_cents' => 1399_99,
+        ]
+    )->assertSuccessful();
+
+    expect($account->refresh()->balance_in_cents)->toBe(100_00);
 });
