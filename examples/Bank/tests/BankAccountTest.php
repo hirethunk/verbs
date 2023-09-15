@@ -12,8 +12,7 @@ use Thunk\Verbs\Models\VerbEvent;
 test('a bank account can be opened and interacted with', function () {
     Mail::fake();
 
-    $this->actingAs(User::factory()->create())
-        ->withoutExceptionHandling();
+    $this->actingAs(User::factory()->create());
 
     // First we'll open the account
 
@@ -57,6 +56,17 @@ test('a bank account can be opened and interacted with', function () {
             'withdrawal_in_cents' => 1399_99,
         ]
     )->assertSuccessful();
+
+    expect($account->refresh()->balance_in_cents)->toBe(100_00);
+
+    // Next let's try to withdraw an amount that we don't have
+
+    $this->post(
+        route('bank.accounts.withdrawals.store', $account),
+        [
+            'withdrawal_in_cents' => 100_01,
+        ]
+    )->assertSessionHasErrors();
 
     expect($account->refresh()->balance_in_cents)->toBe(100_00);
 

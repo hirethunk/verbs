@@ -19,6 +19,7 @@ class AccountOpened extends Event
 
     public function states(): array
     {
+        // TODO: This should eventually be handled by magic for you
         $this->account_id ??= Snowflake::make()->id();
 
         return [AccountState::load($this->account_id)];
