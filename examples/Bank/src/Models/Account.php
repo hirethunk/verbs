@@ -8,8 +8,8 @@ use Thunk\Verbs\FromState;
 
 class Account extends Model
 {
-    use HasSnowflakes;
     use FromState;
+    use HasSnowflakes;
 
     public function user()
     {

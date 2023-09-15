@@ -2,7 +2,6 @@
 
 namespace Thunk\Verbs;
 
-use InterNACHI\Modular\Support\ModuleRegistry;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Thunk\Verbs\Lifecycle\Broker;

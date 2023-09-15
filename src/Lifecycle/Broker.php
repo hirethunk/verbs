@@ -54,8 +54,6 @@ class Broker
                 $states->each(fn ($state) => app(Dispatcher::class)->apply($event, $state));
             });
 
-
-
         app(Queue::class)->queue($event);
 
         return $event;
