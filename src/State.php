@@ -2,7 +2,6 @@
 
 namespace Thunk\Verbs;
 
-use Glhd\Bits\Snowflake;
 use Illuminate\Contracts\Support\Arrayable;
 use Thunk\Verbs\Lifecycle\StateStore;
 
