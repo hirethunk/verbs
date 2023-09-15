@@ -4,6 +4,7 @@ namespace Thunk\Verbs\Examples\Bank\Events;
 
 use Glhd\Bits\Snowflake;
 use Illuminate\Support\Facades\Mail;
+use Throwable;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Examples\Bank\Mail\WelcomeEmail;
 use Thunk\Verbs\Examples\Bank\Models\Account;
@@ -19,10 +20,14 @@ class AccountOpened extends Event
 
     public function states(): array
     {
-        // TODO: This should eventually be handled by magic for you
-        $this->account_id ??= Snowflake::make()->id();
+        try {
+            // TODO: This should eventually be handled by magic for you
+            $this->account_id ??= Snowflake::make()->id();
 
-        return [AccountState::load($this->account_id)];
+            return [AccountState::load($this->account_id)];
+        } catch (Throwable $exception) {
+            dd($exception);
+        }
     }
 
     public function validate(AccountState $state): bool

@@ -24,8 +24,10 @@ class MoneyDeposited extends Event
         $state->balance_in_cents += $this->cents;
     }
 
-    public function onFire(AccountState $state)
+    public function onFire()
     {
+        [$state] = $this->states();
+
         Account::find($this->account_id)
             ->update([
                 'balance_in_cents' => $state->balance_in_cents,
