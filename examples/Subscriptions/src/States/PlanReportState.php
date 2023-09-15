@@ -32,13 +32,17 @@ class PlanReportState extends State
 
     public function applySubscriptionStarted(SubscriptionStarted $e)
     {
+        dump('applySubscriptionStarted', $this->id());
+
         $this->total_subscriptions++;
         $this->subscribes_since_last_report++;
     }
 
     public function applySubscriptionCancelled(SubscriptionCancelled $e)
     {
-        $this->total_subscriptions--;
-        $this->unsubscribes_since_last_report++;
+        dump('applySubscriptionCancelled', $this->id());
+
+        $this->unsubscribes_since_last_report = 20;
+        $this->total_subscriptions = 500;
     }
 }

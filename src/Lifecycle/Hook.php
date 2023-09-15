@@ -46,6 +46,13 @@ class Hook
     ) {
     }
 
+    public function aggregatesState(bool $aggregates_state = true): static
+    {
+        $this->aggregates_state = $aggregates_state;
+
+        return $this;
+    }
+
     public function validate(Container $container, Event $event, State $state): bool
     {
         return $container->call($this->callback, $this->guessParameters($event, $state));

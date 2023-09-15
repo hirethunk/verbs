@@ -37,9 +37,16 @@ test('a user can subscribe to multiple plans and unsubscribe', function () {
     $serious_report = $serious_plan->generateReport();
     $global_report = Plan::generateGlobalReport();
 
+    dump($silly_report, $serious_report, $global_report);
+
     Verbs::commit();
 
-    expect($silly_report)->toBe('1 subscribe(s); 1 unsubscribe(s); 100% churn');
-    expect($serious_report)->toBe('1 subscribe(s); 0 unsubscribes(s); 0% churn');
-    expect($global_report)->toBe('2 subscribe(s); 1 unsubscribe(s); 50% churn');
+    expect($silly_report->summary())
+        ->toBe('1 subscribe(s); 1 unsubscribe(s); 100% churn');
+
+    expect($serious_report->summary())
+        ->toBe('1 subscribe(s); 0 unsubscribes(s); 0% churn');
+
+    expect($global_report->summary())
+        ->toBe('2 subscribe(s); 1 unsubscribe(s); 50% churn');
 });

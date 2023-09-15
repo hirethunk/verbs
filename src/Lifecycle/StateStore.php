@@ -4,6 +4,7 @@ namespace Thunk\Verbs\Lifecycle;
 
 use Glhd\Bits\Snowflake;
 use Illuminate\Support\Arr;
+use Thunk\Verbs\Examples\Subscriptions\States\SubscriptionState;
 use Thunk\Verbs\State;
 use Thunk\Verbs\VerbSnapshot;
 use UnexpectedValueException;

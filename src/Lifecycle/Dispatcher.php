@@ -6,7 +6,10 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Str;
 use ReflectionMethod;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Examples\Subscriptions\Events\SubscriptionStarted;
+use Thunk\Verbs\Examples\Subscriptions\States\SubscriptionState;
 use Thunk\Verbs\State;
+use Thunk\Verbs\Support\ReflectionMethodSignature;
 use Thunk\Verbs\Support\Reflector;
 
 class Dispatcher
@@ -110,18 +113,21 @@ class Dispatcher
     {
         $hooks = collect($this->hooks[$event::class] ?? []);
 
-        collect(get_class_methods($event))
-            ->filter(fn (string $name) => Str::startsWith($name, 'apply'))
-            ->filter(function (string $name) use ($event, $state) {
-                $method = new ReflectionMethod($event, $name);
+        $event_apply_methods = ReflectionMethodSignature::make($event)
+            ->prefix('apply')
+            ->param($state::class)
+            ->find();
 
-                return ! empty(Reflector::getParametersOfType($state::class, $method));
-            })
-            ->each(function (string $name) use (&$hooks, $event) {
-                $hook = Hook::fromClassMethod($event, new ReflectionMethod($event, $name));
-                $hook->aggregates_state = true;
-                $hooks->push($hook);
-            });
+        $states_apply_methods = ReflectionMethodSignature::make($state)
+            ->prefix('apply')
+            ->param($event::class)
+            ->find();
+
+        $hooks = $hooks->merge(
+            $event_apply_methods->map(fn (ReflectionMethod $method) => Hook::fromClassMethod($event, $method)->aggregatesState())
+        )->merge(
+            $states_apply_methods->map(fn (ReflectionMethod $method) => Hook::fromClassMethod($state, $method)->aggregatesState())
+        );
 
         return $hooks
             ->filter(fn (Hook $hook) => $hook->aggregates_state)

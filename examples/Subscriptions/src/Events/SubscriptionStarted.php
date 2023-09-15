@@ -36,11 +36,6 @@ class SubscriptionStarted extends Event
         $state->plan_id = $this->plan_id;
     }
 
-    public function applyToReport(PlanReportState $state)
-    {
-        $state->subscribes_since_last_report++;
-    }
-
     public function onFire()
     {
         Subscription::create([
