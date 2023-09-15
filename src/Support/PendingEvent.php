@@ -3,14 +3,13 @@
 namespace Thunk\Verbs\Support;
 
 use Closure;
+use Illuminate\Validation\ValidationException;
 use Throwable;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\Broker;
 
 class PendingEvent
 {
-    protected bool $should_fire = false;
-
     protected Closure $exception_mapper;
 
     public static function make(Event $event): static
@@ -26,7 +25,7 @@ class PendingEvent
 
     public function shouldFire(): static
     {
-        $this->should_fire = true;
+        $this->autofire = true;
 
         return $this;
     }
@@ -40,17 +39,12 @@ class PendingEvent
         return $this;
     }
 
-    public function fire(...$args)
+    public function fire(...$args): Event
     {
-        if (func_num_args()) {
+        if (! empty($args)) {
             $this->hydrate($args);
         }
 
-        return $this->shouldFire();
-    }
-
-    public function forceFire(): Event
-    {
         try {
             return app(Broker::class)->fire($this->event);
         } catch (Throwable $e) {
@@ -66,16 +60,14 @@ class PendingEvent
         return $this;
     }
 
-    public function __destruct()
-    {
-        if ($this->should_fire) {
-            $this->should_fire = false;
-            $this->forceFire();
-        }
-    }
-
     protected function prepareException(Throwable $e): Throwable
     {
-        return call_user_func($this->exception_mapper, $e);
+        $result = call_user_func($this->exception_mapper, $e);
+
+        if (is_array($result)) {
+            $result = ValidationException::withMessages($result);
+        }
+
+        return $result;
     }
 }

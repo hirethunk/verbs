@@ -19,9 +19,9 @@ abstract class Event
         return PendingEvent::make($event);
     }
 
-    public static function fire(...$args): PendingEvent
+    public static function fire(...$args)
     {
-        return static::make()->hydrate($args)->shouldFire();
+        return static::make()->fire(...$args);
     }
 
     public function states(): array
