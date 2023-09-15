@@ -21,6 +21,7 @@ abstract class State implements Arrayable
         return $state;
     }
 
+    // FIXME: This function maybe needs to go away
     public static function initialize(int|string $id = null): static
     {
         return app(StateStore::class)->initialize(static::class, $id);

@@ -48,6 +48,7 @@ class Dispatcher
 
     public function fire(Event $event): void
     {
+        // FIXME: We need to be able to pass state into onFire
         foreach ($this->getHooks($event) as $listener) {
             $listener->fire($this->container, $event);
         }

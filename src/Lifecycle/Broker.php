@@ -11,12 +11,14 @@ class Broker
 {
     public function fire(Event $event)
     {
-        $states = Reflector::getPublicStateProperties($event);
+        $states = collect($event->states());
 
         $states->each(fn ($state) => Guards::for($event, $state)->check());
         $states->each(fn ($state) => app(Dispatcher::class)->apply($event, $state));
 
         app(Queue::class)->queue($event);
+
+        $event->fired = true;
 
         return $event;
     }
@@ -46,6 +48,7 @@ class Broker
         app(EventStore::class)->read()
             ->each(function (VerbEvent $model) {
                 $event = $model->type::hydrate($model->id, $model->data);
+                $event->fired = true;
 
                 $states = Reflector::getPublicStateProperties($event);
                 $states->each(fn ($state) => app(Dispatcher::class)->apply($event, $state));

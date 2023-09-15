@@ -8,13 +8,13 @@ use Thunk\Verbs\Examples\Bank\States\AccountState;
 
 class MoneyWithdrawn extends Event
 {
-    public AccountState $account_state;
+    public int $account_id;
 
-    public function __construct(
-        public int $account_id,
-        public int $cents = 0,
-    ) {
-        $this->account_state = AccountState::load($this->account_id);
+    public int $cents = 0;
+
+    public function states(): array
+    {
+        return [AccountState::load($this->account_id)];
     }
 
     public function validate(AccountState $state): bool
@@ -27,11 +27,11 @@ class MoneyWithdrawn extends Event
         $state->balance_in_cents -= $this->cents;
     }
 
-    public function onFire(): void
+    public function onFire(AccountState $state): void
     {
         Account::find($this->account_id)
             ->update([
-                'balance_in_cents' => $this->account_state->balance_in_cents,
+                'balance_in_cents' => $state->balance_in_cents,
             ]);
     }
 }

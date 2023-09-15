@@ -2,6 +2,7 @@
 
 namespace Thunk\Verbs\Examples\Bank\Events;
 
+use Glhd\Bits\Snowflake;
 use Illuminate\Support\Facades\Mail;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Examples\Bank\Mail\WelcomeEmail;
@@ -10,13 +11,17 @@ use Thunk\Verbs\Examples\Bank\States\AccountState;
 
 class AccountOpened extends Event
 {
-    public AccountState $account_state;
+    public ?int $account_id = null;
 
-    public function __construct(
-        public int $user_id,
-        public int $initial_deposit_in_cents = 0,
-    ) {
-        $this->account_state = AccountState::initialize();
+    public int $user_id;
+
+    public int $initial_deposit_in_cents = 0;
+
+    public function states(): array
+    {
+        $this->account_id ??= Snowflake::make()->id();
+
+        return [AccountState::load($this->account_id)];
     }
 
     public function validate(AccountState $state): bool
@@ -32,8 +37,8 @@ class AccountOpened extends Event
     public function onFire()
     {
         Account::create([
-            'id' => $this->account_state->id,
-            'user_id' => $this->user_id, // User::find($this->user_id)->getKey(),
+            'id' => $this->account_id,
+            'user_id' => $this->user_id,
             'balance_in_cents' => $this->initial_deposit_in_cents,
         ]);
     }

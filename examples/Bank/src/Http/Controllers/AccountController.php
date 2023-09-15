@@ -14,24 +14,24 @@ class AccountController
     public function store(Request $request)
     {
         AccountOpened::fire(
-            Auth::id(),
-            $request->integer('initial_deposit_in_cents')
+            user_id: Auth::id(),
+            initial_deposit_in_cents: $request->integer('initial_deposit_in_cents'),
         );
     }
 
     public function deposit(Request $request, Account $account)
     {
         MoneyDeposited::fire(
-            $account->id,
-            $request->integer('deposit_in_cents')
+            account_id: $account->id,
+            cents: $request->integer('deposit_in_cents')
         );
     }
 
     public function withdraw(Request $request, Account $account)
     {
         MoneyWithdrawn::fire(
-            $account->id,
-            $request->integer('withdrawal_in_cents')
+            account_id: $account->id,
+            cents: $request->integer('withdrawal_in_cents')
         );
     }
 }
