@@ -34,6 +34,11 @@ class SubscriptionCancelled extends Event
         $state->is_active = false;
     }
 
+    public function applyToReport(PlanReportState $state)
+    {
+        $state->unsubscribes_since_last_report++;
+    }
+
     public function onFire()
     {
         $subscription = Subscription::find($this->subscription_id);

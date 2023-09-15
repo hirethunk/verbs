@@ -18,6 +18,6 @@ class Plan extends Model
     {
         return PlanReportGenerated::fire($this->id)
             ->state
-            ->summary;
+            ->summary();
     }
 }
