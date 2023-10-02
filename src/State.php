@@ -3,8 +3,6 @@
 namespace Thunk\Verbs;
 
 use Illuminate\Contracts\Support\Arrayable;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Thunk\Verbs\Lifecycle\Dispatcher;
 use Thunk\Verbs\Lifecycle\StateStore;
 use Thunk\Verbs\Models\VerbStateEvent;
 
@@ -45,9 +43,9 @@ abstract class State implements Arrayable
     {
         // @todo - refactor this and make it good.
         return VerbStateEvent::where([
-                'state_id' => $this->id,
-                'state_type' => static::class,
-            ])
+            'state_id' => $this->id,
+            'state_type' => static::class,
+        ])
             ->with('event')
             ->get()
             ->map

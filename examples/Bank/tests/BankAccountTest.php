@@ -9,7 +9,6 @@ use Thunk\Verbs\Examples\Bank\Mail\DepositAvailable;
 use Thunk\Verbs\Examples\Bank\Mail\WelcomeEmail;
 use Thunk\Verbs\Examples\Bank\Models\User;
 use Thunk\Verbs\Examples\Bank\States\AccountState;
-use Thunk\Verbs\Models\VerbStateEvent;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Models\VerbEvent;
 
