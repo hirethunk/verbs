@@ -3,7 +3,6 @@
 namespace Thunk\Verbs;
 
 use Illuminate\Contracts\Support\Arrayable;
-use Thunk\Verbs\Lifecycle\Dispatcher;
 use Thunk\Verbs\Lifecycle\StateStore;
 
 abstract class State implements Arrayable
@@ -13,8 +12,7 @@ abstract class State implements Arrayable
     public static function hydrate(
         int|string $id,
         array $data,
-    ): static
-    {
+    ): static {
         $state = new static();
         $state->id = $id;
 

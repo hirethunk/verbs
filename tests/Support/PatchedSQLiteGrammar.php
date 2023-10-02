@@ -2,9 +2,9 @@
 
 namespace Thunk\Verbs\Tests\Support;
 
-use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Query\Grammars\SQLiteGrammar;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 // Stolen from: @joecampo
 // Original Laracasts Answer: https://laracasts.com/discuss/channels/laravel/wherejsoncontains-equivalent-for-sqlite-database?page=1&replyId=894087
@@ -28,7 +28,7 @@ class PatchedSQLiteGrammar extends SQLiteGrammar
                             $decoded_needle,
                             $decoded_haystack->pluck($path)
                         );
-                    }   
+                    }
 
                     return $this->collectionContainsCollection(
                         $decoded_needle,

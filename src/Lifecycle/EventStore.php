@@ -2,10 +2,10 @@
 
 namespace Thunk\Verbs\Lifecycle;
 
-use Thunk\Verbs\Models\VerbEvent;
-use Thunk\Verbs\Support\Reflector;
 use Illuminate\Support\LazyCollection;
+use Thunk\Verbs\Models\VerbEvent;
 use Thunk\Verbs\Models\VerbStateEvent;
+use Thunk\Verbs\Support\Reflector;
 
 class EventStore
 {
