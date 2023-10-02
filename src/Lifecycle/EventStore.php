@@ -2,6 +2,7 @@
 
 namespace Thunk\Verbs\Lifecycle;
 
+use Glhd\Bits\Snowflake;
 use Thunk\Verbs\Models\VerbEvent;
 use Thunk\Verbs\Support\Reflector;
 use Illuminate\Support\LazyCollection;
@@ -38,12 +39,13 @@ class EventStore
         return collect($event_objects)
             ->map(fn ($event) => collect($event->states())
                 ->map(fn ($state) => [
+                    'id' => Snowflake::make()->id(),
                     'event_id' => $event->id,
                     'state_id' => $state->id,
                     'state_type' => $state::class,
                 ])
             )
-            ->flatten()
+            ->flatten(1)
             ->toArray();
     }
 }

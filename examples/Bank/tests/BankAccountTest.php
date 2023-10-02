@@ -11,6 +11,7 @@ use Thunk\Verbs\Examples\Bank\Events\MoneyDeposited;
 use Thunk\Verbs\Examples\Bank\Events\MoneyWithdrawn;
 use Thunk\Verbs\Examples\Bank\Mail\DepositAvailable;
 use Thunk\Verbs\Examples\Bank\States\AccountState;
+use Thunk\Verbs\Models\VerbStateEvent;
 
 test('a bank account can be opened and interacted with', function () {
     Mail::fake();
@@ -101,10 +102,11 @@ test('a bank account can be opened and interacted with', function () {
     expect(AccountState::load($account->id)->storedEvents())
         ->toHaveCount(3)
         ->sequence(
-            fn (VerbEvent $event) => $event->type === AccountOpened::class,
-            fn (VerbEvent $event) => $event->type === MoneyDeposited::class,
-            fn (VerbEvent $event) => $event->type === MoneyWithdrawn::class,
+            fn ($number) => $number->id->toBe($open_event->id),
+            fn ($number) => $number->id->toBe($deposit_event->id),
+            fn ($number) => $number->id->toBe($withdraw_event->id),
         );
+
     // Finally, let's replay everything and make sure we get what's expected
 
     //    Mail::fake();

@@ -65,6 +65,9 @@ class TestCase extends Orchestra
         $events = include __DIR__.'/../database/migrations/create_verb_events_table.php.stub';
         $events->up();
 
+        $state_events = include __DIR__.'/../database/migrations/create_verb_state_events_table.php.stub';
+        $state_events->up();
+
         $snapshots = include __DIR__.'/../database/migrations/create_verb_snapshots_table.php.stub';
         $snapshots->up();
     }
