@@ -3,9 +3,7 @@
 namespace Thunk\Verbs\Examples\Bank\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Throwable;
-use Thunk\Verbs\Examples\Bank\Events\AccountOpened;
 use Thunk\Verbs\Examples\Bank\Events\MoneyDeposited;
 use Thunk\Verbs\Examples\Bank\Events\MoneyWithdrawn;
 use Thunk\Verbs\Examples\Bank\Models\Account;

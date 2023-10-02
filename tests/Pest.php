@@ -1,12 +1,12 @@
 <?php
 
-use Thunk\Verbs\Tests\TestCase;
-use Symfony\Component\Finder\Finder;
 use Illuminate\Database\Eloquent\Model;
-use Symfony\Component\Finder\SplFileInfo;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Symfony\Component\Finder\Finder;
+use Symfony\Component\Finder\SplFileInfo;
 use Thunk\Verbs\Tests\Support\PatchedSQLiteGrammar;
+use Thunk\Verbs\Tests\TestCase;
 
 Model::unguard();
 
@@ -16,10 +16,9 @@ $examples = collect(Finder::create()->directories()->in(__DIR__.'/../examples/')
     ->all();
 
 uses(TestCase::class, RefreshDatabase::class)
-    ->beforeEach(fn () => 
-        DB::connection(DB::getDefaultConnection())
-            ->setQueryGrammar(
-                new PatchedSQLiteGrammar()
-            )
+    ->beforeEach(fn () => DB::connection(DB::getDefaultConnection())
+        ->setQueryGrammar(
+            new PatchedSQLiteGrammar()
+        )
     )
     ->in(__DIR__, ...$examples);

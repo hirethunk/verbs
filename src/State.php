@@ -15,8 +15,7 @@ abstract class State implements Arrayable
     public static function hydrate(
         int|string $id,
         array $data,
-    ): static
-    {
+    ): static {
         $state = new static();
         $state->id = $id;
 

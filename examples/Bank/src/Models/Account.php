@@ -2,11 +2,11 @@
 
 namespace Thunk\Verbs\Examples\Bank\Models;
 
-use Thunk\Verbs\FromState;
 use Glhd\Bits\Database\HasSnowflakes;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Thunk\Verbs\Examples\Bank\Events\AccountOpened;
+use Thunk\Verbs\FromState;
 
 class Account extends Model
 {
@@ -21,6 +21,7 @@ class Account extends Model
         );
 
     }
+
     public function user()
     {
         return $this->belongsTo(User::class);

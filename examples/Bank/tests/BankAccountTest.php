@@ -1,17 +1,17 @@
 <?php
 
-use Thunk\Verbs\Facades\Verbs;
-use Thunk\Verbs\Models\VerbEvent;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Mail;
-use Thunk\Verbs\Examples\Bank\Models\User;
-use Thunk\Verbs\Examples\Bank\Mail\WelcomeEmail;
 use Thunk\Verbs\Examples\Bank\Events\AccountOpened;
 use Thunk\Verbs\Examples\Bank\Events\MoneyDeposited;
 use Thunk\Verbs\Examples\Bank\Events\MoneyWithdrawn;
 use Thunk\Verbs\Examples\Bank\Mail\DepositAvailable;
+use Thunk\Verbs\Examples\Bank\Mail\WelcomeEmail;
+use Thunk\Verbs\Examples\Bank\Models\User;
 use Thunk\Verbs\Examples\Bank\States\AccountState;
 use Thunk\Verbs\Models\VerbStateEvent;
+use Thunk\Verbs\Facades\Verbs;
+use Thunk\Verbs\Models\VerbEvent;
 
 test('a bank account can be opened and interacted with', function () {
     Mail::fake();
@@ -95,7 +95,6 @@ test('a bank account can be opened and interacted with', function () {
     )->toBe(1);
 
     expect($account->refresh()->balance_in_cents)->toBe(100_00);
-
 
     // Lets assert the events are on the state store in the correct order
 
