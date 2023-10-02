@@ -3,13 +3,17 @@
 namespace Thunk\Verbs;
 
 use Illuminate\Contracts\Support\Arrayable;
+use Thunk\Verbs\Lifecycle\Dispatcher;
 use Thunk\Verbs\Lifecycle\StateStore;
 
 abstract class State implements Arrayable
 {
     public int|string|null $id;
 
-    public static function hydrate(int|string $id, array $data): static
+    public static function hydrate(
+        int|string $id,
+        array $data,
+    ): static
     {
         $state = new static();
         $state->id = $id;
@@ -34,6 +38,11 @@ abstract class State implements Arrayable
             : $from;
 
         return static::loadByKey($key);
+    }
+
+    public function storedEvents()
+    {
+        return app(StateStore::class)->getEventsForState($this::class, $this->id);
     }
 
     public static function loadByKey($from): static

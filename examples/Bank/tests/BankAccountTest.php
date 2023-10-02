@@ -1,18 +1,19 @@
 <?php
 
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Mail;
-use Thunk\Verbs\Examples\Bank\Events\AccountOpened;
-use Thunk\Verbs\Examples\Bank\Mail\DepositAvailable;
-use Thunk\Verbs\Examples\Bank\Mail\WelcomeEmail;
-use Thunk\Verbs\Examples\Bank\Models\User;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Models\VerbEvent;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+use Thunk\Verbs\Examples\Bank\Models\User;
+use Thunk\Verbs\Examples\Bank\Mail\WelcomeEmail;
+use Thunk\Verbs\Examples\Bank\Events\AccountOpened;
+use Thunk\Verbs\Examples\Bank\Events\MoneyDeposited;
+use Thunk\Verbs\Examples\Bank\Events\MoneyWithdrawn;
+use Thunk\Verbs\Examples\Bank\Mail\DepositAvailable;
+use Thunk\Verbs\Examples\Bank\States\AccountState;
 
 test('a bank account can be opened and interacted with', function () {
     Mail::fake();
-
-    // $this->withoutExceptionHandling();
 
     $this->actingAs(User::factory()->create());
 
@@ -25,12 +26,12 @@ test('a bank account can be opened and interacted with', function () {
         ]
     )->assertSuccessful();
 
-    //    expect(
-    //        VerbEvent::type(AccountOpened::class)->whereDataContains([
-    //            'initial_deposit_in_cents' => 1000_00,
-    //            'user_id' => User::first()->id,
-    //        ])->first()
-    //    )->not->toBeNull();
+    expect(
+        $open_event = VerbEvent::type(AccountOpened::class)->whereDataContains([
+            'user_id' => User::first()->id,
+            'initial_deposit_in_cents' => 1000_00,
+        ])->first()
+    )->not->toBeNull();
 
     $account = Auth::user()->accounts()->sole();
     expect($account->balance_in_cents)->toBe(1000_00);
@@ -45,6 +46,13 @@ test('a bank account can be opened and interacted with', function () {
             'deposit_in_cents' => 499_99,
         ]
     )->assertSuccessful();
+
+    expect(
+        $deposit_event = VerbEvent::type(MoneyDeposited::class)->whereDataContains([
+            'account_id' => $account->id,
+            'cents' => 499_99,
+        ])->first()
+    )->not->toBeNull();
 
     expect($account->refresh()->balance_in_cents)->toBe(1499_99);
 
@@ -61,6 +69,13 @@ test('a bank account can be opened and interacted with', function () {
         ->assertSessionHasNoErrors()
         ->assertSuccessful();
 
+    expect(
+        $withdraw_event = VerbEvent::type(MoneyWithdrawn::class)->whereDataContains([
+            'account_id' => $account->id,
+            'cents' => 1399_99,
+        ])->first()
+    )->not->toBeNull();
+
     expect($account->refresh()->balance_in_cents)->toBe(100_00);
 
     // Next let's try to withdraw an amount that we don't have
@@ -74,8 +89,22 @@ test('a bank account can be opened and interacted with', function () {
         ]
     )->assertSessionHasErrors();
 
+    expect(
+        VerbEvent::type(MoneyWithdrawn::class)->count()
+    )->toBe(1);
+
     expect($account->refresh()->balance_in_cents)->toBe(100_00);
 
+
+    // Lets assert the events are on the state store in the correct order
+
+    expect(AccountState::load($account->id)->storedEvents())
+        ->toHaveCount(3)
+        ->sequence(
+            fn (VerbEvent $event) => $event->type === AccountOpened::class,
+            fn (VerbEvent $event) => $event->type === MoneyDeposited::class,
+            fn (VerbEvent $event) => $event->type === MoneyWithdrawn::class,
+        );
     // Finally, let's replay everything and make sure we get what's expected
 
     //    Mail::fake();

@@ -15,9 +15,8 @@ class AccountController
 {
     public function store(Request $request)
     {
-        AccountOpened::fire(
-            user_id: Auth::id(),
-            initial_deposit_in_cents: $request->integer('initial_deposit_in_cents'),
+        Account::open(
+            $request->integer('initial_deposit_in_cents')
         );
 
         return response('Account created!');

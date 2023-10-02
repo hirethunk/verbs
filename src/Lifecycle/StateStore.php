@@ -3,7 +3,9 @@
 namespace Thunk\Verbs\Lifecycle;
 
 use Glhd\Bits\Snowflake;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Arr;
+use Thunk\Verbs\Models\VerbEvent;
 use Thunk\Verbs\Models\VerbSnapshot;
 use Thunk\Verbs\State;
 use UnexpectedValueException;
@@ -36,6 +38,13 @@ class StateStore
         }
 
         return $type::initialize($id);
+    }
+
+    public static function getEventsForState(int|string $id, string $type): Collection
+    {
+        return VerbEvent::where('state_id', $id)
+            ->where('state_type', $type)
+            ->get();
     }
 
     public function writeLoaded(): bool
