@@ -3,7 +3,9 @@
 namespace Thunk\Verbs;
 
 use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Support\Carbon;
 use Thunk\Verbs\Lifecycle\StateStore;
+use Thunk\Verbs\Models\VerbSnapshot;
 use Thunk\Verbs\Models\VerbStateEvent;
 
 abstract class State implements Arrayable
@@ -39,22 +41,19 @@ abstract class State implements Arrayable
         return static::loadByKey($key);
     }
 
-    public function storedEvents()
-    {
-        // @todo - refactor this and make it good.
-        return VerbStateEvent::where([
-            'state_id' => $this->id,
-            'state_type' => static::class,
-        ])
-            ->with('event')
-            ->get()
-            ->map
-            ->event;
-    }
-
     public static function loadByKey($from): static
     {
         return app(StateStore::class)->load($from, static::class);
+    }
+
+    public static function hydrateFromStoredEvents(?VerbSnapshot $latest_snapshot = null): static
+    {
+        $events_since_snapshot = return $this->storedEvents($latest_snapshot?->created_at);
+    }
+
+    public function storedEvents(?Carbon $after_date = null)
+    {
+        return app(StateStore::class)->getEventsForState($this->id, static::class);
     }
 
     public static function singleton(): static

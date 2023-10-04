@@ -2,13 +2,15 @@
 
 namespace Thunk\Verbs\Lifecycle;
 
+use Thunk\Verbs\State;
 use Glhd\Bits\Snowflake;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Arr;
+use UnexpectedValueException;
 use Thunk\Verbs\Models\VerbEvent;
 use Thunk\Verbs\Models\VerbSnapshot;
-use Thunk\Verbs\State;
-use UnexpectedValueException;
+use Thunk\Verbs\Models\VerbStateEvent;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Carbon;
 
 class StateStore
 {
@@ -40,11 +42,22 @@ class StateStore
         return $type::initialize($id);
     }
 
-    public static function getEventsForState(int|string $id, string $type): Collection
+    public static function getEventsForState(
+        int|string $id,
+        string $type,
+        int|string|null $cutoff_id
+    ): Collection
     {
-        return VerbEvent::where('state_id', $id)
-            ->where('state_type', $type)
-            ->get();
+         // @todo - refactor this and make it good.
+         return VerbStateEvent::where([
+            'state_id' => $id,
+            'state_type' => $type,
+        ])
+            ->with('event')
+            ->when($cutoff_id, fn ($query) => $query->where('id' , '>', $cutoff_id))
+            ->get()
+            ->map
+            ->event;
     }
 
     public function writeLoaded(): bool
