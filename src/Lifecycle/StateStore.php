@@ -45,10 +45,9 @@ class StateStore
     public static function getEventsForState(
         int|string $id,
         string $type,
-        int|string|null $cutoff_id
+        int|string|null $cutoff_id = null,
     ): Collection
     {
-         // @todo - refactor this and make it good.
          return VerbStateEvent::where([
             'state_id' => $id,
             'state_type' => $type,
