@@ -15,13 +15,25 @@ abstract class State implements Arrayable
 
     public static function hydrate(
         int|string $id,
-        array $data,
+        array $data = [],
+        array $events = [],
     ): static {
         $state = new static();
         $state->id = $id;
 
+        dump(
+            static::class,
+            $id,
+            $data,
+            $events,
+        );
+
         foreach ($data as $key => $value) {
             $state->{$key} = $value;
+        }
+
+        foreach ($events as $event) {
+            app(Dispatcher::class)->apply($event, $state);
         }
 
         return $state;
@@ -54,29 +66,6 @@ abstract class State implements Arrayable
     public static function loadByKey($from): static
     {
         return app(StateStore::class)->load($from, static::class);
-    }
-
-    public static function hydrateFromStoredEvents(
-        int|string $id,
-        ?VerbSnapshot $latest_snapshot = null
-    ): static
-    {
-        $state = new static();
-        $state->id = $id;
-
-        $cutoff_id = $latest_snapshot?->id;
-
-        $events = $state->storedEvents($cutoff_id);
-        
-        if ($latest_snapshot) {
-            $state->applyData($latest_snapshot->data);
-        }
-
-        foreach ($events as $event) {
-            app(Dispatcher::class)->apply($event, $state);
-        }
-
-        return $state;
     }
 
     public function storedEvents(int|string|null $after_id = null)

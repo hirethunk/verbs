@@ -6,11 +6,12 @@ use Thunk\Verbs\State;
 use Glhd\Bits\Snowflake;
 use Illuminate\Support\Arr;
 use UnexpectedValueException;
+use Illuminate\Support\Carbon;
+use Thunk\Verbs\Lifecycle\Queue;
 use Thunk\Verbs\Models\VerbEvent;
 use Thunk\Verbs\Models\VerbSnapshot;
 use Thunk\Verbs\Models\VerbStateEvent;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Carbon;
 
 class StateStore
 {
@@ -31,15 +32,28 @@ class StateStore
             return $loaded;
         }
 
-        if ($snapshot = VerbSnapshot::find($id)) {
-            if ($type !== $snapshot->type) {
-                throw new UnexpectedValueException('State does not have a valid type.');
-            }
+        $snapshot = VerbSnapshot::find($id);
 
-            return $this->remember($snapshot->type::hydrate($snapshot->data));
+        if ($snapshot && $type !== $snapshot->type) {
+            throw new UnexpectedValueException('State does not have a valid type.');
         }
 
-        return $type::initialize($id);
+        $stored_events = static::getEventsForState($id, $type, $snapshot?->last_event_id);
+
+        $queued_events = app(Queue::class)->getEvents();
+
+        if ($snapshot && $stored_events->isEmpty()) {
+            return $type::initialize($id);
+        }
+
+        return $this->remember(
+            $type::hydrate(
+                $id,
+                $snapshot?->data ?? [],
+                $stored_events->toArray(),
+            )
+        );
+
     }
 
     public static function getEventsForState(

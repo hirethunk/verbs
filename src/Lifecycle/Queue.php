@@ -25,4 +25,9 @@ class Queue
 
         return $events;
     }
+
+    public function getEvents(): array
+    {
+        return $this->event_queue;
+    }
 }
