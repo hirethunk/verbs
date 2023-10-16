@@ -4,13 +4,16 @@ namespace Thunk\Verbs;
 
 use Illuminate\Contracts\Support\Arrayable;
 use Thunk\Verbs\Lifecycle\StateStore;
+use Thunk\Verbs\Models\VerbStateEvent;
 
 abstract class State implements Arrayable
 {
     public int|string|null $id;
 
-    public static function hydrate(int|string $id, array $data): static
-    {
+    public static function hydrate(
+        int|string $id,
+        array $data,
+    ): static {
         $state = new static();
         $state->id = $id;
 
@@ -34,6 +37,19 @@ abstract class State implements Arrayable
             : $from;
 
         return static::loadByKey($key);
+    }
+
+    public function storedEvents()
+    {
+        // @todo - refactor this and make it good.
+        return VerbStateEvent::where([
+            'state_id' => $this->id,
+            'state_type' => static::class,
+        ])
+            ->with('event')
+            ->get()
+            ->map
+            ->event;
     }
 
     public static function loadByKey($from): static

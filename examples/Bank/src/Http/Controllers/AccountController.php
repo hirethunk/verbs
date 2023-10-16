@@ -3,9 +3,7 @@
 namespace Thunk\Verbs\Examples\Bank\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Throwable;
-use Thunk\Verbs\Examples\Bank\Events\AccountOpened;
 use Thunk\Verbs\Examples\Bank\Events\MoneyDeposited;
 use Thunk\Verbs\Examples\Bank\Events\MoneyWithdrawn;
 use Thunk\Verbs\Examples\Bank\Models\Account;
@@ -15,9 +13,8 @@ class AccountController
 {
     public function store(Request $request)
     {
-        AccountOpened::fire(
-            user_id: Auth::id(),
-            initial_deposit_in_cents: $request->integer('initial_deposit_in_cents'),
+        Account::open(
+            $request->integer('initial_deposit_in_cents')
         );
 
         return response('Account created!');

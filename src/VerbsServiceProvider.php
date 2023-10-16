@@ -18,7 +18,10 @@ class VerbsServiceProvider extends PackageServiceProvider
             ->name('verbs')
             ->hasConfigFile()
             ->hasViews()
-            ->hasMigration('create_verb_events_table');
+            ->hasMigrations(
+                'create_verb_events_table',
+                'create_verb_state_events_table',
+            );
     }
 
     public function packageRegistered()

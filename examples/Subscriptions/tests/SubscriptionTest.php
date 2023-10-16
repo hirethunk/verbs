@@ -37,8 +37,6 @@ test('a user can subscribe to multiple plans and unsubscribe', function () {
     $serious_report = $serious_plan->generateReport();
     $global_report = Plan::generateGlobalReport();
 
-    dump($silly_report, $serious_report, $global_report);
-
     Verbs::commit();
 
     expect($silly_report->summary())
