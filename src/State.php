@@ -3,11 +3,8 @@
 namespace Thunk\Verbs;
 
 use Illuminate\Contracts\Support\Arrayable;
-use Illuminate\Support\Carbon;
 use Thunk\Verbs\Lifecycle\Dispatcher;
 use Thunk\Verbs\Lifecycle\StateStore;
-use Thunk\Verbs\Models\VerbSnapshot;
-use Thunk\Verbs\Models\VerbStateEvent;
 
 abstract class State implements Arrayable
 {
@@ -38,7 +35,7 @@ abstract class State implements Arrayable
 
         return $state;
     }
-    
+
     public function applyData(array $data): static
     {
         foreach ($data as $key => $value) {
@@ -68,7 +65,7 @@ abstract class State implements Arrayable
         return app(StateStore::class)->load($from, static::class);
     }
 
-    public function storedEvents(int|string|null $after_id = null)
+    public function storedEvents(int|string $after_id = null)
     {
         return app(StateStore::class)->getEventsForState($this->id, static::class);
     }
