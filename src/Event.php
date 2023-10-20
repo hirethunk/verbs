@@ -2,23 +2,31 @@
 
 namespace Thunk\Verbs;
 
-use Thunk\Verbs\Snowflakes\Snowflake;
+use Glhd\Bits\Snowflake;
 use Thunk\Verbs\Support\PendingEvent;
 
-/**
- * @method static PendingEvent withContext(Context ...$contexts)
- * @method static Event fire(...$args)
- */
 abstract class Event
 {
-    public Snowflake $id;
+    public int|string $id;
 
-    public ?Snowflake $context_id = null;
+    public bool $fired = false;
 
-    public static function __callStatic(string $name, array $arguments)
+    public static function make(): PendingEvent
     {
-        $pending = new PendingEvent(static::class);
+        $event = new static();
+        $event->id = Snowflake::make()->id();
 
-        return $pending->$name(...$arguments);
+        return PendingEvent::make($event);
+    }
+
+    public static function fire(...$args)
+    {
+        return static::make()->fire(...$args);
+    }
+
+    public function states(): array
+    {
+        // TODO: Use reflection and attributes to figure this out
+        return [];
     }
 }

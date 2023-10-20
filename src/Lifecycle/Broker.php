@@ -2,69 +2,60 @@
 
 namespace Thunk\Verbs\Lifecycle;
 
-use Thunk\Verbs\Context;
-use Thunk\Verbs\Contracts\BrokersEvents;
-use Thunk\Verbs\Contracts\DispatchesEvents;
-use Thunk\Verbs\Contracts\ManagesContext;
-use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Exceptions\ContextAlreadyExists;
-use Thunk\Verbs\Snowflakes\Factory;
+use Thunk\Verbs\Lifecycle\Queue as EventQueue;
+use Thunk\Verbs\Models\VerbEvent;
 use Thunk\Verbs\Support\Reflector;
 
-class Broker implements BrokersEvents
+class Broker
 {
-    public function __construct(
-        protected DispatchesEvents $bus,
-        protected StoresEvents $events,
-        protected ManagesContext $contexts,
-        protected Factory $snowflakes,
-    ) {
+    public function fire(Event $event)
+    {
+        $states = collect($event->states());
+
+        $states->each(fn ($state) => Guards::for($event, $state)->check());
+        $states->each(fn ($state) => app(Dispatcher::class)->apply($event, $state));
+
+        app(Queue::class)->queue($event);
+
+        $event->fired = true;
+
+        return $event;
     }
 
-    public function originate(Event $event, ?Context $context = null): void
+    public function commit(): bool
     {
-        $context = $this->syncOrCreateContext($event, $context);
+        $events = app(EventQueue::class)->flush();
 
-        $this->guardEvent($event, $context);
+        // FIXME: Only write changes + handle aggregate versioning
+        app(StateStore::class)->writeLoaded();
 
-        $this->events->save($event);
-        $this->bus->dispatch($event);
-    }
-
-    public function replay(array|string $event_types = null, int $chunk_size = 1000): void
-    {
-        $this->events
-            ->get((array) $event_types, null, null, $chunk_size)
-            ->each($this->bus->replay(...));
-    }
-
-    protected function syncOrCreateContext(Event $event, ?Context $context = null): ?Context
-    {
-        if ($creates = Reflector::getContextForCreation($event)) {
-            // If we've been provided a context, but the event that we're firing also
-            // creates a new context, we want to trigger an error before the event fires
-            if ($context) {
-                throw new ContextAlreadyExists($event, $context, $creates);
-            }
-
-            $context = new $creates($this->snowflakes->make());
+        if (empty($events)) {
+            return true;
         }
 
-        if ($context) {
-            $event->context_id = $context->id;
-            $this->contexts->register($context);
+        foreach ($events as $event) {
+            app(Dispatcher::class)->fire($event);
         }
 
-        return $context;
+        return $this->commit();
     }
 
-    protected function guardEvent(Event $event, ?Context $context): void
+    public function replay()
     {
-        Guards::for($event, $context)->check();
+        app(StateStore::class)->reset();
 
-        if ($context) {
-            $this->contexts->validate($context, $event);
-        }
+        app(EventStore::class)->read()
+            ->each(function (VerbEvent $model) {
+                $event = $model->type::hydrate($model->id, $model->data);
+                $event->fired = true;
+
+                $states = Reflector::getPublicStateProperties($event);
+                $states->each(fn ($state) => app(Dispatcher::class)->apply($event, $state));
+            });
+
+        app(Queue::class)->queue($event);
+
+        return $event;
     }
 }

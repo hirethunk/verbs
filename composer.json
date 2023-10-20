@@ -18,7 +18,9 @@
     ],
     "require": {
         "php": "^8.1",
+        "glhd/bits": "^0.1.1",
         "illuminate/contracts": "^10.0",
+        "internachi/modular": "^2.0",
         "spatie/laravel-package-tools": "^1.14.0",
         "symfony/property-access": "^6.2",
         "symfony/serializer": "^6.2"
@@ -27,15 +29,11 @@
         "laravel/pint": "^1.0",
         "mockery/mockery": "^1.5",
         "nunomaduro/collision": "^7.9",
-        "nunomaduro/larastan": "^2.0.1",
         "orchestra/testbench": "^8.0",
         "pestphp/pest": "^2.0",
         "pestphp/pest-plugin-arch": "^2.0",
         "pestphp/pest-plugin-laravel": "^2.0",
         "pestphp/pest-plugin-watch": "^2.0",
-        "phpstan/extension-installer": "^1.1",
-        "phpstan/phpstan-deprecation-rules": "^1.0",
-        "phpstan/phpstan-phpunit": "^1.0",
         "spatie/laravel-ray": "^1.26"
     },
     "autoload": {
@@ -46,12 +44,19 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Thunk\\Verbs\\Tests\\": "tests/"
+            "Thunk\\Verbs\\Tests\\": "tests/",
+
+            "Thunk\\Verbs\\Examples\\Bank\\": "examples/bank/src/",
+            "Thunk\\Verbs\\Examples\\Bank\\Tests\\": "examples/bank/tests/",
+            "Thunk\\Verbs\\Examples\\Bank\\Database\\Factories\\": "examples/bank/database/factories/",
+
+            "Thunk\\Verbs\\Examples\\Subscriptions\\": "examples/subscriptions/src/",
+            "Thunk\\Verbs\\Examples\\Subscriptions\\Tests\\": "examples/subscriptions/tests/",
+            "Thunk\\Verbs\\Examples\\Subscriptions\\Database\\Factories\\": "examples/subscriptions/database/factories/"
         }
     },
     "scripts": {
         "post-autoload-dump": "@php ./vendor/bin/testbench package:discover --ansi",
-        "analyse": "vendor/bin/phpstan analyse",
         "test": "vendor/bin/pest",
         "test-coverage": "vendor/bin/pest --coverage",
         "format": "vendor/bin/pint"

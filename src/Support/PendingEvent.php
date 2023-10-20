@@ -2,40 +2,72 @@
 
 namespace Thunk\Verbs\Support;
 
-use Thunk\Verbs\Context;
+use Closure;
+use Illuminate\Validation\ValidationException;
+use Throwable;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Facades\Broker;
+use Thunk\Verbs\Lifecycle\Broker;
 
 class PendingEvent
 {
-    protected ?Context $context = null;
+    protected Closure $exception_mapper;
 
-    public function __construct(
-        protected string $event_type
-    ) {
+    public static function make(Event $event): static
+    {
+        return new static($event);
     }
 
-    public function withContext(Context $context): static
+    public function __construct(
+        public Event $event
+    ) {
+        $this->exception_mapper = fn ($e) => $e;
+    }
+
+    public function shouldFire(): static
     {
-        $this->context = $context;
+        $this->autofire = true;
+
+        return $this;
+    }
+
+    public function hydrate(array $data): static
+    {
+        foreach ($data as $key => $value) {
+            $this->event->{$key} = $value;
+        }
 
         return $this;
     }
 
     public function fire(...$args): Event
     {
-        if (1 === count($args) && $args[0] instanceof Event) {
-            $event = $args[0];
-        } else {
-            $event = new $this->event_type(...$args);
+        if (! empty($args)) {
+            $this->hydrate($args);
         }
 
-        if ($this->context) {
-            $event->context_id = $this->context->id;
+        try {
+            return app(Broker::class)->fire($this->event);
+        } catch (Throwable $e) {
+            throw $this->prepareException($e);
+        }
+    }
+
+    /** @param  callable(Throwable): Throwable  $handler */
+    public function onError(Closure $handler): static
+    {
+        $this->exception_mapper = $handler;
+
+        return $this;
+    }
+
+    protected function prepareException(Throwable $e): Throwable
+    {
+        $result = call_user_func($this->exception_mapper, $e);
+
+        if (is_array($result)) {
+            $result = ValidationException::withMessages($result);
         }
 
-        Broker::originate($event, $this->context);
-
-        return $event;
+        return $result;
     }
 }
