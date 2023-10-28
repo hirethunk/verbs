@@ -10,7 +10,7 @@ class ResetGlobalReportState extends Event
     public function states(): array
     {
         return [
-            GlobalReportState::class => GlobalReportState::singleton()
+            GlobalReportState::class => GlobalReportState::singleton(),
         ];
     }
 

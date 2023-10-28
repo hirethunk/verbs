@@ -3,8 +3,8 @@
 namespace Thunk\Verbs\Examples\Subscriptions\Events;
 
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Examples\Subscriptions\States\PlanReportState;
 use Thunk\Verbs\Examples\Subscriptions\States\GlobalReportState;
+use Thunk\Verbs\Examples\Subscriptions\States\PlanReportState;
 
 class ResetPlanReportState extends Event
 {
@@ -13,7 +13,7 @@ class ResetPlanReportState extends Event
     public function states(): array
     {
         return [
-            PlanReportState::class => PlanReportState::load($this->plan_id)
+            PlanReportState::class => PlanReportState::load($this->plan_id),
         ];
     }
 
