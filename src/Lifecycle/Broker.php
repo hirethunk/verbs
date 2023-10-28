@@ -9,6 +9,8 @@ use Thunk\Verbs\Support\Reflector;
 
 class Broker
 {
+    public bool $is_replaying = false;
+
     public function fire(Event $event)
     {
         $states = collect($event->states());
@@ -43,6 +45,8 @@ class Broker
 
     public function replay()
     {
+        $this->is_replaying = true;
+
         app(StateStore::class)->reset();
 
         app(EventStore::class)->read()
@@ -52,10 +56,19 @@ class Broker
 
                 $states = Reflector::getPublicStateProperties($event);
                 $states->each(fn ($state) => app(Dispatcher::class)->apply($event, $state));
+
+                app(Queue::class)->queue($event);
+
+                return $event;
             });
 
-        app(Queue::class)->queue($event);
+        $this->is_replaying = false;
+    }
 
-        return $event;
+    public static function unlessReplaying(callable $callback)
+    {
+        if (! app(Broker::class)->is_replaying) {
+            $callback();
+        }
     }
 }

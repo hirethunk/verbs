@@ -50,7 +50,6 @@ class StateStore
                 $stored_events->toArray(),
             )
         );
-
     }
 
     public static function getEventsForState(

@@ -1,6 +1,7 @@
 <?php
 
 use Thunk\Verbs\Examples\Subscriptions\Models\Plan;
+use Thunk\Verbs\Examples\Subscriptions\Models\Report;
 use Thunk\Verbs\Examples\Subscriptions\Models\User;
 use Thunk\Verbs\Facades\Verbs;
 
@@ -33,18 +34,17 @@ test('a user can subscribe to multiple plans and unsubscribe', function () {
     expect($silly_plan_subscription)->toBeNull();
     expect($serious_plan_subscription)->not->toBeNull();
 
-    $silly_report = $silly_plan->generateReport();
-    $serious_report = $serious_plan->generateReport();
-    $global_report = Plan::generateGlobalReport();
+    $silly_plan->generateReport();
+    $serious_plan->generateReport();
+    Plan::generateGlobalReport();
 
     Verbs::commit();
 
-    expect($silly_report->summary())
-        ->toBe('1 subscribe(s); 1 unsubscribe(s); 100% churn');
+    $global_report = Report::whereNull('plan_id')->sole();
+    $silly_report = Report::where('plan_id', $silly_plan->id)->sole();
+    $serious_report = Report::where('plan_id', $serious_plan->id)->sole();
 
-    expect($serious_report->summary())
-        ->toBe('1 subscribe(s); 0 unsubscribes(s); 0% churn');
-
-    expect($global_report->summary())
-        ->toBe('2 subscribe(s); 1 unsubscribe(s); 50% churn');
+    expect($global_report->summary)->toBe('2 subscribe(s); 1 unsubscribe(s); 50% churn');
+    expect($silly_report->summary)->toBe('1 subscribe(s); 1 unsubscribe(s); 100% churn');
+    expect($serious_report->summary)->toBe('1 subscribe(s); 0 unsubscribe(s); 0% churn');
 });
