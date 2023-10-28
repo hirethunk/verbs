@@ -3,7 +3,12 @@
 namespace Thunk\Verbs;
 
 use Glhd\Bits\Snowflake;
+use Illuminate\Support\Arr;
+use InvalidArgumentException;
+use ReflectionMethod;
+use ReflectionParameter;
 use Thunk\Verbs\Support\PendingEvent;
+use Thunk\Verbs\Support\Serializer;
 
 abstract class Event
 {
@@ -11,9 +16,27 @@ abstract class Event
 
     public bool $fired = false;
 
-    public static function make(): PendingEvent
+    public static function make(...$args): PendingEvent
     {
-        $event = new static();
+        if ((count($args) === 1 && is_array($args[0]))) {
+            $args = $args[0];
+        }
+
+        // Turn a positional array to an associative array
+        if (! Arr::isAssoc($args)) {
+            if (! method_exists(static::class, '__construct')) {
+                throw new InvalidArgumentException('You cannot pass positional arguments to '.class_basename(static::class).'::make()');
+            }
+
+            // TODO: Cache this
+            $names = collect((new ReflectionMethod(static::class, '__construct'))->getParameters())
+                ->map(fn (ReflectionParameter $parameter) => $parameter->getName());
+
+            $args = $names->combine(collect($args)->take($names->count()))->all();
+        }
+
+        $event = app(Serializer::class)->deserialize(static::class, $args);
+
         $event->id = Snowflake::make()->id();
 
         return PendingEvent::make($event);
@@ -21,7 +44,7 @@ abstract class Event
 
     public static function fire(...$args)
     {
-        return static::make()->fire(...$args);
+        return static::make(...$args)->fire();
     }
 
     public function states(): array

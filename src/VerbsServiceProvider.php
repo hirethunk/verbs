@@ -9,6 +9,7 @@ use Thunk\Verbs\Lifecycle\Dispatcher;
 use Thunk\Verbs\Lifecycle\EventStore;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 use Thunk\Verbs\Lifecycle\StateStore;
+use Thunk\Verbs\Support\Serializer;
 
 class VerbsServiceProvider extends PackageServiceProvider
 {
@@ -31,6 +32,10 @@ class VerbsServiceProvider extends PackageServiceProvider
         $this->app->singleton(EventStore::class);
         $this->app->singleton(EventQueue::class);
         $this->app->singleton(StateStore::class);
+
+        $this->app->singleton(Serializer::class, function () {
+            return new Serializer(Serializer::defaultSymfonySerializer());
+        });
     }
 
     public function boot()

@@ -32,9 +32,7 @@ class PendingEvent
 
     public function hydrate(array $data): static
     {
-        foreach ($data as $key => $value) {
-            $this->event->{$key} = $value;
-        }
+        app(Serializer::class)->deserialize($this->event, $data);
 
         return $this;
     }
@@ -42,6 +40,10 @@ class PendingEvent
     public function fire(...$args): Event
     {
         if (! empty($args)) {
+            if (count($args) === 1 && isset($args[0]) && is_array($args[0])) {
+                $args = $args[0];
+            }
+
             $this->hydrate($args);
         }
 
