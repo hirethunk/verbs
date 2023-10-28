@@ -2,13 +2,22 @@
 
 namespace Thunk\Verbs;
 
-use Illuminate\Contracts\Support\Arrayable;
+use Illuminate\Support\Collection;
 use Thunk\Verbs\Lifecycle\Dispatcher;
 use Thunk\Verbs\Lifecycle\StateStore;
+use Illuminate\Contracts\Support\Arrayable;
+use Thunk\Bugg\Bugg;
 
 abstract class State implements Arrayable
 {
     public int|string|null $id;
+
+    public Collection $applied_events;
+
+    public function __construct()
+    {
+        $this->applied_events = collect();
+    }
 
     public static function hydrate(
         int|string $id,
@@ -17,13 +26,6 @@ abstract class State implements Arrayable
     ): static {
         $state = new static();
         $state->id = $id;
-
-        dump(
-            static::class,
-            $id,
-            $data,
-            $events,
-        );
 
         foreach ($data as $key => $value) {
             $state->{$key} = $value;

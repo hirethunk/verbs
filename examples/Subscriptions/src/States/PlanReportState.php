@@ -38,7 +38,7 @@ class PlanReportState extends State
 
     public function applySubscriptionCancelled(SubscriptionCancelled $e)
     {
-        $this->unsubscribes_since_last_report = 20;
-        $this->total_subscriptions = 500;
+        $this->unsubscribes_since_last_report++;
+        $this->total_subscriptions--;
     }
 }

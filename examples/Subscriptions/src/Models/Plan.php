@@ -20,12 +20,13 @@ class Plan extends Model
     public function generateReport(): PlanReportState
     {
         return PlanReportGenerated::fire(plan_id: $this->id)
-            ->states()[0];
+            ->states()[PlanReportState::class];
     }
 
     public static function generateGlobalReport(): GlobalReportState
     {
-        return GlobalReportGenerated::fire()
-            ->states()[0];
+        $e = GlobalReportGenerated::fire();
+            
+        return $e->states()[GlobalReportState::class];
     }
 }
