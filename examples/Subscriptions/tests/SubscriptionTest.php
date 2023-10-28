@@ -1,10 +1,9 @@
 <?php
 
-use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Examples\Subscriptions\Models\Plan;
-use Thunk\Verbs\Examples\Subscriptions\Models\User;
 use Thunk\Verbs\Examples\Subscriptions\Models\Report;
-use Thunk\Verbs\Examples\Subscriptions\States\PlanReportState;
+use Thunk\Verbs\Examples\Subscriptions\Models\User;
+use Thunk\Verbs\Facades\Verbs;
 
 test('a user can subscribe to multiple plans and unsubscribe', function () {
     $daniel = User::factory()->create();

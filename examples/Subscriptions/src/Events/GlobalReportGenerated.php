@@ -3,16 +3,16 @@
 namespace Thunk\Verbs\Examples\Subscriptions\Events;
 
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Examples\Subscriptions\Models\Report;
 use Thunk\Verbs\Examples\Subscriptions\States\GlobalReportState;
+use Thunk\Verbs\Facades\Verbs;
 
 class GlobalReportGenerated extends Event
 {
     public function states(): array
     {
         return [
-            GlobalReportState::class => GlobalReportState::singleton()
+            GlobalReportState::class => GlobalReportState::singleton(),
         ];
     }
 

@@ -3,9 +3,9 @@
 namespace Thunk\Verbs\Examples\Subscriptions\Events;
 
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Examples\Subscriptions\Models\Report;
 use Thunk\Verbs\Examples\Subscriptions\States\PlanReportState;
+use Thunk\Verbs\Facades\Verbs;
 
 class PlanReportGenerated extends Event
 {
@@ -14,7 +14,7 @@ class PlanReportGenerated extends Event
     public function states(): array
     {
         return [
-            PlanReportState::class => PlanReportState::load($this->plan_id)
+            PlanReportState::class => PlanReportState::load($this->plan_id),
         ];
     }
 

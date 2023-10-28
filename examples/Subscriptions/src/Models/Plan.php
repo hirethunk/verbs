@@ -26,7 +26,7 @@ class Plan extends Model
     public static function generateGlobalReport(): GlobalReportState
     {
         $e = GlobalReportGenerated::fire();
-            
+
         return $e->states()[GlobalReportState::class];
     }
 }

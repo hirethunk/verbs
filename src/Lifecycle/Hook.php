@@ -61,7 +61,7 @@ class Hook
     public function fire(Container $container, Event $event, State $state = null): void
     {
         $container->call($this->callback, $this->guessParameters($event, $state));
-        
+
         if ($state) {
             $state->applied_events->push($event);
         }

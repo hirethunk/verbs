@@ -2,11 +2,10 @@
 
 namespace Thunk\Verbs;
 
+use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Support\Collection;
 use Thunk\Verbs\Lifecycle\Dispatcher;
 use Thunk\Verbs\Lifecycle\StateStore;
-use Illuminate\Contracts\Support\Arrayable;
-use Thunk\Bugg\Bugg;
 
 abstract class State implements Arrayable
 {
