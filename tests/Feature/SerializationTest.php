@@ -47,7 +47,7 @@ it('supports instantiation via an positional arguments', function () {
     $this->assertEquals($string, $event1->event->string);
 });
 
-it('triggers an error when using positional arguments with an event that does not support them', function() {
+it('triggers an error when using positional arguments with an event that does not support them', function () {
     $snowflake = Snowflake::make();
     $timestamp = now();
     $string = Str::random();

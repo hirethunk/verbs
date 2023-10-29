@@ -10,6 +10,7 @@ use Thunk\Verbs\Lifecycle\Broker;
 
 /**
  * @template T
+ *
  * @property T $event
  */
 class PendingEvent
