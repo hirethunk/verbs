@@ -53,17 +53,21 @@ class EventSerializer
             throw new InvalidArgumentException(class_basename($this).'::deserialize must be passed an Event class.');
         }
 
-        $method = is_array($data) ? 'denormalize' : 'deserialize';
+        $type = $target;
+        $context = [];
 
         if ($target instanceof Event) {
-            return $this->serializer->$method(
-                data: $data,
-                type: $target::class,
-                format: 'json',
-                context: [AbstractNormalizer::OBJECT_TO_POPULATE => $target],
-            );
+            $type = $target::class;
+            $context[AbstractNormalizer::OBJECT_TO_POPULATE] = $target;
         }
 
-        return $this->serializer->$method($data, $target, 'json');
+        $callback = is_array($data) ? $this->serializer->denormalize(...) : $this->serializer->deserialize(...);
+
+        return $callback(
+            data: $data,
+            type: $type,
+            format: 'json',
+            context: $context,
+        );
     }
 }
