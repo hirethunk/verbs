@@ -3,9 +3,6 @@
 namespace Thunk\Verbs;
 
 use Glhd\Bits\Snowflake;
-use Illuminate\Contracts\Database\Eloquent\Castable;
-use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use InvalidArgumentException;
 use ReflectionMethod;
