@@ -11,8 +11,7 @@ class BitsNormalizer implements DenormalizerInterface, NormalizerInterface
 {
     public function supportsDenormalization(mixed $data, string $type, string $format = null): bool
     {
-        return is_numeric($data)
-            && is_a($type, Bits::class, true);
+        return is_a($type, Bits::class, true);
     }
 
     /** @param  class-string<Bits>  $type */

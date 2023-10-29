@@ -4,6 +4,7 @@ namespace Thunk\Verbs\Support\Normalizers;
 
 use Carbon\CarbonInterface;
 use Glhd\Bits\Bits;
+use Illuminate\Support\Facades\Date;
 use InvalidArgumentException;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
@@ -12,14 +13,15 @@ class CarbonNormalizer implements DenormalizerInterface, NormalizerInterface
 {
     public function supportsDenormalization(mixed $data, string $type, string $format = null): bool
     {
-        return is_string($data)
-            && is_a($type, CarbonInterface::class, true);
+        return is_a($type, CarbonInterface::class, true);
     }
 
     /** @param  class-string<CarbonInterface>  $type */
-    public function denormalize(mixed $data, string $type, string $format = null, array $context = []): Bits
+    public function denormalize(mixed $data, string $type, string $format = null, array $context = []): CarbonInterface
     {
-        return $type::parse($data);
+        return $type === CarbonInterface::class
+            ? Date::parse($data)
+            : $type::parse($data);
     }
 
     public function supportsNormalization(mixed $data, string $format = null): bool

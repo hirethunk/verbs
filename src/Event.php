@@ -8,7 +8,7 @@ use InvalidArgumentException;
 use ReflectionMethod;
 use ReflectionParameter;
 use Thunk\Verbs\Support\PendingEvent;
-use Thunk\Verbs\Support\Serializer;
+use Thunk\Verbs\Support\EventSerializer;
 
 abstract class Event
 {
@@ -16,9 +16,10 @@ abstract class Event
 
     public bool $fired = false;
 
+    /** @return PendingEvent<static> */
     public static function make(...$args): PendingEvent
     {
-        if ((count($args) === 1 && is_array($args[0]))) {
+        if ((count($args) === 1 && isset($args[0]) && is_array($args[0]))) {
             $args = $args[0];
         }
 
@@ -35,7 +36,7 @@ abstract class Event
             $args = $names->combine(collect($args)->take($names->count()))->all();
         }
 
-        $event = app(Serializer::class)->deserialize(static::class, $args);
+        $event = app(EventSerializer::class)->deserialize(static::class, $args);
 
         $event->id = Snowflake::make()->id();
 

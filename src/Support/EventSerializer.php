@@ -3,8 +3,12 @@
 namespace Thunk\Verbs\Support;
 
 use InvalidArgumentException;
-use Symfony\Component\Serializer\Encoder\DecoderInterface;
+use Symfony\Component\PropertyInfo\Extractor\PhpDocExtractor;
+use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
+use Symfony\Component\Serializer\Mapping\Loader\AnnotationLoader;
+use Symfony\Component\Serializer\NameConverter\MetadataAwareNameConverter;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
@@ -13,7 +17,7 @@ use Thunk\Verbs\Event;
 use Thunk\Verbs\Support\Normalizers\BitsNormalizer;
 use Thunk\Verbs\Support\Normalizers\CarbonNormalizer;
 
-class Serializer
+class EventSerializer
 {
     public static function defaultSymfonySerializer(): SymfonySerializer
     {
@@ -22,7 +26,7 @@ class Serializer
                 new BitsNormalizer(),
                 new CarbonNormalizer(),
                 new DateTimeNormalizer(),
-                new ObjectNormalizer(),
+                new ObjectNormalizer(propertyTypeExtractor: new ReflectionExtractor()),
             ],
             encoders: [
                 new JsonEncoder(),
