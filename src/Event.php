@@ -3,6 +3,9 @@
 namespace Thunk\Verbs;
 
 use Glhd\Bits\Snowflake;
+use Illuminate\Contracts\Database\Eloquent\Castable;
+use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use InvalidArgumentException;
 use ReflectionMethod;
@@ -24,7 +27,7 @@ abstract class Event
         }
 
         // Turn a positional array to an associative array
-        if (! Arr::isAssoc($args)) {
+        if (count($args) && ! Arr::isAssoc($args)) {
             if (! method_exists(static::class, '__construct')) {
                 throw new InvalidArgumentException('You cannot pass positional arguments to '.class_basename(static::class).'::make()');
             }
