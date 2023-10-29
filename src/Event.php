@@ -7,8 +7,8 @@ use Illuminate\Support\Arr;
 use InvalidArgumentException;
 use ReflectionMethod;
 use ReflectionParameter;
-use Thunk\Verbs\Support\PendingEvent;
 use Thunk\Verbs\Support\EventSerializer;
+use Thunk\Verbs\Support\PendingEvent;
 
 abstract class Event
 {
