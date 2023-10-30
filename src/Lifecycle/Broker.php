@@ -51,7 +51,8 @@ class Broker
 
         app(EventStore::class)->read()
             ->each(function (VerbEvent $model) {
-                Reflector::getPublicStateProperties($model->event())
+                // FIXME: This is currently applying events to the states before we're ready
+                collect($model->event()->states())
                     ->each(fn ($state) => app(Dispatcher::class)->apply($model->event(), $state));
 
                 return $model->event();

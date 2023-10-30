@@ -3,7 +3,7 @@
 namespace Thunk\Verbs\Examples\Bank\Events;
 
 use Illuminate\Support\Facades\Mail;
-use Thunk\Verbs\Attributes\Identifies;
+use Thunk\Verbs\Attributes\StateDiscovery\StateId;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Examples\Bank\Mail\DepositAvailable;
 use Thunk\Verbs\Examples\Bank\Models\Account;
@@ -12,8 +12,7 @@ use Thunk\Verbs\Examples\Bank\States\AccountState;
 class MoneyDeposited extends Event
 {
     public function __construct(
-        #[Identifies(AccountState::class)]
-        public int $account_id,
+        #[StateId(AccountState::class)] public int $account_id,
         public int $cents = 0,
     ) {
     }
@@ -25,7 +24,7 @@ class MoneyDeposited extends Event
 
     public function onFire()
     {
-        [$state] = $this->states();
+        $state = $this->state();
 
         Account::find($this->account_id)
             ->update([

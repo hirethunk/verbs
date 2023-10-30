@@ -58,4 +58,16 @@ abstract class Event
 
         return $map[$this] ??= Reflector::getStatesFromIds($this);
     }
+
+    public function state(string $state_type = null): ?State
+    {
+        $states = collect($this->states());
+
+        // If we only have one state, allow for accessing without providing a class
+        if ($state_type === null && $states->count() === 1) {
+            return $states->first();
+        }
+
+        return $states->firstWhere(fn (State $state) => $state::class === $state_type);
+    }
 }
