@@ -10,7 +10,8 @@ use Thunk\Verbs\Facades\Verbs;
 
 class PlanReportGenerated extends Event
 {
-    #[StateId(PlanReportState::class)] public int $plan_id;
+    #[StateId(PlanReportState::class)]
+    public int $plan_id;
 
     public function onCommit()
     {
