@@ -112,8 +112,6 @@ class Reflector extends BaseReflector
     {
         $reflect = new ReflectionClass($target);
 
-        // Get all possible attributes in a [attribute, property name] tuple
-
         $class_attributes = collect($reflect->getAttributes())
             ->filter(fn (ReflectionAttribute $attribute) => is_a($attribute->getName(), StateDiscoveryAttribute::class, true))
             ->map(fn (ReflectionAttribute $attribute) => $attribute->newInstance());
