@@ -6,7 +6,7 @@ use Glhd\Bits\Snowflake;
 use Illuminate\Support\LazyCollection;
 use Thunk\Verbs\Models\VerbEvent;
 use Thunk\Verbs\Models\VerbStateEvent;
-use Thunk\Verbs\Support\Reflector;
+use Thunk\Verbs\Support\EventSerializer;
 
 class EventStore
 {
@@ -26,9 +26,7 @@ class EventStore
         return array_map(fn ($event) => [
             'id' => $event->id,
             'type' => $event::class,
-            'data' => json_encode(
-                Reflector::getNonStatePublicPropertiesAndValues($event)
-            ),
+            'data' => app(EventSerializer::class)->serialize($event),
             'created_at' => now(),
             'updated_at' => now(),
         ], $event_objects);

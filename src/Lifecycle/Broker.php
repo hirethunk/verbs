@@ -51,23 +51,18 @@ class Broker
 
         app(EventStore::class)->read()
             ->each(function (VerbEvent $model) {
-                $event = $model->type::hydrate($model->id, $model->data);
-                $event->fired = true;
+                Reflector::getPublicStateProperties($model->event())
+                    ->each(fn ($state) => app(Dispatcher::class)->apply($model->event(), $state));
 
-                $states = Reflector::getPublicStateProperties($event);
-                $states->each(fn ($state) => app(Dispatcher::class)->apply($event, $state));
-
-                app(Queue::class)->queue($event);
-
-                return $event;
+                return $model->event();
             });
 
         $this->is_replaying = false;
     }
 
-    public static function unlessReplaying(callable $callback)
+    public function unlessReplaying(callable $callback)
     {
-        if (! app(Broker::class)->is_replaying) {
+        if (! $this->is_replaying) {
             $callback();
         }
     }

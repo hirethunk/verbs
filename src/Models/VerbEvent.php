@@ -3,6 +3,8 @@
 namespace Thunk\Verbs\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Thunk\Verbs\Event;
+use Thunk\Verbs\Support\EventSerializer;
 
 class VerbEvent extends Model
 {
@@ -13,6 +15,16 @@ class VerbEvent extends Model
     protected $casts = [
         'data' => 'array',
     ];
+
+    protected ?Event $event = null;
+
+    public function event(): Event
+    {
+        $this->event ??= app(EventSerializer::class)->deserialize($this->type, $this->data);
+        $this->event->fired = true;
+
+        return $this->event;
+    }
 
     public function scopeType($query, string $type)
     {

@@ -8,6 +8,11 @@ use Throwable;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\Broker;
 
+/**
+ * @template T
+ *
+ * @property T $event
+ */
 class PendingEvent
 {
     protected Closure $exception_mapper;
@@ -32,9 +37,7 @@ class PendingEvent
 
     public function hydrate(array $data): static
     {
-        foreach ($data as $key => $value) {
-            $this->event->{$key} = $value;
-        }
+        app(EventSerializer::class)->deserialize($this->event, $data);
 
         return $this;
     }
@@ -42,6 +45,10 @@ class PendingEvent
     public function fire(...$args): Event
     {
         if (! empty($args)) {
+            if (count($args) === 1 && isset($args[0]) && is_array($args[0])) {
+                $args = $args[0];
+            }
+
             $this->hydrate($args);
         }
 
