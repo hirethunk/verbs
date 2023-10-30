@@ -2,7 +2,6 @@
 
 namespace Thunk\Verbs\Support\Normalizers;
 
-use Glhd\Bits\Bits;
 use InvalidArgumentException;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
