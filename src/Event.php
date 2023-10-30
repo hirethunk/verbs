@@ -9,6 +9,8 @@ use ReflectionMethod;
 use ReflectionParameter;
 use Thunk\Verbs\Support\EventSerializer;
 use Thunk\Verbs\Support\PendingEvent;
+use Thunk\Verbs\Support\Reflector;
+use WeakMap;
 
 abstract class Event
 {
@@ -50,7 +52,10 @@ abstract class Event
 
     public function states(): array
     {
-        // TODO: Use reflection and attributes to figure this out
-        return [];
+        // TODO: This is a bit hacky, but is probably OK right now
+
+        static $map = new WeakMap();
+
+        return $map[$this] ??= Reflector::getStatesFromIds($this);
     }
 }

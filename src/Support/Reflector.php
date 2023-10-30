@@ -12,8 +12,10 @@ use ReflectionMethod;
 use ReflectionNamedType;
 use ReflectionProperty;
 use Thunk\Verbs\Attributes\Hooks\HookAttribute;
+use Thunk\Verbs\Attributes\Identifies;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\Hook;
+use Thunk\Verbs\Lifecycle\StateStore;
 use Thunk\Verbs\State;
 
 class Reflector extends BaseReflector
@@ -102,6 +104,25 @@ class Reflector extends BaseReflector
             array: static::getParameterClassNames($parameters[0]),
             callback: fn (string $class_name) => is_a($class_name, $type, true)
         );
+    }
+
+    public static function getStatesFromIds(Event $target): array
+    {
+        $reflect = new ReflectionClass($target);
+
+        return collect($reflect->getProperties(ReflectionProperty::IS_PUBLIC))
+            ->map(function (ReflectionProperty $property) use ($target) {
+                if (! count($attributes = $property->getAttributes(Identifies::class))) {
+                    return null;
+                }
+
+                return app(StateStore::class)->load(
+                    id: $property->getValue($target),
+                    type: $attributes[0]->newInstance()->state_type
+                );
+            })
+            ->filter()
+            ->all();
     }
 
     protected static function reflectFunction(ReflectionFunctionAbstract|Closure $function): ReflectionFunctionAbstract

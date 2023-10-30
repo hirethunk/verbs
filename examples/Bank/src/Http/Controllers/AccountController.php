@@ -22,10 +22,10 @@ class AccountController
 
     public function deposit(Request $request, Account $account)
     {
-        MoneyDeposited::fire(
+        event(new MoneyDeposited(
             account_id: $account->id,
             cents: $request->integer('deposit_in_cents')
-        );
+        ));
 
         return response('Deposited!');
     }
