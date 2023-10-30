@@ -7,7 +7,6 @@ use Illuminate\Support\LazyCollection;
 use Thunk\Verbs\Models\VerbEvent;
 use Thunk\Verbs\Models\VerbStateEvent;
 use Thunk\Verbs\Support\EventSerializer;
-use Thunk\Verbs\Support\Reflector;
 
 class EventStore
 {
