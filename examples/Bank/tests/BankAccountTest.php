@@ -108,15 +108,15 @@ test('a bank account can be opened and interacted with', function () {
 
     // Finally, let's replay everything and make sure we get what's expected
 
-//    Mail::fake();
-//
-//    $account->delete();
-//
-//    Verbs::replay();
-//
-//    $account = Auth::user()->accounts()->sole();
-//
-//    expect($account->balance_in_cents)->toBe(100_00);
-//
-//    Mail::assertNothingOutgoing();
+    //    Mail::fake();
+    //
+    //    $account->delete();
+    //
+    //    Verbs::replay();
+    //
+    //    $account = Auth::user()->accounts()->sole();
+    //
+    //    expect($account->balance_in_cents)->toBe(100_00);
+    //
+    //    Mail::assertNothingOutgoing();
 });

@@ -4,7 +4,6 @@ namespace Thunk\Verbs\Attributes\StateDiscovery;
 
 use Attribute;
 use InvalidArgumentException;
-use ReflectionClass;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\StateStore;
 use Thunk\Verbs\State;
