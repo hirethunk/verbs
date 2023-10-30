@@ -25,4 +25,9 @@ class AppliesToSingletonState implements StateDiscoveryAttribute
         // FIXME: dont use "0"
         return app(StateStore::class)->load(0, $this->state_type);
     }
+
+    public function getAlias(): ?string
+    {
+        return $this->alias;
+    }
 }

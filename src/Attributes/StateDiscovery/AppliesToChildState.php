@@ -50,4 +50,9 @@ class AppliesToChildState implements DependsOnDiscoveredState, StateDiscoveryAtt
 
         return $store->load($parent->{$this->id}, $this->state_type);
     }
+
+    public function getAlias(): ?string
+    {
+        return $this->alias;
+    }
 }

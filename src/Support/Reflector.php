@@ -149,6 +149,8 @@ class Reflector extends BaseReflector
             ->map(fn (DependsOnDiscoveredState $attribute) => $attribute->setDiscoveredState($discovered))
             ->map(fn (StateDiscoveryAttribute $attribute) => $attribute->discoverState($target));
 
+        // FIXME: Aliases
+
         return $discovered
             ->merge($deferred)
             ->filter()

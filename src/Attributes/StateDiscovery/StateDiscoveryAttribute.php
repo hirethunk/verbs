@@ -8,4 +8,6 @@ use Thunk\Verbs\State;
 interface StateDiscoveryAttribute
 {
     public function discoverState(Event $event): State;
+
+    public function getAlias(): ?string;
 }

@@ -26,4 +26,9 @@ class AppliesToState implements StateDiscoveryAttribute
     {
         return app(StateStore::class)->load($event->{$this->id}, $this->state_type);
     }
+
+    public function getAlias(): ?string
+    {
+        return $this->alias;
+    }
 }
