@@ -3,7 +3,7 @@
 namespace Thunk\Verbs\Examples\Bank\Events;
 
 use Illuminate\Support\Facades\Mail;
-use Thunk\Verbs\Attributes\StateDiscovery\StateId;
+use Thunk\Verbs\Attributes\Autodiscovery\StateId;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Examples\Bank\Mail\DepositAvailable;
 use Thunk\Verbs\Examples\Bank\Models\Account;

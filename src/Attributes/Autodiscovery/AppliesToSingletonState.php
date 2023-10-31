@@ -1,6 +1,6 @@
 <?php
 
-namespace Thunk\Verbs\Attributes\StateDiscovery;
+namespace Thunk\Verbs\Attributes\Autodiscovery;
 
 use Attribute;
 use InvalidArgumentException;
@@ -9,7 +9,7 @@ use Thunk\Verbs\Lifecycle\StateStore;
 use Thunk\Verbs\State;
 
 #[Attribute(Attribute::TARGET_CLASS)]
-class AppliesToSingletonState implements StateDiscoveryAttribute
+class AppliesToSingletonState extends StateDiscoveryAttribute
 {
     public function __construct(
         public string $state_type,
@@ -24,10 +24,5 @@ class AppliesToSingletonState implements StateDiscoveryAttribute
     {
         // FIXME: dont use "0"
         return app(StateStore::class)->load(0, $this->state_type);
-    }
-
-    public function getAlias(): ?string
-    {
-        return $this->alias;
     }
 }

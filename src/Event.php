@@ -8,6 +8,7 @@ use InvalidArgumentException;
 use ReflectionMethod;
 use ReflectionParameter;
 use Thunk\Verbs\Support\EventSerializer;
+use Thunk\Verbs\Support\EventStateRegistry;
 use Thunk\Verbs\Support\PendingEvent;
 use Thunk\Verbs\Support\Reflector;
 use WeakMap;
@@ -56,7 +57,7 @@ abstract class Event
 
         static $map = new WeakMap();
 
-        return $map[$this] ??= Reflector::getStatesFromIds($this);
+        return $map[$this] ??= EventStateRegistry::getStatesFromIds($this);
     }
 
     public function state(string $state_type = null): ?State

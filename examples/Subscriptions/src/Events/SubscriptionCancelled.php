@@ -2,9 +2,9 @@
 
 namespace Thunk\Verbs\Examples\Subscriptions\Events;
 
-use Thunk\Verbs\Attributes\StateDiscovery\AppliesToChildState;
-use Thunk\Verbs\Attributes\StateDiscovery\AppliesToSingletonState;
-use Thunk\Verbs\Attributes\StateDiscovery\AppliesToState;
+use Thunk\Verbs\Attributes\Autodiscovery\AppliesToChildState;
+use Thunk\Verbs\Attributes\Autodiscovery\AppliesToSingletonState;
+use Thunk\Verbs\Attributes\Autodiscovery\AppliesToState;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Examples\Subscriptions\Models\Subscription;
 use Thunk\Verbs\Examples\Subscriptions\States\GlobalReportState;

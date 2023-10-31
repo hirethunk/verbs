@@ -1,20 +1,16 @@
 <?php
 
-namespace Thunk\Verbs\Attributes\StateDiscovery;
+namespace Thunk\Verbs\Attributes\Autodiscovery;
 
 use Attribute;
-use Illuminate\Support\Collection;
 use InvalidArgumentException;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\StateStore;
 use Thunk\Verbs\State;
 
 #[Attribute(Attribute::TARGET_CLASS)]
-class AppliesToChildState implements DependsOnDiscoveredState, StateDiscoveryAttribute
+class AppliesToChildState extends StateDiscoveryAttribute
 {
-    /** @var Collection<string, State> */
-    protected Collection $discovered;
-
     public function __construct(
         public string $state_type,
         public string $parent_type,
@@ -35,24 +31,11 @@ class AppliesToChildState implements DependsOnDiscoveredState, StateDiscoveryAtt
         return [$this->parent_type];
     }
 
-    public function setDiscoveredState(Collection $discovered): static
-    {
-        $this->discovered = $discovered;
-
-        return $this;
-    }
-
     public function discoverState(Event $event): State
     {
-        $store = app(StateStore::class);
-
         $parent = $this->discovered->first(fn (State $state) => $state instanceof $this->parent_type);
 
-        return $store->load($parent->{$this->id}, $this->state_type);
-    }
-
-    public function getAlias(): ?string
-    {
-        return $this->alias;
+        return app(StateStore::class)
+            ->load($parent->{$this->id}, $this->state_type);
     }
 }

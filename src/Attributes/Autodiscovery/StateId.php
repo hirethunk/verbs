@@ -1,6 +1,6 @@
 <?php
 
-namespace Thunk\Verbs\Attributes\StateDiscovery;
+namespace Thunk\Verbs\Attributes\Autodiscovery;
 
 use Attribute;
 use InvalidArgumentException;
@@ -10,10 +10,8 @@ use Thunk\Verbs\Lifecycle\StateStore;
 use Thunk\Verbs\State;
 
 #[Attribute(Attribute::TARGET_PROPERTY)]
-class StateId implements ReflectsProperty, StateDiscoveryAttribute
+class StateId extends StateDiscoveryAttribute
 {
-    protected ReflectionProperty $property;
-
     public function __construct(
         public string $state_type,
         public ?string $alias = null,
@@ -23,18 +21,8 @@ class StateId implements ReflectsProperty, StateDiscoveryAttribute
         }
     }
 
-    public function setReflection(ReflectionProperty $reflection)
-    {
-        $this->property = $reflection;
-    }
-
     public function discoverState(Event $event): State
     {
         return app(StateStore::class)->load($this->property->getValue($event), $this->state_type);
-    }
-
-    public function getAlias(): ?string
-    {
-        return $this->alias;
     }
 }

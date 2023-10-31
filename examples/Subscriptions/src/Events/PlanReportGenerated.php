@@ -2,7 +2,7 @@
 
 namespace Thunk\Verbs\Examples\Subscriptions\Events;
 
-use Thunk\Verbs\Attributes\StateDiscovery\StateId;
+use Thunk\Verbs\Attributes\Autodiscovery\StateId;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Examples\Subscriptions\Models\Report;
 use Thunk\Verbs\Examples\Subscriptions\States\PlanReportState;

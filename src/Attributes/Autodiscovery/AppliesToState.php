@@ -1,6 +1,6 @@
 <?php
 
-namespace Thunk\Verbs\Attributes\StateDiscovery;
+namespace Thunk\Verbs\Attributes\Autodiscovery;
 
 use Attribute;
 use InvalidArgumentException;
@@ -9,7 +9,7 @@ use Thunk\Verbs\Lifecycle\StateStore;
 use Thunk\Verbs\State;
 
 #[Attribute(Attribute::TARGET_CLASS)]
-class AppliesToState implements StateDiscoveryAttribute
+class AppliesToState extends StateDiscoveryAttribute
 {
     public function __construct(
         public string $state_type,
