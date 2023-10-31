@@ -4,14 +4,15 @@ namespace Thunk\Verbs\Examples\Subscriptions\Events;
 
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Examples\Subscriptions\States\GlobalReportState;
+use Thunk\Verbs\Support\StateCollection;
 
 class ResetGlobalReportState extends Event
 {
-    public function states(): array
+    public function states(): StateCollection
     {
-        return [
+        return new StateCollection([
             GlobalReportState::class => GlobalReportState::singleton(),
-        ];
+        ]);
     }
 
     public function apply(GlobalReportState $state)
