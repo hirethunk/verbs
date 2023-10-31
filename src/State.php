@@ -2,16 +2,14 @@
 
 namespace Thunk\Verbs;
 
-use Illuminate\Contracts\Support\Arrayable;
-use Illuminate\Support\Collection;
 use Thunk\Verbs\Lifecycle\EventStore;
 use Thunk\Verbs\Lifecycle\StateRegistry;
 
-abstract class State implements Arrayable
+abstract class State
 {
-    public int|string|null $id;
+    public int|string|null $id = null;
 
-    public Collection $applied_events;
+    public int|string|null $last_event_id = null;
 
     public static function make(...$args): static
     {
@@ -20,8 +18,6 @@ abstract class State implements Arrayable
 
     public function __construct()
     {
-        $this->applied_events = collect();
-
         app(StateRegistry::class)->register($this);
     }
 
@@ -39,24 +35,16 @@ abstract class State implements Arrayable
         return app(StateRegistry::class)->load($from, static::class);
     }
 
-    public function storedEvents(int|string $after_id = null)
+    public function storedEvents()
     {
-        return app(EventStore::class)->read(state: $this)->collect();
+        return app(EventStore::class)
+            ->read(state: $this)
+            ->collect();
     }
 
     public static function singleton(): static
     {
         // FIXME: don't use "0"
         return app(StateRegistry::class)->load(0, static::class);
-    }
-
-    public function id(): int|string
-    {
-        return $this->id;
-    }
-
-    public function toArray(): array
-    {
-        return get_object_vars($this);
     }
 }

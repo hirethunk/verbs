@@ -98,7 +98,7 @@ test('a bank account can be opened and interacted with', function () {
 
     // Lets assert the events are on the state store in the correct order
 
-    expect(AccountState::load($account->id)->storedEvents())
+    expect(AccountState::load($account)->storedEvents())
         ->toHaveCount(3)
         ->sequence(
             fn ($number) => $number->id->toBe($open_event->id),
@@ -108,15 +108,15 @@ test('a bank account can be opened and interacted with', function () {
 
     // Finally, let's replay everything and make sure we get what's expected
 
-    //    Mail::fake();
-    //
-    //    $account->delete();
-    //
-    //    Verbs::replay();
-    //
-    //    $account = Auth::user()->accounts()->sole();
-    //
-    //    expect($account->balance_in_cents)->toBe(100_00);
-    //
-    //    Mail::assertNothingOutgoing();
+    Mail::fake();
+
+    $account->delete();
+
+    Verbs::replay();
+
+    $account = Auth::user()->accounts()->sole();
+
+    expect($account->balance_in_cents)->toBe(100_00);
+
+    Mail::assertNothingOutgoing();
 });

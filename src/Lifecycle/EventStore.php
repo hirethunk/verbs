@@ -12,14 +12,15 @@ use Thunk\Verbs\Support\EventSerializer;
 
 class EventStore
 {
-    public function read(State $state = null, int|string|null $after_id = null): LazyCollection
+    public function read(State $state = null, int|string $up_to_id = null): LazyCollection
     {
         if ($state) {
             return VerbStateEvent::query()
                 ->with('event')
                 ->where('state_id', $state->id)
                 ->where('state_type', $state::class)
-                ->when($after_id, fn (Builder $query) => $query->whereRelation('event', 'id', '>', $after_id))
+                // FIXME: ->when($state->last_event_id, fn (Builder $query) => $query->whereRelation('event', 'id', '>', $state->last_event_id))
+                ->when($up_to_id, fn (Builder $query) => $query->whereRelation('event', 'id', '<=', $up_to_id))
                 ->lazyById()
                 ->map(fn (VerbStateEvent $pivot) => $pivot->event);
         }

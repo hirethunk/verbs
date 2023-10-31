@@ -22,8 +22,7 @@ class SnapshotStore
 
     public function write(array $states): bool
     {
-        // FIXME: last_event_id
-        return VerbSnapshot::upsert(static::formatForWrite($states), 'id', ['data', 'updated_at']);
+        return VerbSnapshot::upsert(static::formatForWrite($states), 'id', ['data', 'last_event_id', 'updated_at']);
     }
 
     public function reset(): bool
@@ -35,11 +34,11 @@ class SnapshotStore
 
     protected static function formatForWrite(array $states): array
     {
-        return array_map(fn ($state) => [
+        return array_map(fn (State $state) => [
             'id' => $state->id,
             'type' => $state::class,
             'data' => app(StateSerializer::class)->serialize($state),
-            // FIXME: last_event_id
+            'last_event_id' => $state->last_event_id,
             'created_at' => now(),
             'updated_at' => now(),
         ], $states);

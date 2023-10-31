@@ -13,6 +13,8 @@ class StateRegistry
     /** @var Collection<string, State> */
     protected Collection $states;
 
+    protected int|string|null $last_event_id = null;
+
     public function __construct(
         protected Dispatcher $dispatcher,
         protected SnapshotStore $snapshots,
@@ -45,7 +47,7 @@ class StateRegistry
             }
 
             $this->events
-                ->read(state: $state)
+                ->read(state: $state, up_to_id: $this->last_event_id)
                 ->each(fn (Event $event) => $this->dispatcher->apply($event, $state));
         } else {
             $state = $type::make();
@@ -58,6 +60,11 @@ class StateRegistry
     public function snapshot(): bool
     {
         return $this->snapshots->write($this->states->values()->all());
+    }
+
+    public function setLastEventId(string|int $last_event_id)
+    {
+        $this->last_event_id = $last_event_id;
     }
 
     protected function remember(State $state): State
