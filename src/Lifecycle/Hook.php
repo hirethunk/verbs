@@ -60,11 +60,15 @@ class Hook
 
     public function fire(Container $container, Event $event, State $state = null): void
     {
+        // FIXME: Pull states off of events and allow for multiple
+
         $container->call($this->callback, $this->guessParameters($event, $state));
     }
 
     public function replay(Container $container, Event $event, State $state = null): void
     {
+        // FIXME: Pull states off of events and allow for multiple
+
         if ($this->replayable) {
             $this->fire($container, $event, $state);
         }

@@ -57,11 +57,11 @@ class Dispatcher
         }
     }
 
-    public function replay(Event $event): void
+    public function replay(Event $event, State $state): void
     {
         // FIXME: We need to be able to pass state into replay
         foreach ($this->getHooks($event) as $listener) {
-            $listener->replay($this->container, $event);
+            $listener->replay($this->container, $event, $state);
         }
     }
 

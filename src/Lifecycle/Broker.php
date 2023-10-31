@@ -34,6 +34,7 @@ class Broker
         $events = app(EventQueue::class)->flush();
 
         // FIXME: Only write changes + handle aggregate versioning
+
         app(StateRegistry::class)->snapshot();
 
         if (empty($events)) {
@@ -59,7 +60,7 @@ class Broker
 
                 $model->event()->states()
                     ->each(fn ($state) => $this->dispatcher->apply($model->event(), $state))
-                    ->each(fn ($state) => $this->dispatcher->replay($model->event()));
+                    ->each(fn ($state) => $this->dispatcher->replay($model->event(), $state));
 
                 return $model->event();
             });

@@ -33,9 +33,9 @@ class StateRegistry
     /** @param  class-string<State>  $type */
     public function load(int|string $id, string $type): State
     {
-        // FIXME: don't apply events necessarily
-
         $key = $this->key($id, $type);
+
+        // FIXME: If the state we're loading has a last_event_id that's ahead of the registry's last_event_id, we need to re-build the state
 
         if ($state = $this->states->get($key)) {
             return $state;
