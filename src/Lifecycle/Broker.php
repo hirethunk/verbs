@@ -12,7 +12,8 @@ class Broker
 
     public function __construct(
         protected Dispatcher $dispatcher,
-    ) {}
+    ) {
+    }
 
     public function fire(Event $event): Event
     {

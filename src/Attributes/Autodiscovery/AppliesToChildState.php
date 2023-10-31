@@ -6,7 +6,6 @@ use Attribute;
 use InvalidArgumentException;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\StateRegistry;
-use Thunk\Verbs\Lifecycle\StateStore;
 use Thunk\Verbs\State;
 
 #[Attribute(Attribute::TARGET_CLASS)]

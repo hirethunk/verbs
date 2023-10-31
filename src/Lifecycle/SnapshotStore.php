@@ -2,14 +2,9 @@
 
 namespace Thunk\Verbs\Lifecycle;
 
-use Glhd\Bits\Snowflake;
-use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Arr;
 use Thunk\Verbs\Models\VerbSnapshot;
-use Thunk\Verbs\Models\VerbStateEvent;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\StateSerializer;
-use UnexpectedValueException;
 
 class SnapshotStore
 {
