@@ -13,17 +13,14 @@ use Thunk\Verbs\State;
 
 class EventStateRegistry
 {
-    public function __construct(
-        public array $attributes = [],
-    ) {
-    }
+    protected array $discovered_attributes = [];
 
     public function getStates(Event $event): StateCollection
     {
         $discovered = new StateCollection();
         $deferred = new StateCollection();
 
-        foreach ($this->findAttributes($event) as $attribute) {
+        foreach ($this->getAttributes($event) as $attribute) {
             // If there are state dependencies that the attribute relies on that we haven't already
             // loaded, then we'll have to defer it until all other dependencies are loaded. Otherwise,
             // we can load the state with what we already have.
@@ -58,16 +55,17 @@ class EventStateRegistry
     }
 
     /** @return Collection<int, StateDiscoveryAttribute> */
-    protected function findAttributes(Event $target): Collection
+    protected function getAttributes(Event $target): Collection
     {
-        if (! isset($this->attributes[$target::class])) {
-            $reflect = new ReflectionClass($target);
+        return $this->discovered_attributes[$target::class] ??= $this->findAllAttributes($target);
+    }
 
-            $this->attributes[$target::class] = collect($this->findClassAttributes($reflect))
-                ->merge($this->findPropertyAttributes($reflect));
-        }
+    /** @return Collection<int, StateDiscoveryAttribute> */
+    protected function findAllAttributes(Event $target): Collection
+    {
+        $reflect = new ReflectionClass($target);
 
-        return $this->attributes[$target::class];
+        return $this->findClassAttributes($reflect)->merge($this->findPropertyAttributes($reflect));
     }
 
     /** @return Collection<int, StateDiscoveryAttribute> */
