@@ -53,4 +53,17 @@ abstract class Event
         // TODO: Use reflection and attributes to figure this out
         return [];
     }
+
+    public function state(string $fqcn = null)
+    {
+        if ($fqcn) {
+            return $this->states()[$fqcn] ?? null;
+        }
+
+        if (count($this->states()) === 1) {
+            return $this->states()[0];
+        }
+
+        throw new InvalidArgumentException('You must specify a state class when there are multiple states');
+    }
 }
