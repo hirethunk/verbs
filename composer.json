@@ -28,6 +28,9 @@
         "glhd/bits": "^0.1.1",
         "illuminate/contracts": "^10.0",
         "internachi/modular": "^2.0",
+        "laravel/framework": "10.*",
+        "nesbot/carbon": "^2.63",
+        "orchestra/testbench": "8.*",
         "spatie/laravel-package-tools": "^1.14.0",
         "symfony/property-access": "^6.2",
         "symfony/serializer": "^6.3"
@@ -36,11 +39,11 @@
         "laravel/pint": "^1.0",
         "mockery/mockery": "^1.5",
         "nunomaduro/collision": "^7.9",
-        "orchestra/testbench": "^8.0",
         "pestphp/pest": "^2.0",
         "pestphp/pest-plugin-arch": "^2.0",
         "pestphp/pest-plugin-laravel": "^2.0",
         "pestphp/pest-plugin-watch": "^2.0",
+        "phpunit/phpunit": "^10.0.17",
         "spatie/laravel-ray": "^1.26",
         "kathunk/bugg": "dev-main"
     },
