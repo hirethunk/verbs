@@ -4,7 +4,6 @@ namespace Thunk\Verbs\Attributes\Autodiscovery;
 
 use Attribute;
 use InvalidArgumentException;
-use ReflectionProperty;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\StateStore;
 use Thunk\Verbs\State;

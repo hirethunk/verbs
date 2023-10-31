@@ -10,7 +10,6 @@ use ReflectionParameter;
 use Thunk\Verbs\Support\EventSerializer;
 use Thunk\Verbs\Support\EventStateRegistry;
 use Thunk\Verbs\Support\PendingEvent;
-use Thunk\Verbs\Support\Reflector;
 use Thunk\Verbs\Support\StateCollection;
 use WeakMap;
 

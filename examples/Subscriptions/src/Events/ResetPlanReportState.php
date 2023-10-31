@@ -5,7 +5,6 @@ namespace Thunk\Verbs\Examples\Subscriptions\Events;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Examples\Subscriptions\States\GlobalReportState;
 use Thunk\Verbs\Examples\Subscriptions\States\PlanReportState;
-use Thunk\Verbs\State;
 use Thunk\Verbs\Support\StateCollection;
 
 class ResetPlanReportState extends Event
