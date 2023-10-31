@@ -54,13 +54,13 @@
         "psr-4": {
             "Thunk\\Verbs\\Tests\\": "tests/",
 
-            "Thunk\\Verbs\\Examples\\Bank\\": "examples/bank/src/",
-            "Thunk\\Verbs\\Examples\\Bank\\Tests\\": "examples/bank/tests/",
-            "Thunk\\Verbs\\Examples\\Bank\\Database\\Factories\\": "examples/bank/database/factories/",
+            "Thunk\\Verbs\\Examples\\Bank\\": "examples/Bank/src/",
+            "Thunk\\Verbs\\Examples\\Bank\\Tests\\": "examples/Bank/tests/",
+            "Thunk\\Verbs\\Examples\\Bank\\Database\\Factories\\": "examples/Bank/database/factories/",
 
-            "Thunk\\Verbs\\Examples\\Subscriptions\\": "examples/subscriptions/src/",
-            "Thunk\\Verbs\\Examples\\Subscriptions\\Tests\\": "examples/subscriptions/tests/",
-            "Thunk\\Verbs\\Examples\\Subscriptions\\Database\\Factories\\": "examples/subscriptions/database/factories/"
+            "Thunk\\Verbs\\Examples\\Subscriptions\\": "examples/Subscriptions/src/",
+            "Thunk\\Verbs\\Examples\\Subscriptions\\Tests\\": "examples/Subscriptions/tests/",
+            "Thunk\\Verbs\\Examples\\Subscriptions\\Database\\Factories\\": "examples/Subscriptions/database/factories/"
         }
     },
     "scripts": {
