@@ -1,7 +1,7 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Route;
 use Thunk\Verbs\Examples\Bank\Events\AccountOpened;
 use Thunk\Verbs\Examples\Bank\Events\MoneyDeposited;
 use Thunk\Verbs\Examples\Bank\States\AccountState;
@@ -17,6 +17,7 @@ beforeEach(function () {
         dump($e->state(AccountState::class));
         Verbs::commit();
         dump('hi');
+
         return $e->state(AccountState::class)->balance_in_cents;
     });
 
@@ -25,6 +26,7 @@ beforeEach(function () {
 
         dump($e->state(AccountState::class));
         Verbs::commit();
+
         return $e->state(AccountState::class)->balance_in_cents;
     });
 });
@@ -59,6 +61,6 @@ it('supports rehydrating a state from events', function () {
 
 //     expect(VerbEvent::query()->count())->toBe(1);
 //     $snapshot->save();
-    
+
 //     $this->get('deposit')->assertSee(200);
 // });
