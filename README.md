@@ -4,6 +4,8 @@
 
 Write some docs.
 
+This is a branch to test CI.
+
 ## Flow of events during a request
 
 ### Request Phase
