@@ -5,16 +5,17 @@ namespace Thunk\Verbs\Examples\Subscriptions\Events;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Examples\Subscriptions\States\GlobalReportState;
 use Thunk\Verbs\Examples\Subscriptions\States\PlanReportState;
+use Thunk\Verbs\Support\StateCollection;
 
 class ResetPlanReportState extends Event
 {
     public int $plan_id;
 
-    public function states(): array
+    public function states(): StateCollection
     {
-        return [
+        return new StateCollection([
             PlanReportState::class => PlanReportState::load($this->plan_id),
-        ];
+        ]);
     }
 
     public function apply(GlobalReportState $state)

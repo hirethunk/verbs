@@ -8,7 +8,10 @@ use InvalidArgumentException;
 use ReflectionMethod;
 use ReflectionParameter;
 use Thunk\Verbs\Support\EventSerializer;
+use Thunk\Verbs\Support\EventStateRegistry;
 use Thunk\Verbs\Support\PendingEvent;
+use Thunk\Verbs\Support\StateCollection;
+use WeakMap;
 
 abstract class Event
 {
@@ -48,9 +51,24 @@ abstract class Event
         return static::make(...$args)->fire();
     }
 
-    public function states(): array
+    public function states(): StateCollection
     {
-        // TODO: Use reflection and attributes to figure this out
-        return [];
+        // TODO: This is a bit hacky, but is probably OK right now
+
+        static $map = new WeakMap();
+
+        return $map[$this] ??= app(EventStateRegistry::class)->getStates($this);
+    }
+
+    public function state(string $state_type = null): ?State
+    {
+        $states = $this->states();
+
+        // If we only have one state, allow for accessing without providing a class
+        if ($state_type === null && $states->count() === 1) {
+            return $states->first();
+        }
+
+        return $states->firstWhere(fn (State $state) => $state::class === $state_type);
     }
 }

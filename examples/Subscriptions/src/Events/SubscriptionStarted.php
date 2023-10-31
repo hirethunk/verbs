@@ -8,6 +8,7 @@ use Thunk\Verbs\Examples\Subscriptions\Models\Subscription;
 use Thunk\Verbs\Examples\Subscriptions\States\GlobalReportState;
 use Thunk\Verbs\Examples\Subscriptions\States\PlanReportState;
 use Thunk\Verbs\Examples\Subscriptions\States\SubscriptionState;
+use Thunk\Verbs\Support\StateCollection;
 
 class SubscriptionStarted extends Event
 {
@@ -17,15 +18,15 @@ class SubscriptionStarted extends Event
 
     public ?int $subscription_id = null;
 
-    public function states(): array
+    public function states(): StateCollection
     {
         $this->subscription_id ??= Snowflake::make()->id();
 
-        return [
+        return new StateCollection([
             SubscriptionState::load($this->subscription_id),
             PlanReportState::load($this->plan_id),
             GlobalReportState::singleton(),
-        ];
+        ]);
     }
 
     public function validate(SubscriptionState $state)

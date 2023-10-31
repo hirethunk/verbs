@@ -2,6 +2,7 @@
 
 namespace Thunk\Verbs\Examples\Subscriptions\Events;
 
+use Thunk\Verbs\Attributes\Autodiscovery\StateId;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Examples\Subscriptions\Models\Report;
 use Thunk\Verbs\Examples\Subscriptions\States\PlanReportState;
@@ -9,14 +10,8 @@ use Thunk\Verbs\Facades\Verbs;
 
 class PlanReportGenerated extends Event
 {
+    #[StateId(PlanReportState::class)]
     public int $plan_id;
-
-    public function states(): array
-    {
-        return [
-            PlanReportState::class => PlanReportState::load($this->plan_id),
-        ];
-    }
 
     public function onCommit()
     {
