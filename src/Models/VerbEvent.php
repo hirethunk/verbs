@@ -2,8 +2,11 @@
 
 namespace Thunk\Verbs\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\State;
 use Thunk\Verbs\Support\EventSerializer;
 
 class VerbEvent extends Model
@@ -24,6 +27,11 @@ class VerbEvent extends Model
         $this->event->fired = true;
 
         return $this->event;
+    }
+
+    public function states(): BelongsToMany
+    {
+        return $this->belongsToMany(State::class, 'verb_state_events');
     }
 
     public function scopeType($query, string $type)

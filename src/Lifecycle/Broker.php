@@ -10,7 +10,7 @@ class Broker
 {
     public bool $is_replaying = false;
 
-    public function fire(Event $event)
+    public function fire(Event $event): Event
     {
         $states = collect($event->states());
 
@@ -29,7 +29,7 @@ class Broker
         $events = app(EventQueue::class)->flush();
 
         // FIXME: Only write changes + handle aggregate versioning
-        app(StateStore::class)->writeLoaded();
+        app(StateRegistry::class)->snapshot();
 
         if (empty($events)) {
             return true;
@@ -46,7 +46,7 @@ class Broker
     {
         $this->is_replaying = true;
 
-        app(StateStore::class)->reset();
+        app(SnapshotStore::class)->reset();
 
         app(EventStore::class)->read()
             ->each(function (VerbEvent $model) {

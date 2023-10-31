@@ -5,6 +5,7 @@ namespace Thunk\Verbs\Attributes\Autodiscovery;
 use Attribute;
 use InvalidArgumentException;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Lifecycle\StateRegistry;
 use Thunk\Verbs\Lifecycle\StateStore;
 use Thunk\Verbs\State;
 
@@ -31,11 +32,10 @@ class AppliesToChildState extends StateDiscoveryAttribute
         return [$this->parent_type];
     }
 
-    public function discoverState(Event $event): State
+    public function discoverState(Event $event, StateRegistry $registry): State
     {
         $parent = $this->discovered->first(fn (State $state) => $state instanceof $this->parent_type);
 
-        return app(StateStore::class)
-            ->load($parent->{$this->id}, $this->state_type);
+        return $registry->load($parent->{$this->id}, $this->state_type);
     }
 }

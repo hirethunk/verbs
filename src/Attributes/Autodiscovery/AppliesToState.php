@@ -5,6 +5,7 @@ namespace Thunk\Verbs\Attributes\Autodiscovery;
 use Attribute;
 use InvalidArgumentException;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Lifecycle\StateRegistry;
 use Thunk\Verbs\Lifecycle\StateStore;
 use Thunk\Verbs\State;
 
@@ -21,9 +22,9 @@ class AppliesToState extends StateDiscoveryAttribute
         }
     }
 
-    public function discoverState(Event $event): State
+    public function discoverState(Event $event, StateRegistry $registry): State
     {
-        return app(StateStore::class)->load($event->{$this->id}, $this->state_type);
+        return $registry->load($event->{$this->id}, $this->state_type);
     }
 
     public function getAlias(): ?string

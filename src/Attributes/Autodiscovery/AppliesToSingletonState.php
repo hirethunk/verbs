@@ -5,6 +5,7 @@ namespace Thunk\Verbs\Attributes\Autodiscovery;
 use Attribute;
 use InvalidArgumentException;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Lifecycle\StateRegistry;
 use Thunk\Verbs\Lifecycle\StateStore;
 use Thunk\Verbs\State;
 
@@ -20,9 +21,9 @@ class AppliesToSingletonState extends StateDiscoveryAttribute
         }
     }
 
-    public function discoverState(Event $event): State
+    public function discoverState(Event $event, StateRegistry $registry): State
     {
         // FIXME: dont use "0"
-        return app(StateStore::class)->load(0, $this->state_type);
+        return $registry->load(0, $this->state_type);
     }
 }

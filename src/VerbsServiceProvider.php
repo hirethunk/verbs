@@ -10,9 +10,11 @@ use Thunk\Verbs\Lifecycle\Broker;
 use Thunk\Verbs\Lifecycle\Dispatcher;
 use Thunk\Verbs\Lifecycle\EventStore;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
-use Thunk\Verbs\Lifecycle\StateStore;
+use Thunk\Verbs\Lifecycle\SnapshotStore;
+use Thunk\Verbs\Lifecycle\StateRegistry;
 use Thunk\Verbs\Support\EventSerializer;
 use Thunk\Verbs\Support\EventStateRegistry;
+use Thunk\Verbs\Support\StateSerializer;
 
 class VerbsServiceProvider extends PackageServiceProvider
 {
@@ -33,12 +35,17 @@ class VerbsServiceProvider extends PackageServiceProvider
         $this->app->singleton(Broker::class);
         $this->app->singleton(Dispatcher::class);
         $this->app->singleton(EventStore::class);
+        $this->app->singleton(SnapshotStore::class);
         $this->app->singleton(EventQueue::class);
-        $this->app->singleton(StateStore::class);
+        $this->app->singleton(StateRegistry::class);
         $this->app->singleton(EventStateRegistry::class);
 
         $this->app->singleton(EventSerializer::class, function () {
             return new EventSerializer(EventSerializer::defaultSymfonySerializer());
+        });
+
+        $this->app->singleton(StateSerializer::class, function () {
+            return new StateSerializer(StateSerializer::defaultSymfonySerializer());
         });
     }
 

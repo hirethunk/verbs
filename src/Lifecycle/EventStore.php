@@ -3,15 +3,27 @@
 namespace Thunk\Verbs\Lifecycle;
 
 use Glhd\Bits\Snowflake;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\LazyCollection;
 use Thunk\Verbs\Models\VerbEvent;
 use Thunk\Verbs\Models\VerbStateEvent;
+use Thunk\Verbs\State;
 use Thunk\Verbs\Support\EventSerializer;
 
 class EventStore
 {
-    public function read(): LazyCollection
+    public function read(State $state = null, int|string|null $after_id = null): LazyCollection
     {
+        if ($state) {
+            return VerbStateEvent::query()
+                ->with('event')
+                ->where('state_id', $state->id)
+                ->where('state_type', $state::class)
+                ->when($after_id, fn (Builder $query) => $query->whereRelation('event', 'id', '>', $after_id))
+                ->lazyById()
+                ->map(fn (VerbStateEvent $pivot) => $pivot->event);
+        }
+
         return VerbEvent::query()->lazyById();
     }
 

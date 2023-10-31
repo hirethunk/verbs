@@ -9,11 +9,17 @@ use ReflectionClass;
 use ReflectionProperty;
 use Thunk\Verbs\Attributes\Autodiscovery\StateDiscoveryAttribute;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Lifecycle\StateRegistry;
 use Thunk\Verbs\State;
 
 class EventStateRegistry
 {
     protected array $discovered_attributes = [];
+
+    public function __construct(
+        protected StateRegistry $registry
+    ) {
+    }
 
     public function getStates(Event $event): StateCollection
     {
@@ -42,7 +48,7 @@ class EventStateRegistry
     {
         $state = $attribute
             ->setDiscoveredState($discovered)
-            ->discoverState($target);
+            ->discoverState($target, $this->registry);
 
         if ($discovered->has($state::class)) {
             throw new OutOfBoundsException('An event can only be associated with a single instance of any given state.');

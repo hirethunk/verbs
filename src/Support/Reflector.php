@@ -108,54 +108,6 @@ class Reflector extends BaseReflector
         );
     }
 
-    public static function getStatesFromIds(Event $target): array
-    {
-        $reflect = new ReflectionClass($target);
-
-        $class_attributes = collect($reflect->getAttributes())
-            ->filter(fn (ReflectionAttribute $attribute) => is_a($attribute->getName(), StateDiscoveryAttribute::class, true))
-            ->map(fn (ReflectionAttribute $attribute) => $attribute->newInstance());
-
-        $property_attributes = collect($reflect->getProperties(ReflectionProperty::IS_PUBLIC))
-            ->flatMap(function (ReflectionProperty $property) {
-                return collect($property->getAttributes())
-                    ->filter(fn (ReflectionAttribute $attribute) => is_a($attribute->getName(), StateDiscoveryAttribute::class, true))
-                    ->map(function (ReflectionAttribute $attribute) use ($property) {
-                        $instance = $attribute->newInstance();
-
-                        if ($instance instanceof ReflectsProperty) {
-                            $instance->setReflection($property);
-                        }
-
-                        return $instance;
-                    });
-            });
-
-        [$discovered, $deferred] = collect($class_attributes)
-            ->merge($property_attributes)
-            ->reduceSpread(function (Collection $discovered, Collection $deferred, StateDiscoveryAttribute $attribute) use ($target) {
-                if ($attribute instanceof DependsOnDiscoveredState) {
-                    $deferred->push($attribute);
-                } else {
-                    $discovered->push($attribute->discoverState($target));
-                }
-
-                return [$discovered, $deferred];
-            }, new Collection(), new Collection());
-
-        $deferred = $deferred
-            ->map(fn (DependsOnDiscoveredState $attribute) => $attribute->setDiscoveredState($discovered))
-            ->map(fn (StateDiscoveryAttribute $attribute) => $attribute->discoverState($target));
-
-        // FIXME: Aliases
-
-        return $discovered
-            ->merge($deferred)
-            ->filter()
-            ->keyBy(fn (State $state) => $state::class)
-            ->all();
-    }
-
     protected static function reflectFunction(ReflectionFunctionAbstract|Closure $function): ReflectionFunctionAbstract
     {
         if ($function instanceof Closure) {
