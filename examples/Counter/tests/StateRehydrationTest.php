@@ -14,7 +14,6 @@ it('supports rehydrating a state from events', function () {
     $this->artisan('count:increment')->expectsOutput('The count is 2.');
     $this->artisan('count:increment')->expectsOutput('The count is 3.');
 
-
     // expect(VerbEvent::query()->count())->toBe(1);
     // // VerbSnapshot::truncate();
     // dump('request mid');
@@ -36,6 +35,6 @@ it('supports rehydrating a state from events', function () {
 
 //     expect(VerbEvent::query()->count())->toBe(1);
 //     $snapshot->save();
-    
+
 //     $this->get('deposit')->assertSee(200);
 // });
