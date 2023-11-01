@@ -4,7 +4,6 @@ namespace Thunk\Verbs;
 
 use Glhd\Bits\Snowflake;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
 use InvalidArgumentException;
 use LogicException;
 use ReflectionMethod;
