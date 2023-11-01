@@ -6,6 +6,7 @@ use Glhd\Bits\Snowflake;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
+use LogicException;
 use ReflectionMethod;
 use ReflectionParameter;
 use Thunk\Verbs\Support\EventSerializer;
@@ -65,13 +66,13 @@ abstract class Event
     {
         $states = $this->states();
 
+        if ($states->isEmpty()) {
+            throw new LogicException(class_basename($this).' does not have any states.');
+        }
+
         // If we only have one state, allow for accessing without providing a class
         if ($state_type === null && $states->count() === 1) {
             return $states->first();
-        }
-
-        if (count($this->states()) === 0) {
-            throw new InvalidArgumentException(Str::afterLast(get_class($this), '\\').' event does not have any states');
         }
 
         return $states->firstWhere(fn (State $state) => $state::class === $state_type);
