@@ -23,7 +23,7 @@ class EventStore
                 ->when($after_id, fn (Builder $query) => $query->whereRelation('event', 'id', '>', $after_id))
                 ->when($up_to_id, fn (Builder $query) => $query->whereRelation('event', 'id', '<=', $up_to_id))
                 ->lazyById()
-                ->map(fn (VerbStateEvent $pivot) => $pivot->event);
+                ->map(fn (VerbStateEvent $pivot) => $pivot->event->event());
         }
 
         return VerbEvent::query()->lazyById();

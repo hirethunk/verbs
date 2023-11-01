@@ -45,14 +45,14 @@ class StateManager
             if (! $state instanceof $type) {
                 throw new UnexpectedValueException(sprintf('Expected State <%d> to be of type "%s" but got "%s"', $id, class_basename($type), class_basename($state)));
             }
-
-            $this->events
-                ->read(state: $state, up_to_id: $this->max_event_id)
-                ->each(fn (Event $event) => $this->dispatcher->apply($event, $state));
         } else {
             $state = $type::make();
             $state->id = $id;
         }
+
+        $this->events
+            ->read(state: $state, up_to_id: $this->max_event_id)
+            ->each(fn (Event $event) => $this->dispatcher->apply($event, $state));
 
         return $this->remember($state);
     }
@@ -70,6 +70,18 @@ class StateManager
     public function setMaxEventId(string|int $max_event_id): static
     {
         $this->max_event_id = $max_event_id;
+
+        return $this;
+    }
+
+    public function reset(bool $include_storage = false): static
+    {
+        $this->states = new Collection();
+        $this->max_event_id = null;
+
+        if ($include_storage) {
+            $this->snapshots->reset();
+        }
 
         return $this;
     }
