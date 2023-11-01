@@ -15,7 +15,7 @@ class AppliesToChildState extends StateDiscoveryAttribute
         public string $state_type,
         public string $parent_type,
         public string $id,
-        public ?string $alias = null, // TODO
+        public ?string $alias = null,
     ) {
         if (! is_a($this->state_type, State::class, true)) {
             throw new InvalidArgumentException('You must pass state class names to the "AppliesToChildState" attribute.');

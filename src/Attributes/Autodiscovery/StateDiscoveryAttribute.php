@@ -10,6 +10,8 @@ use Thunk\Verbs\State;
 
 abstract class StateDiscoveryAttribute
 {
+    public ?string $alias = null;
+
     protected ReflectionProperty $property;
 
     /** @var Collection<string, State> */
@@ -33,7 +35,7 @@ abstract class StateDiscoveryAttribute
 
     public function getAlias(): ?string
     {
-        return property_exists($this, 'alias') ? $this->alias : null;
+        return $this->alias;
     }
 
     public function dependencies(): array
