@@ -3,7 +3,7 @@
 namespace Thunk\Verbs;
 
 use Thunk\Verbs\Lifecycle\EventStore;
-use Thunk\Verbs\Lifecycle\StateRegistry;
+use Thunk\Verbs\Lifecycle\StateManager;
 
 abstract class State
 {
@@ -18,7 +18,7 @@ abstract class State
 
     public function __construct()
     {
-        app(StateRegistry::class)->register($this);
+        app(StateManager::class)->register($this);
     }
 
     public static function load($from): static
@@ -32,7 +32,7 @@ abstract class State
 
     public static function loadByKey($from): static
     {
-        return app(StateRegistry::class)->load($from, static::class);
+        return app(StateManager::class)->load($from, static::class);
     }
 
     public function storedEvents()
@@ -44,6 +44,6 @@ abstract class State
 
     public static function singleton(): static
     {
-        return app(StateRegistry::class)->singleton(static::class);
+        return app(StateManager::class)->singleton(static::class);
     }
 }

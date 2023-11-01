@@ -8,7 +8,7 @@ use Thunk\Verbs\Event;
 use Thunk\Verbs\State;
 use UnexpectedValueException;
 
-class StateRegistry
+class StateManager
 {
     /** @var Collection<string, State> */
     protected Collection $states;

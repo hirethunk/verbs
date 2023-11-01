@@ -11,7 +11,7 @@ use Thunk\Verbs\Lifecycle\Dispatcher;
 use Thunk\Verbs\Lifecycle\EventStore;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 use Thunk\Verbs\Lifecycle\SnapshotStore;
-use Thunk\Verbs\Lifecycle\StateRegistry;
+use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\Support\EventSerializer;
 use Thunk\Verbs\Support\EventStateRegistry;
 use Thunk\Verbs\Support\StateSerializer;
@@ -37,7 +37,7 @@ class VerbsServiceProvider extends PackageServiceProvider
         $this->app->singleton(EventStore::class);
         $this->app->singleton(SnapshotStore::class);
         $this->app->singleton(EventQueue::class);
-        $this->app->singleton(StateRegistry::class);
+        $this->app->singleton(StateManager::class);
         $this->app->singleton(EventStateRegistry::class);
 
         $this->app->singleton(EventSerializer::class, function () {
