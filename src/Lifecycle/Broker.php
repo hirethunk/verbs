@@ -10,12 +10,17 @@ class Broker
 {
     public bool $is_replaying = false;
 
-    public function fire(Event $event)
+    public function __construct(
+        protected Dispatcher $dispatcher,
+    ) {
+    }
+
+    public function fire(Event $event): Event
     {
         $states = collect($event->states());
 
         $states->each(fn ($state) => Guards::for($event, $state)->check());
-        $states->each(fn ($state) => app(Dispatcher::class)->apply($event, $state));
+        $states->each(fn ($state) => $this->dispatcher->apply($event, $state));
 
         app(Queue::class)->queue($event);
 
@@ -36,7 +41,7 @@ class Broker
         }
 
         foreach ($events as $event) {
-            app(Dispatcher::class)->fire($event);
+            $this->dispatcher->fire($event);
         }
 
         return $this->commit();

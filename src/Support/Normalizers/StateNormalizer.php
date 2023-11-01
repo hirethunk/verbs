@@ -32,7 +32,7 @@ class StateNormalizer implements DenormalizerInterface, NormalizerInterface
             throw new InvalidArgumentException(class_basename($this).' can only normalize State objects.');
         }
 
-        return $object->id();
+        return $object->id;
     }
 
     public function getSupportedTypes(?string $format): array
