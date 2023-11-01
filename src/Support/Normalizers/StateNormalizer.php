@@ -5,7 +5,7 @@ namespace Thunk\Verbs\Support\Normalizers;
 use InvalidArgumentException;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
-use Thunk\Verbs\Lifecycle\StateStore;
+use Thunk\Verbs\Lifecycle\SnapshotStore;
 use Thunk\Verbs\State;
 
 class StateNormalizer implements DenormalizerInterface, NormalizerInterface
@@ -18,7 +18,7 @@ class StateNormalizer implements DenormalizerInterface, NormalizerInterface
     /** @param  class-string<State>  $type */
     public function denormalize(mixed $data, string $type, string $format = null, array $context = []): State
     {
-        return app(StateStore::class)->load($data, $type);
+        return app(SnapshotStore::class)->load($data, $type);
     }
 
     public function supportsNormalization(mixed $data, string $format = null): bool
@@ -32,7 +32,7 @@ class StateNormalizer implements DenormalizerInterface, NormalizerInterface
             throw new InvalidArgumentException(class_basename($this).' can only normalize State objects.');
         }
 
-        return $object->id();
+        return $object->id;
     }
 
     public function getSupportedTypes(?string $format): array

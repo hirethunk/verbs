@@ -5,16 +5,19 @@ namespace Thunk\Verbs\Attributes\Autodiscovery;
 use Illuminate\Support\Collection;
 use ReflectionProperty;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\State;
 
 abstract class StateDiscoveryAttribute
 {
+    public ?string $alias = null;
+
     protected ReflectionProperty $property;
 
     /** @var Collection<string, State> */
     protected Collection $discovered;
 
-    abstract public function discoverState(Event $event): State;
+    abstract public function discoverState(Event $event, StateManager $manager): State;
 
     public function setProperty(ReflectionProperty $property): static
     {
@@ -32,7 +35,7 @@ abstract class StateDiscoveryAttribute
 
     public function getAlias(): ?string
     {
-        return property_exists($this, 'alias') ? $this->alias : null;
+        return $this->alias;
     }
 
     public function dependencies(): array

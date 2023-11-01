@@ -6,7 +6,7 @@ use Attribute;
 use Glhd\Bits\Snowflake;
 use InvalidArgumentException;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Lifecycle\StateStore;
+use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\State;
 
 #[Attribute(Attribute::TARGET_PROPERTY)]
@@ -22,7 +22,7 @@ class StateId extends StateDiscoveryAttribute
         }
     }
 
-    public function discoverState(Event $event): State
+    public function discoverState(Event $event, StateManager $manager): State
     {
         $value = $this->property->getValue($event);
 
@@ -32,6 +32,6 @@ class StateId extends StateDiscoveryAttribute
             $this->property->setValue($event, $value);
         }
 
-        return app(StateStore::class)->load($value, $this->state_type);
+        return $manager->load($value, $this->state_type);
     }
 }
