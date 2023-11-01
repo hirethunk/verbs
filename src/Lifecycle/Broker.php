@@ -35,7 +35,7 @@ class Broker
 
         // FIXME: Only write changes + handle aggregate versioning
 
-        app(StateManager::class)->snapshot();
+        app(StateManager::class)->writeSnapshots();
 
         if (empty($events)) {
             return true;
@@ -56,7 +56,7 @@ class Broker
 
         app(EventStore::class)->read()
             ->each(function (VerbEvent $model) {
-                app(StateManager::class)->setLastEventId($model->id);
+                app(StateManager::class)->setMaxEventId($model->id);
 
                 $model->event()->states()
                     ->each(fn ($state) => $this->dispatcher->apply($model->event(), $state))

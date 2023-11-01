@@ -13,7 +13,7 @@ class StateManager
     /** @var Collection<string, State> */
     protected Collection $states;
 
-    protected int|string|null $last_event_id = null;
+    protected int|string|null $max_event_id = null;
 
     public function __construct(
         protected Dispatcher $dispatcher,
@@ -47,7 +47,7 @@ class StateManager
             }
 
             $this->events
-                ->read(state: $state, up_to_id: $this->last_event_id)
+                ->read(state: $state, up_to_id: $this->max_event_id)
                 ->each(fn (Event $event) => $this->dispatcher->apply($event, $state));
         } else {
             $state = $type::make();
@@ -62,14 +62,16 @@ class StateManager
         return $this->load(0, $type);
     }
 
-    public function snapshot(): bool
+    public function writeSnapshots(): bool
     {
         return $this->snapshots->write($this->states->values()->all());
     }
 
-    public function setLastEventId(string|int $last_event_id)
+    public function setMaxEventId(string|int $max_event_id): static
     {
-        $this->last_event_id = $last_event_id;
+        $this->max_event_id = $max_event_id;
+
+        return $this;
     }
 
     protected function remember(State $state): State
