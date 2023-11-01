@@ -2,6 +2,7 @@
 
 namespace Thunk\Verbs\Lifecycle;
 
+use Thunk\Bugg\Bugg;
 use Thunk\Verbs\Event;
 
 class Queue
@@ -11,11 +12,15 @@ class Queue
     public function queue(Event $event)
     {
         $this->event_queue[] = $event;
+
+        dump('queue', $this->event_queue);
     }
 
     public function flush(): array
     {
         $events = $this->event_queue;
+
+        dump('flush', $this->event_queue);
 
         if (! app(EventStore::class)->write($events)) {
             throw new \Exception('Failed to write events to store.');

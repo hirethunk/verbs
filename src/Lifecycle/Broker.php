@@ -15,7 +15,6 @@ class Broker
     {
         $states = collect($event->states());
 
-        dump($states);
         $states->each(fn ($state) => Guards::for($event, $state)->check());
         $states->each(fn ($state) => app(Dispatcher::class)->apply($event, $state));
 
@@ -28,7 +27,6 @@ class Broker
 
     public function commit(): bool
     {
-        dump('commit');
         $events = app(EventQueue::class)->flush();
 
         // FIXME: Only write changes + handle aggregate versioning

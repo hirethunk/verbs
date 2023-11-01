@@ -2,13 +2,14 @@
 
 namespace Thunk\Verbs;
 
-use Glhd\Bits\Snowflake;
-use Illuminate\Support\Arr;
-use InvalidArgumentException;
 use ReflectionMethod;
+use Glhd\Bits\Snowflake;
 use ReflectionParameter;
-use Thunk\Verbs\Support\EventSerializer;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
+use InvalidArgumentException;
 use Thunk\Verbs\Support\PendingEvent;
+use Thunk\Verbs\Support\EventSerializer;
 
 abstract class Event
 {
@@ -60,8 +61,13 @@ abstract class Event
             return $this->states()[$fqcn] ?? null;
         }
 
-        if (count($this->states()) === 1) {
+        dump($this->states());
+        if (count($this->states()) > 1) {
             return $this->states()[0];
+        }
+
+        if (count($this->states()) === 0) {
+            throw new InvalidArgumentException( Str::afterLast(get_class($this), '\\') . ' event does not have any states');
         }
 
         throw new InvalidArgumentException('You must specify a state class when there are multiple states');

@@ -1,36 +1,5 @@
 <?php
 
-use Thunk\Verbs\Facades\Verbs;
-use Thunk\Verbs\Models\VerbEvent;
-use Illuminate\Support\Facades\Route;
-use Thunk\Verbs\Examples\Bank\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Thunk\Verbs\Examples\Bank\States\AccountState;
-use Thunk\Verbs\Examples\Bank\Events\AccountOpened;
-use Thunk\Verbs\Examples\Bank\Events\MoneyDeposited;
-
-uses(RefreshDatabase::class);
-
-beforeEach(function () {
-    $user = User::factory()->create();
-    
-    Route::get('open', function () {
-        $e = AccountOpened::fire();
-
-        Verbs::commit();
-        return $e->state(AccountState::class)->balance_in_cents;
-    });
-
-    Route::get('deposit', function () {
-        $e = MoneyDeposited::fire(cents: 100);
-
-        Verbs::commit();
-        return $e->state(AccountState::class)->balance_in_cents;
-    });
-
-    dump('endBeforeEach');
-});
-
 // it('supports rehydrating a state from snapshots', function () {
 //     $this->get('open')->assertSee(0);
 
@@ -41,10 +10,10 @@ beforeEach(function () {
 // });
 
 it('supports rehydrating a state from events', function () {
-    dump('start Test');
+    $this->artisan('count:increment')->expectsOutput('The count is 1.');
+    $this->artisan('count:increment')->expectsOutput('The count is 2.');
+    $this->artisan('count:increment')->expectsOutput('The count is 3.');
 
-    $this->get('open')->assertSee(0);
-    dump('request 1');
 
     // expect(VerbEvent::query()->count())->toBe(1);
     // // VerbSnapshot::truncate();
