@@ -2,7 +2,6 @@
 
 namespace Thunk\Verbs\Lifecycle;
 
-use Thunk\Bugg\Bugg;
 use Thunk\Verbs\Event;
 
 class Queue
