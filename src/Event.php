@@ -2,16 +2,16 @@
 
 namespace Thunk\Verbs;
 
-use ReflectionMethod;
 use Glhd\Bits\Snowflake;
-use ReflectionParameter;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
-use Thunk\Verbs\Support\PendingEvent;
+use ReflectionMethod;
+use ReflectionParameter;
 use Thunk\Verbs\Support\EventSerializer;
-use Thunk\Verbs\Support\StateCollection;
 use Thunk\Verbs\Support\EventStateRegistry;
+use Thunk\Verbs\Support\PendingEvent;
+use Thunk\Verbs\Support\StateCollection;
 use WeakMap;
 
 abstract class Event
@@ -71,7 +71,7 @@ abstract class Event
         }
 
         if (count($this->states()) === 0) {
-            throw new InvalidArgumentException( Str::afterLast(get_class($this), '\\') . ' event does not have any states');
+            throw new InvalidArgumentException(Str::afterLast(get_class($this), '\\').' event does not have any states');
         }
 
         return $states->firstWhere(fn (State $state) => $state::class === $state_type);

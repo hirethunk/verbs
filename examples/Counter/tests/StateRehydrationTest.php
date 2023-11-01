@@ -1,8 +1,8 @@
 <?php
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Thunk\Verbs\Models\VerbEvent;
 use Thunk\Verbs\Models\VerbSnapshot;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
@@ -36,6 +36,6 @@ it('supports rehydrating a state from a combination of snapshots and events', fu
 
     expect(VerbEvent::query()->count())->toBe(1);
     $snapshot->save();
-    
+
     $this->artisan('count:increment')->expectsOutput('3');
 });
