@@ -57,6 +57,11 @@ class StateRegistry
         return $this->remember($state);
     }
 
+    public function singleton(string $type): State
+    {
+        return $this->load(0, $type);
+    }
+
     public function snapshot(): bool
     {
         return $this->snapshots->write($this->states->values()->all());

@@ -44,7 +44,6 @@ abstract class State
 
     public static function singleton(): static
     {
-        // FIXME: don't use "0"
-        return app(StateRegistry::class)->load(0, static::class);
+        return app(StateRegistry::class)->singleton(static::class);
     }
 }

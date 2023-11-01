@@ -44,8 +44,6 @@ class StateSerializer
             $state->__sleep();
         }
 
-        // FIXME: Throw away applied events or don't store on state
-
         return $this->serializer->serialize($state, 'json');
     }
 

@@ -13,7 +13,7 @@ class AppliesToSingletonState extends StateDiscoveryAttribute
 {
     public function __construct(
         public string $state_type,
-        public ?string $alias = null, // TODO
+        public ?string $alias = null,
     ) {
         if (! is_a($this->state_type, State::class, true)) {
             throw new InvalidArgumentException('You must pass state class names to the "AppliesToState" attribute.');
@@ -22,7 +22,6 @@ class AppliesToSingletonState extends StateDiscoveryAttribute
 
     public function discoverState(Event $event, StateRegistry $registry): State
     {
-        // FIXME: dont use "0"
-        return $registry->load(0, $this->state_type);
+        return $registry->singleton($this->state_type);
     }
 }

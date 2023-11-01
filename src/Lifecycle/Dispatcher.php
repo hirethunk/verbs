@@ -95,8 +95,6 @@ class Dispatcher
 
         $listeners = $this->hooks[$event::class] ?? [];
 
-        // FIXME: We can lazily auto-discover here
-
         if (method_exists($event, 'onFire')) {
             $onFire = Hook::fromClassMethod($event, new ReflectionMethod($event, 'onFire'));
             array_unshift($listeners, $onFire);

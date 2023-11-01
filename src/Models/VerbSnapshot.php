@@ -18,8 +18,7 @@ class VerbSnapshot extends Model
     {
         $this->state ??= app(StateSerializer::class)->deserialize($this->type, $this->data);
         $this->state->id = $this->id;
-
-        // FIXME: Last applied event
+        $this->state->last_event_id = $this->last_event_id;
 
         return $this->state;
     }
