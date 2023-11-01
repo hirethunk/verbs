@@ -70,24 +70,10 @@ abstract class Event
             return $states->first();
         }
 
-        return $states->firstWhere(fn (State $state) => $state::class === $state_type);
-    }
-
-    public function state(string $fqcn = null)
-    {
-        if ($fqcn) {
-            return $this->states()[$fqcn] ?? null;
-        }
-
-        dump($this->states());
-        if (count($this->states()) > 1) {
-            return $this->states()[0];
-        }
-
         if (count($this->states()) === 0) {
             throw new InvalidArgumentException( Str::afterLast(get_class($this), '\\') . ' event does not have any states');
         }
 
-        throw new InvalidArgumentException('You must specify a state class when there are multiple states');
+        return $states->firstWhere(fn (State $state) => $state::class === $state_type);
     }
 }

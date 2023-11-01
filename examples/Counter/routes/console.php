@@ -2,9 +2,12 @@
 
 use Illuminate\Support\Facades\Artisan;
 use Thunk\Verbs\Examples\Counter\Events\IncrementCount;
+use Thunk\Verbs\Facades\Verbs;
 
 Artisan::command('count:increment', function () {
     $state = IncrementCount::fire()->state();
 
-    $this->line("Count is now {$state->count}");
+    Verbs::commit();
+
+    $this->line("{$state->count}");
 });

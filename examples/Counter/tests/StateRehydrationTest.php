@@ -1,41 +1,41 @@
 <?php
 
-// it('supports rehydrating a state from snapshots', function () {
-//     $this->get('open')->assertSee(0);
+use Thunk\Verbs\Models\VerbEvent;
+use Thunk\Verbs\Models\VerbSnapshot;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
-//     expect(VerbSnapshot::query()->count())->toBe(1);
-//     VerbEvent::truncate();
+uses(RefreshDatabase::class);
 
-//     $this->get('deposit')->assertSee(100);
-// });
+it('supports rehydrating a state from snapshots', function () {
+    $this->artisan('count:increment')->expectsOutput('1');
 
-it('supports rehydrating a state from events', function () {
-    $this->artisan('count:increment')->expectsOutput('The count is 1.');
-    $this->artisan('count:increment')->expectsOutput('The count is 2.');
-    $this->artisan('count:increment')->expectsOutput('The count is 3.');
+    expect(VerbSnapshot::query()->count())->toBe(1);
+    VerbEvent::truncate();
 
-
-    // expect(VerbEvent::query()->count())->toBe(1);
-    // // VerbSnapshot::truncate();
-    // dump('request mid');
-
-    // $this->get('deposit')->assertSee(100);
-    // dump('request 2');
-
+    $this->artisan('count:increment')->expectsOutput('2');
 });
 
-// it('supports rehydrating a state from a combination of snapshots and events', function () {
-//     $this->get('open')->assertSee(0);
+it('supports rehydrating a state from events', function () {
+    $this->artisan('count:increment')->expectsOutput('1');
 
-//     expect(VerbSnapshot::query()->count())->toBe(1);
-//     VerbEvent::truncate();
+    expect(VerbEvent::query()->count())->toBe(1);
+    VerbSnapshot::truncate();
 
-//     $snapshot = VerbSnapshot::first();
+    $this->artisan('count:increment')->expectsOutput('2');
+});
 
-//     $this->get('deposit')->assertSee(100);
+it('supports rehydrating a state from a combination of snapshots and events', function () {
+    $this->artisan('count:increment')->expectsOutput('1');
 
-//     expect(VerbEvent::query()->count())->toBe(1);
-//     $snapshot->save();
+    expect(VerbSnapshot::query()->count())->toBe(1);
+    VerbEvent::truncate();
+
+    $snapshot = VerbSnapshot::first();
+
+    $this->artisan('count:increment')->expectsOutput('2');
+
+    expect(VerbEvent::query()->count())->toBe(1);
+    $snapshot->save();
     
-//     $this->get('deposit')->assertSee(200);
-// });
+    $this->artisan('count:increment')->expectsOutput('3');
+});
