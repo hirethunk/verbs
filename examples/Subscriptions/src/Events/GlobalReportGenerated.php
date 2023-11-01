@@ -6,14 +6,15 @@ use Thunk\Verbs\Event;
 use Thunk\Verbs\Examples\Subscriptions\Models\Report;
 use Thunk\Verbs\Examples\Subscriptions\States\GlobalReportState;
 use Thunk\Verbs\Facades\Verbs;
+use Thunk\Verbs\Support\StateCollection;
 
 class GlobalReportGenerated extends Event
 {
-    public function states(): array
+    public function states(): StateCollection
     {
-        return [
+        return new StateCollection([
             GlobalReportState::class => GlobalReportState::singleton(),
-        ];
+        ]);
     }
 
     public function onCommit()

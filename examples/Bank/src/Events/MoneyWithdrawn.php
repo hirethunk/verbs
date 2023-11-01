@@ -2,20 +2,17 @@
 
 namespace Thunk\Verbs\Examples\Bank\Events;
 
+use Thunk\Verbs\Attributes\Autodiscovery\StateId;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Examples\Bank\Models\Account;
 use Thunk\Verbs\Examples\Bank\States\AccountState;
 
 class MoneyWithdrawn extends Event
 {
+    #[StateId(AccountState::class)]
     public int $account_id;
 
     public int $cents = 0;
-
-    public function states(): array
-    {
-        return [AccountState::load($this->account_id)];
-    }
 
     public function validate(AccountState $state): bool
     {
@@ -29,11 +26,9 @@ class MoneyWithdrawn extends Event
 
     public function onFire(): void
     {
-        [$state] = $this->states();
-
         Account::find($this->account_id)
             ->update([
-                'balance_in_cents' => $state->balance_in_cents,
+                'balance_in_cents' => $this->state()->balance_in_cents,
             ]);
     }
 }

@@ -2,9 +2,8 @@
 
 namespace Thunk\Verbs\Examples\Bank\Events;
 
-use Glhd\Bits\Snowflake;
 use Illuminate\Support\Facades\Mail;
-use Throwable;
+use Thunk\Verbs\Attributes\Autodiscovery\StateId;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Examples\Bank\Mail\WelcomeEmail;
 use Thunk\Verbs\Examples\Bank\Models\Account;
@@ -12,23 +11,12 @@ use Thunk\Verbs\Examples\Bank\States\AccountState;
 
 class AccountOpened extends Event
 {
+    #[StateId(AccountState::class)]
     public ?int $account_id = null;
 
     public int $user_id;
 
     public int $initial_deposit_in_cents = 0;
-
-    public function states(): array
-    {
-        try {
-            // TODO: This should eventually be handled by magic for you
-            $this->account_id ??= Snowflake::make()->id();
-
-            return [AccountState::load($this->account_id)];
-        } catch (Throwable $exception) {
-            dd($exception);
-        }
-    }
 
     public function validate(AccountState $state): bool
     {

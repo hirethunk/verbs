@@ -5,7 +5,6 @@ namespace Thunk\Verbs\Lifecycle;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 use Thunk\Verbs\Models\VerbEvent;
-use Thunk\Verbs\Support\Reflector;
 
 class Broker
 {
@@ -51,7 +50,8 @@ class Broker
 
         app(EventStore::class)->read()
             ->each(function (VerbEvent $model) {
-                Reflector::getPublicStateProperties($model->event())
+                // FIXME: This is currently applying events to the states before we're ready
+                collect($model->event()->states())
                     ->each(fn ($state) => app(Dispatcher::class)->apply($model->event(), $state));
 
                 return $model->event();

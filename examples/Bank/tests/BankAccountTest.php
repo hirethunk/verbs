@@ -7,6 +7,7 @@ use Thunk\Verbs\Examples\Bank\Events\MoneyDeposited;
 use Thunk\Verbs\Examples\Bank\Events\MoneyWithdrawn;
 use Thunk\Verbs\Examples\Bank\Mail\DepositAvailable;
 use Thunk\Verbs\Examples\Bank\Mail\WelcomeEmail;
+use Thunk\Verbs\Examples\Bank\Models\Account;
 use Thunk\Verbs\Examples\Bank\Models\User;
 use Thunk\Verbs\Examples\Bank\States\AccountState;
 use Thunk\Verbs\Facades\Verbs;
