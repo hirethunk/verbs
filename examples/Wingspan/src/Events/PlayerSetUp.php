@@ -5,6 +5,8 @@ namespace Thunk\Verbs\Examples\Wingspan\Events;
 use InvalidArgumentException;
 use Thunk\Verbs\Attributes\Autodiscovery\AppliesToState;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Examples\Wingspan\Game\Birds\BirdCollection;
+use Thunk\Verbs\Examples\Wingspan\Game\FoodCollection;
 use Thunk\Verbs\Examples\Wingspan\States\GameState;
 use Thunk\Verbs\Examples\Wingspan\States\PlayerState;
 
@@ -31,6 +33,8 @@ class PlayerSetUp extends Event
         if ($bird_count > $allowed_birds) {
             throw new InvalidArgumentException('For each bird card you keep, you must discard 1 food token.');
         }
+
+        // TODO: Validate food and birds are legit game pieces
     }
 
     public function validatePlayer(PlayerState $state)
@@ -51,9 +55,9 @@ class PlayerSetUp extends Event
 
     public function applyToPlayer(PlayerState $state)
     {
-        $state->bird_cards = $this->bird_cards;
+        $state->bird_cards = BirdCollection::make($this->bird_cards);
         $state->bonus_cards = [$this->bonus_card];
-        $state->food = $this->food;
+        $state->food = FoodCollection::make($this->food);
         $state->setup = true;
     }
 }

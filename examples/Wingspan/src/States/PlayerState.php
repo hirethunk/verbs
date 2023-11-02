@@ -2,6 +2,8 @@
 
 namespace Thunk\Verbs\Examples\Wingspan\States;
 
+use Thunk\Verbs\Examples\Wingspan\Game\Birds\BirdCollection;
+use Thunk\Verbs\Examples\Wingspan\Game\FoodCollection;
 use Thunk\Verbs\State;
 
 class PlayerState extends State
@@ -12,9 +14,9 @@ class PlayerState extends State
 
     public int $available_action_cubes = 0;
 
-    public array $bird_cards = [];
+    public BirdCollection $bird_cards;
 
     public array $bonus_cards = [];
 
-    public array $food = [];
+    public FoodCollection $food;
 }

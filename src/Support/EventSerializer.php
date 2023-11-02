@@ -5,7 +5,11 @@ namespace Thunk\Verbs\Support;
 use InvalidArgumentException;
 use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Mapping\ClassDiscriminatorFromClassMetadata;
+use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
+use Symfony\Component\Serializer\Mapping\Loader\AnnotationLoader;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
+use Symfony\Component\Serializer\Normalizer\BackedEnumNormalizer;
 use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer as SymfonySerializer;
@@ -16,16 +20,23 @@ use Thunk\Verbs\Support\Normalizers\StateNormalizer;
 
 class EventSerializer
 {
+    // FIXME: We need an API for normalizers
+    public static array $custom_normalizers = [];
+
     public static function defaultSymfonySerializer(): SymfonySerializer
     {
         return new SymfonySerializer(
-            normalizers: [
+            normalizers: array_merge(self::$custom_normalizers, [
                 new StateNormalizer(),
                 new BitsNormalizer(),
                 new CarbonNormalizer(),
                 new DateTimeNormalizer(),
-                new ObjectNormalizer(propertyTypeExtractor: new ReflectionExtractor()),
-            ],
+                new BackedEnumNormalizer(),
+                new ObjectNormalizer(
+                    propertyTypeExtractor: new ReflectionExtractor(),
+                    classDiscriminatorResolver: new ClassDiscriminatorFromClassMetadata(new ClassMetadataFactory(new AnnotationLoader())),
+                ),
+            ]),
             encoders: [
                 new JsonEncoder(),
             ],

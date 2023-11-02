@@ -19,13 +19,12 @@ class RoundStarted extends Event
 
     public function validateGame(GameState $game)
     {
-        // TODO: It'd be nice to have access to the previous round here
-
-        return $game->round < 4;
+        return $game->current_round_complete && $game->round < 4;
     }
 
     public function applyToGame(GameState $game)
     {
         $game->round++;
+        $game->current_round_complete = false;
     }
 }

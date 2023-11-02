@@ -12,6 +12,8 @@ class GameState extends State
 
     public int $round = 0;
 
+    public bool $current_round_complete = true;
+
     public int $players = 0;
 
     public ?int $first_player_id = null;
