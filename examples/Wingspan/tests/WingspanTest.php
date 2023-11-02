@@ -40,6 +40,9 @@ it('can play a game of wingspan', function () {
 
     expect($game_state->setup_count)->toBe(1)
         ->and($player1_state->setup)->toBe(true)
+        ->and($player1_state->bird_cards)->toBe(['hawk', 'crow'])
+        ->and($player1_state->bonus_cards)->toBe(['bonus1'])
+        ->and($player1_state->food)->toBe(['worm', 'wheat', 'fish'])
         ->and($player2_state->setup)->toBe(false);
 
     PlayerSetUp::fire(
@@ -52,7 +55,10 @@ it('can play a game of wingspan', function () {
 
     expect($game_state->setup_count)->toBe(2)
         ->and($player1_state->setup)->toBe(true)
-        ->and($player2_state->setup)->toBe(true);
+        ->and($player2_state->setup)->toBe(true)
+        ->and($player2_state->bird_cards)->toBe(['bald eagle', 'nuthatch', 'finch'])
+        ->and($player2_state->bonus_cards)->toBe(['bonus2'])
+        ->and($player2_state->food)->toBe(['mouse', 'berries']);
 
     SelectedAsFirstPlayer::fire(
         player_id: $player2_state->id,
