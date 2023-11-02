@@ -6,5 +6,4 @@ use Thunk\Verbs\State;
 
 class RoundState extends State
 {
-
 }
