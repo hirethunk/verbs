@@ -35,6 +35,11 @@ abstract class State
         return app(StateManager::class)->load($from, static::class);
     }
 
+    public static function singleton(): static
+    {
+        return app(StateManager::class)->singleton(static::class);
+    }
+
     public function storedEvents()
     {
         return app(EventStore::class)
@@ -42,8 +47,8 @@ abstract class State
             ->collect();
     }
 
-    public static function singleton(): static
+    public function fresh(): static
     {
-        return app(StateManager::class)->singleton(static::class);
+        return app(StateManager::class)->load($this->id, static::class);
     }
 }

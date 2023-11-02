@@ -46,7 +46,7 @@ abstract class Event
         return PendingEvent::make($event);
     }
 
-    public static function fire(...$args)
+    public static function fire(...$args): static
     {
         return static::make(...$args)->fire();
     }
@@ -60,6 +60,12 @@ abstract class Event
         return $map[$this] ??= app(EventStateRegistry::class)->getStates($this);
     }
 
+    /**
+     * @template T
+     *
+     * @param  class-string<T>|null  $state_type
+     * @return T|null
+     */
     public function state(string $state_type = null): ?State
     {
         $states = $this->states();
