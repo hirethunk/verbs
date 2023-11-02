@@ -2,6 +2,7 @@
 
 namespace Thunk\Verbs\Examples\Wingspan\States;
 
+use Illuminate\Support\Collection;
 use Thunk\Verbs\Examples\Wingspan\Game\Birds\BirdCollection;
 use Thunk\Verbs\Examples\Wingspan\Game\FoodCollection;
 use Thunk\Verbs\State;
@@ -25,4 +26,9 @@ class PlayerState extends State
     public BirdCollection $grass_birds;
 
     public BirdCollection $water_birds;
+
+    public function playedBirds(): Collection
+    {
+        return $this->tree_birds->merge($this->grass_birds)->merge($this->water_birds);
+    }
 }

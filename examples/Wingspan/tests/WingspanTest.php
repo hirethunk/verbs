@@ -2,9 +2,10 @@
 
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
+use Thunk\Verbs\Examples\Wingspan\Events\DrewCards;
 use Thunk\Verbs\Examples\Wingspan\Events\GainedFood;
 use Thunk\Verbs\Examples\Wingspan\Events\GameStarted;
-use Thunk\Verbs\Examples\Wingspan\Events\PlayedBird;
+use Thunk\Verbs\Examples\Wingspan\Events\LaidEggs;
 use Thunk\Verbs\Examples\Wingspan\Events\PlayerSetUp;
 use Thunk\Verbs\Examples\Wingspan\Events\RoundStarted;
 use Thunk\Verbs\Examples\Wingspan\Events\SelectedAsFirstPlayer;
@@ -15,6 +16,7 @@ use Thunk\Verbs\Examples\Wingspan\Game\Birds\Goldfinch;
 use Thunk\Verbs\Examples\Wingspan\Game\Birds\Hawk;
 use Thunk\Verbs\Examples\Wingspan\Game\Birds\Nuthatch;
 use Thunk\Verbs\Examples\Wingspan\Game\Food;
+use Thunk\Verbs\Examples\Wingspan\Game\PlayedBird;
 use Thunk\Verbs\Examples\Wingspan\States\GameState;
 use Thunk\Verbs\Examples\Wingspan\States\RoundState;
 use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
@@ -146,4 +148,22 @@ it('can play a game of wingspan', function () {
 
     expect($player2_state->food->is([Food::Mouse, Food::Berries, Food::Fish]))->toBeTrue()
         ->and($player2_state->available_action_cubes)->toBe(7);
+
+    DrewCards::fire(
+        player_id: $player1_state->id,
+        birds: [new Goldfinch(), new Crow()],
+    );
+
+    expect($player1_state->bird_cards->is([new Hawk(), new Goldfinch(), new Crow()]))->toBeTrue();
+
+    LaidEggs::fire(
+        player_id: $player1_state->id,
+        round_id: $round1_state->id,
+        birds: [
+            $player1_state->grass_birds->first(),
+            $player1_state->grass_birds->first(),
+        ],
+    );
+
+    expect($player1_state->grass_birds->first()->egg_count)->toBe(2);
 });

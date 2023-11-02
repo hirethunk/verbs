@@ -2,18 +2,28 @@
 
 namespace Thunk\Verbs\Examples\Wingspan\Game\Birds;
 
+use Glhd\Bits\Snowflake;
 use Illuminate\Support\Collection;
 use Thunk\Verbs\Examples\Wingspan\Game\Food;
 use Thunk\Verbs\Examples\Wingspan\Game\Habitat;
 
 abstract class Bird
 {
+    public int $id;
+
     public int $points;
 
     /** @var Food[] */
     public array $cost;
 
     public Habitat $habitat;
+
+    public int $egg_count = 0;
+
+    public function __construct()
+    {
+        $this->id = Snowflake::make()->id();
+    }
 
     public function is($bird): bool
     {

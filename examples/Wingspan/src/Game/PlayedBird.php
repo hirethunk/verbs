@@ -1,11 +1,10 @@
 <?php
 
-namespace Thunk\Verbs\Examples\Wingspan\Events;
+namespace Thunk\Verbs\Examples\Wingspan\Game;
 
 use Thunk\Verbs\Attributes\Autodiscovery\AppliesToState;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Examples\Wingspan\Game\Birds\Bird;
-use Thunk\Verbs\Examples\Wingspan\Game\Habitat;
 use Thunk\Verbs\Examples\Wingspan\States\PlayerState;
 use Thunk\Verbs\Examples\Wingspan\States\RoundState;
 
@@ -24,7 +23,7 @@ class PlayedBird extends Event
     public function validatePlayer(PlayerState $player): bool
     {
         return $player->available_action_cubes > 0
-            && collect($player->bird_cards)->contains($this->bird)
+            && collect($player->bird_cards)->map(fn (Bird $bird) => $bird::class)->contains($this->bird::class)
             && $player->food->containsAll($this->food);
     }
 

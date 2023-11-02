@@ -37,12 +37,14 @@ class BirdCollection extends Collection
         $expected = $this
             ->map(fn (Bird $bird) => $bird::class)
             ->sort()
+            ->values()
             ->all();
 
         $comparison = collect($birds)
             ->ensure(Bird::class)
             ->map(fn (Bird $bird) => $bird::class)
             ->sort()
+            ->values()
             ->all();
 
         return $expected === $comparison;
