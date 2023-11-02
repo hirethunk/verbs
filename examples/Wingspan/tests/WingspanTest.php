@@ -2,6 +2,7 @@
 
 use Thunk\Verbs\Examples\Wingspan\Events\GameStarted;
 use Thunk\Verbs\Examples\Wingspan\Events\PlayerSetUp;
+use Thunk\Verbs\Examples\Wingspan\Events\RoundStarted;
 use Thunk\Verbs\Examples\Wingspan\Events\SelectedAsFirstPlayer;
 use Thunk\Verbs\Examples\Wingspan\States\GameState;
 use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
@@ -21,7 +22,7 @@ it('can play a game of wingspan', function () {
     $player2_state = $start_event->playerState(1);
 
     expect($game_state->started)->toBeTrue()
-        ->and($game_state->round)->toBe(1)
+        ->and($game_state->round)->toBe(0)
         ->and($game_state->setup_count)->toBe(0)
         ->and($player1_state->setup)->toBe(false)
         ->and($player1_state->available_action_cubes)->toBe(8)
@@ -64,4 +65,8 @@ it('can play a game of wingspan', function () {
 
     // First Round
     // ---------------------------------------------------------------------------------------------------------------------------
+
+    RoundStarted::fire(game_id: $game_state->id);
+
+    expect($game_state->round)->toBe(1);
 });
