@@ -4,6 +4,7 @@ namespace Thunk\Verbs\Examples\Wingspan\Game\Birds;
 
 use Illuminate\Support\Collection;
 use Thunk\Verbs\Examples\Wingspan\Game\Food;
+use Thunk\Verbs\Examples\Wingspan\Game\Habitat;
 
 abstract class Bird
 {
@@ -11,6 +12,8 @@ abstract class Bird
 
     /** @var Food[] */
     public array $cost;
+
+    public Habitat $habitat;
 
     public function is($bird): bool
     {
@@ -31,6 +34,11 @@ abstract class Bird
         }
 
         return true;
+    }
+
+    public function livesIn(Habitat $habitat): bool
+    {
+        return $this->habitat === $habitat;
     }
 
     public function points(): int

@@ -16,7 +16,13 @@ class GainedFood extends Event
         public int $player_id,
         public Food $food,
     ) {
+    }
+
+    public function validate(PlayerState $player)
+    {
         // TODO: Eventually confirm that this food is available
+
+        return $player->available_action_cubes > 0;
     }
 
     public function applyToPlayer(PlayerState $player)

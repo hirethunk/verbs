@@ -2,6 +2,7 @@
 
 namespace Thunk\Verbs\Support;
 
+use BackedEnum;
 use InvalidArgumentException;
 use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
@@ -72,6 +73,11 @@ class EventSerializer
         if ($target instanceof Event) {
             $type = $target::class;
             $context[AbstractNormalizer::OBJECT_TO_POPULATE] = $target;
+        }
+
+        // FIXME: Symfony's serializer is a little wonky. May need to re-think things.
+        if (is_array($data)) {
+            $data = array_map(fn ($value) => $value instanceof BackedEnum ? $value->value : $value, $data);
         }
 
         $callback = is_array($data) ? $this->serializer->denormalize(...) : $this->serializer->deserialize(...);

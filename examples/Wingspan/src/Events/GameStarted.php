@@ -5,6 +5,7 @@ namespace Thunk\Verbs\Examples\Wingspan\Events;
 use Glhd\Bits\Snowflake;
 use InvalidArgumentException;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Examples\Wingspan\Game\Birds\BirdCollection;
 use Thunk\Verbs\Examples\Wingspan\States\GameState;
 use Thunk\Verbs\Examples\Wingspan\States\PlayerState;
 use Thunk\Verbs\State;
@@ -62,5 +63,9 @@ class GameStarted extends Event
     public function applyToPlayers(PlayerState $state)
     {
         $state->available_action_cubes = 8;
+
+        $state->tree_birds = new BirdCollection();
+        $state->grass_birds = new BirdCollection();
+        $state->water_birds = new BirdCollection();
     }
 }

@@ -19,4 +19,10 @@ class PlayerState extends State
     public array $bonus_cards = [];
 
     public FoodCollection $food;
+
+    public BirdCollection $tree_birds;
+
+    public BirdCollection $grass_birds;
+
+    public BirdCollection $water_birds;
 }

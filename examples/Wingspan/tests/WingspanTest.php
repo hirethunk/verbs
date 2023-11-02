@@ -2,6 +2,7 @@
 
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
+use Thunk\Verbs\Examples\Wingspan\Events\GainedFood;
 use Thunk\Verbs\Examples\Wingspan\Events\GameStarted;
 use Thunk\Verbs\Examples\Wingspan\Events\PlayedBird;
 use Thunk\Verbs\Examples\Wingspan\Events\PlayerSetUp;
@@ -135,5 +136,14 @@ it('can play a game of wingspan', function () {
 
     expect($player1_state->bird_cards->is([new Hawk()]))->toBeTrue()
         ->and($player1_state->food->is([Food::Worm]))->toBeTrue()
-        ->and($player1_state->available_action_cubes)->toBe(7);
+        ->and($player1_state->available_action_cubes)->toBe(7)
+        ->and($player1_state->grass_birds->is([new Crow()]))->toBeTrue();
+
+    GainedFood::fire(
+        player_id: $player2_state->id,
+        food: Food::Fish,
+    );
+
+    expect($player2_state->food->is([Food::Mouse, Food::Berries, Food::Fish]))->toBeTrue()
+        ->and($player2_state->available_action_cubes)->toBe(7);
 });
