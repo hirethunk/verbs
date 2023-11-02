@@ -7,6 +7,7 @@ use Illuminate\Support\Enumerable;
 
 class BirdCollection extends Collection
 {
+    /** @param  callable|string|Bird  $key */
     public function contains($key, $operator = null, $value = null)
     {
         if ($key instanceof Bird) {
@@ -16,7 +17,7 @@ class BirdCollection extends Collection
         return parent::contains($key, $operator, $value);
     }
 
-    /** @param \Illuminate\Support\Enumerable<array-key, Bird>|array<array-key, Bird>|Bird|string $keys */
+    /** @param  \Illuminate\Support\Enumerable<array-key, Bird>|array<array-key, Bird>|Bird|string  $keys */
     public function except($keys)
     {
         if ($keys instanceof Bird) {
