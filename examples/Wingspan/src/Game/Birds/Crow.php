@@ -2,7 +2,6 @@
 
 namespace Thunk\Verbs\Examples\Wingspan\Game\Birds;
 
-use Illuminate\Support\Collection;
 use Thunk\Verbs\Examples\Wingspan\Game\Food;
 use Thunk\Verbs\Examples\Wingspan\Game\Habitat;
 
