@@ -20,7 +20,6 @@ class RoundStarted extends Event
         public int $game_id,
         public ?int $round_id = null,
     ) {
-
     }
 
     public function validateGame(GameState $game)

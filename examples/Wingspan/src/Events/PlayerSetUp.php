@@ -51,6 +51,9 @@ class PlayerSetUp extends Event
 
     public function applyToPlayer(PlayerState $state)
     {
+        $state->bird_cards = $this->bird_cards;
+        $state->bonus_cards = [$this->bonus_card];
+        $state->food = $this->food;
         $state->setup = true;
     }
 }
