@@ -54,6 +54,8 @@ class GameStarted extends Event
 
     public function applyToGame(GameState $state)
     {
+        // TODO: It might be nice to be able to combine these apply methods into one
+
         $state->started = true;
         $state->round = 1;
         $state->players = $this->players;
