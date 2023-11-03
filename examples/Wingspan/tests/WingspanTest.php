@@ -18,7 +18,6 @@ use Thunk\Verbs\Examples\Wingspan\Game\Food;
 use Thunk\Verbs\Examples\Wingspan\States\GameState;
 use Thunk\Verbs\Examples\Wingspan\States\RoundState;
 use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
-use Thunk\Verbs\Facades\Verbs;
 
 it('can play a game of wingspan', function () {
     // We shouldn't be able to start a game with an invalid number of players
