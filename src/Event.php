@@ -5,6 +5,7 @@ namespace Thunk\Verbs;
 use Glhd\Bits\Snowflake;
 use Illuminate\Support\Arr;
 use InvalidArgumentException;
+use LogicException;
 use ReflectionMethod;
 use ReflectionParameter;
 use Thunk\Verbs\Support\EventSerializer;
@@ -63,6 +64,10 @@ abstract class Event
     public function state(string $state_type = null): ?State
     {
         $states = $this->states();
+
+        if ($states->isEmpty()) {
+            throw new LogicException(class_basename($this).' does not have any states.');
+        }
 
         // If we only have one state, allow for accessing without providing a class
         if ($state_type === null && $states->count() === 1) {

@@ -55,6 +55,10 @@
         "psr-4": {
             "Thunk\\Verbs\\Tests\\": "tests/",
 
+            "Thunk\\Verbs\\Examples\\Counter\\": "examples/Counter/src/",
+            "Thunk\\Verbs\\Examples\\Counter\\Tests\\": "examples/Counter/tests/",
+            "Thunk\\Verbs\\Examples\\Counter\\Database\\Factories\\": "examples/Counter/database/factories/",
+
             "Thunk\\Verbs\\Examples\\Bank\\": "examples/Bank/src/",
             "Thunk\\Verbs\\Examples\\Bank\\Tests\\": "examples/Bank/tests/",
             "Thunk\\Verbs\\Examples\\Bank\\Database\\Factories\\": "examples/Bank/database/factories/",
