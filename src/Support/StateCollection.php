@@ -33,7 +33,7 @@ class StateCollection extends Collection
         return $this->filter(fn (State $state) => $state instanceof $state_type);
     }
 
-    /** @param  class-string<State>  $state_type */
+    /** @param  class-string<State>  $state_type  */
     public function firstOfType(string $state_type): ?State
     {
         return $this->ofType($state_type)->first();
