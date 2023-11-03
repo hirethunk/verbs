@@ -19,8 +19,7 @@ class EventStateRegistry
 
     public function __construct(
         protected StateManager $manager
-    )
-    {
+    ) {
     }
 
     public function getStates(Event $event): StateCollection
@@ -40,7 +39,7 @@ class EventStateRegistry
         }
 
         // Once we've loaded everything else, try to discover any deferred attributes
-        $deferred->each(fn(StateDiscoveryAttribute $attr) => $this->discoverAndPushState($attr, $event, $discovered));
+        $deferred->each(fn (StateDiscoveryAttribute $attr) => $this->discoverAndPushState($attr, $event, $discovered));
 
         return $discovered;
     }
@@ -86,17 +85,17 @@ class EventStateRegistry
     {
         return collect($reflect->getAttributes())
             ->filter($this->isStateDiscoveryAttribute(...))
-            ->map(fn(ReflectionAttribute $attribute) => $attribute->newInstance());
+            ->map(fn (ReflectionAttribute $attribute) => $attribute->newInstance());
     }
 
     /** @return Collection<int, StateDiscoveryAttribute> */
     protected function findPropertyAttributes(ReflectionClass $reflect): Collection
     {
         return collect($reflect->getProperties(ReflectionProperty::IS_PUBLIC))
-            ->flatMap(fn(ReflectionProperty $property) => collect($property->getAttributes())
+            ->flatMap(fn (ReflectionProperty $property) => collect($property->getAttributes())
                 ->filter($this->isStateDiscoveryAttribute(...))
-                ->map(fn(ReflectionAttribute $attribute) => $attribute->newInstance())
-                ->map(fn(StateDiscoveryAttribute $attribute) => $attribute->setProperty($property)));
+                ->map(fn (ReflectionAttribute $attribute) => $attribute->newInstance())
+                ->map(fn (StateDiscoveryAttribute $attribute) => $attribute->setProperty($property)));
     }
 
     protected function isStateDiscoveryAttribute(ReflectionAttribute $attribute): bool
