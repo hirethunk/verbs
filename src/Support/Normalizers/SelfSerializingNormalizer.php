@@ -5,9 +5,7 @@ namespace Thunk\Verbs\Support\Normalizers;
 use InvalidArgumentException;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
-use Thunk\Verbs\Lifecycle\SnapshotStore;
 use Thunk\Verbs\SerializedByVerbs;
-use Thunk\Verbs\State;
 
 class SelfSerializingNormalizer implements DenormalizerInterface, NormalizerInterface
 {
