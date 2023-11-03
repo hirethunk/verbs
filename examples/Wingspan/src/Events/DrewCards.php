@@ -10,6 +10,8 @@ use Thunk\Verbs\Examples\Wingspan\States\PlayerState;
 #[AppliesToState(PlayerState::class)]
 class DrewCards extends Event
 {
+    use TurnEvent;
+
     public function __construct(
         public int $player_id,
         public array $birds,
@@ -25,13 +27,11 @@ class DrewCards extends Event
             default => 2,
         };
 
-        return $player->available_action_cubes > 0
-            && count($this->birds) <= $allowed;
+        return count($this->birds) <= $allowed;
     }
 
     public function applyToPlayer(PlayerState $player)
     {
         $player->bird_cards->push(...$this->birds);
-        $player->available_action_cubes--;
     }
 }

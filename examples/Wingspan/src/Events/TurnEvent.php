@@ -19,7 +19,7 @@ trait TurnEvent
         return $player->id === $round->active_player_id;
     }
 
-    public function applyToRound(RoundState $round)
+    public function applyTurnEventToRound(RoundState $round)
     {
         $players = $round->game()->players();
 
@@ -30,5 +30,10 @@ trait TurnEvent
             ->first() ?? $players->first();
 
         $round->active_player_id = $next_player->id;
+    }
+
+    public function applyTurnEventToPlayer(PlayerState $player)
+    {
+        $player->available_action_cubes--;
     }
 }

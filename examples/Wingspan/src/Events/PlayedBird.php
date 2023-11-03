@@ -33,7 +33,6 @@ class PlayedBird extends Event
     {
         $player->bird_cards = $player->bird_cards->except($this->bird);
         $player->food = $player->food->consume($this->food);
-        $player->available_action_cubes--;
 
         $player->board->habitat($this->bird->habitat)->push($this->bird);
     }
