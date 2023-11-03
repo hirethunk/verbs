@@ -102,7 +102,7 @@ it('can play a game of wingspan', function () {
     expect($player1_state->bird_cards->is([new Hawk()]))->toBeTrue()
         ->and($player1_state->food->is([Food::Worm]))->toBeTrue()
         ->and($player1_state->available_action_cubes)->toBe(7)
-        ->and($player1_state->grass_birds->is([new Crow()]))->toBeTrue();
+        ->and($player1_state->board->inGrass()->is([new Crow()]))->toBeTrue();
 
     GainedFood::fire(
         player_id: $player2_state->id,
@@ -123,10 +123,10 @@ it('can play a game of wingspan', function () {
         player_id: $player1_state->id,
         round_id: $round1_state->id,
         birds: [
-            $player1_state->grass_birds->first(),
-            $player1_state->grass_birds->first(),
+            $player1_state->board->inGrass()->first(),
+            $player1_state->board->inGrass()->first(),
         ],
     );
 
-    expect($player1_state->grass_birds->first()->egg_count)->toBe(2);
+    expect($player1_state->board->inGrass()->first()->egg_count)->toBe(2);
 });

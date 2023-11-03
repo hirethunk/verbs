@@ -20,8 +20,8 @@ class DrewCards extends Event
     public function validatePlayer(PlayerState $player): bool
     {
         $allowed = match (true) {
-            $player->water_birds->count() > 3 => 4,
-            $player->water_birds->count() > 1 => 3,
+            $player->board->inWater()->count() > 3 => 4,
+            $player->board->inWater()->count() > 1 => 3,
             default => 2,
         };
 

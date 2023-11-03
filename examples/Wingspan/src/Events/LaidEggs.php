@@ -24,7 +24,7 @@ class LaidEggs extends Event
 
         return $player->available_action_cubes > 0
             && collect($this->birds)->pluck('id')
-                ->diff($player->playedBirds()->pluck('id'))
+                ->diff($player->board->inAnyHabitat()->pluck('id'))
                 ->isEmpty();
     }
 

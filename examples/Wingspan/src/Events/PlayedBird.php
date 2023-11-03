@@ -34,10 +34,6 @@ class PlayedBird extends Event
         $player->food = $player->food->consume($this->food);
         $player->available_action_cubes--;
 
-        match ($this->bird->habitat) {
-            Habitat::Trees => $player->tree_birds->push($this->bird),
-            Habitat::Grass => $player->grass_birds->push($this->bird),
-            Habitat::Water => $player->water_birds->push($this->bird),
-        };
+        $player->board->habitat($this->bird->habitat)->push($this->bird);
     }
 }
