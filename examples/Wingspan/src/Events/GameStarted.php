@@ -8,8 +8,6 @@ use Thunk\Verbs\Event;
 use Thunk\Verbs\Examples\Wingspan\Game\Board;
 use Thunk\Verbs\Examples\Wingspan\States\GameState;
 use Thunk\Verbs\Examples\Wingspan\States\PlayerState;
-use Thunk\Verbs\State;
-use Thunk\Verbs\Support\StateCollection;
 
 #[AppliesToState(GameState::class)]
 #[AppliesToState(PlayerState::class)]
