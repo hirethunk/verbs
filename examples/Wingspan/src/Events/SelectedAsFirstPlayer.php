@@ -17,18 +17,18 @@ class SelectedAsFirstPlayer extends Event
     ) {
     }
 
-    public function validateGame(GameState $state)
+    public function validateGame(GameState $game)
     {
-        return $state->first_player_id === null;
+        return $game->first_player_id === null;
     }
 
-    public function applyToGame(GameState $state)
+    public function applyToGame(GameState $game)
     {
-        $state->first_player_id = $this->player_id;
+        $game->first_player_id = $this->player_id;
     }
 
-    public function applyToPlayer(PlayerState $state)
+    public function applyToPlayer(PlayerState $player)
     {
-        $state->first_player = true;
+        $player->first_player = true; // TODO: This maybe can go in favor of game.first_player_id
     }
 }

@@ -24,8 +24,7 @@ class PlayedBird extends Event
 
     public function validatePlayer(PlayerState $player): bool
     {
-        return $player->available_action_cubes > 0
-            && collect($player->bird_cards)->map(fn (Bird $bird) => $bird::class)->contains($this->bird::class)
+        return collect($player->bird_cards)->map(fn (Bird $bird) => $bird::class)->contains($this->bird::class)
             && $player->food->containsAll($this->food);
     }
 

@@ -2,8 +2,9 @@
 
 namespace Thunk\Verbs\Support;
 
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
-use OutOfBoundsException;
+use InvalidArgumentException;
 use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionProperty;
@@ -18,7 +19,8 @@ class EventStateRegistry
 
     public function __construct(
         protected StateManager $manager
-    ) {
+    )
+    {
     }
 
     public function getStates(Event $event): StateCollection
@@ -38,7 +40,7 @@ class EventStateRegistry
         }
 
         // Once we've loaded everything else, try to discover any deferred attributes
-        $deferred->each(fn (StateDiscoveryAttribute $attr) => $this->discoverAndPushState($attr, $event, $discovered));
+        $deferred->each(fn(StateDiscoveryAttribute $attr) => $this->discoverAndPushState($attr, $event, $discovered));
 
         return $discovered;
     }
@@ -46,16 +48,21 @@ class EventStateRegistry
     /** @return Collection<string, State> */
     protected function discoverAndPushState(StateDiscoveryAttribute $attribute, Event $target, StateCollection $discovered): Collection
     {
-        $state = $attribute
-            ->setDiscoveredState($discovered)
-            ->discoverState($target, $this->manager);
+        $states = Arr::wrap(
+            $attribute
+                ->setDiscoveredState($discovered)
+                ->discoverState($target, $this->manager)
+        );
 
-        if ($discovered->has($state::class)) {
-            throw new OutOfBoundsException('An event can only be associated with a single instance of any given state.');
+        $discovered->push(...$states);
+
+        if ($alias = $attribute->getAlias()) {
+            if (count($states) > 1) {
+                throw new InvalidArgumentException('You cannot provide an alias for an array of states.');
+            }
+
+            $discovered->alias($alias, $states[0]::class);
         }
-
-        $discovered->put($state::class, $state);
-        $discovered->alias($attribute->getAlias(), $state::class);
 
         return $discovered;
     }
@@ -79,17 +86,17 @@ class EventStateRegistry
     {
         return collect($reflect->getAttributes())
             ->filter($this->isStateDiscoveryAttribute(...))
-            ->map(fn (ReflectionAttribute $attribute) => $attribute->newInstance());
+            ->map(fn(ReflectionAttribute $attribute) => $attribute->newInstance());
     }
 
     /** @return Collection<int, StateDiscoveryAttribute> */
     protected function findPropertyAttributes(ReflectionClass $reflect): Collection
     {
         return collect($reflect->getProperties(ReflectionProperty::IS_PUBLIC))
-            ->flatMap(fn (ReflectionProperty $property) => collect($property->getAttributes())
+            ->flatMap(fn(ReflectionProperty $property) => collect($property->getAttributes())
                 ->filter($this->isStateDiscoveryAttribute(...))
-                ->map(fn (ReflectionAttribute $attribute) => $attribute->newInstance())
-                ->map(fn (StateDiscoveryAttribute $attribute) => $attribute->setProperty($property)));
+                ->map(fn(ReflectionAttribute $attribute) => $attribute->newInstance())
+                ->map(fn(StateDiscoveryAttribute $attribute) => $attribute->setProperty($property)));
     }
 
     protected function isStateDiscoveryAttribute(ReflectionAttribute $attribute): bool

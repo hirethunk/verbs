@@ -17,7 +17,7 @@ abstract class StateDiscoveryAttribute
     /** @var Collection<string, State> */
     protected Collection $discovered;
 
-    abstract public function discoverState(Event $event, StateManager $manager): State;
+    abstract public function discoverState(Event $event, StateManager $manager): State|array;
 
     public function setProperty(ReflectionProperty $property): static
     {

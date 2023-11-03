@@ -12,6 +12,8 @@ class RoundState extends State
 
     public int $active_player_id;
 
+    // TODO: Current round goal
+
     public function game(): GameState
     {
         return GameState::load($this->game_id);

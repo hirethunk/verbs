@@ -37,21 +37,21 @@ class PlayerSetUp extends Event
         // TODO: Validate food and birds are legit game pieces
     }
 
-    public function validatePlayer(PlayerState $state)
+    public function validatePlayer(PlayerState $player)
     {
-        return ! $state->setup;
+        return ! $player->setup;
     }
 
-    public function validateGame(GameState $state)
+    public function validateGame(GameState $game)
     {
-        return $state->currentRoundNumber() === null;
+        return $game->currentRoundNumber() === null;
     }
 
-    public function applyToPlayer(PlayerState $state)
+    public function applyToPlayer(PlayerState $player)
     {
-        $state->bird_cards = BirdCollection::make($this->bird_cards);
-        $state->bonus_cards = [$this->bonus_card];
-        $state->food = FoodCollection::make($this->food);
-        $state->setup = true;
+        $player->bird_cards = BirdCollection::make($this->bird_cards);
+        $player->bonus_cards = [$this->bonus_card];
+        $player->food = FoodCollection::make($this->food);
+        $player->setup = true;
     }
 }

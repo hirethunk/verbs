@@ -13,4 +13,6 @@ enum Food: string
     case Wheat = 'wheat';
 
     case Berries = 'berries';
+
+    case Any = '*'; // TODO: Add support for this
 }

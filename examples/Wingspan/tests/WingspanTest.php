@@ -45,6 +45,8 @@ it('can play a game of wingspan', function () {
         ->and($player2_state->available_action_cubes)->toBe(8)
         ->and(fn () => GameStarted::fire(player_ids: [$player1_id], game_id: $game_state->id))->toThrow(EventNotValidForCurrentState::class);
 
+    // TODO: Deal bird cards and bonus cards to players
+
     PlayerSetUp::fire(
         player_id: $player1_state->id,
         game_id: $game_state->id,
@@ -96,7 +98,8 @@ it('can play a game of wingspan', function () {
         player_id: $player1_id,
         round_id: $round1_state->id,
         bird: new Crow(),
-        food: [Food::Wheat, Food::Berries],
+        food: [Food::Wheat, Food::Berries], // TODO: You can pay two of anything as a wild card
+        // TODO: Which habitat + egg cost
     );
 
     expect($player1_state->bird_cards->is([new Hawk()]))->toBeTrue()
@@ -106,7 +109,7 @@ it('can play a game of wingspan', function () {
 
     GainedFood::fire(
         player_id: $player2_state->id,
-        food: Food::Fish,
+        food: Food::Fish, // TODO: We need to know what food is available, plus it may be more than one
     );
 
     expect($player2_state->food->is([Food::Mouse, Food::Berries, Food::Fish]))->toBeTrue()

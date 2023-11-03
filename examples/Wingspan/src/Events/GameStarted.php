@@ -12,6 +12,7 @@ use Thunk\Verbs\State;
 use Thunk\Verbs\Support\StateCollection;
 
 #[AppliesToState(GameState::class)]
+#[AppliesToState(PlayerState::class)]
 class GameStarted extends Event
 {
     public ?int $game_id = null;
@@ -26,17 +27,6 @@ class GameStarted extends Event
         }
     }
 
-    public function states(): StateCollection
-    {
-        $states = parent::states();
-
-        foreach ($this->player_ids as $player_id) {
-            $states->push(PlayerState::load($player_id));
-        }
-
-        return $states;
-    }
-
     public function playerState(int $index = null): PlayerState
     {
         return $index
@@ -44,20 +34,20 @@ class GameStarted extends Event
             : $this->states()->firstWhere(fn (State $state) => $state instanceof PlayerState);
     }
 
-    public function validate(GameState $state): bool
+    public function validate(GameState $game): bool
     {
-        return ! $state->started;
+        return ! $game->started;
     }
 
-    public function applyToGame(GameState $state)
+    public function applyToGame(GameState $game)
     {
-        $state->started = true;
-        $state->player_ids = $this->player_ids;
+        $game->started = true;
+        $game->player_ids = $this->player_ids;
     }
 
-    public function applyToPlayers(PlayerState $state)
+    public function applyToPlayers(PlayerState $player)
     {
-        $state->available_action_cubes = 8;
-        $state->board = new Board();
+        $player->available_action_cubes = 8;
+        $player->board = new Board();
     }
 }

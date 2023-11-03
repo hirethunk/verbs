@@ -24,11 +24,15 @@ class RoundStarted extends Event
 
     public function validateGame(GameState $game)
     {
-        if (! $last_round = $game->currentRound()) {
-            return $game->isSetUp();
+        if ($this->number === 1) {
+            return $game->current_round_id === null && $game->isSetUp();
         }
 
-        return $last_round->isFinished() && $last_round->number < $this->number;
+        $current_round = $game->currentRound();
+
+        return $current_round
+            && $current_round->isFinished()
+            && $current_round->number === $this->number - 1;
     }
 
     public function applyToGame(GameState $game)
