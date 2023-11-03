@@ -36,6 +36,8 @@ class AppliesToState extends StateDiscoveryAttribute
             $event->{$property} = $id;
         }
 
+        // TODO: Check type of data
+
         return collect(Arr::wrap($id))
             ->map(fn (int|string $id) => $manager->load($id, $this->state_type))
             ->all();
