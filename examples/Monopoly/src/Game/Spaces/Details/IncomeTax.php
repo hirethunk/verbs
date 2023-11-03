@@ -2,11 +2,12 @@
 
 namespace Thunk\Verbs\Examples\Monopoly\Game\Spaces\Details;
 
+use Thunk\Verbs\Examples\Monopoly\Game\PropertyColor;
 use Thunk\Verbs\Examples\Monopoly\Game\Spaces\SpaceDetails;
 
 class IncomeTax extends SpaceDetails
 {
-    public string $name = 'Income Tax';
+    protected string $name = 'Income Tax';
 
-    public int $position = 4;
+    protected int $position = 4;
 }

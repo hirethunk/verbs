@@ -4,9 +4,14 @@ namespace Thunk\Verbs\Examples\Monopoly\Game\Spaces;
 
 use Illuminate\Support\Traits\ForwardsCalls;
 
+/**
+ * @mixin SpaceDetails
+ * @mixin PropertyDetails
+ */
 enum Space: string
 {
     use ForwardsCalls;
+    use HasDetails;
 
     case Go = Details\Go::class;
     case MediterraneanAvenue = Details\MediterraneanAvenue::class;
@@ -44,13 +49,4 @@ enum Space: string
     case ParkPlace = Details\ParkPlace::class;
     case LuxuryTax = Details\LuxuryTax::class;
     case Boardwalk = Details\Boardwalk::class;
-
-    public function __call(string $name, array $arguments)
-    {
-        static $spaces = [];
-
-        $spaces[$this->name] ??= new $this->value;
-
-        return $this->forwardDecoratedCallTo($spaces[$this->name], $name, $arguments);
-    }
 }

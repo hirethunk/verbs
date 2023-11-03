@@ -7,18 +7,23 @@ use Thunk\Verbs\Examples\Monopoly\Game\PropertyColor;
 
 abstract class PropertyDetails extends SpaceDetails
 {
-    public PropertyColor $color;
+    protected PropertyColor $color;
 
-    public int $price;
+    protected int $price;
 
     /** @var int[] */
-    public array $rent;
+    protected array $rent;
 
-    public int $building_cost;
+    protected int $building_cost;
 
-    public int $development = 0;
+    protected int $development = 0;
 
-    public bool $mortgaged = false;
+    protected bool $is_mortgaged = false;
+
+    public function color(): PropertyColor
+    {
+        return $this->color;
+    }
 
     public function price(): Money
     {
@@ -33,5 +38,10 @@ abstract class PropertyDetails extends SpaceDetails
     public function buildingCost(): Money
     {
         return Money::of($this->building_cost, 'USD');
+    }
+
+    public function isMortgaged(): bool
+    {
+        return $this->is_mortgaged;
     }
 }

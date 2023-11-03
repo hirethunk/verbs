@@ -97,18 +97,18 @@ it('can generate data', function () {
 
             class {$class_name} extends PropertyDetails
             {
-                public string \$name = '{$data['Name']}';
+                protected string \$name = '{$data['Name']}';
 
-                public PropertyColor \$color = PropertyColor::{$data['Color']};
+                protected PropertyColor \$color = PropertyColor::{$data['Color']};
 
-                public int \$position = {$data['Position']};
+                protected int \$position = {$data['Position']};
 
-                public int \$price = {$data['Price']};
+                protected int \$price = {$data['Price']};
 
                 /** @var int[] */
-                public array \$rent = [{$data['Rent']}, {$data['RentBuild1']}, {$data['RentBuild2']}, {$data['RentBuild3']}, {$data['RentBuild4']}, {$data['RentBuild5']}];
+                protected array \$rent = [{$data['Rent']}, {$data['RentBuild1']}, {$data['RentBuild2']}, {$data['RentBuild3']}, {$data['RentBuild4']}, {$data['RentBuild5']}];
 
-                public int \$building_cost = {$data['PriceBuild']};
+                protected int \$building_cost = {$data['PriceBuild']};
             }
             PHP;
         } else {
@@ -122,9 +122,9 @@ it('can generate data', function () {
 
             class {$class_name} extends SpaceDetails
             {
-                public string \$name = '{$data['Name']}';
+                protected string \$name = '{$data['Name']}';
 
-                public int \$position = {$data['Position']};
+                protected int \$position = {$data['Position']};
             }
             PHP;
         }
@@ -176,20 +176,16 @@ it('can generate data', function () {
 
     use Illuminate\Support\Traits\ForwardsCalls;
 
+    /**
+     * @mixin SpaceDetails
+     * @mixin PropertyDetails
+     */
     enum Space: string
     {
+        use HasDetails;
         use ForwardsCalls;
 
         {$space_cases}
-
-        public function __call(string \$name, array \$arguments)
-        {
-            static \$spaces = [];
-
-            \$spaces[\$this->name] ??= new \$this->value;
-
-            return \$this->forwardDecoratedCallTo(\$spaces[\$this->name], \$name, \$arguments);
-        }
     }
     PHP;
 

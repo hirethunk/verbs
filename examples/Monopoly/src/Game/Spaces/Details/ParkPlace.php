@@ -7,16 +7,16 @@ use Thunk\Verbs\Examples\Monopoly\Game\Spaces\PropertyDetails;
 
 class ParkPlace extends PropertyDetails
 {
-    public string $name = 'Park Place';
+    protected string $name = 'Park Place';
 
-    public PropertyColor $color = PropertyColor::Blue;
+    protected PropertyColor $color = PropertyColor::Blue;
 
-    public int $position = 37;
+    protected int $position = 37;
 
-    public int $price = 350;
+    protected int $price = 350;
 
     /** @var int[] */
-    public array $rent = [35, 175, 500, 1100, 1300, 1500];
+    protected array $rent = [35, 175, 500, 1100, 1300, 1500];
 
-    public int $building_cost = 200;
+    protected int $building_cost = 200;
 }

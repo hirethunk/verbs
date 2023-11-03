@@ -2,11 +2,12 @@
 
 namespace Thunk\Verbs\Examples\Monopoly\Game\Spaces\Details;
 
+use Thunk\Verbs\Examples\Monopoly\Game\PropertyColor;
 use Thunk\Verbs\Examples\Monopoly\Game\Spaces\SpaceDetails;
 
 class PennsylvaniaRailroad extends SpaceDetails
 {
-    public string $name = 'Pennsylvania Railroad';
+    protected string $name = 'Pennsylvania Railroad';
 
-    public int $position = 15;
+    protected int $position = 15;
 }

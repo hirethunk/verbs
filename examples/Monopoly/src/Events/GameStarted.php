@@ -2,10 +2,12 @@
 
 namespace Thunk\Verbs\Examples\Monopoly\Events;
 
+use Brick\Money\Money;
 use InvalidArgumentException;
 use Thunk\Verbs\Attributes\Autodiscovery\AppliesToState;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Examples\Monopoly\Game\Board;
+use Thunk\Verbs\Examples\Monopoly\Game\DeedCollection;
+use Thunk\Verbs\Examples\Monopoly\Game\Token;
 use Thunk\Verbs\Examples\Monopoly\States\GameState;
 use Thunk\Verbs\Examples\Monopoly\States\PlayerState;
 
@@ -20,8 +22,10 @@ class GameStarted extends Event
     ) {
         $player_count = count($this->player_ids);
 
-        if ($player_count < 1 || $player_count > 5) {
-            throw new InvalidArgumentException('Monopoly can be played with 1-5 players.');
+        $token_count = count(Token::cases());
+
+        if ($player_count < 1 || $player_count > $token_count) {
+            throw new InvalidArgumentException("Monopoly can be played with 1–{$token_count} players.");
         }
     }
 
@@ -43,7 +47,8 @@ class GameStarted extends Event
 
     public function applyToPlayers(PlayerState $player)
     {
-        $player->available_action_cubes = 8;
-        $player->board = new Board();
+        $player->deeds = DeedCollection::make([]);
+        $player->money = Money::of(1500, 'USD');
+        $player->setup = true;
     }
 }

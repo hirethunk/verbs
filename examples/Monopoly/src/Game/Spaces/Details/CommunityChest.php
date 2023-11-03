@@ -2,11 +2,12 @@
 
 namespace Thunk\Verbs\Examples\Monopoly\Game\Spaces\Details;
 
+use Thunk\Verbs\Examples\Monopoly\Game\PropertyColor;
 use Thunk\Verbs\Examples\Monopoly\Game\Spaces\SpaceDetails;
 
 class CommunityChest extends SpaceDetails
 {
-    public string $name = 'Community Chest';
+    protected string $name = 'Community Chest';
 
-    public int $position = 33;
+    protected int $position = 33;
 }
