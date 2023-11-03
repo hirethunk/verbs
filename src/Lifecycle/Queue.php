@@ -17,6 +17,8 @@ class Queue
     {
         $events = $this->event_queue;
 
+        // TODO: Concurrency check
+
         if (! app(EventStore::class)->write($events)) {
             throw new \Exception('Failed to write events to store.');
         }

@@ -4,6 +4,7 @@ namespace Thunk\Verbs\Lifecycle;
 
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\Access\Response;
+use Throwable;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
 use Thunk\Verbs\State;
@@ -41,15 +42,21 @@ class Guards
 
     public function validate(): static
     {
-        if ($this->passesValidation()) {
-            return $this;
+        $exception = new EventNotValidForCurrentState();
+
+        try {
+            if ($this->passesValidation()) {
+                return $this;
+            }
+        } catch (Throwable $thrown) {
+            $exception = $thrown;
         }
 
         if (method_exists($this->event, 'failedValidation')) {
             $this->event->failedValidation($this->state);
         }
 
-        throw new EventNotValidForCurrentState();
+        throw $exception;
     }
 
     protected function passesAuthorization(): bool

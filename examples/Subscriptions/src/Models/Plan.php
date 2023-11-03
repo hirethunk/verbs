@@ -20,13 +20,14 @@ class Plan extends Model
     public function generateReport(): PlanReportState
     {
         return PlanReportGenerated::fire(plan_id: $this->id)
-            ->states()[PlanReportState::class];
+            ->states()
+            ->firstOfType(PlanReportState::class);
     }
 
     public static function generateGlobalReport(): GlobalReportState
     {
         $e = GlobalReportGenerated::fire();
 
-        return $e->states()[GlobalReportState::class];
+        return $e->states()->firstOfType(GlobalReportState::class);
     }
 }

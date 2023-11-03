@@ -6,6 +6,7 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Str;
 use ReflectionMethod;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\ReflectionMethodSignature;
 use Thunk\Verbs\Support\Reflector;
@@ -35,7 +36,7 @@ class Dispatcher
     {
         foreach ($this->getValidationHooks($event, $state) as $hook) {
             if (! $hook->validate($this->container, $event, $state)) {
-                return false;
+                throw new EventNotValidForCurrentState("Validation failed in '{$hook->name}'");
             }
         }
 
