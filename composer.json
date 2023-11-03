@@ -67,9 +67,9 @@
             "Thunk\\Verbs\\Examples\\Subscriptions\\Tests\\": "examples/Subscriptions/tests/",
             "Thunk\\Verbs\\Examples\\Subscriptions\\Database\\Factories\\": "examples/Subscriptions/database/factories/",
 
-            "Thunk\\Verbs\\Examples\\Wingspan\\": "examples/Wingspan/src/",
-            "Thunk\\Verbs\\Examples\\Wingspan\\Tests\\": "examples/Wingspan/tests/",
-            "Thunk\\Verbs\\Examples\\Wingspan\\Database\\Factories\\": "examples/Wingspan/database/factories/"
+            "Thunk\\Verbs\\Examples\\Monopoly\\": "examples/Monopoly/src/",
+            "Thunk\\Verbs\\Examples\\Monopoly\\Tests\\": "examples/Monopoly/tests/",
+            "Thunk\\Verbs\\Examples\\Monopoly\\Database\\Factories\\": "examples/Monopoly/database/factories/"
         }
     },
     "scripts": {

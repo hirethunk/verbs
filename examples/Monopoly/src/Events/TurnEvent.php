@@ -1,0 +1,39 @@
+<?php
+
+namespace Thunk\Verbs\Examples\Monopoly\Events;
+
+use Thunk\Verbs\Examples\Monopoly\States\PlayerState;
+use Thunk\Verbs\Examples\Monopoly\States\RoundState;
+
+trait TurnEvent
+{
+    public function validatePlayerTurn(PlayerState $player): bool
+    {
+        return $player->available_action_cubes > 0;
+    }
+
+    public function validateRoundTurn(RoundState $round): bool
+    {
+        $player = $this->state(PlayerState::class);
+
+        return $player->id === $round->active_player_id;
+    }
+
+    public function applyTurnEventToRound(RoundState $round)
+    {
+        $players = $round->game()->players();
+
+        // Next player is either the next one in the list, or if there are no more
+        // players in the list, then it's the first player in the list again.
+        $next_player = $players
+            ->skipUntil(fn (PlayerState $player) => $player->id === $round->active_player_id)
+            ->first() ?? $players->first();
+
+        $round->active_player_id = $next_player->id;
+    }
+
+    public function applyTurnEventToPlayer(PlayerState $player)
+    {
+        $player->available_action_cubes--;
+    }
+}
