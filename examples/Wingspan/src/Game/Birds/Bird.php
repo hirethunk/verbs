@@ -6,8 +6,10 @@ use Glhd\Bits\Snowflake;
 use Illuminate\Support\Collection;
 use Thunk\Verbs\Examples\Wingspan\Game\Food;
 use Thunk\Verbs\Examples\Wingspan\Game\Habitat;
+use Thunk\Verbs\SerializedByVerbs;
+use UnexpectedValueException;
 
-abstract class Bird
+abstract class Bird implements SerializedByVerbs
 {
     public int $id;
 
@@ -54,5 +56,35 @@ abstract class Bird
     public function points(): int
     {
         return $this->points;
+    }
+
+    public static function deserializeForVerbs(mixed $data): static
+    {
+        if ($data instanceof static) {
+            return $data;
+        }
+
+        if (
+            is_array($data)
+            && isset($data['fqcn'], $data['id'])
+            && is_a($data['fqcn'], Bird::class)
+        ) {
+            $bird = new $data['fqcn'];
+            $bird->id = $data['id'];
+            $bird->egg_count = $data['egg_count'] ?? 0;
+
+            return $bird;
+        }
+
+        throw new UnexpectedValueException;
+    }
+
+    public function serializeForVerbs(): string|array
+    {
+        return [
+            'fqcn' => static::class,
+            'id' => $this->id,
+            'egg_count' => $this->egg_count,
+        ];
     }
 }

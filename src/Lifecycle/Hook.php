@@ -58,6 +58,7 @@ class Hook
         return $container->call($this->callback, $this->guessParameters($event, $state));
     }
 
+    // FIXME: Rename to handle and add 'fired' as its own thing
     public function fire(Container $container, Event $event, State $state = null): void
     {
         // FIXME: Pull states off of events and allow for multiple

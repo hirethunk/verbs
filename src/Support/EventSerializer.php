@@ -17,6 +17,7 @@ use Symfony\Component\Serializer\Serializer as SymfonySerializer;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Support\Normalizers\BitsNormalizer;
 use Thunk\Verbs\Support\Normalizers\CarbonNormalizer;
+use Thunk\Verbs\Support\Normalizers\SelfSerializingNormalizer;
 use Thunk\Verbs\Support\Normalizers\StateNormalizer;
 
 class EventSerializer
@@ -28,6 +29,7 @@ class EventSerializer
     {
         return new SymfonySerializer(
             normalizers: array_merge(self::$custom_normalizers, [
+                new SelfSerializingNormalizer(),
                 new StateNormalizer(),
                 new BitsNormalizer(),
                 new CarbonNormalizer(),

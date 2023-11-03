@@ -13,6 +13,7 @@ use Thunk\Verbs\Event;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\Normalizers\BitsNormalizer;
 use Thunk\Verbs\Support\Normalizers\CarbonNormalizer;
+use Thunk\Verbs\Support\Normalizers\SelfSerializingNormalizer;
 use Thunk\Verbs\Support\Normalizers\StateNormalizer;
 
 class StateSerializer
@@ -22,6 +23,7 @@ class StateSerializer
         return new SymfonySerializer(
             normalizers: [
                 // new StateNormalizer(),
+                new SelfSerializingNormalizer(),
                 new BitsNormalizer(),
                 new CarbonNormalizer(),
                 new DateTimeNormalizer(),

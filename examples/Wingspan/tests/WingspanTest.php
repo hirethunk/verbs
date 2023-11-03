@@ -1,74 +1,37 @@
 <?php
 
-use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
-use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
+use Glhd\Bits\Snowflake;
 use Thunk\Verbs\Examples\Wingspan\Events\DrewCards;
 use Thunk\Verbs\Examples\Wingspan\Events\GainedFood;
 use Thunk\Verbs\Examples\Wingspan\Events\GameStarted;
 use Thunk\Verbs\Examples\Wingspan\Events\LaidEggs;
+use Thunk\Verbs\Examples\Wingspan\Events\PlayedBird;
 use Thunk\Verbs\Examples\Wingspan\Events\PlayerSetUp;
 use Thunk\Verbs\Examples\Wingspan\Events\RoundStarted;
 use Thunk\Verbs\Examples\Wingspan\Events\SelectedAsFirstPlayer;
 use Thunk\Verbs\Examples\Wingspan\Game\Birds\BaldEagle;
-use Thunk\Verbs\Examples\Wingspan\Game\Birds\Bird;
 use Thunk\Verbs\Examples\Wingspan\Game\Birds\Crow;
 use Thunk\Verbs\Examples\Wingspan\Game\Birds\Goldfinch;
 use Thunk\Verbs\Examples\Wingspan\Game\Birds\Hawk;
 use Thunk\Verbs\Examples\Wingspan\Game\Birds\Nuthatch;
 use Thunk\Verbs\Examples\Wingspan\Game\Food;
-use Thunk\Verbs\Examples\Wingspan\Game\PlayedBird;
 use Thunk\Verbs\Examples\Wingspan\States\GameState;
 use Thunk\Verbs\Examples\Wingspan\States\RoundState;
 use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
-use Thunk\Verbs\Support\EventSerializer;
-
-beforeEach(fn () => EventSerializer::$custom_normalizers = [
-    new class implements DenormalizerInterface, NormalizerInterface
-    {
-        public function supportsDenormalization(mixed $data, string $type, string $format = null): bool
-        {
-            return is_a($type, Bird::class, true);
-        }
-
-        public function denormalize(mixed $data, string $type, string $format = null, array $context = [])
-        {
-            if ($data instanceof Bird) {
-                return $data;
-            }
-
-            if (is_a($data, Bird::class, true)) {
-                return new $data();
-            }
-
-            throw new UnexpectedValueException;
-        }
-
-        public function supportsNormalization(mixed $data, string $format = null): bool
-        {
-            return $data instanceof Bird;
-        }
-
-        public function normalize(mixed $object, string $format = null, array $context = []): string
-        {
-            return $object::class;
-        }
-
-        public function getSupportedTypes(?string $format): array
-        {
-            return [Bird::class => true];
-        }
-    },
-]);
+use Thunk\Verbs\Facades\Verbs;
 
 it('can play a game of wingspan', function () {
     // We shouldn't be able to start a game with an invalid number of players
-    expect(fn () => GameStarted::fire(players: 0))->toThrow(InvalidArgumentException::class)
-        ->and(fn () => GameStarted::fire(players: 6))->toThrow(InvalidArgumentException::class);
+    expect(fn () => GameStarted::fire(player_ids: []))->toThrow(InvalidArgumentException::class)
+        ->and(fn () => GameStarted::fire(player_ids: [1, 2, 3, 4, 5, 6]))->toThrow(InvalidArgumentException::class);
 
     // Game setup
     // ---------------------------------------------------------------------------------------------------------------------------
 
-    $start_event = GameStarted::fire(players: 2);
+    $player1_id = Snowflake::make()->id();
+    $player2_id = Snowflake::make()->id();
+
+    $start_event = GameStarted::fire(player_ids: [$player1_id, $player2_id]);
     $game_state = $start_event->state(GameState::class);
 
     $player1_state = $start_event->playerState(0);
@@ -81,7 +44,7 @@ it('can play a game of wingspan', function () {
         ->and($player1_state->available_action_cubes)->toBe(8)
         ->and($player2_state->setup)->toBe(false)
         ->and($player2_state->available_action_cubes)->toBe(8)
-        ->and(fn () => GameStarted::fire(players: 2, game_id: $game_state->id))->toThrow(EventNotValidForCurrentState::class);
+        ->and(fn () => GameStarted::fire(player_ids: [$player1_id], game_id: $game_state->id))->toThrow(EventNotValidForCurrentState::class);
 
     PlayerSetUp::fire(
         player_id: $player1_state->id,

@@ -2,8 +2,9 @@
 
 namespace Thunk\Verbs\Examples\Wingspan\Events;
 
-use Glhd\Bits\Snowflake;
+use Illuminate\Support\Collection;
 use InvalidArgumentException;
+use Thunk\Verbs\Attributes\Autodiscovery\AppliesToState;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Examples\Wingspan\Game\Birds\BirdCollection;
 use Thunk\Verbs\Examples\Wingspan\States\GameState;
@@ -11,33 +12,32 @@ use Thunk\Verbs\Examples\Wingspan\States\PlayerState;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\StateCollection;
 
+#[AppliesToState(GameState::class)]
 class GameStarted extends Event
 {
     public ?int $game_id = null;
 
-    public function __construct(
-        public int $players,
-        public array $player_ids = [],
-    ) {
-        if ($this->players < 1 || $this->players > 5) {
-            throw new InvalidArgumentException('Wingspan can be played with 1-5 players.');
-        }
+    public Collection $player_ids;
 
-        if (count($this->player_ids) > 0 && count($this->player_ids) !== $this->players) {
-            throw new InvalidArgumentException('If you pass player IDs you must pass the same number as players.');
+    public function __construct(
+        array $player_ids,
+    ) {
+        $this->player_ids = Collection::make($player_ids);
+
+        if ($this->player_ids->count() < 1 || $this->player_ids->count() > 5) {
+            throw new InvalidArgumentException('Wingspan can be played with 1-5 players.');
         }
     }
 
     public function states(): StateCollection
     {
-        $this->game_id ??= Snowflake::make()->id();
+        $states = parent::states();
 
-        while (count($this->player_ids) < $this->players) {
-            $this->player_ids[] = Snowflake::make()->id();
+        foreach ($this->player_ids as $player_id) {
+            $states->push(PlayerState::load($player_id));
         }
 
-        return StateCollection::make([GameState::load($this->game_id)])
-            ->merge(collect($this->player_ids)->map(fn ($id) => PlayerState::load($id)));
+        return $states;
     }
 
     public function playerState(int $index = null): PlayerState
@@ -54,10 +54,8 @@ class GameStarted extends Event
 
     public function applyToGame(GameState $state)
     {
-        // TODO: It might be nice to be able to combine these apply methods into one
-
         $state->started = true;
-        $state->players = $this->players;
+        $state->player_ids = $this->player_ids->all();
     }
 
     public function applyToPlayers(PlayerState $state)
