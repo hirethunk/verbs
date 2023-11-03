@@ -38,8 +38,8 @@ it('can play a game of wingspan', function () {
     $player2_state = $start_event->playerState(1);
 
     expect($game_state->started)->toBeTrue()
-        ->and($game_state->round)->toBe(0)
-        ->and($game_state->setup_count)->toBe(0)
+        ->and($game_state->currentRoundNumber())->toBeNull()
+        ->and($game_state->isSetUp())->toBeFalse()
         ->and($player1_state->setup)->toBe(false)
         ->and($player1_state->available_action_cubes)->toBe(8)
         ->and($player2_state->setup)->toBe(false)
@@ -54,7 +54,7 @@ it('can play a game of wingspan', function () {
         food: [Food::Worm, Food::Wheat, Food::Berries],
     );
 
-    expect($game_state->setup_count)->toBe(1)
+    expect($game_state->isSetUp())->toBeFalse()
         ->and($player1_state->setup)->toBe(true)
         ->and($player1_state->bird_cards->is([new Hawk(), new Crow()]))->toBeTrue()
         ->and($player1_state->bonus_cards)->toBe(['bonus1'])
@@ -69,7 +69,7 @@ it('can play a game of wingspan', function () {
         food: [Food::Mouse, Food::Berries],
     );
 
-    expect($game_state->setup_count)->toBe(2)
+    expect($game_state->isSetUp())->toBeFalse()
         ->and($player1_state->setup)->toBe(true)
         ->and($player2_state->setup)->toBe(true)
         ->and($player2_state->bird_cards->is([new BaldEagle(), new Nuthatch(), new Goldfinch()]))->toBeTrue()
@@ -90,7 +90,7 @@ it('can play a game of wingspan', function () {
 
     $round1_state = RoundStarted::fire(game_id: $game_state->id)->state(RoundState::class);
 
-    expect($game_state->round)->toBe(1);
+    expect($game_state->currentRoundNumber())->toBe(1);
 
     PlayedBird::fire(
         player_id: $player1_state->id,

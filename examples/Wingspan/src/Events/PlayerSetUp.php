@@ -44,12 +44,7 @@ class PlayerSetUp extends Event
 
     public function validateGame(GameState $state)
     {
-        return $state->round === 0;
-    }
-
-    public function applyToGame(GameState $state)
-    {
-        $state->setup_count++;
+        return $state->currentRoundNumber() === null;
     }
 
     public function applyToPlayer(PlayerState $state)

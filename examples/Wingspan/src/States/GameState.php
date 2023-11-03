@@ -9,12 +9,6 @@ class GameState extends State
 {
     public bool $started = false;
 
-    public int $setup_count = 0;
-
-    public int $round = 0;
-
-    public bool $current_round_complete = true;
-
     public ?int $first_player_id = null;
 
     public ?int $current_round_id = null;
@@ -30,7 +24,18 @@ class GameState extends State
             && $this->first_player_id;
     }
 
-    public function players()
+    public function currentRound(): ?RoundState
+    {
+        return $this->current_round_id ? RoundState::load($this->current_round_id) : null;
+    }
+
+    public function currentRoundNumber(): ?int
+    {
+        return $this->currentRound()?->number;
+    }
+
+    /** @return Collection<int, PlayerState> */
+    public function players(): Collection
     {
         return $this->players ??= collect($this->player_ids)->map(fn (int $id) => PlayerState::load($id));
     }

@@ -2,11 +2,9 @@
 
 namespace Thunk\Verbs\Examples\Wingspan\Events;
 
-use Illuminate\Support\Collection;
 use InvalidArgumentException;
 use Thunk\Verbs\Attributes\Autodiscovery\AppliesToState;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Examples\Wingspan\Game\Birds\BirdCollection;
 use Thunk\Verbs\Examples\Wingspan\Game\Board;
 use Thunk\Verbs\Examples\Wingspan\States\GameState;
 use Thunk\Verbs\Examples\Wingspan\States\PlayerState;
@@ -18,14 +16,12 @@ class GameStarted extends Event
 {
     public ?int $game_id = null;
 
-    public Collection $player_ids;
-
     public function __construct(
-        array $player_ids,
+        public array $player_ids,
     ) {
-        $this->player_ids = Collection::make($player_ids);
+        $player_count = count($this->player_ids);
 
-        if ($this->player_ids->count() < 1 || $this->player_ids->count() > 5) {
+        if ($player_count < 1 || $player_count > 5) {
             throw new InvalidArgumentException('Wingspan can be played with 1-5 players.');
         }
     }
@@ -56,7 +52,7 @@ class GameStarted extends Event
     public function applyToGame(GameState $state)
     {
         $state->started = true;
-        $state->player_ids = $this->player_ids->all();
+        $state->player_ids = $this->player_ids;
     }
 
     public function applyToPlayers(PlayerState $state)
