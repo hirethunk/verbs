@@ -3,6 +3,7 @@
 namespace Thunk\Verbs\Support;
 
 use Illuminate\Support\Collection;
+use Thunk\Verbs\State;
 
 class StateCollection extends Collection
 {
@@ -24,5 +25,17 @@ class StateCollection extends Collection
         }
 
         return parent::get($key, $default);
+    }
+
+    /** @param  class-string<State>  $state_type */
+    public function ofType(string $state_type): static
+    {
+        return $this->filter(fn (State $state) => $state instanceof $state_type);
+    }
+
+    /** @param  class-string<State>  $state_type */
+    public function firstOfType(string $state_type): ?State
+    {
+        return $this->ofType($state_type)->first();
     }
 }

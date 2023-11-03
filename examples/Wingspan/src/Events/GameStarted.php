@@ -27,11 +27,9 @@ class GameStarted extends Event
         }
     }
 
-    public function playerState(int $index = null): PlayerState
+    public function player(int $index): PlayerState
     {
-        return $index
-            ? $this->states()->filter(fn (State $state) => $state instanceof PlayerState)->values()->get($index)
-            : $this->states()->firstWhere(fn (State $state) => $state instanceof PlayerState);
+        return $this->states()->ofType(PlayerState::class)->values()->get($index);
     }
 
     public function validate(GameState $game): bool

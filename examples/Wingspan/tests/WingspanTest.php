@@ -33,8 +33,8 @@ it('can play a game of wingspan', function () {
     $start_event = GameStarted::fire(player_ids: [$player1_id, $player2_id]);
     $game_state = $start_event->state(GameState::class);
 
-    $player1_state = $start_event->playerState(0);
-    $player2_state = $start_event->playerState(1);
+    $player1_state = $start_event->player(0);
+    $player2_state = $start_event->player(1);
 
     expect($game_state->started)->toBeTrue()
         ->and($game_state->currentRoundNumber())->toBeNull()
