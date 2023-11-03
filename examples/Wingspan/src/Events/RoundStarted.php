@@ -38,6 +38,10 @@ class RoundStarted extends Event
 
     public function applyToRound(RoundState $round)
     {
+        $game = $this->state(GameState::class);
+
+        $round->game_id = $this->game_id;
         $round->number = $this->number;
+        $round->active_player_id = $game->first_player_id;
     }
 }

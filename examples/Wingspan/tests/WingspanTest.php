@@ -18,7 +18,6 @@ use Thunk\Verbs\Examples\Wingspan\Game\Food;
 use Thunk\Verbs\Examples\Wingspan\States\GameState;
 use Thunk\Verbs\Examples\Wingspan\States\RoundState;
 use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
-use Thunk\Verbs\Facades\Verbs;
 
 it('can play a game of wingspan', function () {
     // We shouldn't be able to start a game with an invalid number of players
@@ -77,12 +76,12 @@ it('can play a game of wingspan', function () {
         ->and($player2_state->food->is([Food::Mouse, Food::Berries]))->toBeTrue();
 
     SelectedAsFirstPlayer::fire(
-        player_id: $player2_state->id,
+        player_id: $player1_id,
         game_id: $game_state->id,
     );
 
-    expect($player1_state->first_player)->toBe(false)
-        ->and($player2_state->first_player)->toBe(true)
+    expect($player2_state->first_player)->toBe(false)
+        ->and($player1_state->first_player)->toBe(true)
         ->and($game_state->isSetUp())->toBeTrue();
 
     // First Round
@@ -90,10 +89,11 @@ it('can play a game of wingspan', function () {
 
     $round1_state = RoundStarted::fire(game_id: $game_state->id)->state(RoundState::class);
 
-    expect($game_state->currentRoundNumber())->toBe(1);
+    expect($game_state->currentRoundNumber())->toBe(1)
+        ->and($round1_state->active_player_id)->toBe($player1_id);
 
     PlayedBird::fire(
-        player_id: $player1_state->id,
+        player_id: $player1_id,
         round_id: $round1_state->id,
         bird: new Crow(),
         food: [Food::Wheat, Food::Berries],

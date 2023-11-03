@@ -5,7 +5,6 @@ namespace Thunk\Verbs\Examples\Wingspan\Events;
 use Thunk\Verbs\Attributes\Autodiscovery\AppliesToState;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Examples\Wingspan\Game\Birds\Bird;
-use Thunk\Verbs\Examples\Wingspan\Game\Habitat;
 use Thunk\Verbs\Examples\Wingspan\States\PlayerState;
 use Thunk\Verbs\Examples\Wingspan\States\RoundState;
 
@@ -13,6 +12,8 @@ use Thunk\Verbs\Examples\Wingspan\States\RoundState;
 #[AppliesToState(RoundState::class)]
 class PlayedBird extends Event
 {
+    use TurnEvent;
+
     public function __construct(
         public int $player_id,
         public int $round_id,
