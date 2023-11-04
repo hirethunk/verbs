@@ -34,7 +34,7 @@ class PlayerMoved extends Event
 
     public function validateGame(GameState $game)
     {
-        $this->assert($game->phase === Phase::Move, 'You are not allowed to roll dice right now.');
+        $this->assert($game->phase === Phase::Move && ! $game->phase_complete, 'You are not allowed to roll dice right now.');
     }
 
     public function applyToGameAndPlayer(GameState $game)
