@@ -4,6 +4,7 @@ namespace Thunk\Verbs\Examples\Monopoly\States;
 
 use Illuminate\Support\Collection;
 use Thunk\Verbs\Examples\Monopoly\Game\Board;
+use Thunk\Verbs\Examples\Monopoly\Game\Phase;
 use Thunk\Verbs\State;
 
 class GameState extends State
@@ -15,6 +16,10 @@ class GameState extends State
     public array $player_ids = [];
 
     public ?int $active_player_id = null;
+
+    public Phase $phase = Phase::Move;
+
+    public bool $phase_complete = false;
 
     /** @return Collection<int, PlayerState> */
     public function players(): Collection

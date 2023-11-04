@@ -2,6 +2,8 @@
 
 namespace Thunk\Verbs\Examples\Monopoly\Game\Spaces;
 
+use BadMethodCallException;
+
 abstract class Space
 {
     protected string $name;
@@ -12,7 +14,16 @@ abstract class Space
 
     public static function instance(): static
     {
-        return static::$instances[static::class] ??= new static();
+        return self::$instances[static::class] ?? new static();
+    }
+
+    public function __construct()
+    {
+        if (isset(self::$instances[static::class])) {
+            throw new BadMethodCallException('An instance of '.class_basename($this).' already exists.');
+        }
+
+        self::$instances[static::class] = $this;
     }
 
     public function name(): string

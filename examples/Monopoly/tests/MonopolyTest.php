@@ -2,10 +2,12 @@
 
 use Glhd\Bits\Snowflake;
 use Illuminate\Support\Collection;
+use Thunk\Verbs\Examples\Monopoly\Events\Gameplay\PlayerMoved;
 use Thunk\Verbs\Examples\Monopoly\Events\Setup\FirstPlayerSelected;
 use Thunk\Verbs\Examples\Monopoly\Events\Setup\GameStarted;
 use Thunk\Verbs\Examples\Monopoly\Events\Setup\PlayerJoinedGame;
 use Thunk\Verbs\Examples\Monopoly\Game\Spaces\Go;
+use Thunk\Verbs\Examples\Monopoly\Game\Spaces\Properties\BalticAvenue;
 use Thunk\Verbs\Examples\Monopoly\Game\Token;
 use Thunk\Verbs\Examples\Monopoly\States\GameState;
 use Thunk\Verbs\Examples\Monopoly\States\PlayerState;
@@ -83,7 +85,7 @@ it('can generate data', function () {
         $data['class'] = (string) str($data['Name'])->slug()->studly();
         $data['namespace'] = (string) str($data['Space'])->plural()->studly();
 
-        if (!in_array($data['namespace'], $allowed_namespaces)) {
+        if (! in_array($data['namespace'], $allowed_namespaces)) {
             $data['namespace'] = 'Spaces';
         } else {
             $data['namespace'] = "Spaces\\{$data['namespace']}";
@@ -94,7 +96,7 @@ it('can generate data', function () {
 
     $all_spaces = $spaces
         ->sortBy('Position')
-        ->map(fn($space) => "{$space['namespace']}\\{$space['class']}::instance(),")
+        ->map(fn ($space) => "{$space['namespace']}\\{$space['class']}::instance(),")
         ->implode("\n            ");
 
     $code = <<<PHP
@@ -220,4 +222,13 @@ it('can play a game of Monopoly', function () {
 
     // Player 1's first move
     // ---------------------------------------------------------------------------------------------------------------------------
+
+    verb(new PlayerMoved(
+        game_id: $game_state->id,
+        player_id: $player1_id,
+        first_die: 1,
+        second_die: 2,
+    ));
+
+    expect($player1->location)->toBe(BalticAvenue::instance());
 });
