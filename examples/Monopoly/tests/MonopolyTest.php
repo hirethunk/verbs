@@ -3,6 +3,7 @@
 use Glhd\Bits\Snowflake;
 use Illuminate\Support\Collection;
 use Thunk\Verbs\Examples\Monopoly\Events\Gameplay\PlayerMoved;
+use Thunk\Verbs\Examples\Monopoly\Events\Gameplay\RolledDice;
 use Thunk\Verbs\Examples\Monopoly\Events\Setup\FirstPlayerSelected;
 use Thunk\Verbs\Examples\Monopoly\Events\Setup\GameStarted;
 use Thunk\Verbs\Examples\Monopoly\Events\Setup\PlayerJoinedGame;
@@ -223,11 +224,16 @@ it('can play a game of Monopoly', function () {
     // Player 1's first move
     // ---------------------------------------------------------------------------------------------------------------------------
 
+    verb(new RolledDice(
+        game_id: $game_state->id,
+        player_id: $player1_id,
+        dice: [1, 2],
+    ));
+
     verb(new PlayerMoved(
         game_id: $game_state->id,
         player_id: $player1_id,
-        first_die: 1,
-        second_die: 2,
+        to: BalticAvenue::instance(),
     ));
 
     expect($player1->location)->toBe(BalticAvenue::instance());

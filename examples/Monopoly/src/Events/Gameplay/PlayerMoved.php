@@ -7,6 +7,7 @@ use Thunk\Verbs\Attributes\Autodiscovery\AppliesToState;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Examples\Monopoly\Game\Phase;
 use Thunk\Verbs\Examples\Monopoly\Game\Spaces\Go;
+use Thunk\Verbs\Examples\Monopoly\Game\Spaces\Space;
 use Thunk\Verbs\Examples\Monopoly\States\GameState;
 use Thunk\Verbs\Examples\Monopoly\States\PlayerState;
 
@@ -19,26 +20,32 @@ class PlayerMoved extends Event
     public function __construct(
         public int $game_id,
         public int $player_id,
-        public int $first_die,
-        public int $second_die,
+        public Space $to,
     ) {
-        if ($this->first_die < 1 || $this->first_die > 6 || $this->second_die < 1 || $this->second_die > 6) {
-            throw new InvalidArgumentException('Dice rolls must be between 1 and 6');
-        }
-
-        // TODO: If you roll doubles, you get to go again. If you roll 3 times, you go to jail.
     }
 
     public function validateGame(GameState $game)
     {
         $this->assert($game->phase === Phase::Move && ! $game->phase_complete, 'You are not allowed to roll dice right now.');
+
+        $player = $this->state(PlayerState::class);
+
+        $this->assert($this->to === $this->expectedSpace(), "You must move to '{$this->expectedSpace()->name()}'");
     }
 
     public function applyToGameAndPlayer(GameState $game)
     {
         $player = $this->state(PlayerState::class);
 
-        $player->location = $game->board->findNextSpace($player->location, $this->first_die + $this->second_die);
+        $player->location = $this->to;
         $game->phase_complete = true;
+    }
+
+    protected function expectedSpace(): Space
+    {
+        $game = $this->state(GameState::class);
+        $player = $this->state(PlayerState::class);
+
+        return $game->board->findNextSpace($player->location, array_sum($game->last_roll));
     }
 }

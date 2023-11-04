@@ -21,6 +21,8 @@ class GameState extends State
 
     public bool $phase_complete = false;
 
+    public ?array $last_roll = null;
+
     /** @return Collection<int, PlayerState> */
     public function players(): Collection
     {
