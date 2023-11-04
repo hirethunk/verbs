@@ -3,6 +3,7 @@
 namespace Thunk\Verbs\Support;
 
 use Closure;
+use Glhd\Bits\Snowflake;
 use Illuminate\Validation\ValidationException;
 use Throwable;
 use Thunk\Verbs\Event;
@@ -25,6 +26,7 @@ class PendingEvent
     public function __construct(
         public Event $event
     ) {
+        $this->event->id ??= Snowflake::make()->id();
         $this->exception_mapper = fn ($e) => $e;
     }
 

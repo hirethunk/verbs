@@ -37,6 +37,6 @@ class GameState extends State
     /** @return Collection<int, PlayerState> */
     public function players(): Collection
     {
-        return $this->players ??= collect($this->player_ids)->map(fn (int $id) => PlayerState::load($id));
+        return collect($this->player_ids)->map(fn (int $id) => PlayerState::load($id));
     }
 }

@@ -30,6 +30,11 @@ class VerbsServiceProvider extends PackageServiceProvider
             );
     }
 
+    public function registeringPackage()
+    {
+        require_once __DIR__.'/Support/helpers.php';
+    }
+
     public function packageRegistered()
     {
         $this->app->singleton(Broker::class);

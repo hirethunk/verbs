@@ -55,7 +55,7 @@ class Hook
 
     public function validate(Container $container, Event $event, State $state): bool
     {
-        return $container->call($this->callback, $this->guessParameters($event, $state)) ?? false;
+        return $container->call($this->callback, $this->guessParameters($event, $state)) ?? true;
     }
 
     // FIXME: Rename to handle and add 'fired' as its own thing
