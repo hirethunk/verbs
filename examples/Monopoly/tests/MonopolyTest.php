@@ -113,7 +113,7 @@ it('can generate data', function () {
                 namespace Thunk\Verbs\Examples\Monopoly\Game\{$namespace};
 
                 use Thunk\Verbs\Examples\Monopoly\Game\PropertyColor;
-                use Thunk\Verbs\Examples\Monopoly\Game\Spaces\SpaceDetails;
+                use Thunk\Verbs\Examples\Monopoly\Game\Spaces\Space;
 
                 class {$space['class']} extends {$parent}
                 {
