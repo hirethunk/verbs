@@ -1,6 +1,5 @@
 <?php
 
-use Brick\Money\Money;
 use Glhd\Bits\Snowflake;
 use Thunk\Verbs\Examples\Monopoly\Events\Setup\GameStarted;
 use Thunk\Verbs\Examples\Monopoly\Events\Setup\PlayerJoinedGame;
