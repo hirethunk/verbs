@@ -92,34 +92,33 @@ it('can generate data', function () {
 
                 class {$space['class']} extends Property
                 {
-                    protected string \$name = '{$data['Name']}';
+                    protected string \$name = '{$space['Name']}';
 
-                    protected PropertyColor \$color = PropertyColor::{$data['Color']};
+                    protected PropertyColor \$color = PropertyColor::{$space['Color']};
 
-                    protected int \$position = {$data['Position']};
+                    protected int \$position = {$space['Position']};
 
-                    protected int \$price = {$data['Price']};
+                    protected int \$price = {$space['Price']};
 
                     /** @var int[] */
-                    protected array \$rent = [{$data['Rent']}, {$data['RentBuild1']}, {$data['RentBuild2']}, {$data['RentBuild3']}, {$data['RentBuild4']}, {$data['RentBuild5']}];
+                    protected array \$rent = [{$space['Rent']}, {$space['RentBuild1']}, {$space['RentBuild2']}, {$space['RentBuild3']}, {$space['RentBuild4']}, {$space['RentBuild5']}];
 
-                    protected int \$building_cost = {$data['PriceBuild']};
+                    protected int \$building_cost = {$space['PriceBuild']};
                 }
                 PHP;
             } else {
                 $code = <<<PHP
                 <?php
 
-                namespace Thunk\Verbs\Examples\Monopoly\Game\{$namespace};
+                namespace Thunk\Verbs\Examples\Monopoly\Game\\{$namespace};
 
-                use Thunk\Verbs\Examples\Monopoly\Game\PropertyColor;
-                use Thunk\Verbs\Examples\Monopoly\Game\Spaces\Space;
+                use Thunk\Verbs\Examples\Monopoly\Game\Spaces\\{$parent};
 
                 class {$space['class']} extends {$parent}
                 {
-                    protected string \$name = '{$data['Name']}';
+                    protected string \$name = '{$space['Name']}';
 
-                    protected int \$position = {$data['Position']};
+                    protected int \$position = {$space['Position']};
                 }
                 PHP;
             }
