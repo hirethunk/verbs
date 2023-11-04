@@ -16,16 +16,16 @@ enum PropertyColor: string
 
     public function totalSpaces(): int
     {
-        return match($this) {
+        return match ($this) {
             self::None => 0,
-                self::Brown => 2,
-                self::LightBlue => 3,
-                self::Pink => 3,
-                self::Orange => 3,
-                self::Red => 3,
-                self::Yellow => 3,
-                self::Green => 3,
-                self::Blue => 2,
+            self::Brown => 2,
+            self::LightBlue => 3,
+            self::Pink => 3,
+            self::Orange => 3,
+            self::Red => 3,
+            self::Yellow => 3,
+            self::Green => 3,
+            self::Blue => 2,
             default => throw new \UnexpectedValueException('Unknown color.'),
         };
     }
