@@ -4,6 +4,7 @@ namespace Thunk\Verbs\Examples\Monopoly\Events\Setup;
 
 use Thunk\Verbs\Attributes\Autodiscovery\AppliesToState;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Examples\Monopoly\Game\Bank;
 use Thunk\Verbs\Examples\Monopoly\Game\Board;
 use Thunk\Verbs\Examples\Monopoly\States\GameState;
 
@@ -15,9 +16,9 @@ class GameStarted extends Event
     ) {
     }
 
-    public function validate(GameState $game): bool
+    public function validate(GameState $game)
     {
-        return ! $game->started;
+        $this->assert(! $game->started, 'The game has already started');
     }
 
     public function applyToGame(GameState $game)
@@ -25,5 +26,6 @@ class GameStarted extends Event
         $game->started = true;
         $game->player_ids = [];
         $game->board = new Board();
+        $game->bank = new Bank();
     }
 }

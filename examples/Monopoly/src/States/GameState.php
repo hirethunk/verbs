@@ -3,6 +3,7 @@
 namespace Thunk\Verbs\Examples\Monopoly\States;
 
 use Illuminate\Support\Collection;
+use Thunk\Verbs\Examples\Monopoly\Game\Bank;
 use Thunk\Verbs\Examples\Monopoly\Game\Board;
 use Thunk\Verbs\Examples\Monopoly\Game\Phase;
 use Thunk\Verbs\State;
@@ -12,6 +13,8 @@ class GameState extends State
     public bool $started = false;
 
     public Board $board;
+
+    public Bank $bank;
 
     public array $player_ids = [];
 

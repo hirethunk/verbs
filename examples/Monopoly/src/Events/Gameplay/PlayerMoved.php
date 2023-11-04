@@ -26,19 +26,20 @@ class PlayerMoved extends Event
 
     public function validateGame(GameState $game)
     {
-        $this->assert($game->phase === Phase::Move && ! $game->phase_complete, 'You are not allowed to roll dice right now.');
-
-        $player = $this->state(PlayerState::class);
-
+        $this->assert($game->last_roll, 'You must roll the dice first.');
+        $this->assert($game->phase === Phase::Move && ! $game->phase_complete, 'You are not allowed to move right now.');
         $this->assert($this->to === $this->expectedSpace(), "You must move to '{$this->expectedSpace()->name()}'");
     }
 
-    public function applyToGameAndPlayer(GameState $game)
+    public function applyToGame(GameState $game)
     {
-        $player = $this->state(PlayerState::class);
-
-        $player->location = $this->to;
         $game->phase_complete = true;
+        $game->last_roll = null;
+    }
+
+    public function applyToPlayer(PlayerState $player)
+    {
+        $player->location = $this->to;
     }
 
     protected function expectedSpace(): Space
