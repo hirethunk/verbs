@@ -7,10 +7,12 @@ use Thunk\Verbs\Examples\Monopoly\Game\Spaces\Space;
 
 class Board
 {
+    use SetsUpBoard;
+
     public Collection $spaces;
 
     public function __construct()
     {
-        $this->spaces = collect(Space::cases())->sortBy(fn (Space $space) => $space->position());
+        $this->spaces = $this->setUpAllSpaces();
     }
 }
