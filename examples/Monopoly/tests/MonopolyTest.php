@@ -61,6 +61,15 @@ it('can generate data', function () {
 
     $spaces = new Collection();
 
+    $allowed_namespaces = [
+        'Chances',
+        'Chests',
+        'Properties',
+        'Railroads',
+        'Taxes',
+        'Utilities',
+    ];
+
     while ($line = fgetcsv($stream)) {
         if (! $headings) {
             $headings = $line;
@@ -72,20 +81,51 @@ it('can generate data', function () {
         $data['class'] = (string) str($data['Name'])->slug()->studly();
         $data['namespace'] = (string) str($data['Space'])->plural()->studly();
 
+        if (!in_array($data['namespace'], $allowed_namespaces)) {
+            $data['namespace'] = 'Spaces';
+        } else {
+            $data['namespace'] = "Spaces\\{$data['namespace']}";
+        }
+
         $spaces->push($data);
     }
+
+    $all_spaces = $spaces
+        ->sortBy('Position')
+        ->map(fn($space) => "{$space['namespace']}\\{$space['class']}::instance(),")
+        ->implode("\n            ");
+
+    $code = <<<PHP
+    <?php
+
+    namespace Thunk\Verbs\Examples\Monopoly\Game;
+
+    use Illuminate\Support\Collection;
+
+    trait SetsUpBoard
+    {
+        protected function setUpAllSpaces(): Collection
+        {
+            return Collection::make([
+                {$all_spaces}
+            ]);
+        }
+    }
+    PHP;
+
+    $fs->put(__DIR__.'/../src/Game/SetsUpBoard.php', $code);
 
     foreach ($spaces->groupBy('Space') as $group => $spaces) {
         foreach ($spaces as $space) {
             $parent = $spaces->count() > 1 ? $space['Space'] : 'Space';
-            $namespace = $spaces->count() > 1 ? 'Spaces\\'.$space['namespace'] : 'Spaces';
+            $namespace = $space['namespace'];
             $directory = str_replace('\\', '//', $namespace);
 
             if ($space['Space'] === 'Property') {
                 $code = <<<PHP
                 <?php
 
-                namespace Thunk\Verbs\Examples\Monopoly\Game\{$namespace};
+                namespace Thunk\Verbs\Examples\Monopoly\Game\\{$namespace};
 
                 use Thunk\Verbs\Examples\Monopoly\Game\PropertyColor;
                 use Thunk\Verbs\Examples\Monopoly\Game\Spaces\Property;

@@ -1,17 +1,17 @@
 <?php
 
-namespace Thunk\Verbs\Examples\Monopoly\Game\Spaces\Properties;
+namespace Thunk\Verbs\Examples\Monopoly\Game\Spaces\Spaces\Properties;
 
 use Thunk\Verbs\Examples\Monopoly\Game\PropertyColor;
 use Thunk\Verbs\Examples\Monopoly\Game\Spaces\Property;
 
-class NorthCarolinaAvenue extends Property
+class PacificAvenue extends Property
 {
-    protected string $name = 'North Carolina Avenue';
+    protected string $name = 'Pacific Avenue';
 
     protected PropertyColor $color = PropertyColor::Green;
 
-    protected int $position = 32;
+    protected int $position = 31;
 
     protected int $price = 300;
 

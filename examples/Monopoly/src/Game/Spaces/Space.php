@@ -8,6 +8,11 @@ abstract class Space
 
     protected int $position;
 
+    public static function instance()
+    {
+        return new static();
+    }
+
     public function name(): string
     {
         return $this->name;

@@ -1,6 +1,6 @@
 <?php
 
-namespace Thunk\Verbs\Examples\Monopoly\Game\{Spaces\Properties};
+namespace Thunk\Verbs\Examples\Monopoly\Game\Spaces\Properties;
 
 use Thunk\Verbs\Examples\Monopoly\Game\PropertyColor;
 use Thunk\Verbs\Examples\Monopoly\Game\Spaces\Property;
