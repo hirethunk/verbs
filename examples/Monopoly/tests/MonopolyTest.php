@@ -2,8 +2,10 @@
 
 use Glhd\Bits\Snowflake;
 use Illuminate\Support\Collection;
+use Thunk\Verbs\Examples\Monopoly\Events\Setup\FirstPlayerSelected;
 use Thunk\Verbs\Examples\Monopoly\Events\Setup\GameStarted;
 use Thunk\Verbs\Examples\Monopoly\Events\Setup\PlayerJoinedGame;
+use Thunk\Verbs\Examples\Monopoly\Game\Spaces\Go;
 use Thunk\Verbs\Examples\Monopoly\Game\Token;
 use Thunk\Verbs\Examples\Monopoly\States\GameState;
 use Thunk\Verbs\Examples\Monopoly\States\PlayerState;
@@ -180,6 +182,8 @@ it('can play a game of Monopoly', function () {
     $game_state = verb(new GameStarted())->state(GameState::class);
 
     expect($game_state->started)->toBeTrue()
+        ->and($game_state->board->spaces->count())->toBe(40)
+        ->and($game_state->active_player_id)->toBeNull()
         ->and(fn () => GameStarted::fire(game_id: $game_state->id))->toThrow(EventNotValidForCurrentState::class);
 
     verb(new PlayerJoinedGame(
@@ -191,8 +195,10 @@ it('can play a game of Monopoly', function () {
     $player1 = PlayerState::load($player1_id);
 
     expect($player1->token)->toBe(Token::Battleship)
+        ->and($player1->location)->toBe(Go::instance())
         ->and($player1->money)->toBeMoney(1500, 'USD')
-        ->and($player1->deeds)->toBeEmpty();
+        ->and($player1->deeds)->toBeEmpty()
+        ->and($game_state->active_player_id)->toBeNull();
 
     verb(new PlayerJoinedGame(
         game_id: $game_state->id,
@@ -203,6 +209,15 @@ it('can play a game of Monopoly', function () {
     $player2 = PlayerState::load($player2_id);
 
     expect($player2->token)->toBe(Token::TopHat)
+        ->and($player2->location)->toBe(Go::instance())
         ->and($player2->money)->toBeMoney(1500, 'USD')
-        ->and($player2->deeds)->toBeEmpty();
+        ->and($player2->deeds)->toBeEmpty()
+        ->and($game_state->active_player_id)->toBeNull();
+
+    verb(new FirstPlayerSelected($game_state->id, $player1_id));
+
+    expect($game_state->active_player_id)->toBe($player1_id);
+
+    // Player 1's first move
+    // ---------------------------------------------------------------------------------------------------------------------------
 });

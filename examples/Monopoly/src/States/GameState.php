@@ -3,40 +3,36 @@
 namespace Thunk\Verbs\Examples\Monopoly\States;
 
 use Illuminate\Support\Collection;
+use Thunk\Verbs\Examples\Monopoly\Game\Board;
 use Thunk\Verbs\State;
 
 class GameState extends State
 {
     public bool $started = false;
 
-    public ?int $first_player_id = null;
-
-    public ?int $current_round_id = null;
+    public Board $board;
 
     public array $player_ids = [];
 
-    protected ?Collection $players = null;
-
-    public function isSetUp(): bool
-    {
-        return $this->started
-            && $this->players()->where('setup', false)->isEmpty()
-            && $this->first_player_id;
-    }
-
-    public function currentRound(): ?RoundState
-    {
-        return $this->current_round_id ? RoundState::load($this->current_round_id) : null;
-    }
-
-    public function currentRoundNumber(): ?int
-    {
-        return $this->currentRound()?->number;
-    }
+    public ?int $active_player_id = null;
 
     /** @return Collection<int, PlayerState> */
     public function players(): Collection
     {
         return collect($this->player_ids)->map(fn (int $id) => PlayerState::load($id));
+    }
+
+    public function activePlayer(): ?PlayerState
+    {
+        return $this->active_player_id ? PlayerState::load($this->active_player_id) : null;
+    }
+
+    public function hasPlayer(PlayerState|int $player): bool
+    {
+        if ($player instanceof PlayerState) {
+            $player = $player->id;
+        }
+
+        return in_array($player, $this->player_ids);
     }
 }

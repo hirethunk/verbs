@@ -8,9 +8,11 @@ abstract class Space
 
     protected int $position;
 
-    public static function instance()
+    protected static array $instances = [];
+
+    public static function instance(): static
     {
-        return new static();
+        return static::$instances[static::class] ??= new static();
     }
 
     public function name(): string

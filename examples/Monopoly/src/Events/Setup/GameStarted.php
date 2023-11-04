@@ -4,6 +4,7 @@ namespace Thunk\Verbs\Examples\Monopoly\Events\Setup;
 
 use Thunk\Verbs\Attributes\Autodiscovery\AppliesToState;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Examples\Monopoly\Game\Board;
 use Thunk\Verbs\Examples\Monopoly\States\GameState;
 
 #[AppliesToState(GameState::class)]
@@ -23,5 +24,6 @@ class GameStarted extends Event
     {
         $game->started = true;
         $game->player_ids = [];
+        $game->board = new Board();
     }
 }

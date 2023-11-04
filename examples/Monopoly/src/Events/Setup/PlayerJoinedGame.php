@@ -6,6 +6,7 @@ use Brick\Money\Money;
 use Thunk\Verbs\Attributes\Autodiscovery\AppliesToState;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Examples\Monopoly\Game\DeedCollection;
+use Thunk\Verbs\Examples\Monopoly\Game\Spaces\Go;
 use Thunk\Verbs\Examples\Monopoly\Game\Token;
 use Thunk\Verbs\Examples\Monopoly\States\GameState;
 use Thunk\Verbs\Examples\Monopoly\States\PlayerState;
@@ -46,6 +47,7 @@ class PlayerJoinedGame extends Event
         $player->token = $this->token;
         $player->deeds = DeedCollection::make([]);
         $player->money = Money::of(1500, 'USD');
+        $player->location = Go::instance();
         $player->setup = true;
     }
 }
