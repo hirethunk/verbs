@@ -1,5 +1,6 @@
 <?php
 
+use Brick\Money\Money;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -35,6 +36,20 @@ expect()->extend('toThrow', function (string|Throwable $expected, string $messag
     }
 
     return false;
+});
+
+expect()->extend('toBeMoney', function (Money|string|int $amount = null, string $currency = null) {
+    $this->toBeInstanceOf(Money::class);
+
+    if (isset($amount, $currency)) {
+        $amount = Money::of($amount, $currency);
+    }
+
+    if ($amount) {
+        expect($amount->isEqualTo($this->value))->toBeTrue(sprintf(
+            'Expected %s but got %s instead', $amount->formatTo('en_US'), $this->value->formatTo('en_US')
+        ));
+    }
 });
 
 uses(TestCase::class, RefreshDatabase::class)

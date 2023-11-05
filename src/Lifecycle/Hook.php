@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Str;
 use ReflectionMethod;
+use RuntimeException;
 use SplObjectStorage;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\State;
@@ -76,10 +77,10 @@ class Hook
     public function validate(Container $container, Event $event, State $state): bool
     {
         if ($this->runsInPhase(Phase::Validate)) {
-            return $container->call($this->callback, $this->guessParameters($event, $state)) ?? false;
+            return $container->call($this->callback, $this->guessParameters($event, $state)) ?? true;
         }
 
-        return false;
+        throw new RuntimeException('Hook::validate called on a non-validation hook.');
     }
 
     public function apply(Container $container, Event $event, State $state): void
