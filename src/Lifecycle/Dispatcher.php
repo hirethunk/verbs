@@ -70,10 +70,10 @@ class Dispatcher
         $hooks = collect($this->hooks[$event::class] ?? []);
 
         if (method_exists($event, 'fired')) {
-            $hooks->prepend(Hook::fromClassMethod($event, 'fired')->whenFired());
+            $hooks->prepend(Hook::fromClassMethod($event, 'fired')->forcePhases(Phase::Fired));
         }
 
-        return $hooks->filter(fn (Hook $hook) => $hook->when_fired);
+        return $hooks->filter(fn (Hook $hook) => $hook->runsInPhase(Phase::Fired));
     }
 
     /** @return Collection<int, Hook> */
@@ -84,14 +84,14 @@ class Dispatcher
         $hooks = collect($this->hooks[$event::class] ?? []);
 
         if (method_exists($event, 'once')) {
-            $hooks->prepend(Hook::fromClassMethod($event, 'once')->runsOnCommit());
+            $hooks->prepend(Hook::fromClassMethod($event, 'once')->forcePhases(Phase::Handle));
         }
 
         if (method_exists($event, 'handle')) {
-            $hooks->prepend(Hook::fromClassMethod($event, 'handle')->runsOnCommit()->replayable());
+            $hooks->prepend(Hook::fromClassMethod($event, 'handle')->forcePhases(Phase::Handle, Phase::Replay));
         }
 
-        return $hooks->filter(fn (Hook $hook) => $hook->runs_on_commit);
+        return $hooks->filter(fn (Hook $hook) => $hook->runsInPhase(Phase::Handle));
     }
 
     /** @return Collection<int, Hook> */
@@ -100,10 +100,10 @@ class Dispatcher
         $hooks = collect($this->hooks[$event::class] ?? []);
 
         if (method_exists($event, 'handle')) {
-            $hooks->prepend(Hook::fromClassMethod($event, 'handle')->runsOnCommit()->replayable());
+            $hooks->prepend(Hook::fromClassMethod($event, 'handle')->forcePhases(Phase::Handle, Phase::Replay));
         }
 
-        return $hooks->filter(fn (Hook $hook) => $hook->replayable);
+        return $hooks->filter(fn (Hook $hook) => $hook->runsInPhase(Phase::Replay));
     }
 
     /** @return Collection<int, Hook> */
@@ -115,13 +115,13 @@ class Dispatcher
             // ->filter(fn (string $name) => $name !== 'validate' && Str::startsWith($name, 'validate'))
             ->filter(fn (string $name) => Str::startsWith($name, 'validate'))
             ->filter(fn (string $name) => ! empty(Reflector::getParametersOfType($state::class, new ReflectionMethod($event, $name))))
-            ->map(fn (string $name) => Hook::fromClassMethod($event, $name)->validatesState());
+            ->map(fn (string $name) => Hook::fromClassMethod($event, $name)->forcePhases(Phase::Validate));
 
         // FIXME: We need to handle special `validate()` hook with no suffix
 
         return $hooks
             ->merge($validation_hooks)
-            ->filter(fn (Hook $hook) => $hook->validates_state);
+            ->filter(fn (Hook $hook) => $hook->runsInPhase(Phase::Validate));
     }
 
     /** @return Collection<int, Hook> */
@@ -131,17 +131,17 @@ class Dispatcher
             ->prefix('apply')
             ->param($state::class)
             ->find()
-            ->map(fn (ReflectionMethod $method) => Hook::fromClassMethod($event, $method)->aggregatesState());
+            ->map(fn (ReflectionMethod $method) => Hook::fromClassMethod($event, $method)->forcePhases(Phase::Apply));
 
         $states_apply_methods = ReflectionMethodSignature::make($state)
             ->prefix('apply')
             ->param($event::class)
             ->find()
-            ->map(fn (ReflectionMethod $method) => Hook::fromClassMethod($state, $method)->aggregatesState());
+            ->map(fn (ReflectionMethod $method) => Hook::fromClassMethod($state, $method)->forcePhases(Phase::Apply));
 
         return collect($this->hooks[$event::class] ?? [])
             ->merge($event_apply_methods)
             ->merge($states_apply_methods)
-            ->filter(fn (Hook $hook) => $hook->aggregates_state);
+            ->filter(fn (Hook $hook) => $hook->runsInPhase(Phase::Apply));
     }
 }

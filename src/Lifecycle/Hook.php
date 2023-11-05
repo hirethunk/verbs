@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Str;
 use ReflectionMethod;
+use SplObjectStorage;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\Reflector;
@@ -43,53 +44,37 @@ class Hook
         public Closure $callback,
         public array $events = [],
         public array $states = [],
-        public bool $when_fired = false,
-        public bool $runs_on_commit = false,
-        public bool $replayable = false,
-        public bool $validates_state = false,
-        public bool $aggregates_state = false,
+        public SplObjectStorage $phases = new SplObjectStorage(),
         public ?string $name = null,
     ) {
     }
 
-    public function whenFired(): static
+    public function forcePhases(Phase ...$phases): static
     {
-        $this->when_fired = true;
+        foreach ($phases as $phase) {
+            $this->phases[$phase] = true;
+        }
 
         return $this;
     }
 
-    public function runsOnCommit(): static
+    public function skipPhases(Phase ...$phases): static
     {
-        $this->runs_on_commit = true;
+        foreach ($phases as $phase) {
+            $this->phases[$phase] = false;
+        }
 
         return $this;
     }
 
-    public function replayable(): static
+    public function runsInPhase(Phase $phase): bool
     {
-        $this->replayable = true;
-
-        return $this;
-    }
-
-    public function validatesState(): static
-    {
-        $this->validates_state = true;
-
-        return $this;
-    }
-
-    public function aggregatesState(): static
-    {
-        $this->aggregates_state = true;
-
-        return $this;
+        return isset($this->phases[$phase]) && $this->phases[$phase] === true;
     }
 
     public function validate(Container $container, Event $event, State $state): bool
     {
-        if ($this->validates_state) {
+        if ($this->runsInPhase(Phase::Validate)) {
             return $container->call($this->callback, $this->guessParameters($event, $state)) ?? false;
         }
 
@@ -98,7 +83,7 @@ class Hook
 
     public function apply(Container $container, Event $event, State $state): void
     {
-        if ($this->aggregates_state) {
+        if ($this->runsInPhase(Phase::Apply)) {
             $container->call($this->callback, $this->guessParameters($event, $state));
             $state->last_event_id = $event->id;
         }
@@ -106,21 +91,21 @@ class Hook
 
     public function fired(Container $container, Event $event, State $state = null): void
     {
-        if ($this->when_fired) {
+        if ($this->runsInPhase(Phase::Fired)) {
             $container->call($this->callback, $this->guessParameters($event, $state));
         }
     }
 
     public function handle(Container $container, Event $event, State $state = null): void
     {
-        if ($this->runs_on_commit) {
+        if ($this->runsInPhase(Phase::Handle)) {
             $container->call($this->callback, $this->guessParameters($event, $state));
         }
     }
 
     public function replay(Container $container, Event $event, State $state = null): void
     {
-        if ($this->replayable) {
+        if ($this->runsInPhase(Phase::Replay)) {
             $container->call($this->callback, $this->guessParameters($event, $state));
         }
     }
