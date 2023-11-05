@@ -2,7 +2,6 @@
 
 namespace Thunk\Verbs;
 
-use Glhd\Bits\Snowflake;
 use Illuminate\Events\Dispatcher as LaravelDispatcher;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
