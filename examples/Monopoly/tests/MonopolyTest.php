@@ -3,6 +3,7 @@
 use Glhd\Bits\Snowflake;
 use Illuminate\Support\Collection;
 use Thunk\Verbs\Examples\Monopoly\Events\Gameplay\EndedTurn;
+use Thunk\Verbs\Examples\Monopoly\Events\Gameplay\PaidRent;
 use Thunk\Verbs\Examples\Monopoly\Events\Gameplay\PlayerMoved;
 use Thunk\Verbs\Examples\Monopoly\Events\Gameplay\PurchasedProperty;
 use Thunk\Verbs\Examples\Monopoly\Events\Gameplay\RolledDice;
@@ -281,9 +282,40 @@ it('can play a game of Monopoly', function () {
 
     expect($player2->deeds)->toHaveCount(1)
         ->and($player2->deeds->first())->toBe(OrientalAvenue::instance())
+        ->and($player2->money)->toBeMoney(1400, 'USD')
         ->and($game_state->bank->hasDeed(OrientalAvenue::instance()))->toBeFalse();
 
     verb(new EndedTurn(game_id: $game_state->id, player_id: $player2_id));
 
     expect($game_state->active_player_id)->toBe($player1_id);
+
+    // Player 1's second move
+    // ---------------------------------------------------------------------------------------------------------------------------
+
+    verb(new RolledDice(
+        game_id: $game_state->id,
+        player_id: $player1_id,
+        dice: [1, 2],
+    ));
+
+    verb(new PlayerMoved(
+        game_id: $game_state->id,
+        player_id: $player1_id,
+        to: OrientalAvenue::instance(),
+    ));
+
+    expect($player1->location)->toBe(OrientalAvenue::instance());
+
+    verb(new PaidRent(
+        game_id: $game_state->id,
+        player_id: $player1_id,
+        property: OrientalAvenue::instance(),
+    ));
+
+    expect($player1->money)->toBeMoney(1434, 'USD')
+        ->and($player2->money)->toBeMoney(1406, 'USD');
+
+    verb(new EndedTurn(game_id: $game_state->id, player_id: $player1_id));
+
+    expect($game_state->active_player_id)->toBe($player2_id);
 });

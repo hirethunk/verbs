@@ -24,6 +24,7 @@ class EndedTurn extends Event
     public function validateGame(GameState $game)
     {
         $this->assert($game->phase_complete, 'You have to finish what you’re doing before you can end your turn.');
+        $this->assert($game->phase->canTransitionTo(Phase::EndTurn), 'You must complete your turn before ending it.');
     }
 
     public function applyToGame(GameState $game)

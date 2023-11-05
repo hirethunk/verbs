@@ -31,6 +31,7 @@ class PlayerMoved extends Event
 
     public function applyToGame(GameState $game)
     {
+        $game->phase = Phase::Move;
         $game->phase_complete = true;
         $game->last_roll = null;
     }

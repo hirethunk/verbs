@@ -11,7 +11,7 @@ use Thunk\Verbs\Examples\Monopoly\States\PlayerState;
 
 #[AppliesToState(GameState::class)]
 #[AppliesToState(PlayerState::class)]
-class PurchasedProperty extends Event
+class PaidRent extends Event
 {
     use PlayerAction;
 
@@ -24,28 +24,29 @@ class PurchasedProperty extends Event
 
     public function validatePlayer(PlayerState $player)
     {
-        $this->assert($player->location === $this->property, 'You must land on a property to buy it.');
-        $this->assert($player->money->isGreaterThanOrEqualTo($this->property->price()), "You do not have enough money to buy {$this->property->name()}.");
+        $this->assert($player->location === $this->property, 'You must land on a property to pay rent on it.');
+        $this->assert($player->money->isGreaterThanOrEqualTo($this->property->rent()), "You do not have enough money to pay rent at {$this->property->name()}.");
+        $this->assert($player !== $this->property->owner(), 'You cannot pay rent on a property that you do not own.');
     }
 
     public function validateGame(GameState $game)
     {
-        $this->assert($game->bank->hasDeed($this->property), "{$this->property->name()} is not for sale.");
+        $this->assert(! $game->bank->hasDeed($this->property), "{$this->property->name()} is still for sale—you cannot pay rent on it.");
         $this->assert($game->phase_complete, 'You must finish what you’re doing before purchasing a property.');
-        $this->assert($game->phase->canTransitionTo(Phase::Purchase), 'You are not allowed to purchase properties right now.');
+        $this->assert($game->phase->canTransitionTo(Phase::PayRent), 'You are not allowed to pay rent right now.');
     }
 
     public function applyToGame(GameState $game)
     {
-        $game->phase = Phase::Purchase;
+        $game->phase = Phase::PayRent;
         $game->phase_complete = true;
-        $game->bank->purchaseDeed($this->property);
     }
 
     public function applyToPlayer(PlayerState $player)
     {
-        $player->deeds->push($this->property);
-        $player->money = $player->money->minus($this->property->price());
-        $this->property->setOwner($player);
+        $owner = $this->property->owner();
+
+        $owner->money = $owner->money->plus($this->property->rent());
+        $player->money = $player->money->minus($this->property->rent());
     }
 }
