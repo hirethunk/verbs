@@ -8,6 +8,7 @@ use Thunk\Verbs\Event;
 use Thunk\Verbs\Examples\Bank\Mail\DepositAvailable;
 use Thunk\Verbs\Examples\Bank\Models\Account;
 use Thunk\Verbs\Examples\Bank\States\AccountState;
+use Thunk\Verbs\Facades\Verbs;
 
 class MoneyDeposited extends Event
 {
@@ -28,10 +29,7 @@ class MoneyDeposited extends Event
             ->update([
                 'balance_in_cents' => $this->state()->balance_in_cents,
             ]);
-    }
 
-    public function once()
-    {
-        Mail::send(new DepositAvailable(Account::find($this->account_id)->user_id));
+        Verbs::unlessReplaying(fn() => Mail::send(new DepositAvailable(Account::find($this->account_id)->user_id)));
     }
 }

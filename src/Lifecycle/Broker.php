@@ -75,6 +75,11 @@ class Broker
         $this->is_replaying = false;
     }
 
+    public function isReplaying(): bool
+    {
+        return $this->is_replaying;
+    }
+
     public function unlessReplaying(callable $callback)
     {
         if (! $this->is_replaying) {

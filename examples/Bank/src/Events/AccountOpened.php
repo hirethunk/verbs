@@ -8,6 +8,7 @@ use Thunk\Verbs\Event;
 use Thunk\Verbs\Examples\Bank\Mail\WelcomeEmail;
 use Thunk\Verbs\Examples\Bank\Models\Account;
 use Thunk\Verbs\Examples\Bank\States\AccountState;
+use Thunk\Verbs\Facades\Verbs;
 
 class AccountOpened extends Event
 {
@@ -35,10 +36,7 @@ class AccountOpened extends Event
             'user_id' => $this->user_id,
             'balance_in_cents' => $this->initial_deposit_in_cents,
         ]);
-    }
 
-    public function once()
-    {
-        Mail::send(new WelcomeEmail($this->user_id));
+        Verbs::unlessReplaying(fn () => Mail::send(new WelcomeEmail($this->user_id)));
     }
 }
