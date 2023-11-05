@@ -2,7 +2,6 @@
 
 namespace Thunk\Verbs;
 
-use Glhd\Bits\Snowflake;
 use Illuminate\Events\Dispatcher as LaravelDispatcher;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -63,8 +62,7 @@ class VerbsServiceProvider extends PackageServiceProvider
         // Allow for firing events with traditional Laravel dispatcher
         $this->app->make(LaravelDispatcher::class)->listen('*', function (string $name, array $data) {
             [$event] = $data;
-            if (isset($event) && $event instanceof Event && ! $event->fired) {
-                $event->id = Snowflake::make()->id();
+            if (isset($event) && $event instanceof Event) {
                 $this->app->make(Broker::class)->fire($event);
             }
         });

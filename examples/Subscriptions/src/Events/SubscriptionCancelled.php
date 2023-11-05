@@ -28,7 +28,7 @@ class SubscriptionCancelled extends Event
         $state->is_active = false;
     }
 
-    public function onFire()
+    public function handle()
     {
         $subscription = Subscription::find($this->subscription_id);
 

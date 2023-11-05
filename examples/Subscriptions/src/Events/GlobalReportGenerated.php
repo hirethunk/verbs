@@ -2,24 +2,19 @@
 
 namespace Thunk\Verbs\Examples\Subscriptions\Events;
 
+use Thunk\Verbs\Attributes\Autodiscovery\AppliesToSingletonState;
+use Thunk\Verbs\Attributes\Hooks\Once;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Examples\Subscriptions\Models\Report;
 use Thunk\Verbs\Examples\Subscriptions\States\GlobalReportState;
-use Thunk\Verbs\Facades\Verbs;
-use Thunk\Verbs\Support\StateCollection;
 
+#[AppliesToSingletonState(GlobalReportState::class)]
 class GlobalReportGenerated extends Event
 {
-    public function states(): StateCollection
+    #[Once]
+    public function handle()
     {
-        return new StateCollection([
-            GlobalReportState::class => GlobalReportState::singleton(),
-        ]);
-    }
-
-    public function onCommit()
-    {
-        $state = $this->states()[GlobalReportState::class];
+        $state = $this->state(GlobalReportState::class);
 
         Report::create([
             'plan_id' => null,
@@ -29,8 +24,6 @@ class GlobalReportGenerated extends Event
             'summary' => $state->summary(),
         ]);
 
-        Verbs::unlessReplaying(function () {
-            ResetGlobalReportState::fire();
-        });
+        ResetGlobalReportState::fire();
     }
 }

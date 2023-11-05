@@ -3,14 +3,14 @@
 namespace Thunk\Verbs\Support;
 
 use Closure;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Reflector as BaseReflector;
 use ReflectionClass;
 use ReflectionFunction;
 use ReflectionFunctionAbstract;
 use ReflectionMethod;
-use ReflectionNamedType;
-use ReflectionProperty;
+use ReflectionParameter;
 use Thunk\Verbs\Attributes\Hooks\HookAttribute;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\Hook;
@@ -32,51 +32,17 @@ class Reflector extends BaseReflector
             ->map(fn (ReflectionMethod $method) => Hook::fromClassMethod($target, $method));
     }
 
-    public static function getPublicStateProperties(Event $event)
-    {
-        $reflect = new ReflectionClass($event);
-
-        return collect($reflect->getProperties(ReflectionMethod::IS_PUBLIC))
-            ->filter(function (ReflectionProperty $prop) {
-                $type = $prop->getType();
-
-                return $type instanceof ReflectionNamedType
-                    && ! $type->isBuiltin()
-                    && is_a($type->getName(), State::class, true);
-            })
-            ->mapWithKeys(fn (ReflectionProperty $prop) => [
-                $prop->getName() => $prop->getValue($event),
-            ]);
-    }
-
-    public static function getNonStatePublicPropertiesAndValues(Event $event)
-    {
-        $properties = get_object_vars($event);
-        $reflect = new ReflectionClass($event);
-
-        return collect($reflect->getProperties(ReflectionMethod::IS_PUBLIC))
-            ->filter(function (ReflectionProperty $prop) {
-                $type = $prop->getType();
-
-                return $type instanceof ReflectionNamedType &&
-                    ! is_a($type->getName(), State::class, true);
-            })
-            ->mapWithKeys(fn (ReflectionProperty $prop) => [
-                $prop->getName() => $properties[$prop->getName()] ?? null,
-            ]);
-    }
-
     public static function getEventParameters(ReflectionFunctionAbstract|Closure $method): array
     {
-        return static::getParametersOfType(Event::class, $method);
+        return static::getParametersOfType(Event::class, $method)->values()->all();
     }
 
     public static function getStateParameters(ReflectionFunctionAbstract|Closure $method): array
     {
-        return static::getParametersOfType(State::class, $method);
+        return static::getParametersOfType(State::class, $method)->values()->all();
     }
 
-    public static function applyAttributes(ReflectionFunctionAbstract|Closure $method, Hook $hook): Hook
+    public static function applyHookAttributes(ReflectionFunctionAbstract|Closure $method, Hook $hook): Hook
     {
         $method = static::reflectFunction($method);
 
@@ -90,18 +56,28 @@ class Reflector extends BaseReflector
         return $hook;
     }
 
-    public static function getParametersOfType(string $type, ReflectionFunctionAbstract|Closure $method): array
+    /**
+     * This method returns a collection keyed by the parameter position, with a value
+     * that is the FQCN of the argument that matches $type
+     *
+     * @template T
+     *
+     * @param  class-string<T>  $type
+     * @return Collection<int, class-string<T>>
+     */
+    public static function getParametersOfType(string $type, ReflectionFunctionAbstract|Closure $method): Collection
     {
         $method = static::reflectFunction($method);
 
         if (empty($parameters = $method->getParameters())) {
-            return [];
+            return new Collection();
         }
 
-        return array_filter(
-            array: static::getParameterClassNames($parameters[0]),
-            callback: fn (string $class_name) => is_a($class_name, $type, true)
-        );
+        return collect($parameters)
+            ->map(fn (ReflectionParameter $parameter) => static::getParameterClassNames($parameter))
+            ->map(fn (array $names) => array_filter($names, fn ($name) => is_a($name, $type, true)))
+            ->reject(fn (array $names) => empty($names))
+            ->map(fn (array $names) => Arr::first($names));
     }
 
     protected static function reflectFunction(ReflectionFunctionAbstract|Closure $function): ReflectionFunctionAbstract

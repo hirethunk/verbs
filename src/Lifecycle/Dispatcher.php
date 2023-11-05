@@ -3,13 +3,14 @@
 namespace Thunk\Verbs\Lifecycle;
 
 use Illuminate\Contracts\Container\Container;
-use Illuminate\Support\Str;
+use Illuminate\Support\Collection;
 use ReflectionMethod;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
 use Thunk\Verbs\State;
-use Thunk\Verbs\Support\ReflectionMethodSignature;
+use Thunk\Verbs\Support\MethodFinder;
 use Thunk\Verbs\Support\Reflector;
+use Thunk\Verbs\Support\StateCollection;
 
 class Dispatcher
 {
@@ -45,94 +46,98 @@ class Dispatcher
 
     public function apply(Event $event, State $state): void
     {
-        foreach ($this->getApplyHooks($event, $state) as $hook) {
-            $hook->apply($this->container, $event, $state);
-        }
+        $this->getApplyHooks($event, $state)->each(fn (Hook $hook) => $hook->apply($this->container, $event, $state));
     }
 
-    public function fire(Event $event): void
+    public function fired(Event $event, StateCollection $states): void
     {
-        // FIXME: We need to be able to pass state into onFire
-        foreach ($this->getHooks($event) as $listener) {
-            $listener->fire($this->container, $event);
-        }
+        $this->getFiredHooks($event)->each(fn (Hook $hook) => $hook->fired($this->container, $event, $states));
+    }
+
+    public function handle(Event $event): void
+    {
+        $this->getHandleHooks($event)->each(fn (Hook $hook) => $hook->handle($this->container, $event));
     }
 
     public function replay(Event $event, State $state): void
     {
-        // FIXME: We need to be able to pass state into replay
-        foreach ($this->getHooks($event) as $listener) {
-            $listener->replay($this->container, $event, $state);
-        }
+        $this->getReplayHooks($event)->each(fn (Hook $hook) => $hook->replay($this->container, $event, $state));
     }
 
-    /** @return \Thunk\Verbs\Lifecycle\Hook[] */
-    protected function getValidationHooks(Event $event, State $state): array
+    /** @return Collection<int, Hook> */
+    protected function getFiredHooks(Event $event): Collection
     {
         $hooks = collect($this->hooks[$event::class] ?? []);
 
-        collect(get_class_methods($event))
-            ->filter(fn (string $name) => Str::startsWith($name, 'validate'))
-            ->filter(function (string $name) use ($event, $state) {
-                $method = new ReflectionMethod($event, $name);
+        if (method_exists($event, 'fired')) {
+            $hooks->prepend(Hook::fromClassMethod($event, 'fired')->forcePhases(Phase::Fired));
+        }
 
-                return ! empty(Reflector::getParametersOfType($state::class, $method));
-            })
-            ->each(function (string $name) use (&$hooks, $event) {
-                $hook = Hook::fromClassMethod($event, new ReflectionMethod($event, $name));
-                $hook->validates_state = true;
-                $hooks->push($hook);
-            });
-
-        return $hooks
-            ->filter(fn (Hook $hook) => $hook->validates_state)
-            ->all();
+        return $hooks->filter(fn (Hook $hook) => $hook->runsInPhase(Phase::Fired));
     }
 
-    /** @return \Thunk\Verbs\Lifecycle\Hook[] */
-    protected function getHooks(Event $event): array
+    /** @return Collection<int, Hook> */
+    protected function getHandleHooks(Event $event): Collection
     {
         // FIXME: We need to handle interfaces, too
 
-        $listeners = $this->hooks[$event::class] ?? [];
+        $hooks = collect($this->hooks[$event::class] ?? []);
 
-        if (method_exists($event, 'onFire')) {
-            $onFire = Hook::fromClassMethod($event, new ReflectionMethod($event, 'onFire'));
-            array_unshift($listeners, $onFire);
+        // TODO: We may want a special hook that only runs during handle but not replay. We've talked about
+        // using "once" or "stored" or "committed" or "react" but can't quite agree. Just leaving it out for now.
+
+        if (method_exists($event, 'handle')) {
+            $hooks->prepend(Hook::fromClassMethod($event, 'handle')->forcePhases(Phase::Handle, Phase::Replay));
         }
 
-        if (method_exists($event, 'onCommit')) {
-            $onCommit = Hook::fromClassMethod($event, new ReflectionMethod($event, 'onCommit'));
-            $onCommit->replayable = false;
-            array_unshift($listeners, $onCommit);
-        }
-
-        return $listeners;
+        return $hooks->filter(fn (Hook $hook) => $hook->runsInPhase(Phase::Handle));
     }
 
-    /** @return \Thunk\Verbs\Lifecycle\Hook[] */
-    protected function getApplyHooks(Event $event, State $state): array
+    /** @return Collection<int, Hook> */
+    protected function getReplayHooks(Event $event): Collection
     {
         $hooks = collect($this->hooks[$event::class] ?? []);
 
-        $event_apply_methods = ReflectionMethodSignature::make($event)
-            ->prefix('apply')
-            ->param($state::class)
-            ->find();
+        if (method_exists($event, 'handle')) {
+            $hooks->prepend(Hook::fromClassMethod($event, 'handle')->forcePhases(Phase::Handle, Phase::Replay));
+        }
 
-        $states_apply_methods = ReflectionMethodSignature::make($state)
-            ->prefix('apply')
-            ->param($event::class)
-            ->find();
+        return $hooks->filter(fn (Hook $hook) => $hook->runsInPhase(Phase::Replay));
+    }
 
-        $hooks = $hooks->merge(
-            $event_apply_methods->map(fn (ReflectionMethod $method) => Hook::fromClassMethod($event, $method)->aggregatesState())
-        )->merge(
-            $states_apply_methods->map(fn (ReflectionMethod $method) => Hook::fromClassMethod($state, $method)->aggregatesState())
-        );
+    /** @return Collection<int, Hook> */
+    protected function getValidationHooks(Event $event, State $state): Collection
+    {
+        $hooks = collect($this->hooks[$event::class] ?? []);
+
+        $validation_hooks = MethodFinder::for($event)
+            ->prefixed('validate')
+            ->expecting($state::class)
+            ->map(fn (ReflectionMethod $name) => Hook::fromClassMethod($event, $name)->forcePhases(Phase::Validate));
+
+        // FIXME: We need to handle special `validate()` hook with no suffix
 
         return $hooks
-            ->filter(fn (Hook $hook) => $hook->aggregates_state)
-            ->all();
+            ->merge($validation_hooks)
+            ->filter(fn (Hook $hook) => $hook->runsInPhase(Phase::Validate));
+    }
+
+    /** @return Collection<int, Hook> */
+    protected function getApplyHooks(Event $event, State $state): Collection
+    {
+        $event_apply_methods = MethodFinder::for($event)
+            ->prefixed('apply')
+            ->expecting($state::class)
+            ->map(fn (ReflectionMethod $method) => Hook::fromClassMethod($event, $method)->forcePhases(Phase::Apply));
+
+        $states_apply_methods = MethodFinder::for($state)
+            ->prefixed('apply')
+            ->expecting($event::class)
+            ->map(fn (ReflectionMethod $method) => Hook::fromClassMethod($state, $method)->forcePhases(Phase::Apply));
+
+        return collect($this->hooks[$event::class] ?? [])
+            ->merge($event_apply_methods)
+            ->merge($states_apply_methods)
+            ->filter(fn (Hook $hook) => $hook->runsInPhase(Phase::Apply));
     }
 }
