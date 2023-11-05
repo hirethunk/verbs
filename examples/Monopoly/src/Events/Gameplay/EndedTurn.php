@@ -2,7 +2,6 @@
 
 namespace Thunk\Verbs\Examples\Monopoly\Events\Gameplay;
 
-use InvalidArgumentException;
 use Thunk\Verbs\Attributes\Autodiscovery\AppliesToState;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Examples\Monopoly\Game\Phase;
