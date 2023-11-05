@@ -6,14 +6,20 @@ use Closure;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Str;
 use ReflectionMethod;
+use SplObjectStorage;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\Reflector;
+use Thunk\Verbs\Support\StateCollection;
 
 class Hook
 {
-    public static function fromClassMethod(object $target, ReflectionMethod $method): static
+    public static function fromClassMethod(object $target, ReflectionMethod|string $method): static
     {
+        if (is_string($method)) {
+            $method = new ReflectionMethod($target, $method);
+        }
+
         $hook = new static(
             callback: Closure::fromCallable([$target, $method->getName()]),
             events: Reflector::getEventParameters($method),
@@ -21,7 +27,7 @@ class Hook
             name: $method->getName(),
         );
 
-        return Reflector::applyAttributes($method, $hook);
+        return Reflector::applyHookAttributes($method, $hook);
     }
 
     public static function fromClosure(Closure $callback): static
@@ -32,57 +38,80 @@ class Hook
             states: Reflector::getStateParameters($callback),
         );
 
-        return Reflector::applyAttributes($callback, $hook);
+        return Reflector::applyHookAttributes($callback, $hook);
     }
 
     public function __construct(
         public Closure $callback,
         public array $events = [],
         public array $states = [],
-        public bool $replayable = true,
-        public bool $validates_state = false,
-        public bool $aggregates_state = false,
+        public SplObjectStorage $phases = new SplObjectStorage(),
         public ?string $name = null,
     ) {
     }
 
-    public function aggregatesState(bool $aggregates_state = true): static
+    public function forcePhases(Phase ...$phases): static
     {
-        $this->aggregates_state = $aggregates_state;
+        foreach ($phases as $phase) {
+            $this->phases[$phase] = true;
+        }
 
         return $this;
     }
 
+    public function skipPhases(Phase ...$phases): static
+    {
+        foreach ($phases as $phase) {
+            $this->phases[$phase] = false;
+        }
+
+        return $this;
+    }
+
+    public function runsInPhase(Phase $phase): bool
+    {
+        return isset($this->phases[$phase]) && $this->phases[$phase] === true;
+    }
+
     public function validate(Container $container, Event $event, State $state): bool
     {
-        return $container->call($this->callback, $this->guessParameters($event, $state)) ?? false;
-    }
-
-    // FIXME: Rename to handle and add 'fired' as its own thing
-    public function fire(Container $container, Event $event, State $state = null): void
-    {
-        // FIXME: Pull states off of events and allow for multiple
-
-        $container->call($this->callback, $this->guessParameters($event, $state));
-    }
-
-    public function replay(Container $container, Event $event, State $state = null): void
-    {
-        // FIXME: Pull states off of events and allow for multiple
-
-        if ($this->replayable) {
-            $this->fire($container, $event, $state);
+        if ($this->runsInPhase(Phase::Validate)) {
+            return $container->call($this->callback, $this->guessParameters($event, $state)) ?? false;
         }
+
+        return false;
     }
 
     public function apply(Container $container, Event $event, State $state): void
     {
-        $this->fire($container, $event, $state);
-
-        $state->last_event_id = $event->id;
+        if ($this->runsInPhase(Phase::Apply)) {
+            $container->call($this->callback, $this->guessParameters($event, $state));
+            $state->last_event_id = $event->id;
+        }
     }
 
-    protected function guessParameters(Event $event, ?State $state): array
+    public function fired(Container $container, Event $event, StateCollection $states): void
+    {
+        if ($this->runsInPhase(Phase::Fired)) {
+            $container->call($this->callback, $this->guessParameters($event, states: $states));
+        }
+    }
+
+    public function handle(Container $container, Event $event, State $state = null): void
+    {
+        if ($this->runsInPhase(Phase::Handle)) {
+            $container->call($this->callback, $this->guessParameters($event, $state));
+        }
+    }
+
+    public function replay(Container $container, Event $event, State $state = null): void
+    {
+        if ($this->runsInPhase(Phase::Replay)) {
+            $container->call($this->callback, $this->guessParameters($event, $state));
+        }
+    }
+
+    protected function guessParameters(Event $event, State $state = null, StateCollection $states = null): array
     {
         $parameters = [
             'e' => $event,
@@ -103,6 +132,27 @@ class Hook
             ];
         }
 
-        return $parameters;
+        if ($states) {
+            foreach ($states as $state) {
+                $keys = [
+                    $state::class,
+                    (string) Str::of($state::class)->classBasename()->snake(),
+                    (string) Str::of($state::class)->classBasename()->studly(),
+                ];
+
+                // FIXME: We need to throw an ambiguous state exception if a method wants a state that we have 2+ of
+                //        But right now, we'll just null them out
+                if (isset($parameters[$state::class])) {
+                    $state = null;
+                }
+
+                foreach ($keys as $key) {
+                    $parameters[$key] = $state;
+                }
+            }
+        }
+
+        // We're going to null out any parameters that may be ambiguous, so we need to filter them here
+        return array_filter($parameters);
     }
 }

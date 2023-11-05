@@ -9,7 +9,6 @@ use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer as SymfonySerializer;
-use Thunk\Verbs\Event;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\Normalizers\BitsNormalizer;
 use Thunk\Verbs\Support\Normalizers\CarbonNormalizer;
@@ -53,7 +52,7 @@ class StateSerializer
     public function deserialize(
         State|string $target,
         string|array $data,
-    ): Event {
+    ): State {
         if (! is_a($target, State::class, true)) {
             throw new InvalidArgumentException(class_basename($this).'::deserialize must be passed a State class.');
         }

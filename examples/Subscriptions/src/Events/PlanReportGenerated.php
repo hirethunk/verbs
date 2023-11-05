@@ -3,19 +3,20 @@
 namespace Thunk\Verbs\Examples\Subscriptions\Events;
 
 use Thunk\Verbs\Attributes\Autodiscovery\StateId;
+use Thunk\Verbs\Attributes\Hooks\Once;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Examples\Subscriptions\Models\Report;
 use Thunk\Verbs\Examples\Subscriptions\States\PlanReportState;
-use Thunk\Verbs\Facades\Verbs;
 
 class PlanReportGenerated extends Event
 {
     #[StateId(PlanReportState::class)]
     public int $plan_id;
 
-    public function onCommit()
+    #[Once]
+    public function handle()
     {
-        $state = $this->states()[PlanReportState::class];
+        $state = $this->state(PlanReportState::class);
 
         Report::create([
             'plan_id' => $this->plan_id,
@@ -25,8 +26,6 @@ class PlanReportGenerated extends Event
             'summary' => $state->summary(),
         ]);
 
-        Verbs::unlessReplaying(function () {
-            ResetPlanReportState::fire(plan_id: $this->plan_id);
-        });
+        ResetPlanReportState::fire(plan_id: $this->plan_id);
     }
 }

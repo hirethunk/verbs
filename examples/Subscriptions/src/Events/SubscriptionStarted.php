@@ -40,7 +40,7 @@ class SubscriptionStarted extends Event
         $state->plan_id = $this->plan_id;
     }
 
-    public function onFire()
+    public function handle()
     {
         [$subscription_state] = $this->states();
 
