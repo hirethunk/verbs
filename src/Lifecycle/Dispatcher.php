@@ -115,7 +115,7 @@ class Dispatcher
         $validation_hooks = collect(get_class_methods($event))
             // ->filter(fn (string $name) => $name !== 'validate' && Str::startsWith($name, 'validate'))
             ->filter(fn (string $name) => Str::startsWith($name, 'validate'))
-            ->filter(fn (string $name) => ! empty(Reflector::getParametersOfType($state::class, new ReflectionMethod($event, $name))))
+            ->filter(fn (string $name) => Reflector::getParametersOfType($state::class, new ReflectionMethod($event, $name))->isNotEmpty())
             ->map(fn (string $name) => Hook::fromClassMethod($event, $name)->forcePhases(Phase::Validate));
 
         // FIXME: We need to handle special `validate()` hook with no suffix

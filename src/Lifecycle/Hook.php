@@ -27,7 +27,7 @@ class Hook
             name: $method->getName(),
         );
 
-        return Reflector::applyAttributes($method, $hook);
+        return Reflector::applyHookAttributes($method, $hook);
     }
 
     public static function fromClosure(Closure $callback): static
@@ -38,7 +38,7 @@ class Hook
             states: Reflector::getStateParameters($callback),
         );
 
-        return Reflector::applyAttributes($callback, $hook);
+        return Reflector::applyHookAttributes($callback, $hook);
     }
 
     public function __construct(

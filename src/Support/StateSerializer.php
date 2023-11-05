@@ -53,7 +53,7 @@ class StateSerializer
     public function deserialize(
         State|string $target,
         string|array $data,
-    ): Event {
+    ): State {
         if (! is_a($target, State::class, true)) {
             throw new InvalidArgumentException(class_basename($this).'::deserialize must be passed a State class.');
         }
