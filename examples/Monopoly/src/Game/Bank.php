@@ -12,7 +12,8 @@ class Bank
 
     public function __construct()
     {
-        // Bank needs deeds and to understand mortgages
+        // TODO: Bank still needs to understand mortgages
+
         $this->deeds = $this->setUpDeeds();
     }
 
@@ -21,7 +22,7 @@ class Bank
         return $this->deeds->contains($property);
     }
 
-    public function purchaseDeed(Property $property)
+    public function purchaseDeed(Property $property): void
     {
         if (! $this->hasDeed($property)) {
             throw new InvalidArgumentException("The bank does not have the deed for {$property->name()}!");
