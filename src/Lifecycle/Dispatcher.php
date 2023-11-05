@@ -83,9 +83,8 @@ class Dispatcher
 
         $hooks = collect($this->hooks[$event::class] ?? []);
 
-        if (method_exists($event, 'once')) {
-            $hooks->prepend(Hook::fromClassMethod($event, 'once')->forcePhases(Phase::Handle));
-        }
+        // TODO: We may want a special hook that only runs during handle but not replay. We've talked about
+        // using "once" or "stored" or "committed" or "react" but can't quite agree. Just leaving it out for now.
 
         if (method_exists($event, 'handle')) {
             $hooks->prepend(Hook::fromClassMethod($event, 'handle')->forcePhases(Phase::Handle, Phase::Replay));
