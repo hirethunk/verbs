@@ -2,8 +2,6 @@
 
 namespace Thunk\Verbs\Lifecycle;
 
-use Thunk\Verbs\Event;
-
 enum Phase: string
 {
     case Authorize = 'authorize';

@@ -17,6 +17,9 @@ class Broker
 
     public function fire(Event $event): Event
     {
+        // NOTE: Any changes to how the dispatcher is called here
+        // should also be applied to the `replay` method
+
         $states = $event->states();
 
         $states->each(fn ($state) => Guards::for($event, $state)->check());
@@ -24,11 +27,10 @@ class Broker
         $event->phase = Phase::Apply;
         $states->each(fn ($state) => $this->dispatcher->apply($event, $state));
 
+        $event->phase = Phase::Fired;
         $this->dispatcher->fired($event, $states);
 
         app(Queue::class)->queue($event);
-
-        $event->phase = Phase::Fired;
 
         return $event;
     }
@@ -46,10 +48,9 @@ class Broker
         }
 
         foreach ($events as $event) {
+            $event->phase = Phase::Handle;
             $this->dispatcher->handle($event);
         }
-
-        $event->phase = Phase::Handle;
 
         return $this->commit();
     }
