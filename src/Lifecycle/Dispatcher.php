@@ -114,7 +114,6 @@ class Dispatcher
         $validation_hooks = MethodFinder::for($event)
             ->prefixed('validate')
             ->expecting($state::class)
-            ->find()
             ->map(fn (ReflectionMethod $name) => Hook::fromClassMethod($event, $name)->forcePhases(Phase::Validate));
 
         // FIXME: We need to handle special `validate()` hook with no suffix
@@ -130,13 +129,11 @@ class Dispatcher
         $event_apply_methods = MethodFinder::for($event)
             ->prefixed('apply')
             ->expecting($state::class)
-            ->find()
             ->map(fn (ReflectionMethod $method) => Hook::fromClassMethod($event, $method)->forcePhases(Phase::Apply));
 
         $states_apply_methods = MethodFinder::for($state)
             ->prefixed('apply')
             ->expecting($event::class)
-            ->find()
             ->map(fn (ReflectionMethod $method) => Hook::fromClassMethod($state, $method)->forcePhases(Phase::Apply));
 
         return collect($this->hooks[$event::class] ?? [])

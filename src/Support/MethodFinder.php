@@ -48,6 +48,17 @@ class MethodFinder
             ->filter($this->expectsParameters(...));
     }
 
+    /**
+     * @template TMapValue
+     *
+     * @param  callable(ReflectionMethod, int): TMapValue  $callback
+     * @return Collection<int, TMapValue>
+     */
+    public function map(callable $callback): Collection
+    {
+        return $this->find()->map($callback);
+    }
+
     protected function matchesPrefix(ReflectionMethod $method): bool
     {
         return $this->prefix === null || Str::startsWith($method->getName(), $this->prefix);
