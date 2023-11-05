@@ -4,12 +4,11 @@ namespace Thunk\Verbs\Lifecycle;
 
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
 use ReflectionMethod;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
 use Thunk\Verbs\State;
-use Thunk\Verbs\Support\ReflectionMethodSignature;
+use Thunk\Verbs\Support\MethodFinder;
 use Thunk\Verbs\Support\Reflector;
 use Thunk\Verbs\Support\StateCollection;
 
@@ -112,11 +111,11 @@ class Dispatcher
     {
         $hooks = collect($this->hooks[$event::class] ?? []);
 
-        $validation_hooks = collect(get_class_methods($event))
-            // ->filter(fn (string $name) => $name !== 'validate' && Str::startsWith($name, 'validate'))
-            ->filter(fn (string $name) => Str::startsWith($name, 'validate'))
-            ->filter(fn (string $name) => Reflector::getParametersOfType($state::class, new ReflectionMethod($event, $name))->isNotEmpty())
-            ->map(fn (string $name) => Hook::fromClassMethod($event, $name)->forcePhases(Phase::Validate));
+        $validation_hooks = MethodFinder::for($event)
+            ->prefixed('validate')
+            ->expecting($state::class)
+            ->find()
+            ->map(fn (ReflectionMethod $name) => Hook::fromClassMethod($event, $name)->forcePhases(Phase::Validate));
 
         // FIXME: We need to handle special `validate()` hook with no suffix
 
@@ -128,15 +127,15 @@ class Dispatcher
     /** @return Collection<int, Hook> */
     protected function getApplyHooks(Event $event, State $state): Collection
     {
-        $event_apply_methods = ReflectionMethodSignature::make($event)
-            ->prefix('apply')
-            ->param($state::class)
+        $event_apply_methods = MethodFinder::for($event)
+            ->prefixed('apply')
+            ->expecting($state::class)
             ->find()
             ->map(fn (ReflectionMethod $method) => Hook::fromClassMethod($event, $method)->forcePhases(Phase::Apply));
 
-        $states_apply_methods = ReflectionMethodSignature::make($state)
-            ->prefix('apply')
-            ->param($event::class)
+        $states_apply_methods = MethodFinder::for($state)
+            ->prefixed('apply')
+            ->expecting($event::class)
             ->find()
             ->map(fn (ReflectionMethod $method) => Hook::fromClassMethod($state, $method)->forcePhases(Phase::Apply));
 
