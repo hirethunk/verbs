@@ -30,6 +30,6 @@ class MoneyDeposited extends Event
                 'balance_in_cents' => $this->state()->balance_in_cents,
             ]);
 
-        Verbs::unlessReplaying(fn() => Mail::send(new DepositAvailable(Account::find($this->account_id)->user_id)));
+        Verbs::unlessReplaying(fn () => Mail::send(new DepositAvailable(Account::find($this->account_id)->user_id)));
     }
 }

@@ -7,7 +7,6 @@ use Thunk\Verbs\Attributes\Hooks\Once;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Examples\Subscriptions\Models\Report;
 use Thunk\Verbs\Examples\Subscriptions\States\GlobalReportState;
-use Thunk\Verbs\Facades\Verbs;
 
 #[AppliesToSingletonState(GlobalReportState::class)]
 class GlobalReportGenerated extends Event

@@ -7,7 +7,6 @@ use Thunk\Verbs\Attributes\Hooks\Once;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Examples\Subscriptions\Models\Report;
 use Thunk\Verbs\Examples\Subscriptions\States\PlanReportState;
-use Thunk\Verbs\Facades\Verbs;
 
 class PlanReportGenerated extends Event
 {
