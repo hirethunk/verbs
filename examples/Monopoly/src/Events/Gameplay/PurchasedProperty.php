@@ -44,5 +44,6 @@ class PurchasedProperty extends Event
     public function applyToPlayer(PlayerState $player)
     {
         $player->deeds->push($this->property);
+        $player->money = $player->money->minus($this->property->price());
     }
 }

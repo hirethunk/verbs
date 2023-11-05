@@ -2,6 +2,7 @@
 
 use Glhd\Bits\Snowflake;
 use Illuminate\Support\Collection;
+use Thunk\Verbs\Examples\Monopoly\Events\Gameplay\EndedTurn;
 use Thunk\Verbs\Examples\Monopoly\Events\Gameplay\PlayerMoved;
 use Thunk\Verbs\Examples\Monopoly\Events\Gameplay\PurchasedProperty;
 use Thunk\Verbs\Examples\Monopoly\Events\Gameplay\RolledDice;
@@ -10,6 +11,7 @@ use Thunk\Verbs\Examples\Monopoly\Events\Setup\GameStarted;
 use Thunk\Verbs\Examples\Monopoly\Events\Setup\PlayerJoinedGame;
 use Thunk\Verbs\Examples\Monopoly\Game\Spaces\Go;
 use Thunk\Verbs\Examples\Monopoly\Game\Spaces\Properties\BalticAvenue;
+use Thunk\Verbs\Examples\Monopoly\Game\Spaces\Properties\OrientalAvenue;
 use Thunk\Verbs\Examples\Monopoly\Game\Token;
 use Thunk\Verbs\Examples\Monopoly\States\GameState;
 use Thunk\Verbs\Examples\Monopoly\States\PlayerState;
@@ -247,5 +249,41 @@ it('can play a game of Monopoly', function () {
 
     expect($player1->deeds)->toHaveCount(1)
         ->and($player1->deeds->first())->toBe(BalticAvenue::instance())
+        ->and($player1->money)->toBeMoney(1440, 'USD')
         ->and($game_state->bank->hasDeed(BalticAvenue::instance()))->toBeFalse();
+
+    verb(new EndedTurn(game_id: $game_state->id, player_id: $player1_id));
+
+    expect($game_state->active_player_id)->toBe($player2_id);
+
+    // Player 2's first move
+    // ---------------------------------------------------------------------------------------------------------------------------
+
+    verb(new RolledDice(
+        game_id: $game_state->id,
+        player_id: $player2_id,
+        dice: [3, 3],
+    ));
+
+    verb(new PlayerMoved(
+        game_id: $game_state->id,
+        player_id: $player2_id,
+        to: OrientalAvenue::instance(),
+    ));
+
+    expect($player2->location)->toBe(OrientalAvenue::instance());
+
+    verb(new PurchasedProperty(
+        game_id: $game_state->id,
+        player_id: $player2_id,
+        property: OrientalAvenue::instance(),
+    ));
+
+    expect($player2->deeds)->toHaveCount(1)
+        ->and($player2->deeds->first())->toBe(OrientalAvenue::instance())
+        ->and($game_state->bank->hasDeed(OrientalAvenue::instance()))->toBeFalse();
+
+    verb(new EndedTurn(game_id: $game_state->id, player_id: $player2_id));
+
+    expect($game_state->active_player_id)->toBe($player1_id);
 });

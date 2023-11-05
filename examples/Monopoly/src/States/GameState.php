@@ -45,4 +45,13 @@ class GameState extends State
 
         return in_array($player, $this->player_ids);
     }
+
+    public function moveToNextPlayer(): static
+    {
+        $active_index = array_search($this->active_player_id, $this->player_ids);
+
+        $this->active_player_id = $this->player_ids[$active_index + 1] ?? $this->player_ids[0];
+
+        return $this;
+    }
 }

@@ -39,12 +39,17 @@ expect()->extend('toThrow', function (string|Throwable $expected, string $messag
 });
 
 expect()->extend('toBeMoney', function (Money|string|int $amount = null, string $currency = null) {
+    $this->toBeInstanceOf(Money::class);
+
     if (isset($amount, $currency)) {
         $amount = Money::of($amount, $currency);
     }
 
-    return $this->toBeInstanceOf(Money::class)
-        && $this->when($amount !== null, fn ($actual) => expect($amount->isEqualTo($actual->value))->toBeTrue());
+    if ($amount) {
+        expect($amount->isEqualTo($this->value))->toBeTrue(sprintf(
+            'Expected %s but got %s instead', $amount->formatTo('en_US'), $this->value->formatTo('en_US')
+        ));
+    }
 });
 
 uses(TestCase::class, RefreshDatabase::class)
