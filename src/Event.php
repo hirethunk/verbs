@@ -8,6 +8,7 @@ use InvalidArgumentException;
 use LogicException;
 use ReflectionMethod;
 use ReflectionParameter;
+use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
 use Thunk\Verbs\Lifecycle\Phase;
 use Thunk\Verbs\Support\EventSerializer;
 use Thunk\Verbs\Support\EventStateRegistry;
@@ -82,5 +83,16 @@ abstract class Event
         }
 
         return $states->firstWhere(fn (State $state) => $state::class === $state_type);
+    }
+
+    protected function assert($assertion, string $message): static
+    {
+        $result = (bool) value($assertion, $this);
+
+        if (! $result) {
+            throw new EventNotValidForCurrentState($message);
+        }
+
+        return $this;
     }
 }
