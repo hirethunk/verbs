@@ -8,6 +8,7 @@ use InvalidArgumentException;
 use LogicException;
 use ReflectionMethod;
 use ReflectionParameter;
+use Thunk\Verbs\Lifecycle\Phase;
 use Thunk\Verbs\Support\EventSerializer;
 use Thunk\Verbs\Support\EventStateRegistry;
 use Thunk\Verbs\Support\PendingEvent;
@@ -18,7 +19,7 @@ abstract class Event
 {
     public int|string $id;
 
-    public bool $fired = false;
+    public Phase $phase;
 
     /** @return PendingEvent<static> */
     public static function make(...$args): PendingEvent

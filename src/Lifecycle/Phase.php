@@ -4,12 +4,12 @@ namespace Thunk\Verbs\Lifecycle;
 
 use Thunk\Verbs\Event;
 
-enum Phase
+enum Phase: string
 {
-    case Authorize;
-    case Validate;
-    case Apply;
-    case Fired;
-    case Handle;
-    case Replay;
+    case Authorize = 'authorize';
+    case Validate = 'validate';
+    case Apply = 'apply';
+    case Fired = 'fired';
+    case Handle = 'handle';
+    case Replay = 'replay';
 }

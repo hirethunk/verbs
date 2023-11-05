@@ -11,6 +11,7 @@ use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\ReflectionMethodSignature;
 use Thunk\Verbs\Support\Reflector;
+use Thunk\Verbs\Support\StateCollection;
 
 class Dispatcher
 {
@@ -49,9 +50,9 @@ class Dispatcher
         $this->getApplyHooks($event, $state)->each(fn (Hook $hook) => $hook->apply($this->container, $event, $state));
     }
 
-    public function fired(Event $event, State $state): void
+    public function fired(Event $event, StateCollection $states): void
     {
-        $this->getFiredHooks($event)->each(fn (Hook $hook) => $hook->fired($this->container, $event, $state));
+        $this->getFiredHooks($event)->each(fn (Hook $hook) => $hook->fired($this->container, $event, $states));
     }
 
     public function handle(Event $event): void

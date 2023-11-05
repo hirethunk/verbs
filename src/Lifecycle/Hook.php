@@ -10,6 +10,7 @@ use SplObjectStorage;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\Reflector;
+use Thunk\Verbs\Support\StateCollection;
 
 class Hook
 {
@@ -89,10 +90,10 @@ class Hook
         }
     }
 
-    public function fired(Container $container, Event $event, State $state = null): void
+    public function fired(Container $container, Event $event, StateCollection $states): void
     {
         if ($this->runsInPhase(Phase::Fired)) {
-            $container->call($this->callback, $this->guessParameters($event, $state));
+            $container->call($this->callback, $this->guessParameters($event, states: $states));
         }
     }
 
@@ -110,7 +111,7 @@ class Hook
         }
     }
 
-    protected function guessParameters(Event $event, ?State $state): array
+    protected function guessParameters(Event $event, State $state = null, StateCollection $states = null): array
     {
         $parameters = [
             'e' => $event,
@@ -131,6 +132,27 @@ class Hook
             ];
         }
 
-        return $parameters;
+        if ($states) {
+            foreach ($states as $state) {
+                $keys = [
+                    $state::class,
+                    (string) Str::of($state::class)->classBasename()->snake(),
+                    (string) Str::of($state::class)->classBasename()->studly(),
+                ];
+
+                // FIXME: We need to throw an ambiguous state exception if a method wants a state that we have 2+ of
+                //        But right now, we'll just null them out
+                if (isset($parameters[$state::class])) {
+                    $state = null;
+                }
+
+                foreach ($keys as $key) {
+                    $parameters[$key] = $state;
+                }
+            }
+        }
+
+        // We're going to null out any parameters that may be ambiguous, so we need to filter them here
+        return array_filter($parameters);
     }
 }
