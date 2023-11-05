@@ -3,6 +3,7 @@
 namespace Thunk\Verbs\Lifecycle;
 
 use Illuminate\Contracts\Container\Container;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use ReflectionMethod;
 use Thunk\Verbs\Event;
@@ -45,94 +46,102 @@ class Dispatcher
 
     public function apply(Event $event, State $state): void
     {
-        foreach ($this->getApplyHooks($event, $state) as $hook) {
-            $hook->apply($this->container, $event, $state);
-        }
+        $this->getApplyHooks($event, $state)->each(fn (Hook $hook) => $hook->apply($this->container, $event, $state));
     }
 
-    public function fire(Event $event): void
+    public function fired(Event $event, State $state): void
     {
-        // FIXME: We need to be able to pass state into onFire
-        foreach ($this->getHooks($event) as $listener) {
-            $listener->fire($this->container, $event);
-        }
+        $this->getFiredHooks($event)->each(fn (Hook $hook) => $hook->fired($this->container, $event, $state));
+    }
+
+    public function handle(Event $event): void
+    {
+        $this->getHandleHooks($event)->each(fn (Hook $hook) => $hook->handle($this->container, $event));
     }
 
     public function replay(Event $event, State $state): void
     {
-        // FIXME: We need to be able to pass state into replay
-        foreach ($this->getHooks($event) as $listener) {
-            $listener->replay($this->container, $event, $state);
-        }
+        $this->getReplayHooks($event)->each(fn (Hook $hook) => $hook->replay($this->container, $event, $state));
     }
 
-    /** @return \Thunk\Verbs\Lifecycle\Hook[] */
-    protected function getValidationHooks(Event $event, State $state): array
+    /** @return Collection<int, Hook> */
+    protected function getFiredHooks(Event $event): Collection
     {
         $hooks = collect($this->hooks[$event::class] ?? []);
 
-        collect(get_class_methods($event))
-            ->filter(fn (string $name) => Str::startsWith($name, 'validate'))
-            ->filter(function (string $name) use ($event, $state) {
-                $method = new ReflectionMethod($event, $name);
+        if (method_exists($event, 'fired')) {
+            $hooks->prepend(Hook::fromClassMethod($event, 'fired')->whenFired());
+        }
 
-                return ! empty(Reflector::getParametersOfType($state::class, $method));
-            })
-            ->each(function (string $name) use (&$hooks, $event) {
-                $hook = Hook::fromClassMethod($event, new ReflectionMethod($event, $name));
-                $hook->validates_state = true;
-                $hooks->push($hook);
-            });
-
-        return $hooks
-            ->filter(fn (Hook $hook) => $hook->validates_state)
-            ->all();
+        return $hooks->filter(fn (Hook $hook) => $hook->when_fired);
     }
 
-    /** @return \Thunk\Verbs\Lifecycle\Hook[] */
-    protected function getHooks(Event $event): array
+    /** @return Collection<int, Hook> */
+    protected function getHandleHooks(Event $event): Collection
     {
         // FIXME: We need to handle interfaces, too
 
-        $listeners = $this->hooks[$event::class] ?? [];
+        $hooks = collect($this->hooks[$event::class] ?? []);
 
-        if (method_exists($event, 'onFire')) {
-            $onFire = Hook::fromClassMethod($event, new ReflectionMethod($event, 'onFire'));
-            array_unshift($listeners, $onFire);
+        if (method_exists($event, 'once')) {
+            $hooks->prepend(Hook::fromClassMethod($event, 'once')->runsOnCommit());
         }
 
-        if (method_exists($event, 'onCommit')) {
-            $onCommit = Hook::fromClassMethod($event, new ReflectionMethod($event, 'onCommit'));
-            $onCommit->replayable = false;
-            array_unshift($listeners, $onCommit);
+        if (method_exists($event, 'handle')) {
+            $hooks->prepend(Hook::fromClassMethod($event, 'handle')->runsOnCommit()->replayable());
         }
 
-        return $listeners;
+        return $hooks->filter(fn (Hook $hook) => $hook->runs_on_commit);
     }
 
-    /** @return \Thunk\Verbs\Lifecycle\Hook[] */
-    protected function getApplyHooks(Event $event, State $state): array
+    /** @return Collection<int, Hook> */
+    protected function getReplayHooks(Event $event): Collection
     {
         $hooks = collect($this->hooks[$event::class] ?? []);
 
+        if (method_exists($event, 'handle')) {
+            $hooks->prepend(Hook::fromClassMethod($event, 'handle')->runsOnCommit()->replayable());
+        }
+
+        return $hooks->filter(fn (Hook $hook) => $hook->replayable);
+    }
+
+    /** @return Collection<int, Hook> */
+    protected function getValidationHooks(Event $event, State $state): Collection
+    {
+        $hooks = collect($this->hooks[$event::class] ?? []);
+
+        $validation_hooks = collect(get_class_methods($event))
+            // ->filter(fn (string $name) => $name !== 'validate' && Str::startsWith($name, 'validate'))
+            ->filter(fn (string $name) => Str::startsWith($name, 'validate'))
+            ->filter(fn (string $name) => ! empty(Reflector::getParametersOfType($state::class, new ReflectionMethod($event, $name))))
+            ->map(fn (string $name) => Hook::fromClassMethod($event, $name)->validatesState());
+
+        // FIXME: We need to handle special `validate()` hook with no suffix
+
+        return $hooks
+            ->merge($validation_hooks)
+            ->filter(fn (Hook $hook) => $hook->validates_state);
+    }
+
+    /** @return Collection<int, Hook> */
+    protected function getApplyHooks(Event $event, State $state): Collection
+    {
         $event_apply_methods = ReflectionMethodSignature::make($event)
             ->prefix('apply')
             ->param($state::class)
-            ->find();
+            ->find()
+            ->map(fn (ReflectionMethod $method) => Hook::fromClassMethod($event, $method)->aggregatesState());
 
         $states_apply_methods = ReflectionMethodSignature::make($state)
             ->prefix('apply')
             ->param($event::class)
-            ->find();
+            ->find()
+            ->map(fn (ReflectionMethod $method) => Hook::fromClassMethod($state, $method)->aggregatesState());
 
-        $hooks = $hooks->merge(
-            $event_apply_methods->map(fn (ReflectionMethod $method) => Hook::fromClassMethod($event, $method)->aggregatesState())
-        )->merge(
-            $states_apply_methods->map(fn (ReflectionMethod $method) => Hook::fromClassMethod($state, $method)->aggregatesState())
-        );
-
-        return $hooks
-            ->filter(fn (Hook $hook) => $hook->aggregates_state)
-            ->all();
+        return collect($this->hooks[$event::class] ?? [])
+            ->merge($event_apply_methods)
+            ->merge($states_apply_methods)
+            ->filter(fn (Hook $hook) => $hook->aggregates_state);
     }
 }

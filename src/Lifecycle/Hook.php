@@ -12,8 +12,12 @@ use Thunk\Verbs\Support\Reflector;
 
 class Hook
 {
-    public static function fromClassMethod(object $target, ReflectionMethod $method): static
+    public static function fromClassMethod(object $target, ReflectionMethod|string $method): static
     {
+        if (is_string($method)) {
+            $method = new ReflectionMethod($target, $method);
+        }
+
         $hook = new static(
             callback: Closure::fromCallable([$target, $method->getName()]),
             events: Reflector::getEventParameters($method),
@@ -39,47 +43,86 @@ class Hook
         public Closure $callback,
         public array $events = [],
         public array $states = [],
-        public bool $replayable = true,
+        public bool $when_fired = false,
+        public bool $runs_on_commit = false,
+        public bool $replayable = false,
         public bool $validates_state = false,
         public bool $aggregates_state = false,
         public ?string $name = null,
     ) {
     }
 
-    public function aggregatesState(bool $aggregates_state = true): static
+    public function whenFired(): static
     {
-        $this->aggregates_state = $aggregates_state;
+        $this->when_fired = true;
+
+        return $this;
+    }
+
+    public function runsOnCommit(): static
+    {
+        $this->runs_on_commit = true;
+
+        return $this;
+    }
+
+    public function replayable(): static
+    {
+        $this->replayable = true;
+
+        return $this;
+    }
+
+    public function validatesState(): static
+    {
+        $this->validates_state = true;
+
+        return $this;
+    }
+
+    public function aggregatesState(): static
+    {
+        $this->aggregates_state = true;
 
         return $this;
     }
 
     public function validate(Container $container, Event $event, State $state): bool
     {
-        return $container->call($this->callback, $this->guessParameters($event, $state)) ?? false;
-    }
-
-    // FIXME: Rename to handle and add 'fired' as its own thing
-    public function fire(Container $container, Event $event, State $state = null): void
-    {
-        // FIXME: Pull states off of events and allow for multiple
-
-        $container->call($this->callback, $this->guessParameters($event, $state));
-    }
-
-    public function replay(Container $container, Event $event, State $state = null): void
-    {
-        // FIXME: Pull states off of events and allow for multiple
-
-        if ($this->replayable) {
-            $this->fire($container, $event, $state);
+        if ($this->validates_state) {
+            return $container->call($this->callback, $this->guessParameters($event, $state)) ?? false;
         }
+
+        return false;
     }
 
     public function apply(Container $container, Event $event, State $state): void
     {
-        $this->fire($container, $event, $state);
+        if ($this->aggregates_state) {
+            $container->call($this->callback, $this->guessParameters($event, $state));
+            $state->last_event_id = $event->id;
+        }
+    }
 
-        $state->last_event_id = $event->id;
+    public function fired(Container $container, Event $event, State $state = null): void
+    {
+        if ($this->when_fired) {
+            $container->call($this->callback, $this->guessParameters($event, $state));
+        }
+    }
+
+    public function handle(Container $container, Event $event, State $state = null): void
+    {
+        if ($this->runs_on_commit) {
+            $container->call($this->callback, $this->guessParameters($event, $state));
+        }
+    }
+
+    public function replay(Container $container, Event $event, State $state = null): void
+    {
+        if ($this->replayable) {
+            $container->call($this->callback, $this->guessParameters($event, $state));
+        }
     }
 
     protected function guessParameters(Event $event, ?State $state): array

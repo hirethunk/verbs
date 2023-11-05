@@ -28,7 +28,7 @@ class AccountOpened extends Event
         $state->balance_in_cents = $this->initial_deposit_in_cents;
     }
 
-    public function onFire()
+    public function handle()
     {
         Account::create([
             'id' => $this->account_id,
@@ -37,7 +37,7 @@ class AccountOpened extends Event
         ]);
     }
 
-    public function onCommit()
+    public function once()
     {
         Mail::send(new WelcomeEmail($this->user_id));
     }

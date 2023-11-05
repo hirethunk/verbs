@@ -17,7 +17,7 @@ class GlobalReportGenerated extends Event
         ]);
     }
 
-    public function onCommit()
+    public function once()
     {
         $state = $this->states()[GlobalReportState::class];
 

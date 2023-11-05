@@ -13,9 +13,9 @@ class PlanReportGenerated extends Event
     #[StateId(PlanReportState::class)]
     public int $plan_id;
 
-    public function onCommit()
+    public function once()
     {
-        $state = $this->states()[PlanReportState::class];
+        $state = $this->state(PlanReportState::class);
 
         Report::create([
             'plan_id' => $this->plan_id,

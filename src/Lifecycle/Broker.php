@@ -21,6 +21,7 @@ class Broker
 
         $states->each(fn ($state) => Guards::for($event, $state)->check());
         $states->each(fn ($state) => $this->dispatcher->apply($event, $state));
+        $states->each(fn ($state) => $this->dispatcher->fired($event, $state));
 
         app(Queue::class)->queue($event);
 
@@ -42,7 +43,7 @@ class Broker
         }
 
         foreach ($events as $event) {
-            $this->dispatcher->fire($event);
+            $this->dispatcher->handle($event);
         }
 
         return $this->commit();

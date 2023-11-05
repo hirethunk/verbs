@@ -24,7 +24,7 @@ class MoneyWithdrawn extends Event
         $state->balance_in_cents -= $this->cents;
     }
 
-    public function onFire(): void
+    public function handle(): void
     {
         Account::find($this->account_id)
             ->update([

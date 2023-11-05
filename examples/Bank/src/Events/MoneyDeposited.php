@@ -22,7 +22,7 @@ class MoneyDeposited extends Event
         $state->balance_in_cents += $this->cents;
     }
 
-    public function onFire()
+    public function handle()
     {
         Account::find($this->account_id)
             ->update([
@@ -30,7 +30,7 @@ class MoneyDeposited extends Event
             ]);
     }
 
-    public function onCommit()
+    public function once()
     {
         Mail::send(new DepositAvailable(Account::find($this->account_id)->user_id));
     }
