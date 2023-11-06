@@ -6,12 +6,12 @@
             {
                 "title": "Quickstart",
                 "slug": "quickstart",
-                "file": "quickstart.md"
+                "icon": "arrow-right"
             },
             {
                 "title": "What you absolutely need to know",
                 "slug": "need-to-know",
-                "file": "need-to-know.md"
+                "icon": "information-circle"
             }
         ]
     },
