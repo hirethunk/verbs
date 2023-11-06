@@ -8,7 +8,7 @@ use Thunk\Verbs\Examples\Monopoly\Game\Spaces\Property;
 
 class Bank
 {
-    protected Collection $deeds;
+    public Collection $deeds;
 
     public function __construct()
     {
