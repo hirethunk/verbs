@@ -70,7 +70,7 @@
             "Thunk\\Verbs\\Examples\\Monopoly\\": "examples/Monopoly/src/",
             "Thunk\\Verbs\\Examples\\Monopoly\\Tests\\": "examples/Monopoly/tests/",
             "Thunk\\Verbs\\Examples\\Monopoly\\Database\\Factories\\": "examples/Monopoly/database/factories/",
-            
+
             "Workbench\\App\\": "workbench/app/",
             "Workbench\\Database\\Factories\\": "workbench/database/factories/",
             "Workbench\\Database\\Seeders\\": "workbench/database/seeders/"
