@@ -62,13 +62,13 @@ class TestCase extends Orchestra
         // TODO: Blade Components
         // TODO: Commands
 
-        $events = include __DIR__.'/../database/migrations/create_verb_events_table.php.stub';
+        $events = include __DIR__.'/../database/migrations/create_verb_events_table.php';
         $events->up();
 
-        $state_events = include __DIR__.'/../database/migrations/create_verb_state_events_table.php.stub';
+        $state_events = include __DIR__.'/../database/migrations/create_verb_state_events_table.php';
         $state_events->up();
 
-        $snapshots = include __DIR__.'/../database/migrations/create_verb_snapshots_table.php.stub';
+        $snapshots = include __DIR__.'/../database/migrations/create_verb_snapshots_table.php';
         $snapshots->up();
     }
 
