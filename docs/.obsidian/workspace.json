@@ -1,14 +1,14 @@
 {
   "main": {
-    "id": "ce1602970ebb7fbb",
+    "id": "7487dda8fbf3aa4f",
     "type": "split",
     "children": [
       {
-        "id": "e2f28891acc0fe16",
+        "id": "a0fd33b0a413afee",
         "type": "tabs",
         "children": [
           {
-            "id": "5d9467377ea1ebd8",
+            "id": "8c85b7fd416bab9f",
             "type": "leaf",
             "state": {
               "type": "markdown",
@@ -25,15 +25,15 @@
     "direction": "vertical"
   },
   "left": {
-    "id": "2768ff9ec72477a1",
+    "id": "8eac7446939e0f46",
     "type": "split",
     "children": [
       {
-        "id": "dcfa09f396757552",
+        "id": "53a5431fda68db4d",
         "type": "tabs",
         "children": [
           {
-            "id": "372af61812e93068",
+            "id": "571f7821232fb548",
             "type": "leaf",
             "state": {
               "type": "file-explorer",
@@ -43,7 +43,7 @@
             }
           },
           {
-            "id": "70edd6442b2c8c1d",
+            "id": "82cfc29fd688580b",
             "type": "leaf",
             "state": {
               "type": "search",
@@ -58,7 +58,7 @@
             }
           },
           {
-            "id": "1892c8ce6827c174",
+            "id": "9eb3dc8d05cbcf6b",
             "type": "leaf",
             "state": {
               "type": "bookmarks",
@@ -72,15 +72,15 @@
     "width": 300
   },
   "right": {
-    "id": "e9af0b862f44bc9b",
+    "id": "f3dcf1bf493ad8a7",
     "type": "split",
     "children": [
       {
-        "id": "92477d58a7c33281",
+        "id": "389de284624c7f34",
         "type": "tabs",
         "children": [
           {
-            "id": "09869c362ec0dea0",
+            "id": "f6eb60e1e2e3db63",
             "type": "leaf",
             "state": {
               "type": "backlink",
@@ -97,7 +97,7 @@
             }
           },
           {
-            "id": "2c001291c22ba86c",
+            "id": "f0527de3949ca44e",
             "type": "leaf",
             "state": {
               "type": "outgoing-link",
@@ -109,7 +109,7 @@
             }
           },
           {
-            "id": "8dbf3f5a732e1aca",
+            "id": "ae7b254b2842c27f",
             "type": "leaf",
             "state": {
               "type": "tag",
@@ -120,7 +120,7 @@
             }
           },
           {
-            "id": "eb55eeb82eac8934",
+            "id": "39c9577394193f1e",
             "type": "leaf",
             "state": {
               "type": "outline",
@@ -146,10 +146,9 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "5d9467377ea1ebd8",
+  "active": "8c85b7fd416bab9f",
   "lastOpenFiles": [
     "States.md",
-    "Quickstart.md",
     "README.md",
     "Need To Know.md"
   ]
