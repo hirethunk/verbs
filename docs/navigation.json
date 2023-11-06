@@ -1,0 +1,29 @@
+[
+    {
+        "section": "Getting Started",
+        "items": [
+            {
+                "title": "Quickstart",
+                "uri": "quickstart",
+                "file": "quickstart.md"
+            },
+            {
+                "title": "What you absolutely need to know",
+                "uri": "need-to-know",
+                "file": "need-to-know.md"
+            }
+        ]
+    },
+    {
+        "section": "Event Sourcing Crash Course",
+        "items": []
+    },
+    {
+        "section": "Event Lifecycle",
+        "items": []
+    },
+    {
+        "section": "Migrating from other packages",
+        "items": []
+    }
+]
