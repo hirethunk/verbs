@@ -7,7 +7,6 @@
         "event-sourcing",
         "verbs"
     ],
-
     "homepage": "https://github.com/kathunk/verbs",
     "license": "MIT",
     "authors": [
@@ -38,7 +37,7 @@
         "laravel/pint": "^1.0",
         "mockery/mockery": "^1.5",
         "nunomaduro/collision": "^7.9",
-        "orchestra/testbench": "^8.0",
+        "orchestra/testbench": "^8.10",
         "pestphp/pest": "^2.0",
         "pestphp/pest-plugin-arch": "^2.0",
         "pestphp/pest-plugin-laravel": "^2.0",
@@ -55,29 +54,42 @@
     "autoload-dev": {
         "psr-4": {
             "Thunk\\Verbs\\Tests\\": "tests/",
-
             "Thunk\\Verbs\\Examples\\Counter\\": "examples/Counter/src/",
             "Thunk\\Verbs\\Examples\\Counter\\Tests\\": "examples/Counter/tests/",
             "Thunk\\Verbs\\Examples\\Counter\\Database\\Factories\\": "examples/Counter/database/factories/",
-
             "Thunk\\Verbs\\Examples\\Bank\\": "examples/Bank/src/",
             "Thunk\\Verbs\\Examples\\Bank\\Tests\\": "examples/Bank/tests/",
             "Thunk\\Verbs\\Examples\\Bank\\Database\\Factories\\": "examples/Bank/database/factories/",
-
             "Thunk\\Verbs\\Examples\\Subscriptions\\": "examples/Subscriptions/src/",
             "Thunk\\Verbs\\Examples\\Subscriptions\\Tests\\": "examples/Subscriptions/tests/",
             "Thunk\\Verbs\\Examples\\Subscriptions\\Database\\Factories\\": "examples/Subscriptions/database/factories/",
-
             "Thunk\\Verbs\\Examples\\Monopoly\\": "examples/Monopoly/src/",
             "Thunk\\Verbs\\Examples\\Monopoly\\Tests\\": "examples/Monopoly/tests/",
-            "Thunk\\Verbs\\Examples\\Monopoly\\Database\\Factories\\": "examples/Monopoly/database/factories/"
+            "Thunk\\Verbs\\Examples\\Monopoly\\Database\\Factories\\": "examples/Monopoly/database/factories/",
+            "Workbench\\App\\": "workbench/app/",
+            "Workbench\\Database\\Factories\\": "workbench/database/factories/",
+            "Workbench\\Database\\Seeders\\": "workbench/database/seeders/"
         }
     },
     "scripts": {
-        "post-autoload-dump": "@php ./vendor/bin/testbench package:discover --ansi",
+        "post-autoload-dump": [
+            "@clear",
+            "@prepare",
+            "@php ./vendor/bin/testbench package:discover --ansi"
+        ],
         "test": "vendor/bin/pest",
         "test-coverage": "vendor/bin/pest --coverage",
-        "format": "vendor/bin/pint"
+        "format": "vendor/bin/pint",
+        "clear": "@php vendor/bin/testbench package:purge-skeleton --ansi",
+        "prepare": "@php vendor/bin/testbench package:discover --ansi",
+        "build": "@php vendor/bin/testbench workbench:build --ansi",
+        "serve": [
+            "@build",
+            "@php vendor/bin/testbench serve"
+        ],
+        "lint": [
+            "@php vendor/bin/pint"
+        ]
     },
     "config": {
         "sort-packages": true,

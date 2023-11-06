@@ -20,4 +20,9 @@ return new class extends Migration
             $table->timestamps();
         });
     }
+
+    public function down()
+    {
+        Schema::dropIfExists('verb_state_events');
+    }
 };

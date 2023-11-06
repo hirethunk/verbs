@@ -22,9 +22,9 @@ class VerbsServiceProvider extends PackageServiceProvider
         $package
             ->name('verbs')
             ->hasConfigFile()
-            ->hasViews()
             ->hasMigrations(
                 'create_verb_events_table',
+                'create_verb_snapshots_table',
                 'create_verb_state_events_table',
             );
     }
@@ -55,6 +55,8 @@ class VerbsServiceProvider extends PackageServiceProvider
 
     public function boot()
     {
+        parent::boot();
+
         $this->app->terminating(function () {
             app(Broker::class)->commit();
         });
@@ -67,13 +69,14 @@ class VerbsServiceProvider extends PackageServiceProvider
             }
         });
 
-        $this->publishes([
-            __DIR__.'/../config/verbs.php' => config_path('verbs.php'),
-        ], 'verbs-config');
+        // $this->publishes([
+        //     __DIR__.'/../config/verbs.php' => config_path('verbs.php'),
+        // ], 'verbs-config');
 
-        $this->publishes([
-            __DIR__.'/../database/migrations/create_verb_events_table.php.stub' => database_path('migrations/'.date('Y_m_d_His', time()).'_create_verb_events_table.php'),
-            __DIR__.'/../database/migrations/create_verb_state_events_table.php.stub' => database_path('migrations/'.date('Y_m_d_His', time()).'_create_verb_state_events_table.php'),
-        ], 'verbs-migrations');
+        // $this->publishes([
+        //     __DIR__.'/../database/migrations/create_verb_events_table.php.stub' => database_path('migrations/'.date('Y_m_d_His', time()).'_create_verb_events_table.php'),
+        //     __DIR__.'/../database/migrations/create_verb_snapshots_table.php.stub' => database_path('migrations/'.date('Y_m_d_His', time()).'_create_verb_snapshots_table.php'),
+        //     __DIR__.'/../database/migrations/create_verb_state_events_table.php.stub' => database_path('migrations/'.date('Y_m_d_His', time()).'_create_verb_state_events_table.php'),
+        // ], 'verbs-migrations');
     }
 }
