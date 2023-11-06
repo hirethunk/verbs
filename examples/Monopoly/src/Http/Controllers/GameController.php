@@ -4,7 +4,6 @@ namespace Thunk\Verbs\Examples\Monopoly\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\Session;
 use Thunk\Verbs\Examples\Monopoly\Events\Setup\GameStarted;
 use Thunk\Verbs\Examples\Monopoly\Game\Token;
 use Thunk\Verbs\Examples\Monopoly\States\GameState;

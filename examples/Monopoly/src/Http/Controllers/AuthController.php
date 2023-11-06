@@ -12,6 +12,7 @@ class AuthController extends Controller
     {
         if ($request->has('name')) {
             Session::put('user', ['name' => $request->input('name')]);
+
             return redirect('/monopoly/games');
         }
 
