@@ -1,29 +1,33 @@
 [
     {
-        "section": "Getting Started",
+        "title": "Getting Started",
+        "slug": "getting-started",
         "items": [
             {
                 "title": "Quickstart",
-                "uri": "quickstart",
+                "slug": "quickstart",
                 "file": "quickstart.md"
             },
             {
                 "title": "What you absolutely need to know",
-                "uri": "need-to-know",
+                "slug": "need-to-know",
                 "file": "need-to-know.md"
             }
         ]
     },
     {
-        "section": "Event Sourcing Crash Course",
+        "title": "Event Sourcing Crash Course",
+        "slug": "crash-course",
         "items": []
     },
     {
-        "section": "Event Lifecycle",
+        "title": "Event Lifecycle",
+        "slug": "lifecycle",
         "items": []
     },
     {
-        "section": "Migrating from other packages",
+        "title": "Migrating from other packages",
+        "slug": "move-to-verbs",
         "items": []
     }
 ]
