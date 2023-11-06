@@ -9,8 +9,8 @@
                 "icon": "arrow-right"
             },
             {
-                "title": "What you absolutely need to know",
-                "slug": "need-to-know",
+                "title": "Common gotchas",
+                "slug": "gotchas",
                 "icon": "information-circle"
             }
         ]
@@ -18,16 +18,69 @@
     {
         "title": "Event Sourcing Crash Course",
         "slug": "crash-course",
-        "items": []
+        "items": [
+            {
+                "title": "ID as in Identity",
+                "slug": "ids",
+                "icon": "identification"
+            },
+            {
+                "title": "State vs. Model",
+                "slug": "state-vs-model",
+                "icon": "circle-stack"
+            }
+        ]
     },
     {
         "title": "Event Lifecycle",
         "slug": "lifecycle",
-        "items": []
+        "items": [
+            {
+                "title": "Authorize",
+                "slug": "lifecycle",
+                "section": "authorize",
+                "icon": "shield-check"
+            },
+            {
+                "title": "Validate",
+                "slug": "lifecycle",
+                "section": "validate",
+                "icon": "clipboard-document-check"
+            },
+            {
+                "title": "Apply",
+                "slug": "lifecycle",
+                "section": "validate",
+                "icon": "pencil-square"
+            },
+            {
+                "title": "Fired",
+                "slug": "lifecycle",
+                "section": "fired",
+                "icon": "check"
+            },
+            {
+                "title": "handle",
+                "slug": "lifecycle",
+                "section": "handle",
+                "icon": "cog-6-tooth"
+            }
+        ]
     },
     {
         "title": "Migrating from other packages",
         "slug": "move-to-verbs",
-        "items": []
+        "items": [
+            {
+                "title": "Laravel Event Sourcing",
+                "slug": "laravel-event-sourcing",
+                "icon": "arrows-right-left"
+            },
+            {
+                "title": "EventSauce",
+                "slug": "event-sauce",
+                "icon": "arrows-right-left"
+            }
+        ]
     }
 ]

@@ -103,7 +103,7 @@ use App\States\CustomerState;
 
 class CustomerBeganTrial
 {
-	#[StateID(CustomerState::class)
+	#[StateID(CustomerState::class)]
 	public int $customer_id;
 
 	public function validate(CustomerState $state) 
