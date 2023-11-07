@@ -28,6 +28,11 @@
                 "title": "State vs. Model",
                 "slug": "state-vs-model",
                 "icon": "circle-stack"
+            },
+            {
+                "title": "One-Time Side Effects",
+                "slug": "one-time-handlers",
+                "icon": "hand-raised"
             }
         ]
     },
@@ -36,32 +41,19 @@
         "slug": "lifecycle",
         "items": [
             {
-                "title": "Authorize",
-                "slug": "lifecycle",
-                "section": "authorize",
+                "title": "Authorize & Validate",
+                "slug": "authorize-and-validate",
                 "icon": "shield-check"
             },
             {
-                "title": "Validate",
-                "slug": "lifecycle",
+                "title": "Apply & Fired",
+                "slug": "apply-and-fired",
                 "section": "validate",
-                "icon": "clipboard-document-check"
-            },
-            {
-                "title": "Apply",
-                "slug": "lifecycle",
-                "section": "validate",
-                "icon": "pencil-square"
-            },
-            {
-                "title": "Fired",
-                "slug": "lifecycle",
-                "section": "fired",
-                "icon": "check"
+                "icon": "squares-plus"
             },
             {
                 "title": "Handle",
-                "slug": "lifecycle",
+                "slug": "handle",
                 "section": "handle",
                 "icon": "cog-6-tooth"
             }
