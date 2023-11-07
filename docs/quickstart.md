@@ -23,17 +23,19 @@ To generate an event, use the built in artisan command
 php artisan verbs:event CustomerBeganTrial
 ```
 
-This will generate an event in the `/app/Events` directory of your application. You can then begin customizing your event to suit your needs:
+This will generate an event in the `app/Events` directory of your application. You can then begin customizing your event to suit your needs:
 
 ```php
-class CustomerBeganTrial
+class CustomerBeganTrial extends Event
 {
-	public int $customer_id;
+    public function __construct(
+	    public int $customer_id,
+    ) {}
 
-	public function handle()
-	{
-		// Your event handler logic will go here.
-	}
+    public function handle()
+    {
+        // Your event handler logic will go here.
+    }
 }
 ```
 
