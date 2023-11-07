@@ -1,12 +1,9 @@
 Verbs is generally very simple to use. But there are a few things that you really need to know to
 get started using event sourcing in Verbs.
 
-## The "Rules"
+- Always use globally-unique IDs. We recommend [Snowflakes](https://github.com/glhd/bits), which is
+  what Verbs uses under-the-hood, but you can use ULIDs or UUIDs if you like. If you choose to use
+  UUIDs, you may run into some issues because they're not (lexicographically) sortable.
 
-### Rule 1: ID === Global Identity
-
-In Verbs, IDs are **global identity**. This means that whatever IDs you use, they should be completely
-unique regardless of what database you happen to be using. The easiest way to do that is to use
-**Snowflakes**, which are unique IDs that also fit into a traditional database's "big int" primary key.
-
-### Rule 2: Keep your events separate from your models
+- If you have events that impact database models, fire the event and do the database work in your
+  event's `handle` method. You always want models to be derived from events.
