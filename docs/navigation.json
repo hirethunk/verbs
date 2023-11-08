@@ -16,6 +16,18 @@
         ]
     },
     {
+        "title": "Examples",
+        "slug": "examples",
+        "items": [
+            {
+                "title": "Banking",
+                "slug": "banking",
+                "icon": "banknotes",
+                "url": "/examples/bank"
+            }
+        ]
+    },
+    {
         "title": "Event Sourcing Crash Course",
         "slug": "crash-course",
         "items": [
