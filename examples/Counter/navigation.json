@@ -1,0 +1,24 @@
+[
+    {
+        "title": "Events",
+        "slug": "events",
+        "items": [
+            {
+                "title": "Increment",
+                "slug": "increment",
+                "path": "src/Events/IncrementCount.php"
+            }
+        ]
+    },
+    {
+        "title": "State",
+        "slug": "state",
+        "items": [
+            {
+                "title": "Count",
+                "slug": "count",
+                "path": "src/States/CountState.php"
+            }
+        ]
+    }
+]

@@ -20,10 +20,22 @@
         "slug": "examples",
         "items": [
             {
+                "title": "Simple Counter",
+                "slug": "counter",
+                "icon": "adjustments-horizontal",
+                "url": "/examples/counter"
+            },
+            {
                 "title": "Banking",
                 "slug": "banking",
                 "icon": "banknotes",
                 "url": "/examples/bank"
+            },
+            {
+                "title": "Subscriptions",
+                "slug": "subscriptions",
+                "icon": "cursor-arrow-rays",
+                "url": "/examples/subscriptions"
             }
         ]
     },
