@@ -9,7 +9,6 @@ use Thunk\Verbs\Examples\Counter\States\CountState;
 /**
  * This is a very **basic** example.
  */
-
 #[AppliesToSingletonState(CountState::class)]
 class IncrementCount extends Event
 {
