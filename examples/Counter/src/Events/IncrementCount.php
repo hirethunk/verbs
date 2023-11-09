@@ -15,7 +15,6 @@ use Thunk\Verbs\Examples\Counter\States\CountState;
  *
  * Because we're using a singleton state, there is no need for the event to
  * have a `$count_id`.
- *
  */
 #[AppliesToSingletonState(CountState::class)]
 class IncrementCount extends Event
