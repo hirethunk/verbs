@@ -1,0 +1,13 @@
+<?php
+
+namespace Thunk\Verbs\Examples\Counter\Events;
+
+use Thunk\Verbs\Event;
+
+class << CLASSNAME >> extends Event
+{
+    public function handle()
+    {
+        // << LYRIC >> - Lil Wayne
+    }
+}

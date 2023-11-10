@@ -2,18 +2,19 @@
 
 namespace Thunk\Verbs;
 
-use Illuminate\Events\Dispatcher as LaravelDispatcher;
-use Spatie\LaravelPackageTools\Package;
-use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Thunk\Verbs\Lifecycle\Broker;
 use Thunk\Verbs\Lifecycle\Dispatcher;
 use Thunk\Verbs\Lifecycle\EventStore;
-use Thunk\Verbs\Lifecycle\Queue as EventQueue;
-use Thunk\Verbs\Lifecycle\SnapshotStore;
+use Spatie\LaravelPackageTools\Package;
 use Thunk\Verbs\Lifecycle\StateManager;
+use Thunk\Verbs\Lifecycle\SnapshotStore;
 use Thunk\Verbs\Support\EventSerializer;
-use Thunk\Verbs\Support\EventStateRegistry;
 use Thunk\Verbs\Support\StateSerializer;
+use Thunk\Verbs\Support\EventStateRegistry;
+use Thunk\Verbs\Commands\MakeVerbEventCommand;
+use Thunk\Verbs\Lifecycle\Queue as EventQueue;
+use Illuminate\Events\Dispatcher as LaravelDispatcher;
+use Spatie\LaravelPackageTools\PackageServiceProvider;
 
 class VerbsServiceProvider extends PackageServiceProvider
 {
@@ -66,6 +67,10 @@ class VerbsServiceProvider extends PackageServiceProvider
                 $this->app->make(Broker::class)->fire($event);
             }
         });
+
+        $this->commands([
+            MakeVerbEventCommand::class,
+        ]);
 
         $this->publishes([
             __DIR__.'/../config/verbs.php' => config_path('verbs.php'),
