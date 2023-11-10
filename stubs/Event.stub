@@ -1,6 +1,6 @@
 <?php
 
-namespace Thunk\Verbs\Examples\Counter\Events;
+namespace App\Events;
 
 use Thunk\Verbs\Event;
 

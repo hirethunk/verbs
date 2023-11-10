@@ -27,6 +27,21 @@ class Stub
         return $stub->destination_path;
     }
 
+    public static function state(string $classname): string
+    {
+        $stub = new self();
+        $stub->stub_name = 'State';
+        $stub->destination_path = app_path('States/' . $classname . '.php');
+        $stub->substitutions = [
+            'classname' => $classname,
+            'lyric' => LilWayneLyrics::random(),
+        ];
+
+        $stub->build();
+
+        return $stub->destination_path;
+    }
+
     public function build(): void {
         $stub = $this->replaceSubstitutions();
         $this->forceWrite( $this->destination_path, $stub);

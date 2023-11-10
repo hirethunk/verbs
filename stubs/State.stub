@@ -1,0 +1,10 @@
+<?php
+
+namespace App\States;
+
+use Thunk\Verbs\State;
+
+class << CLASSNAME >> extends State
+{
+    // << LYRIC >> - Lil Wayne
+}

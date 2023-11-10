@@ -15,6 +15,7 @@ use Thunk\Verbs\Commands\MakeVerbEventCommand;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 use Illuminate\Events\Dispatcher as LaravelDispatcher;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Thunk\Verbs\Commands\MakeVerbStateCommand;
 
 class VerbsServiceProvider extends PackageServiceProvider
 {
@@ -70,6 +71,7 @@ class VerbsServiceProvider extends PackageServiceProvider
 
         $this->commands([
             MakeVerbEventCommand::class,
+            MakeVerbStateCommand::class,
         ]);
 
         $this->publishes([
