@@ -1,29 +1,102 @@
 [
     {
-        "section": "Getting Started",
+        "title": "Getting Started",
+        "slug": "getting-started",
         "items": [
             {
                 "title": "Quickstart",
-                "uri": "quickstart",
-                "file": "quickstart.md"
+                "slug": "quickstart",
+                "icon": "arrow-right"
             },
             {
-                "title": "What you absolutely need to know",
-                "uri": "need-to-know",
-                "file": "need-to-know.md"
+                "title": "Common gotchas",
+                "slug": "gotchas",
+                "icon": "information-circle"
             }
         ]
     },
     {
-        "section": "Event Sourcing Crash Course",
-        "items": []
+        "title": "Examples",
+        "slug": "examples",
+        "items": [
+            {
+                "title": "Simple Counter",
+                "slug": "counter",
+                "icon": "adjustments-horizontal",
+                "url": "/examples/counter"
+            },
+            {
+                "title": "Banking",
+                "slug": "banking",
+                "icon": "banknotes",
+                "url": "/examples/bank"
+            },
+            {
+                "title": "Subscriptions",
+                "slug": "subscriptions",
+                "icon": "cursor-arrow-rays",
+                "url": "/examples/subscriptions"
+            }
+        ]
     },
     {
-        "section": "Event Lifecycle",
-        "items": []
+        "title": "Event Sourcing Crash Course",
+        "slug": "crash-course",
+        "items": [
+            {
+                "title": "ID as in Identity",
+                "slug": "ids",
+                "icon": "identification"
+            },
+            {
+                "title": "State vs. Model",
+                "slug": "state-vs-model",
+                "icon": "circle-stack"
+            },
+            {
+                "title": "One-Time Side Effects",
+                "slug": "one-time-handlers",
+                "icon": "hand-raised"
+            }
+        ]
     },
     {
-        "section": "Migrating from other packages",
-        "items": []
+        "title": "Event Lifecycle",
+        "slug": "lifecycle",
+        "items": [
+            {
+                "title": "Authorize & Validate",
+                "slug": "authorize-and-validate",
+                "icon": "shield-check"
+            },
+            {
+                "title": "Apply & Fired",
+                "slug": "apply-and-fired",
+                "section": "validate",
+                "icon": "squares-plus"
+            },
+            {
+                "title": "Handle",
+                "slug": "handle",
+                "section": "handle",
+                "icon": "cog-6-tooth"
+            }
+        ]
+    },
+    {
+        "title": "Migrating from other packages",
+        "slug": "move-to-verbs",
+        "items": [
+            {
+                "title": "Laravel Event Sourcing",
+                "slug": "laravel-event-sourcing",
+                "icon": "arrows-right-left"
+            },
+            {
+                "title": "EventSauce",
+                "slug": "event-sauce",
+                "icon": "arrows-right-left"
+            }
+        ]
     }
 ]
