@@ -1,7 +1,3 @@
-Let’s get you started with Verbs!
-
-## Prerequisites
-
 First, make sure you have the following installed:
 
 - [Laravel version 10 or later](https://laravel.com/docs/10.x)
