@@ -9,6 +9,11 @@
                 "icon": "arrow-right"
             },
             {
+                "title": "Don't Read This",
+                "slug": "verbs-opinions",
+                "icon": "face-smile"
+            },
+            {
                 "title": "Common Gotchas",
                 "slug": "gotchas",
                 "icon": "information-circle"
