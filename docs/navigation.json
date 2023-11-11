@@ -49,6 +49,11 @@
         "slug": "crash-course",
         "items": [
             {
+                "title": "Combating Jargon",
+                "slug": "verbs-verbiage",
+                "icon": "scale"
+            },
+            {
                 "title": "ID as in Identity",
                 "slug": "ids",
                 "icon": "identification"
