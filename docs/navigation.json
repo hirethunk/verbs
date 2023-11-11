@@ -9,9 +9,14 @@
                 "icon": "arrow-right"
             },
             {
-                "title": "Common gotchas",
+                "title": "Common Gotchas",
                 "slug": "gotchas",
                 "icon": "information-circle"
+            },
+            {
+                "title": "Event Lifecycle",
+                "slug": "lifecycle",
+                "icon": "queue-list"
             }
         ]
     },
@@ -57,45 +62,6 @@
                 "title": "One-Time Side Effects",
                 "slug": "one-time-handlers",
                 "icon": "hand-raised"
-            }
-        ]
-    },
-    {
-        "title": "Event Lifecycle",
-        "slug": "lifecycle",
-        "items": [
-            {
-                "title": "Authorize & Validate",
-                "slug": "authorize-and-validate",
-                "icon": "shield-check"
-            },
-            {
-                "title": "Apply & Fired",
-                "slug": "apply-and-fired",
-                "section": "validate",
-                "icon": "squares-plus"
-            },
-            {
-                "title": "Handle",
-                "slug": "handle",
-                "section": "handle",
-                "icon": "cog-6-tooth"
-            }
-        ]
-    },
-    {
-        "title": "Migrating from other packages",
-        "slug": "move-to-verbs",
-        "items": [
-            {
-                "title": "Laravel Event Sourcing",
-                "slug": "laravel-event-sourcing",
-                "icon": "arrows-right-left"
-            },
-            {
-                "title": "EventSauce",
-                "slug": "event-sauce",
-                "icon": "arrows-right-left"
             }
         ]
     }
