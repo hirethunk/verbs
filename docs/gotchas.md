@@ -7,3 +7,6 @@ get started using event sourcing in Verbs.
 
 - If you have events that impact database models, fire the event and do the database work in your
   event's `handle` method. You always want models to be derived from events.
+
+- If you're replaying events, you probably want to truncate all the data that is created by
+  your event handlers. If you don't, you may end up with lots of duplicate data.

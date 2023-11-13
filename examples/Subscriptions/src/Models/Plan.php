@@ -9,25 +9,23 @@ use Thunk\Verbs\Examples\Subscriptions\Events\GlobalReportGenerated;
 use Thunk\Verbs\Examples\Subscriptions\Events\PlanReportGenerated;
 use Thunk\Verbs\Examples\Subscriptions\States\GlobalReportState;
 use Thunk\Verbs\Examples\Subscriptions\States\PlanReportState;
-use Thunk\Verbs\FromState;
 
 class Plan extends Model
 {
-    use FromState;
-    use HasFactory;
-    use HasSnowflakes;
-
-    public function generateReport(): PlanReportState
-    {
-        return PlanReportGenerated::fire(plan_id: $this->id)
-            ->states()
-            ->firstOfType(PlanReportState::class);
-    }
-
-    public static function generateGlobalReport(): GlobalReportState
-    {
-        $e = GlobalReportGenerated::fire();
-
-        return $e->states()->firstOfType(GlobalReportState::class);
-    }
+	use HasFactory;
+	use HasSnowflakes;
+	
+	public function generateReport(): PlanReportState
+	{
+		return PlanReportGenerated::fire(plan_id: $this->id)
+			->states()
+			->firstOfType(PlanReportState::class);
+	}
+	
+	public static function generateGlobalReport(): GlobalReportState
+	{
+		$e = GlobalReportGenerated::fire();
+		
+		return $e->states()->firstOfType(GlobalReportState::class);
+	}
 }
