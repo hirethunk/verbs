@@ -16,9 +16,6 @@ use Thunk\Verbs\Examples\Monopoly\Game\Token;
 use Thunk\Verbs\Examples\Monopoly\States\GameState;
 use Thunk\Verbs\Examples\Monopoly\States\PlayerState;
 use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
-use Thunk\Verbs\Facades\Verbs;
-use Thunk\Verbs\Lifecycle\StateManager;
-use Thunk\Verbs\Support\StateSerializer;
 
 it('can play a game of Monopoly', function () {
 

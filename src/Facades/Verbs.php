@@ -15,8 +15,8 @@ use Thunk\Verbs\Lifecycle\Broker;
  */
 class Verbs extends Facade
 {
-	protected static function getFacadeAccessor()
-	{
-		return Broker::class;
-	}
+    protected static function getFacadeAccessor()
+    {
+        return Broker::class;
+    }
 }

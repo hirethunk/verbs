@@ -99,7 +99,7 @@ test('a bank account can be opened and interacted with', function () {
     expect($account->refresh()->balance_in_cents)->toBe(100_00);
 
     // Lets assert the events are on the state store in the correct order
-	
+
     expect(AccountState::load($account->id)->storedEvents())
         ->toHaveCount(3)
         ->sequence(

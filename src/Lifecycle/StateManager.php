@@ -37,7 +37,7 @@ class StateManager
     /** @param  class-string<State>  $type */
     public function load(Bits|UuidInterface|AbstractUid|int|string $id, string $type): State
     {
-		$id = Verbs::toId($id);
+        $id = Verbs::toId($id);
         $key = $this->key($id, $type);
 
         // FIXME: If the state we're loading has a last_event_id that's ahead of the registry's last_event_id, we need to re-build the state

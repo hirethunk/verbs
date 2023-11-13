@@ -18,31 +18,31 @@ abstract class Space implements SerializedByVerbs
     {
         return self::$instances[static::class] ?? new static();
     }
-	
-	public static function deserializeForVerbs(mixed $data): static
-	{
-		$fqcn = data_get($data, 'fqcn');
-		
-		if (! is_a($fqcn, static::class)) {
-			throw new InvalidArgumentException('Not a serialized Space');
-		}
-		
-		$space = new $fqcn;
-		
-		$space->name = data_get($data, 'name');
-		$space->position = data_get($data, 'position');
-		
-		return $space;
-	}
-	
-	public function serializeForVerbs(): string|array
-	{
-		return [
-			'fqcn' => static::class,
-			'name' => $this->name,
-			'position' => $this->position
-		];
-	}
+
+    public static function deserializeForVerbs(mixed $data): static
+    {
+        $fqcn = data_get($data, 'fqcn');
+
+        if (! is_a($fqcn, static::class)) {
+            throw new InvalidArgumentException('Not a serialized Space');
+        }
+
+        $space = new $fqcn;
+
+        $space->name = data_get($data, 'name');
+        $space->position = data_get($data, 'position');
+
+        return $space;
+    }
+
+    public function serializeForVerbs(): string|array
+    {
+        return [
+            'fqcn' => static::class,
+            'name' => $this->name,
+            'position' => $this->position,
+        ];
+    }
 
     public function __construct()
     {
@@ -62,5 +62,4 @@ abstract class Space implements SerializedByVerbs
     {
         return $this->position;
     }
-	
 }
