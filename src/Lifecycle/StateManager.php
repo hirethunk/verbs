@@ -2,9 +2,13 @@
 
 namespace Thunk\Verbs\Lifecycle;
 
+use Glhd\Bits\Bits;
 use Glhd\Bits\Snowflake;
 use Illuminate\Database\Eloquent\Collection;
+use Ramsey\Uuid\UuidInterface;
+use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\State;
 use UnexpectedValueException;
 
@@ -31,8 +35,9 @@ class StateManager
     }
 
     /** @param  class-string<State>  $type */
-    public function load(int|string $id, string $type): State
+    public function load(Bits|UuidInterface|AbstractUid|int|string $id, string $type): State
     {
+		$id = Verbs::toId($id);
         $key = $this->key($id, $type);
 
         // FIXME: If the state we're loading has a last_event_id that's ahead of the registry's last_event_id, we need to re-build the state
@@ -67,9 +72,9 @@ class StateManager
         return $this->snapshots->write($this->states->values()->all());
     }
 
-    public function setMaxEventId(string|int $max_event_id): static
+    public function setMaxEventId(Bits|UuidInterface|AbstractUid|int|string $max_event_id): static
     {
-        $this->max_event_id = $max_event_id;
+        $this->max_event_id = Verbs::toId($max_event_id);
 
         return $this;
     }

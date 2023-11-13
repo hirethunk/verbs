@@ -2,12 +2,15 @@
 
 namespace Thunk\Verbs;
 
+use Glhd\Bits\Bits;
 use Glhd\Bits\Snowflake;
 use Illuminate\Support\Arr;
 use InvalidArgumentException;
 use LogicException;
+use Ramsey\Uuid\UuidInterface;
 use ReflectionMethod;
 use ReflectionParameter;
+use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
 use Thunk\Verbs\Lifecycle\Phase;
 use Thunk\Verbs\Support\EventSerializer;
@@ -18,7 +21,7 @@ use WeakMap;
 
 abstract class Event
 {
-    public int|string $id;
+    public int $id;
 
     public Phase $phase;
 
