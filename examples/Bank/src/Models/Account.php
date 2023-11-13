@@ -9,18 +9,18 @@ use Thunk\Verbs\Examples\Bank\Events\AccountOpened;
 
 class Account extends Model
 {
-	use HasSnowflakes;
-	
-	public static function open(int $initial_deposit_in_cents)
-	{
-		return AccountOpened::fire(
-			user_id: Auth::id(),
-			initial_deposit_in_cents: $initial_deposit_in_cents,
-		);
-	}
-	
-	public function user()
-	{
-		return $this->belongsTo(User::class);
-	}
+    use HasSnowflakes;
+
+    public static function open(int $initial_deposit_in_cents)
+    {
+        return AccountOpened::fire(
+            user_id: Auth::id(),
+            initial_deposit_in_cents: $initial_deposit_in_cents,
+        );
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }
