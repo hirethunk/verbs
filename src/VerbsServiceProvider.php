@@ -2,20 +2,20 @@
 
 namespace Thunk\Verbs;
 
+use Illuminate\Events\Dispatcher as LaravelDispatcher;
+use Spatie\LaravelPackageTools\Package;
+use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Thunk\Verbs\Commands\MakeVerbEventCommand;
+use Thunk\Verbs\Commands\MakeVerbStateCommand;
 use Thunk\Verbs\Lifecycle\Broker;
 use Thunk\Verbs\Lifecycle\Dispatcher;
 use Thunk\Verbs\Lifecycle\EventStore;
-use Spatie\LaravelPackageTools\Package;
-use Thunk\Verbs\Lifecycle\StateManager;
-use Thunk\Verbs\Lifecycle\SnapshotStore;
-use Thunk\Verbs\Support\EventSerializer;
-use Thunk\Verbs\Support\StateSerializer;
-use Thunk\Verbs\Support\EventStateRegistry;
-use Thunk\Verbs\Commands\MakeVerbEventCommand;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
-use Illuminate\Events\Dispatcher as LaravelDispatcher;
-use Spatie\LaravelPackageTools\PackageServiceProvider;
-use Thunk\Verbs\Commands\MakeVerbStateCommand;
+use Thunk\Verbs\Lifecycle\SnapshotStore;
+use Thunk\Verbs\Lifecycle\StateManager;
+use Thunk\Verbs\Support\EventSerializer;
+use Thunk\Verbs\Support\EventStateRegistry;
+use Thunk\Verbs\Support\StateSerializer;
 
 class VerbsServiceProvider extends PackageServiceProvider
 {
