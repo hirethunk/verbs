@@ -1,7 +1,6 @@
 <?php
 
 use Glhd\Bits\Snowflake;
-use Illuminate\Support\Collection;
 use Thunk\Verbs\Examples\Monopoly\Events\Gameplay\EndedTurn;
 use Thunk\Verbs\Examples\Monopoly\Events\Gameplay\PaidRent;
 use Thunk\Verbs\Examples\Monopoly\Events\Gameplay\PlayerMoved;

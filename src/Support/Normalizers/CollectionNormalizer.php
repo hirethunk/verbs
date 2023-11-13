@@ -3,7 +3,6 @@
 namespace Thunk\Verbs\Support\Normalizers;
 
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Date;
 use InvalidArgumentException;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;

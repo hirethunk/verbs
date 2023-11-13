@@ -25,7 +25,7 @@ class StateSerializer
             normalizers: [
                 // new StateNormalizer(),
                 new SelfSerializingNormalizer(),
-		        new CollectionNormalizer(),
+                new CollectionNormalizer(),
                 new BackedEnumNormalizer(),
                 new BitsNormalizer(),
                 new CarbonNormalizer(),

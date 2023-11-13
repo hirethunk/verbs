@@ -26,8 +26,8 @@ class GameState extends State
     public bool $phase_complete = false;
 
     public ?array $last_roll = null;
-	
-	public CarbonImmutable $started_at;
+
+    public CarbonImmutable $started_at;
 
     /** @return Collection<int, PlayerState> */
     public function players(): Collection

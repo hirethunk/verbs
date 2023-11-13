@@ -31,7 +31,7 @@ class EventSerializer
         return new SymfonySerializer(
             normalizers: array_merge(self::$custom_normalizers, [
                 new SelfSerializingNormalizer(),
-				new CollectionNormalizer(),
+                new CollectionNormalizer(),
                 new StateNormalizer(),
                 new BitsNormalizer(),
                 new CarbonNormalizer(),
