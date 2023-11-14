@@ -51,7 +51,7 @@ class StateManager
         }
 
         $this->events
-            ->read(state: $state, up_to_id: $this->max_event_id)
+            ->read(state: $state, after_id: $state->last_event_id, up_to_id: $this->max_event_id)
             ->each(fn (Event $event) => $this->dispatcher->apply($event, $state));
 
         return $this->remember($state);
