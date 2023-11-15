@@ -2,14 +2,17 @@
 
 namespace Thunk\Verbs;
 
+use Glhd\Bits\Bits;
+use Ramsey\Uuid\UuidInterface;
+use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Lifecycle\EventStore;
 use Thunk\Verbs\Lifecycle\StateManager;
 
 abstract class State
 {
-    public int|string|null $id = null;
+    public Bits|UuidInterface|AbstractUid|int|string|null $id = null;
 
-    public int|string|null $last_event_id = null;
+    public Bits|UuidInterface|AbstractUid|int|string|null $last_event_id = null;
 
     public static function make(...$args): static
     {

@@ -9,6 +9,11 @@
                 "icon": "arrow-right"
             },
             {
+                "title": "Building Blocks",
+                "slug": "building-blocks",
+                "icon": "cube"
+            },
+            {
                 "title": "Don't Read This",
                 "slug": "verbs-opinions",
                 "icon": "exclamation-triangle"

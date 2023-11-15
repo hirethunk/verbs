@@ -30,7 +30,7 @@ class TestCase extends Orchestra
 
     protected function defineDatabaseMigrations()
     {
-        $this->loadMigrationsFrom(__DIR__.'/database/migrations');
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
     }
 
     /** @param  Application  $app */
@@ -61,15 +61,6 @@ class TestCase extends Orchestra
         // TODO: Views
         // TODO: Blade Components
         // TODO: Commands
-
-        $events = include __DIR__.'/../database/migrations/create_verb_events_table.php';
-        $events->up();
-
-        $state_events = include __DIR__.'/../database/migrations/create_verb_state_events_table.php';
-        $state_events->up();
-
-        $snapshots = include __DIR__.'/../database/migrations/create_verb_snapshots_table.php';
-        $snapshots->up();
     }
 
     protected function watchDatabaseQueries(): self

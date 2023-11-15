@@ -18,7 +18,7 @@ use WeakMap;
 
 abstract class Event
 {
-    public int|string $id;
+    public int $id;
 
     public Phase $phase;
 

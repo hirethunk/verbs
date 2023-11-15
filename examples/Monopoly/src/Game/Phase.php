@@ -8,6 +8,7 @@ enum Phase: string
     case Purchase = 'purchase';
     case PayRent = 'pay-rent';
     case EndTurn = 'end-turn';
+    case OnTheFloorScatteredInDisarray = 'on-the-floor-scattered-in-disarray';
 
     public function canTransitionTo(self $phase): bool
     {

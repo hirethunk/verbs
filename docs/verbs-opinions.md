@@ -1,7 +1,7 @@
 OK. Most people don't read the docs. But it looks like you do! Here are some **opinions**
 that we have, as the creators of Verbs, about how to have a **good time** using Verbs.
 
-## 1. Think in "Event Data" and "UI Data"
+## Think in "Event Data" and "UI Data"
 
 Try this:
 
@@ -18,7 +18,6 @@ ApplicantRejected::fire(
     applicant_id: $request->integer('applicant_id'),
     rejected_at: now(),
     reason: $request->input('rejection_reason'),
-    internal_notes: $request->input('internal_notes'),
 );
 ```
 
@@ -29,7 +28,6 @@ class ApplicantRejected
         public string $applicant_id,
         public CarbonInterface $rejected_at,
         public stirng $reason,
-        public ?string $internal_notes,
     ) {}
 
     // Update State
@@ -63,7 +61,7 @@ class ApplicantRejected
 <dd>{{ $application->status }}</dd>
 ```
 
-## 2. Use Snowflakes
+## Use Snowflakes
 
 Verbs supports UUIDs, ULIDs, or really any other kind of ID format you choose. But it really
 shines with Snowflakes and the [`glhd/bits`](https://github.com/glhd/bits) package.

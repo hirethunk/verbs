@@ -11,6 +11,7 @@ use Thunk\Verbs\Lifecycle\Broker;
  * @method bool commit()
  * @method void unlessReplaying(callable $callback)
  * @method bool isReplaying()
+ * @method int|string toId($id)
  */
 class Verbs extends Facade
 {

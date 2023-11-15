@@ -24,6 +24,7 @@ class GameStarted extends Event
     public function applyToGame(GameState $game)
     {
         $game->started = true;
+        $game->started_at = now()->toImmutable();
         $game->player_ids = [];
         $game->board = new Board();
         $game->bank = new Bank();

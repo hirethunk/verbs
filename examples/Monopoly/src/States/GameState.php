@@ -2,6 +2,7 @@
 
 namespace Thunk\Verbs\Examples\Monopoly\States;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 use Thunk\Verbs\Examples\Monopoly\Game\Bank;
 use Thunk\Verbs\Examples\Monopoly\Game\Board;
@@ -25,6 +26,8 @@ class GameState extends State
     public bool $phase_complete = false;
 
     public ?array $last_roll = null;
+
+    public CarbonImmutable $started_at;
 
     /** @return Collection<int, PlayerState> */
     public function players(): Collection

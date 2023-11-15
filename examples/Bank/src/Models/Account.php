@@ -6,11 +6,9 @@ use Glhd\Bits\Database\HasSnowflakes;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Thunk\Verbs\Examples\Bank\Events\AccountOpened;
-use Thunk\Verbs\FromState;
 
 class Account extends Model
 {
-    use FromState;
     use HasSnowflakes;
 
     public static function open(int $initial_deposit_in_cents)
@@ -19,7 +17,6 @@ class Account extends Model
             user_id: Auth::id(),
             initial_deposit_in_cents: $initial_deposit_in_cents,
         );
-
     }
 
     public function user()

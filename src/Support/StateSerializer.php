@@ -13,6 +13,7 @@ use Symfony\Component\Serializer\Serializer as SymfonySerializer;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\Normalizers\BitsNormalizer;
 use Thunk\Verbs\Support\Normalizers\CarbonNormalizer;
+use Thunk\Verbs\Support\Normalizers\CollectionNormalizer;
 use Thunk\Verbs\Support\Normalizers\SelfSerializingNormalizer;
 use Thunk\Verbs\Support\Normalizers\StateNormalizer;
 
@@ -24,6 +25,7 @@ class StateSerializer
             normalizers: [
                 // new StateNormalizer(),
                 new SelfSerializingNormalizer(),
+                new CollectionNormalizer(),
                 new BackedEnumNormalizer(),
                 new BitsNormalizer(),
                 new CarbonNormalizer(),
