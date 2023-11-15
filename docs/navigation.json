@@ -51,6 +51,12 @@
                 "slug": "subscriptions",
                 "icon": "cursor-arrow-rays",
                 "url": "/examples/subscriptions"
+            },
+            {
+                "title": "Board Game",
+                "slug": "monopoly",
+                "icon": "puzzle-piece",
+                "url": "/examples/monopoly"
             }
         ]
     },
