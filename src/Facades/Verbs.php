@@ -7,10 +7,10 @@ use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\Broker;
 
 /**
+ * @method static bool commit()
+ * @method static bool isReplaying()
  * @method Event fire(Event $event)
- * @method bool commit()
  * @method void unlessReplaying(callable $callback)
- * @method bool isReplaying()
  */
 class Verbs extends Facade
 {
