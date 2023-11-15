@@ -21,8 +21,8 @@
             },
             {
                 "title": "Player",
-                "slug": "game",
-                "path": "src/States/GameState.php"
+                "slug": "player",
+                "path": "src/States/PlayerState.php"
             }
         ]
     },
