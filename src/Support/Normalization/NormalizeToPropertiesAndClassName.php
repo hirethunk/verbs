@@ -14,7 +14,7 @@ use RuntimeException;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
-trait NormalizeToPropertiesAndClass
+trait NormalizeToPropertiesAndClassName
 {
 	public static function requiredDataForVerbsDeserialization(): array
 	{
@@ -53,8 +53,8 @@ trait NormalizeToPropertiesAndClass
 		
 		$instance = $reflect->newInstanceWithoutConstructor();
 		
-		foreach ($data as $key => $value) {
-			(new ReflectionProperty($reflect, $key))->setValue($instance, $value);
+		foreach (Arr::except($data, ['fqcn']) as $key => $value) {
+			$reflect->getProperty($key)->setValue($instance, $value);
 		}
 		
 		return $instance;

@@ -17,6 +17,10 @@ class SelfSerializingNormalizer implements DenormalizerInterface, NormalizerInte
     /** @param  class-string<SerializedByVerbs>  $type */
     public function denormalize(mixed $data, string $type, string $format = null, array $context = []): SerializedByVerbs
     {
+	    if (is_string($data)) {
+		    $data = json_decode($data, true);
+	    }
+		
         return $type::deserializeForVerbs($data);
     }
 
