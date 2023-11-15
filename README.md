@@ -1,4 +1,4 @@
-[![Verbs](art/verbs-animated-big.gif)](https://verbs.thunk.dev/)
+[![Verbs](art/verbs-animated.gif)](https://verbs.thunk.dev/)
 
 # Verbs
 
