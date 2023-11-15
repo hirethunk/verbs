@@ -5,6 +5,12 @@ namespace Thunk\Verbs\Support;
 use Illuminate\Support\Collection;
 use Thunk\Verbs\State;
 
+/**
+ * @template TKey of array-key
+ *
+ * @implements \ArrayAccess<TKey, State>
+ * @implements \Illuminate\Support\Enumerable<TKey, State>
+ */
 class StateCollection extends Collection
 {
     protected array $aliases = [];
