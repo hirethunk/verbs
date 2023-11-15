@@ -22,8 +22,8 @@ abstract class Property extends Space
     protected bool $is_mortgaged = false;
 
     protected ?int $owner_id = null;
-	
-	public function color(): PropertyColor
+
+    public function color(): PropertyColor
     {
         return $this->color;
     }

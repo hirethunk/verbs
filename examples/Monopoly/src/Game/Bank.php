@@ -2,7 +2,6 @@
 
 namespace Thunk\Verbs\Examples\Monopoly\Game;
 
-use Illuminate\Support\Collection;
 use InvalidArgumentException;
 use Thunk\Verbs\Examples\Monopoly\Game\Spaces\Property;
 
