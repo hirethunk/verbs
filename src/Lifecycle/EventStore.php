@@ -43,6 +43,10 @@ class EventStore
     /** @param  Event[]  $events */
     public function write(array $events): bool
     {
+        if (empty($events)) {
+            return true;
+        }
+
         $this->guardAgainstConcurrentWrites($events);
 
         return VerbEvent::insert(static::formatForWrite($events))
