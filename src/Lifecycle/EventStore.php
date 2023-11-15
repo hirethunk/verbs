@@ -54,10 +54,19 @@ class EventStore
     {
         $max_event_ids = new Collection();
 
-        $query = VerbStateEvent::query()
-            ->toBase()
-            ->select(['state_type', 'state_id', DB::raw('MAX(event_id) as max_event_id')])
-            ->orderBy('state_id');
+        $query = VerbStateEvent::query()->toBase();
+
+        $query->select([
+            'state_type',
+            'state_id',
+            DB::raw(sprintf(
+                'max(%s) as %s',
+                $query->getGrammar()->wrap('event_id'),
+                $query->getGrammar()->wrapTable('max_event_id')
+            )),
+        ]);
+
+        $query->orderBy('id');
 
         $query->where(function (BaseBuilder $query) use ($events, $max_event_ids) {
             foreach ($events as $event) {
