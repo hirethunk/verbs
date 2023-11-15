@@ -55,7 +55,7 @@ class CollectionNormalizer implements DenormalizerInterface, NormalizerInterface
     public function normalize(mixed $object, string $format = null, array $context = []): array
     {
         if (! $object instanceof Collection) {
-            throw new InvalidArgumentException(class_basename($this).' can only normalize Carbon objects.');
+            throw new InvalidArgumentException(class_basename($this).' can only normalize Collection objects.');
         }
 
         $types = $object->map(fn ($value) => get_debug_type($value))->unique();
@@ -77,8 +77,6 @@ class CollectionNormalizer implements DenormalizerInterface, NormalizerInterface
 
     public function getSupportedTypes(?string $format): array
     {
-        return [
-            Collection::class => false,
-        ];
+        return [Collection::class => false];
     }
 }
