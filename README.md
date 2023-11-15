@@ -1,4 +1,4 @@
-<img src="art/verbs-animated-big.gif" alt="Verbs" />
+[![Verbs](art/verbs-animated-big.gif)](https://verbs.thunk.dev/)
 
 # Verbs
 
