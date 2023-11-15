@@ -1,6 +1,6 @@
 <?php
 
-namespace Thunk\Verbs\Support\Normalizers;
+namespace Thunk\Verbs\Support\Normalization;
 
 use InvalidArgumentException;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;

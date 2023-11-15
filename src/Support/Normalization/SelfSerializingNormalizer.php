@@ -1,6 +1,6 @@
 <?php
 
-namespace Thunk\Verbs\Support\Normalizers;
+namespace Thunk\Verbs\Support\Normalization;
 
 use InvalidArgumentException;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
@@ -25,7 +25,7 @@ class SelfSerializingNormalizer implements DenormalizerInterface, NormalizerInte
         return $data instanceof SerializedByVerbs;
     }
 
-    public function normalize(mixed $object, string $format = null, array $context = []): string
+    public function normalize(mixed $object, string $format = null, array $context = []): array|string
     {
         if (! $object instanceof SerializedByVerbs) {
             throw new InvalidArgumentException(class_basename($this).' can only normalize classes that implement SerializedByVerbs.');

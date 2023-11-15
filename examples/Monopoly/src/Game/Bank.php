@@ -8,7 +8,7 @@ use Thunk\Verbs\Examples\Monopoly\Game\Spaces\Property;
 
 class Bank
 {
-    public Collection $deeds;
+    public DeedCollection $deeds;
 
     public function __construct()
     {
@@ -33,7 +33,7 @@ class Bank
 
     protected function setUpDeeds()
     {
-        return Collection::make([
+        return DeedCollection::make([
             Spaces\Properties\MediterraneanAvenue::instance(),
             Spaces\Properties\BalticAvenue::instance(),
             Spaces\Properties\OrientalAvenue::instance(),

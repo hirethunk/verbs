@@ -16,6 +16,7 @@ use Thunk\Verbs\Examples\Monopoly\Game\Token;
 use Thunk\Verbs\Examples\Monopoly\States\GameState;
 use Thunk\Verbs\Examples\Monopoly\States\PlayerState;
 use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
+use Thunk\Verbs\Facades\Verbs;
 
 it('can play a game of Monopoly', function () {
 
@@ -63,6 +64,8 @@ it('can play a game of Monopoly', function () {
     verb(new FirstPlayerSelected($game_state->id, $player1_id));
 
     expect($game_state->active_player_id)->toBe($player1_id);
+	
+	Verbs::commit();
 
     // Player 1's first move
     // ---------------------------------------------------------------------------------------------------------------------------

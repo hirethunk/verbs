@@ -1,6 +1,6 @@
 <?php
 
-namespace Thunk\Verbs\Support\Normalizers;
+namespace Thunk\Verbs\Support\Normalization;
 
 use Illuminate\Support\Collection;
 use InvalidArgumentException;
@@ -25,22 +25,20 @@ class CollectionNormalizer implements DenormalizerInterface, NormalizerInterface
 	
 	public function supportsDenormalization(mixed $data, string $type, string $format = null): bool
 	{
-		return is_a($type, Collection::class, true)
-			&& is_array($data)
-			&& ([] === $data || isset($data['type'], $data['items']));
+		return is_a($type, Collection::class, true);
 	}
 	
 	/** @param class-string<Collection> $type */
 	public function denormalize(mixed $data, string $type, string $format = null, array $context = []): Collection
 	{
-		$fqcn = $data['fqcn'] ?? Collection::class;
-		$items = $data['items'] ?? [];
-		$subtype = $data['type'] ?? null;
+		$fqcn = data_get($data, 'fqcn', Collection::class);
+		$items = data_get($data, 'items', []);
 		
 		if ($items === []) {
 			return new $fqcn;
 		}
 		
+		$subtype = data_get($data, 'type');
 		if ($subtype === null) {
 			throw new InvalidArgumentException('Cannot denormalize a Collection that has no type information.');
 		}
@@ -60,8 +58,13 @@ class CollectionNormalizer implements DenormalizerInterface, NormalizerInterface
 		}
 		
 		$types = $object->map(fn($value) => get_debug_type($value))->unique();
+		
 		if ($types->count() > 1) {
-			throw new InvalidArgumentException('Cannot serialize a Collection containing mixed types.');
+			throw new InvalidArgumentException(sprintf(
+				'Cannot serialize a %s containing mixed types (got %s).',
+				class_basename($object),
+				$types->map(fn($fqcn) => class_basename($fqcn))->implode(', ')
+			));
 		}
 		
 		return array_filter([

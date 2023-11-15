@@ -1,6 +1,6 @@
 <?php
 
-namespace Thunk\Verbs\Support\Normalizers;
+namespace Thunk\Verbs\Support\Normalization;
 
 use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\Date;
