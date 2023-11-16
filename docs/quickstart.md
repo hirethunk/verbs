@@ -65,7 +65,7 @@ class CustomerBeganTrial extends Event
 
 ## Compiling data and validating events using states
 
-[[States]] in Verbs are simple PHP objects containing data which is mutated over time by events.
+[States](/docs/getting-started/building-blocks#content-states) in Verbs are simple PHP objects containing data which is mutated over time by events.
 
 Lets assume we want to prevent a customer from signing up for a free trial if they have already signed up for one in the past year. We can store a `latest_trial_started_at` timestamp to
 a `CustomerState` when they sign up. We can then check that timestamp each time the `CustomerBeganTrial` event is fired to validate that the customer is allowed to start a trial.
