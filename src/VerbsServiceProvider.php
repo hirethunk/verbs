@@ -25,10 +25,10 @@ class VerbsServiceProvider extends PackageServiceProvider
         $package
             ->name('verbs')
             ->hasConfigFile()
-	        ->hasCommands(
-		        MakeVerbEventCommand::class,
-		        MakeVerbStateCommand::class,
-	        )
+            ->hasCommands(
+                MakeVerbEventCommand::class,
+                MakeVerbStateCommand::class,
+            )
             ->hasMigrations(
                 'create_verb_events_table',
                 'create_verb_snapshots_table',
