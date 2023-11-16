@@ -99,7 +99,7 @@ We can now add a few things to our event to take advantage of our new state.
 use Thunk\Verbs\Event;
 use App\States\CustomerState;
 
-class CustomerBeganTrial
+class CustomerBeganTrial extends Event
 {
 	#[StateID(CustomerState::class)]
 	public int $customer_id;
