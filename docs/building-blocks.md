@@ -49,5 +49,3 @@ class SignedUpForMailingList extends Event
     }
 }
 ```
-
-//#[StateId(SubscriberState::class)]
