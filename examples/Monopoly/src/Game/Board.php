@@ -7,7 +7,7 @@ use Thunk\Verbs\Examples\Monopoly\Game\Spaces\Space;
 
 class Board
 {
-    public Collection $spaces;
+    public SpaceCollection $spaces;
 
     protected int $max_position;
 
@@ -30,7 +30,7 @@ class Board
 
     protected function setUpAllSpaces(): Collection
     {
-        return Collection::make([
+        return SpaceCollection::make([
             Spaces\Go::instance(),
             Spaces\Properties\MediterraneanAvenue::instance(),
             Spaces\Chests\CommunityChest1::instance(),

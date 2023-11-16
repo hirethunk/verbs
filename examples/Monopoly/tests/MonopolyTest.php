@@ -16,6 +16,8 @@ use Thunk\Verbs\Examples\Monopoly\Game\Token;
 use Thunk\Verbs\Examples\Monopoly\States\GameState;
 use Thunk\Verbs\Examples\Monopoly\States\PlayerState;
 use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
+use Thunk\Verbs\Facades\Verbs;
+use Thunk\Verbs\Models\VerbSnapshot;
 
 it('can play a game of Monopoly', function () {
 
@@ -63,6 +65,20 @@ it('can play a game of Monopoly', function () {
     verb(new FirstPlayerSelected($game_state->id, $player1_id));
 
     expect($game_state->active_player_id)->toBe($player1_id);
+
+    // We'll commit what we have so far and make sure that the state in the database
+    // matches what we've got loaded into memory.
+
+    Verbs::commit();
+
+    $snapshot_state = VerbSnapshot::query()
+        ->firstWhere('type', GameState::class)
+        ->state();
+
+    expect($snapshot_state->started)->toBeTrue()
+        ->and(serialize($snapshot_state->bank))->toBe(serialize($game_state->bank))
+        ->and(serialize($snapshot_state->board))->toBe(serialize($game_state->board))
+        ->and($snapshot_state->active_player_id)->toBe($game_state->active_player_id);
 
     // Player 1's first move
     // ---------------------------------------------------------------------------------------------------------------------------

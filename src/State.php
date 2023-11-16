@@ -7,6 +7,7 @@ use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Lifecycle\EventStore;
 use Thunk\Verbs\Lifecycle\StateManager;
+use Thunk\Verbs\Support\StateSerializer;
 
 abstract class State
 {
@@ -16,7 +17,15 @@ abstract class State
 
     public static function make(...$args): static
     {
-        return new static(...$args);
+        if ((count($args) === 1 && isset($args[0]) && is_array($args[0]))) {
+            $args = $args[0];
+        }
+
+        $state = app(StateSerializer::class)->deserialize(static::class, $args);
+
+        app(StateManager::class)->register($state);
+
+        return $state;
     }
 
     public function __construct()

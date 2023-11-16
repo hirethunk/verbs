@@ -15,11 +15,11 @@ use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer as SymfonySerializer;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Support\Normalizers\BitsNormalizer;
-use Thunk\Verbs\Support\Normalizers\CarbonNormalizer;
-use Thunk\Verbs\Support\Normalizers\CollectionNormalizer;
-use Thunk\Verbs\Support\Normalizers\SelfSerializingNormalizer;
-use Thunk\Verbs\Support\Normalizers\StateNormalizer;
+use Thunk\Verbs\Support\Normalization\BitsNormalizer;
+use Thunk\Verbs\Support\Normalization\CarbonNormalizer;
+use Thunk\Verbs\Support\Normalization\CollectionNormalizer;
+use Thunk\Verbs\Support\Normalization\SelfSerializingNormalizer;
+use Thunk\Verbs\Support\Normalization\StateNormalizer;
 
 class EventSerializer
 {

@@ -1,24 +1,24 @@
 <?php
 
-namespace Thunk\Verbs\Support\Normalizers;
+namespace Thunk\Verbs\Support\Normalization;
 
 use InvalidArgumentException;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
-use Thunk\Verbs\Lifecycle\SnapshotStore;
+use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\State;
 
 class StateNormalizer implements DenormalizerInterface, NormalizerInterface
 {
     public function supportsDenormalization(mixed $data, string $type, string $format = null): bool
     {
-        return is_a($type, State::class, true);
+        return is_a($type, State::class, true) && is_numeric($data);
     }
 
     /** @param  class-string<State>  $type */
     public function denormalize(mixed $data, string $type, string $format = null, array $context = []): State
     {
-        return app(SnapshotStore::class)->load($data, $type);
+        return app(StateManager::class)->load((int) $data, $type);
     }
 
     public function supportsNormalization(mixed $data, string $format = null): bool
@@ -32,13 +32,11 @@ class StateNormalizer implements DenormalizerInterface, NormalizerInterface
             throw new InvalidArgumentException(class_basename($this).' can only normalize State objects.');
         }
 
-        return $object->id;
+        return (string) $object->id;
     }
 
     public function getSupportedTypes(?string $format): array
     {
-        return [
-            State::class => false,
-        ];
+        return [State::class => false];
     }
 }
