@@ -1,6 +1,6 @@
 {
     "name": "hirethunk/verbs",
-    "description": ":package_description",
+    "description": "An event sourcing package that feels nice.",
     "keywords": [
         "hirethunk",
         "laravel",
