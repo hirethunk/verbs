@@ -5,10 +5,14 @@ namespace Thunk\Verbs\Lifecycle;
 use Glhd\Bits\Bits;
 use Glhd\Bits\Snowflake;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder as BaseBuilder;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\LazyCollection;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Exceptions\ConcurrencyException;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Models\VerbEvent;
 use Thunk\Verbs\Models\VerbStateEvent;
@@ -36,10 +40,61 @@ class EventStore
         return VerbEvent::query()->lazyById();
     }
 
+    /** @param  Event[]  $events */
     public function write(array $events): bool
     {
+        if (empty($events)) {
+            return true;
+        }
+
+        $this->guardAgainstConcurrentWrites($events);
+
         return VerbEvent::insert(static::formatForWrite($events))
             && VerbStateEvent::insert(static::formatRelationshipsForWrite($events));
+    }
+
+    /** @param  Event[]  $events */
+    protected function guardAgainstConcurrentWrites(array $events): void
+    {
+        $max_event_ids = new Collection();
+
+        $query = VerbStateEvent::query()->toBase();
+
+        $query->select([
+            'state_type',
+            'state_id',
+            DB::raw(sprintf(
+                'max(%s) as %s',
+                $query->getGrammar()->wrap('event_id'),
+                $query->getGrammar()->wrapTable('max_event_id')
+            )),
+        ]);
+
+        $query->orderBy('id');
+
+        $query->where(function (BaseBuilder $query) use ($events, $max_event_ids) {
+            foreach ($events as $event) {
+                foreach ($event->states() as $state) {
+                    if (! $max_event_ids->has($key = $state::class.$state->id)) {
+                        $query->orWhere(function (BaseBuilder $query) use ($state) {
+                            $query->where('state_type', $state::class);
+                            $query->where('state_id', $state->id);
+                        });
+                        $max_event_ids->put($key, $state->last_event_id);
+                    }
+                }
+            }
+        });
+
+        $query->each(function ($result) use ($max_event_ids) {
+            $key = data_get($result, 'state_type').data_get($result, 'state_id');
+            $max_written_id = (int) data_get($result, 'max_event_id');
+            $max_expected_id = $max_event_ids->get($key, 0);
+
+            if ($max_written_id > $max_expected_id) {
+                throw new ConcurrencyException("An event with ID {$max_written_id} has been written to the database, which is higher than {$max_expected_id}, which is in memory.");
+            }
+        });
     }
 
     /** @param  Event[]  $event_objects */
