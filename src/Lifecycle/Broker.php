@@ -90,7 +90,7 @@ class Broker
         }
     }
 
-    public function toId(Bits|UuidInterface|AbstractUid|int|string $id): int|string
+    public function toId(Bits|UuidInterface|AbstractUid|int|string|null $id): int|string|null
     {
         return match (true) {
             $id instanceof Bits => $id->id(),
