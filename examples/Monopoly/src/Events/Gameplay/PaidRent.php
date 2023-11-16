@@ -26,7 +26,7 @@ class PaidRent extends Event
     {
         $this->assert($player->location === $this->property, 'You must land on a property to pay rent on it.');
         $this->assert($player->money->isGreaterThanOrEqualTo($this->property->rent()), "You do not have enough money to pay rent at {$this->property->name()}.");
-        $this->assert($player !== $this->property->owner(), 'You cannot pay rent on a property that you do not own.');
+        $this->assert($player !== $this->property->owner(), 'You cannot pay rent on a property that you do own.');
     }
 
     public function validateGame(GameState $game)
