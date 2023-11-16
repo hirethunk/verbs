@@ -1,0 +1,14 @@
+providers:
+migrations:
+seeders:
+workbench:
+  start: '/monopoly'
+  install: true
+  discovers:
+    web: true
+    api: false
+    commands: false
+    views: false
+  build: []
+  assets: []
+  sync: []
