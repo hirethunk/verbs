@@ -13,8 +13,11 @@ trait FromState
         return $this->getKey();
     }
 
-    protected function stateAttribute(string $state_type, string $id = 'id'): Attribute
+    /* TODO
+    protected function state(?string $state_type = null, string $id = 'id'): Attribute
     {
+        $state_type ??= $this->fromStateType();
+
         if (! is_a($state_type, State::class, true)) {
             throw new InvalidArgumentException(class_basename($this).'::stateAttribute must be passed a state class name');
         }
@@ -24,4 +27,13 @@ trait FromState
             set: fn () => throw new RuntimeException('You cannot set Verbs state on a model.'),
         );
     }
+
+    protected function fromStateType(): string
+    {
+        $namespace = str(static::class)->before('\\Models');
+        $name = str(static::class)->classBasename()->beforeLast('Model')->finish('State');
+
+        return "{$namespace}\\States\\{$name}";
+    }
+    */
 }

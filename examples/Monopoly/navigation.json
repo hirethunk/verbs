@@ -1,0 +1,81 @@
+[
+    {
+        "title": "Intro",
+        "slug": "intro",
+        "items": [
+            {
+                "title": "Monopoly Example",
+                "slug": "readme",
+                "path": "README.md"
+            }
+        ]
+    },
+    {
+        "title": "State",
+        "slug": "state",
+        "items": [
+            {
+                "title": "Game",
+                "slug": "game",
+                "path": "src/States/GameState.php"
+            },
+            {
+                "title": "Player",
+                "slug": "player",
+                "path": "src/States/PlayerState.php"
+            }
+        ]
+    },
+    {
+        "title": "Game Setup",
+        "slug": "setup-events",
+        "items": [
+            {
+                "title": "1. Game Started",
+                "slug": "game-started",
+                "path": "src/Events/Setup/GameStarted.php"
+            },
+            {
+                "title": "2. Player Joined Game",
+                "slug": "player-joined-game",
+                "path": "src/Events/Setup/PlayerJoinedGame.php"
+            },
+            {
+                "title": "3. First Player Selected",
+                "slug": "first-player-selected",
+                "path": "src/Events/Setup/FirstPlayerSelected.php"
+            }
+        ]
+    },
+    {
+        "title": "Gameplay",
+        "slug": "gameplay-events",
+        "items": [
+            {
+                "title": "Rolled Dice",
+                "slug": "rolled-dice",
+                "path": "src/Events/Gameplay/RolledDice.php"
+            },
+            {
+                "title": "Player Moved",
+                "slug": "player-moved",
+                "path": "src/Events/Gameplay/PlayerMoved.php"
+            },
+            {
+                "title": "Purchased Property",
+                "slug": "purchased-property",
+                "path": "src/Events/Gameplay/PurchasedProperty.php"
+            },
+            {
+                "title": "Paid Rent",
+                "slug": "paid-rent",
+                "path": "src/Events/Gameplay/PaidRent.php"
+            },
+            {
+                "title": "Ended Turn",
+                "slug": "ended-turn",
+                "path": "src/Events/Gameplay/EndedTurn.php"
+            }
+        ]
+    }
+]

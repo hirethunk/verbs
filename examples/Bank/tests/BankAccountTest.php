@@ -100,7 +100,7 @@ test('a bank account can be opened and interacted with', function () {
 
     // Lets assert the events are on the state store in the correct order
 
-    expect(AccountState::load($account)->storedEvents())
+    expect(AccountState::load($account->id)->storedEvents())
         ->toHaveCount(3)
         ->sequence(
             fn ($number) => $number->id->toBe($open_event->id),
@@ -117,7 +117,7 @@ test('a bank account can be opened and interacted with', function () {
     Verbs::replay();
 
     $account = Auth::user()->accounts()->sole();
-    $account_state = AccountState::load($account);
+    $account_state = AccountState::load($account->id);
 
     expect($account->balance_in_cents)->toBe(100_00);
     expect($account_state->balance_in_cents)->toBe(100_00);
@@ -128,6 +128,6 @@ test('a bank account can be opened and interacted with', function () {
 
     app(StateManager::class)->reset(include_storage: true);
 
-    $account_state = AccountState::load($account);
+    $account_state = AccountState::load($account->id);
     expect($account_state->balance_in_cents)->toBe(100_00);
 });

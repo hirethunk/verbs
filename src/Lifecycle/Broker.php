@@ -2,6 +2,9 @@
 
 namespace Thunk\Verbs\Lifecycle;
 
+use Glhd\Bits\Bits;
+use Ramsey\Uuid\UuidInterface;
+use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 use Thunk\Verbs\Models\VerbEvent;
@@ -85,5 +88,15 @@ class Broker
         if (! $this->is_replaying) {
             $callback();
         }
+    }
+
+    public function toId(Bits|UuidInterface|AbstractUid|int|string $id): int|string
+    {
+        return match (true) {
+            $id instanceof Bits => $id->id(),
+            $id instanceof UuidInterface => $id->toString(),
+            $id instanceof AbstractUid => (string) $id,
+            default => $id,
+        };
     }
 }

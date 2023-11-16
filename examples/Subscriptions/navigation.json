@@ -1,0 +1,59 @@
+[
+    {
+        "title": "Events",
+        "slug": "events",
+        "items": [
+            {
+                "title": "Subscription Started",
+                "slug": "subscription-started",
+                "path": "src/Events/SubscriptionStarted.php"
+            },
+            {
+                "title": "Subscription Cancelled",
+                "slug": "subscription-cancelled",
+                "path": "src/Events/SubscriptionCancelled.php"
+            },
+            {
+                "title": "Global Report Generated",
+                "slug": "global-report-generated",
+                "path": "src/Events/GlobalReportGenerated.php"
+            },
+            {
+                "title": "Plan Report Generated",
+                "slug": "plan-report-generated",
+                "path": "src/Events/PlanReportGenerated.php"
+            },
+            {
+                "title": "Reset Global Report State",
+                "slug": "reset-global-report-state",
+                "path": "src/Events/ResetGlobalReportState.php"
+            },
+            {
+                "title": "Reset Plan Report State",
+                "slug": "reset-plan-report-state",
+                "path": "src/Events/ResetPlanReportState.php"
+            }
+        ]
+    },
+    {
+        "title": "State",
+        "slug": "state",
+        "items": [
+            {
+                "title": "Subscription",
+                "slug": "subscription",
+                "path": "src/States/SubscriptionState.php"
+            },
+            {
+                "title": "Plan Report",
+                "slug": "plan-report",
+                "path": "src/States/PlanReportState.php"
+            },
+            {
+                "title": "Global Report",
+                "slug": "global-report",
+                "path": "src/States/GlobalReportState.php"
+            }
+        ]
+    }
+]

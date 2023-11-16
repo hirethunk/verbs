@@ -6,12 +6,14 @@ use InvalidArgumentException;
 use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
+use Symfony\Component\Serializer\Normalizer\BackedEnumNormalizer;
 use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer as SymfonySerializer;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\Normalizers\BitsNormalizer;
 use Thunk\Verbs\Support\Normalizers\CarbonNormalizer;
+use Thunk\Verbs\Support\Normalizers\CollectionNormalizer;
 use Thunk\Verbs\Support\Normalizers\SelfSerializingNormalizer;
 use Thunk\Verbs\Support\Normalizers\StateNormalizer;
 
@@ -23,6 +25,8 @@ class StateSerializer
             normalizers: [
                 // new StateNormalizer(),
                 new SelfSerializingNormalizer(),
+                new CollectionNormalizer(),
+                new BackedEnumNormalizer(),
                 new BitsNormalizer(),
                 new CarbonNormalizer(),
                 new DateTimeNormalizer(),

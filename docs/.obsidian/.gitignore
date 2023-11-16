@@ -1,0 +1,14 @@
+workspace/*
+workspace.json
+
+themes
+appearance.json
+
+plugins/*
+snippets/*
+hotkeys.json
+
+.obsidian-git-data
+
+.trash/
+.DS_Store

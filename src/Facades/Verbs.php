@@ -10,7 +10,9 @@ use Thunk\Verbs\Lifecycle\Broker;
  * @method static bool commit()
  * @method static bool isReplaying()
  * @method static void unlessReplaying(callable $callback)
- * @method Event fire(Event $event)
+ * @method static bool isReplaying()
+ * @method static int|string toId($id)
+ * @method static Event fire(Event $event)
  */
 class Verbs extends Facade
 {

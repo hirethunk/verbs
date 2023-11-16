@@ -39,7 +39,7 @@ class AppliesToState extends StateDiscoveryAttribute
         // TODO: Check type of data
 
         return collect(Arr::wrap($id))
-            ->map(fn (int|string $id) => $manager->load($id, $this->state_type))
+            ->map(fn ($id) => $manager->load($id, $this->state_type))
             ->all();
     }
 

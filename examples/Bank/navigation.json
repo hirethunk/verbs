@@ -1,0 +1,39 @@
+[
+    {
+        "title": "Events",
+        "slug": "events",
+        "items": [
+            {
+                "title": "Account Opened",
+                "slug": "account-opened",
+                "path": "src/Events/AccountOpened.php"
+            },
+            {
+                "title": "Money Deposited",
+                "slug": "money-deposited",
+                "path": "src/Events/MoneyDeposited.php"
+            },
+            {
+                "title": "Money Withdrawn",
+                "slug": "money-withdrawn",
+                "path": "src/Events/MoneyWithdrawn.php"
+            }
+        ]
+    },
+    {
+        "title": "State",
+        "slug": "state",
+        "items": [
+            {
+                "title": "Account",
+                "slug": "account",
+                "path": "src/States/AccountState.php"
+            },
+            {
+                "title": "User",
+                "slug": "user",
+                "path": "src/States/UserState.php"
+            }
+        ]
+    }
+]

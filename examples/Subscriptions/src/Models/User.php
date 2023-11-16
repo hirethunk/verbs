@@ -8,11 +8,10 @@ use Illuminate\Contracts\Auth\Authenticatable as AuthenticatableContract;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Thunk\Verbs\Examples\Subscriptions\Events\SubscriptionStarted;
-use Thunk\Verbs\FromState;
 
 class User extends Model implements AuthenticatableContract
 {
-    use AuthenticatableTrait, FromState, HasFactory, HasSnowflakes;
+    use AuthenticatableTrait, HasFactory, HasSnowflakes;
 
     protected $guarded = [];
 
