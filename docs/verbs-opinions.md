@@ -92,7 +92,7 @@ class JobApplicationController
 class ApplicationSubmitted extends Event
 {
     public function __construct(
-        public string $applicant_id,
+        public int $applicant_id,
         // ...
     ) {}
 
