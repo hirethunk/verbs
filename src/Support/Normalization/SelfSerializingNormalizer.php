@@ -11,19 +11,19 @@ use Thunk\Verbs\SerializedByVerbs;
 
 class SelfSerializingNormalizer implements DenormalizerInterface, NormalizerInterface, SerializerAwareInterface
 {
-	protected NormalizerInterface|DenormalizerInterface $serializer;
-	
-	public function setSerializer(SerializerInterface $serializer)
-	{
-		if ($serializer instanceof NormalizerInterface && $serializer instanceof DenormalizerInterface) {
-			$this->serializer = $serializer;
-			
-			return;
-		}
-		
-		throw new InvalidArgumentException('The SelfSerializingNormalizer expects a serializer that implements both normalization and denormalization.');
-	}
-	
+    protected NormalizerInterface|DenormalizerInterface $serializer;
+
+    public function setSerializer(SerializerInterface $serializer)
+    {
+        if ($serializer instanceof NormalizerInterface && $serializer instanceof DenormalizerInterface) {
+            $this->serializer = $serializer;
+
+            return;
+        }
+
+        throw new InvalidArgumentException('The SelfSerializingNormalizer expects a serializer that implements both normalization and denormalization.');
+    }
+
     public function supportsDenormalization(mixed $data, string $type, string $format = null): bool
     {
         return is_a($type, SerializedByVerbs::class, true);
@@ -35,7 +35,7 @@ class SelfSerializingNormalizer implements DenormalizerInterface, NormalizerInte
         if (is_string($data)) {
             $data = json_decode($data, true);
         }
-		
+
         return $type::deserializeForVerbs($data, $this->serializer);
     }
 

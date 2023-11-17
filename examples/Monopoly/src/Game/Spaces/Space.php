@@ -3,8 +3,6 @@
 namespace Thunk\Verbs\Examples\Monopoly\Game\Spaces;
 
 use BadMethodCallException;
-use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
-use Thunk\Verbs\Examples\Monopoly\Game\PropertyColor;
 use Thunk\Verbs\SerializedByVerbs;
 use Thunk\Verbs\Support\Normalization\NormalizeToPropertiesAndClassName;
 

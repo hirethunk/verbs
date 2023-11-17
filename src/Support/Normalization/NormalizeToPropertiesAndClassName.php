@@ -10,7 +10,6 @@ use ReflectionProperty;
 use RuntimeException;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
-use Thunk\Verbs\SerializedByVerbs;
 use UnexpectedValueException;
 
 trait NormalizeToPropertiesAndClassName
@@ -27,10 +26,10 @@ trait NormalizeToPropertiesAndClassName
     public static function deserializeForVerbs(mixed $data, DenormalizerInterface $denormalizer): static
     {
         $required = self::requiredDataForVerbsDeserialization();
-		
-		if (!is_array($data)) {
-			throw new UnexpectedValueException('deserializeForVerbs expects an array');
-		}
+
+        if (! is_array($data)) {
+            throw new UnexpectedValueException('deserializeForVerbs expects an array');
+        }
 
         if (! Arr::has($data, $required)) {
             throw new InvalidArgumentException(sprintf(
@@ -55,15 +54,15 @@ trait NormalizeToPropertiesAndClassName
         }
 
         $instance = $reflect->newInstanceWithoutConstructor();
-		
+
         foreach (Arr::except($data, ['fqcn']) as $key => $value) {
-	        $property = $reflect->getProperty($key);
-			
-			if ($property->hasType() && ! $property->getType()->isBuiltin()) {
-				$value = $denormalizer->denormalize($value, $property->getType()->getName());
-			}
-			
-	        $property->setValue($instance, $value);
+            $property = $reflect->getProperty($key);
+
+            if ($property->hasType() && ! $property->getType()->isBuiltin()) {
+                $value = $denormalizer->denormalize($value, $property->getType()->getName());
+            }
+
+            $property->setValue($instance, $value);
         }
 
         return $instance;
