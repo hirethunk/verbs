@@ -11,6 +11,15 @@ Install Verbs using composer:
 composer require hirethunk/verbs
 ```
 
+## Publish and Run Migrations
+
+The last thing you need to do before you use Verbs is run migrations:
+
+```shell
+php artisan vendor:publish --tag=verbs-migrations
+php artisan migrate
+```
+
 ## Firing your first event
 
 To generate an event, use the built in artisan command
