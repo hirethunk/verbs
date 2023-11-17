@@ -8,6 +8,7 @@ use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Component\Serializer\SerializerAwareInterface;
 use Symfony\Component\Serializer\SerializerInterface;
+use Thunk\Verbs\SerializedByVerbs;
 
 class CollectionNormalizer implements DenormalizerInterface, NormalizerInterface, SerializerAwareInterface
 {
@@ -43,8 +44,8 @@ class CollectionNormalizer implements DenormalizerInterface, NormalizerInterface
         if ($subtype === null) {
             throw new InvalidArgumentException('Cannot denormalize a Collection that has no type information.');
         }
-
-        return $fqcn::make($items)->map(fn ($value) => $this->serializer->denormalize($value, $subtype));
+		
+        return $fqcn::make($items)->map(fn($value) => $this->serializer->denormalize($value, $subtype, $format, $context));
     }
 
     public function supportsNormalization(mixed $data, string $format = null): bool
@@ -61,11 +62,29 @@ class CollectionNormalizer implements DenormalizerInterface, NormalizerInterface
         $types = $object->map(fn ($value) => get_debug_type($value))->unique();
 
         if ($types->count() > 1) {
-            throw new InvalidArgumentException(sprintf(
-                'Cannot serialize a %s containing mixed types (got %s).',
-                class_basename($object),
-                $types->map(fn ($fqcn) => class_basename($fqcn))->implode(', ')
-            ));
+	        $shared = collect($types)
+		        ->reduce(function(Collection $common, string $fqcn) {
+			        $parents = collect([$fqcn])
+				        ->merge(class_parents($fqcn))
+				        ->merge(class_implements($fqcn))
+				        ->values()
+				        ->filter()
+				        ->unique();
+			        
+			        return $common->isEmpty()
+				        ? $parents
+				        : $parents->intersect($common);
+		        }, new Collection());
+			
+			if ($shared->count() > 1 && $shared->contains(SerializedByVerbs::class)) {
+				$types = $shared;
+			} else {
+				throw new InvalidArgumentException(sprintf(
+					'Cannot serialize a %s containing mixed types (got %s).',
+					class_basename($object),
+					$types->map(fn($fqcn) => class_basename($fqcn))->implode(', ')
+				));
+			}
         }
 
         return array_filter([

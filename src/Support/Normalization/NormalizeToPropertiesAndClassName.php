@@ -8,6 +8,10 @@ use InvalidArgumentException;
 use ReflectionClass;
 use ReflectionProperty;
 use RuntimeException;
+use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
+use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
+use Thunk\Verbs\SerializedByVerbs;
+use UnexpectedValueException;
 
 trait NormalizeToPropertiesAndClassName
 {
@@ -20,15 +24,19 @@ trait NormalizeToPropertiesAndClassName
             ->all();
     }
 
-    public static function deserializeForVerbs(mixed $data): static
+    public static function deserializeForVerbs(mixed $data, DenormalizerInterface $denormalizer): static
     {
         $required = self::requiredDataForVerbsDeserialization();
+		
+		if (!is_array($data)) {
+			throw new UnexpectedValueException('deserializeForVerbs expects an array');
+		}
 
         if (! Arr::has($data, $required)) {
             throw new InvalidArgumentException(sprintf(
-                'The following data is required to deserialize to "%s": %s',
+                'The following data is required to deserialize to "%s": %s.',
                 class_basename(static::class),
-                implode(', ', $required)
+                implode(', ', $required),
             ));
         }
 
@@ -47,15 +55,21 @@ trait NormalizeToPropertiesAndClassName
         }
 
         $instance = $reflect->newInstanceWithoutConstructor();
-
+		
         foreach (Arr::except($data, ['fqcn']) as $key => $value) {
-            $reflect->getProperty($key)->setValue($instance, $value);
+	        $property = $reflect->getProperty($key);
+			
+			if ($property->hasType() && ! $property->getType()->isBuiltin()) {
+				$value = $denormalizer->denormalize($value, $property->getType()->getName());
+			}
+			
+	        $property->setValue($instance, $value);
         }
 
         return $instance;
     }
 
-    public function serializeForVerbs(): string|array
+    public function serializeForVerbs(NormalizerInterface $normalizer): string|array
     {
         $properties = Collection::make((new ReflectionClass($this))->getProperties())
             ->reject(fn (ReflectionProperty $property) => $property->isStatic())
