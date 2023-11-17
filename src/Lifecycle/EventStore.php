@@ -70,7 +70,8 @@ class EventStore
             )),
         ]);
 
-        $query->orderBy('id');
+        $query->groupBy('state_type', 'state_id');
+        $query->orderBy('state_id');
 
         $query->where(function (BaseBuilder $query) use ($events, $max_event_ids) {
             foreach ($events as $event) {
