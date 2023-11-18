@@ -25,7 +25,7 @@ ApplicantRejected::fire(
 class ApplicantRejected
 {
     public function __construct(
-        public string $applicant_id,
+        public int $applicant_id,
         public CarbonInterface $rejected_at,
         public stirng $reason,
     ) {}
