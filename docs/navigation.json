@@ -27,6 +27,11 @@
                 "title": "Event Lifecycle",
                 "slug": "lifecycle",
                 "icon": "queue-list"
+            },
+            {
+                "title": "Event Metadata",
+                "slug": "metadata",
+                "icon": "cube-transparent"
             }
         ]
     },

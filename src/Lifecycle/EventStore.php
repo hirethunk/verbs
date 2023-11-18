@@ -21,6 +21,18 @@ use Thunk\Verbs\Support\EventSerializer;
 
 class EventStore
 {
+    /** @var callable[] */
+    protected static array $createMetadataCallbacks = [];
+
+    public static function createMetadataUsing(?callable $callback = null): void
+    {
+        if (is_null($callback)) {
+            static::$createMetadataCallbacks = [];
+        } else {
+            static::$createMetadataCallbacks[] = $callback;
+        }
+    }
+
     public function read(
         State $state = null,
         Bits|UuidInterface|AbstractUid|int|string $after_id = null,
@@ -98,13 +110,25 @@ class EventStore
         });
     }
 
+    protected static function withCreateMetadataHooks(Event $event): Event
+    {
+        if (! empty(static::$createMetadataCallbacks)) {
+            foreach (static::$createMetadataCallbacks as $callback) {
+                $meta = $event->metadata ?? [];
+                $event->metadata = array_merge($meta, $callback($event::class, $meta));
+            }
+        }
+
+        return $event;
+    }
+
     /** @param  Event[]  $event_objects */
     protected static function formatForWrite(array $event_objects): array
     {
         return array_map(fn (Event $event) => [
             'id' => Verbs::toId($event->id),
             'type' => $event::class,
-            'data' => app(EventSerializer::class)->serialize($event),
+            'data' => app(EventSerializer::class)->serialize(static::withCreateMetadataHooks($event)),
             'created_at' => now(),
             'updated_at' => now(),
         ], $event_objects);

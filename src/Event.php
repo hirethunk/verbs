@@ -22,6 +22,8 @@ abstract class Event
 
     public Phase $phase;
 
+    public ?array $metadata = null;
+
     /** @return PendingEvent<static> */
     public static function make(...$args): PendingEvent
     {
