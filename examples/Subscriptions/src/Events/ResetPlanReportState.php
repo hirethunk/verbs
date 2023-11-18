@@ -3,7 +3,6 @@
 namespace Thunk\Verbs\Examples\Subscriptions\Events;
 
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Examples\Subscriptions\States\GlobalReportState;
 use Thunk\Verbs\Examples\Subscriptions\States\PlanReportState;
 use Thunk\Verbs\Support\StateCollection;
 
@@ -18,7 +17,7 @@ class ResetPlanReportState extends Event
         ]);
     }
 
-    public function apply(GlobalReportState $state)
+    public function apply(PlanReportState $state)
     {
         $state->subscribes_since_last_report = 0;
         $state->unsubscribes_since_last_report = 0;
