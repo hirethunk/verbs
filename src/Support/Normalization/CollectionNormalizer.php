@@ -48,10 +48,8 @@ class CollectionNormalizer implements DenormalizerInterface, NormalizerInterface
         }
 
         return array_filter([
-            'fqcn' => $object::class === Collection::class
-                ? null
-                : $object::class,
-            'type' => $this->determineCollectionType($object),
+            'fqcn' => $object::class === Collection::class ? null : $object::class,
+            'type' => $this->determineContainedType($object),
             'items' => $object->map(fn ($value) => $this->serializer->normalize($value, $format, $context))->all(),
         ]);
     }
@@ -61,7 +59,7 @@ class CollectionNormalizer implements DenormalizerInterface, NormalizerInterface
         return [Collection::class => false];
     }
 
-    protected function determineCollectionType(Collection $collection): string
+    protected function determineContainedType(Collection $collection): string
     {
         [$only_objects, $types] = $this->getCollectionMetadata($collection);
 
@@ -111,9 +109,7 @@ class CollectionNormalizer implements DenormalizerInterface, NormalizerInterface
                 ->filter()
                 ->unique();
 
-            return $common->isEmpty()
-                ? $parents
-                : $parents->intersect($common);
+            return $common->isEmpty() ? $parents : $parents->intersect($common);
         }, new Collection());
     }
 }
