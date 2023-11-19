@@ -23,13 +23,9 @@ trait NormalizeToPropertiesAndClassName
             ->all();
     }
 
-    public static function deserializeForVerbs(mixed $data, DenormalizerInterface $denormalizer): static
+    public static function deserializeForVerbs(array $data, DenormalizerInterface $denormalizer): static
     {
         $required = self::requiredDataForVerbsDeserialization();
-
-        if (! is_array($data)) {
-            throw new UnexpectedValueException('deserializeForVerbs expects an array');
-        }
 
         if (! Arr::has($data, $required)) {
             throw new InvalidArgumentException(sprintf(
