@@ -6,23 +6,11 @@ use InvalidArgumentException;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Component\Serializer\SerializerAwareInterface;
-use Symfony\Component\Serializer\SerializerInterface;
 use Thunk\Verbs\SerializedByVerbs;
 
 class SelfSerializingNormalizer implements DenormalizerInterface, NormalizerInterface, SerializerAwareInterface
 {
-    protected NormalizerInterface|DenormalizerInterface $serializer;
-
-    public function setSerializer(SerializerInterface $serializer)
-    {
-        if ($serializer instanceof NormalizerInterface && $serializer instanceof DenormalizerInterface) {
-            $this->serializer = $serializer;
-
-            return;
-        }
-
-        throw new InvalidArgumentException('The SelfSerializingNormalizer expects a serializer that implements both normalization and denormalization.');
-    }
+    use AcceptsNormalizerAndDenormalizer;
 
     public function supportsDenormalization(mixed $data, string $type, string $format = null): bool
     {
