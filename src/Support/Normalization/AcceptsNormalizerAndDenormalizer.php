@@ -20,7 +20,7 @@ trait AcceptsNormalizerAndDenormalizer
         }
 
         throw new InvalidArgumentException(sprintf(
-            'The %s expects a serializer that implements both normalization and denormalization.',
+            'The %s expects a serializer that supports both normalization and denormalization.',
             class_basename($this)
         ));
     }
