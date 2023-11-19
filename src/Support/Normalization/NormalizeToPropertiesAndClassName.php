@@ -10,7 +10,6 @@ use ReflectionProperty;
 use RuntimeException;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
-use UnexpectedValueException;
 
 trait NormalizeToPropertiesAndClassName
 {
