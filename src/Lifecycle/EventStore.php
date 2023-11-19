@@ -100,12 +100,13 @@ class EventStore
         });
 
         $query->each(function ($result) use ($max_event_ids) {
-            $key = data_get($result, 'state_type').data_get($result, 'state_id');
+            $state_type = data_get($result, 'state_type');
+            $state_id = (int) data_get($result, 'state_id');
             $max_written_id = (int) data_get($result, 'max_event_id');
-            $max_expected_id = $max_event_ids->get($key, 0);
+            $max_expected_id = $max_event_ids->get($state_type.$state_id, 0);
 
             if ($max_written_id > $max_expected_id) {
-                throw new ConcurrencyException("An event with ID {$max_written_id} has been written to the database, which is higher than {$max_expected_id}, which is in memory.");
+                throw new ConcurrencyException("An event with ID {$max_written_id} has been written to the database for '{$state_type}' with ID {$state_id}. This is higher than the in-memory value of {$max_expected_id}.");
             }
         });
     }

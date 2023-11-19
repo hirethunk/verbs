@@ -7,22 +7,11 @@ use InvalidArgumentException;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Component\Serializer\SerializerAwareInterface;
-use Symfony\Component\Serializer\SerializerInterface;
+use Thunk\Verbs\SerializedByVerbs;
 
 class CollectionNormalizer implements DenormalizerInterface, NormalizerInterface, SerializerAwareInterface
 {
-    protected NormalizerInterface|DenormalizerInterface $serializer;
-
-    public function setSerializer(SerializerInterface $serializer)
-    {
-        if ($serializer instanceof NormalizerInterface && $serializer instanceof DenormalizerInterface) {
-            $this->serializer = $serializer;
-
-            return;
-        }
-
-        throw new InvalidArgumentException('The CollectionNormalizer expects a serializer that implements both normalization and denormalization.');
-    }
+    use AcceptsNormalizerAndDenormalizer;
 
     public function supportsDenormalization(mixed $data, string $type, string $format = null): bool
     {
@@ -36,7 +25,7 @@ class CollectionNormalizer implements DenormalizerInterface, NormalizerInterface
         $items = data_get($data, 'items', []);
 
         if ($items === []) {
-            return new $fqcn;
+            return new $fqcn();
         }
 
         $subtype = data_get($data, 'type');
@@ -44,7 +33,7 @@ class CollectionNormalizer implements DenormalizerInterface, NormalizerInterface
             throw new InvalidArgumentException('Cannot denormalize a Collection that has no type information.');
         }
 
-        return $fqcn::make($items)->map(fn ($value) => $this->serializer->denormalize($value, $subtype));
+        return $fqcn::make($items)->map(fn ($value) => $this->serializer->denormalize($value, $subtype, $format, $context));
     }
 
     public function supportsNormalization(mixed $data, string $format = null): bool
@@ -58,19 +47,9 @@ class CollectionNormalizer implements DenormalizerInterface, NormalizerInterface
             throw new InvalidArgumentException(class_basename($this).' can only normalize Collection objects.');
         }
 
-        $types = $object->map(fn ($value) => get_debug_type($value))->unique();
-
-        if ($types->count() > 1) {
-            throw new InvalidArgumentException(sprintf(
-                'Cannot serialize a %s containing mixed types (got %s).',
-                class_basename($object),
-                $types->map(fn ($fqcn) => class_basename($fqcn))->implode(', ')
-            ));
-        }
-
         return array_filter([
             'fqcn' => $object::class === Collection::class ? null : $object::class,
-            'type' => $types->first(),
+            'type' => $this->determineContainedType($object),
             'items' => $object->map(fn ($value) => $this->serializer->normalize($value, $format, $context))->all(),
         ]);
     }
@@ -78,5 +57,59 @@ class CollectionNormalizer implements DenormalizerInterface, NormalizerInterface
     public function getSupportedTypes(?string $format): array
     {
         return [Collection::class => false];
+    }
+
+    protected function determineContainedType(Collection $collection): string
+    {
+        [$only_objects, $types] = $this->getCollectionMetadata($collection);
+
+        // If the whole collection contains one type, then we're golden
+        if ($types->count() === 1) {
+            return $types->first();
+        }
+
+        // If not, but it's all objects, we can look at each object's parent classes
+        // and interfaces, and determine if they all extend something that implements
+        // the `SerializedByVerbs` interface. If they do, then we can use that shared
+        // ancestor as the type we use for serializing the whole collection.
+        if ($only_objects) {
+            $ancestor_types = $this->getSharedAncestorTypes($types);
+            if ($ancestor_types->count() > 1 && $ancestor_types->contains(SerializedByVerbs::class)) {
+                return $ancestor_types->first();
+            }
+        }
+
+        throw new InvalidArgumentException(sprintf(
+            'Cannot serialize a %s containing mixed types (got %s).',
+            class_basename($collection),
+            $types->map(fn ($fqcn) => class_basename($fqcn))->implode(', '),
+        ));
+    }
+
+    protected function getCollectionMetadata(Collection $collection): array
+    {
+        $only_objects = true;
+        $types = new Collection();
+
+        foreach ($collection as $value) {
+            $only_objects = $only_objects && is_object($value);
+            $types->push(get_debug_type($value));
+        }
+
+        return [$only_objects, $types->unique()];
+    }
+
+    protected function getSharedAncestorTypes(Collection $types)
+    {
+        return $types->reduce(function (Collection $common, string $fqcn) {
+            $parents = collect([$fqcn])
+                ->merge(class_parents($fqcn))
+                ->merge(class_implements($fqcn))
+                ->values()
+                ->filter()
+                ->unique();
+
+            return $common->isEmpty() ? $parents : $parents->intersect($common);
+        }, new Collection());
     }
 }
