@@ -25,7 +25,7 @@ ApplicantRejected::fire(
 class ApplicantRejected
 {
     public function __construct(
-        public string $applicant_id,
+        public int $applicant_id,
         public CarbonInterface $rejected_at,
         public stirng $reason,
     ) {}
@@ -91,6 +91,11 @@ class JobApplicationController
 ```php
 class ApplicationSubmitted extends Event
 {
+    public function __construct(
+        public int $applicant_id,
+        // ...
+    ) {}
+
     public function handle()
     {
         // If you use regular auto-incrementing primary keys on your models,
@@ -98,7 +103,7 @@ class ApplicationSubmitted extends Event
         // if you ever replay events. But because Snowflakes are globally unique
         // in your app, it's safe to just use them in events and models.
         JobApplication::updateOrCreate(
-            attributes: ['id' => $this->id],
+            attributes: ['id' => $this->applicant_id],
             values: ['status' => 'Application submitted', /* ... */ ],
         );
     }
