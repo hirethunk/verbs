@@ -59,9 +59,13 @@ class CollectionNormalizer implements DenormalizerInterface, NormalizerInterface
         return [Collection::class => false];
     }
 
-    protected function determineContainedType(Collection $collection): string
+    protected function determineContainedType(Collection $collection): ?string
     {
         [$only_objects, $types] = $this->getCollectionMetadata($collection);
+		
+		if ($types->isEmpty()) {
+			return null;
+		}
 
         // If the whole collection contains one type, then we're golden
         if ($types->count() === 1) {
