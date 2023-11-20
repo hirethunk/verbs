@@ -2,6 +2,10 @@
 
 All notable changes to `:package_name` will be documented in this file.
 
+## v0.0.5 - 2023-11-20
+
+Fixes support for empty collection serialization.
+
 ## v0.0.4 - 2023-11-19
 
 This adds some improvements to how Laravel collections are serialized in Verbs.
