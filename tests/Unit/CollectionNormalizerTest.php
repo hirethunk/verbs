@@ -16,52 +16,52 @@ use Thunk\Verbs\Support\Normalization\NormalizeToPropertiesAndClassName;
 use Thunk\Verbs\Support\Normalization\SelfSerializingNormalizer;
 use Thunk\Verbs\Support\Normalization\StateNormalizer;
 
-it('it can normalize an empty collection', function() {
-	$serializer = new SymfonySerializer(
-		normalizers: [$normalizer = new CollectionNormalizer()],
-		encoders: [new JsonEncoder()],
-	);
-	
-	$collection = new Collection();
-	
-	expect($normalizer->supportsNormalization($collection))->toBeTrue();
-	
-	$normalized = $serializer->normalize($collection, 'json');
-	expect($normalized)->toBe([]);
-	
-	$encoded = json_encode($normalized);
-	expect($encoded)->toBe('[]')
-		->and($normalizer->supportsDenormalization($encoded, Collection::class, 'json'))->toBeTrue();
-	
-	$denormalized = $serializer->denormalize($normalized, Collection::class);
-	
-	// And the denormalized data should be the same
-	expect($denormalized)->toBeInstanceOf(Collection::class)
-		->and($denormalized->isEmpty())->toBeTrue();
+it('it can normalize an empty collection', function () {
+    $serializer = new SymfonySerializer(
+        normalizers: [$normalizer = new CollectionNormalizer()],
+        encoders: [new JsonEncoder()],
+    );
+
+    $collection = new Collection();
+
+    expect($normalizer->supportsNormalization($collection))->toBeTrue();
+
+    $normalized = $serializer->normalize($collection, 'json');
+    expect($normalized)->toBe([]);
+
+    $encoded = json_encode($normalized);
+    expect($encoded)->toBe('[]')
+        ->and($normalizer->supportsDenormalization($encoded, Collection::class, 'json'))->toBeTrue();
+
+    $denormalized = $serializer->denormalize($normalized, Collection::class);
+
+    // And the denormalized data should be the same
+    expect($denormalized)->toBeInstanceOf(Collection::class)
+        ->and($denormalized->isEmpty())->toBeTrue();
 });
 
-it('it can normalize an empty Eloquent collection', function() {
-	$serializer = new SymfonySerializer(
-		normalizers: [$normalizer = new CollectionNormalizer()],
-		encoders: [new JsonEncoder()],
-	);
-	
-	$collection = new EloquentCollection();
-	
-	expect($normalizer->supportsNormalization($collection))->toBeTrue();
-	
-	$normalized = $serializer->normalize($collection, 'json');
-	expect($normalized)->toBe(['fqcn' => EloquentCollection::class]);
-	
-	$encoded = json_encode($normalized);
-	expect($encoded)->toBe('{"fqcn":'.json_encode(EloquentCollection::class).'}')
-		->and($normalizer->supportsDenormalization($encoded, EloquentCollection::class, 'json'))->toBeTrue();
-	
-	$denormalized = $serializer->denormalize($normalized, EloquentCollection::class);
-	
-	// And the denormalized data should be the same
-	expect($denormalized)->toBeInstanceOf(EloquentCollection::class)
-		->and($denormalized->isEmpty())->toBeTrue();
+it('it can normalize an empty Eloquent collection', function () {
+    $serializer = new SymfonySerializer(
+        normalizers: [$normalizer = new CollectionNormalizer()],
+        encoders: [new JsonEncoder()],
+    );
+
+    $collection = new EloquentCollection();
+
+    expect($normalizer->supportsNormalization($collection))->toBeTrue();
+
+    $normalized = $serializer->normalize($collection, 'json');
+    expect($normalized)->toBe(['fqcn' => EloquentCollection::class]);
+
+    $encoded = json_encode($normalized);
+    expect($encoded)->toBe('{"fqcn":'.json_encode(EloquentCollection::class).'}')
+        ->and($normalizer->supportsDenormalization($encoded, EloquentCollection::class, 'json'))->toBeTrue();
+
+    $denormalized = $serializer->denormalize($normalized, EloquentCollection::class);
+
+    // And the denormalized data should be the same
+    expect($denormalized)->toBeInstanceOf(EloquentCollection::class)
+        ->and($denormalized->isEmpty())->toBeTrue();
 });
 
 it('it can normalize a collection all of scalars', function () {
