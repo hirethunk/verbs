@@ -14,6 +14,7 @@ use Thunk\Verbs\Lifecycle\EventStore;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 use Thunk\Verbs\Lifecycle\SnapshotStore;
 use Thunk\Verbs\Lifecycle\StateManager;
+use Thunk\Verbs\Livewire\SupportVerbs;
 use Thunk\Verbs\Support\EventSerializer;
 use Thunk\Verbs\Support\EventStateRegistry;
 use Thunk\Verbs\Support\StateSerializer;
@@ -64,8 +65,8 @@ class VerbsServiceProvider extends PackageServiceProvider
     {
         parent::boot();
 
-        if (app()->has('livewire')) {
-            app('livewire')->componentHook(\Thunk\Verbs\Livewire\SupportVerbs::class);
+        if ($this->app->has('livewire')) {
+            $this->app->make('livewire')->componentHook(SupportVerbs::class);
         }
 
         $this->app->terminating(function () {
