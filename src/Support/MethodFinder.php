@@ -76,7 +76,6 @@ class MethodFinder
 
             $direct_matches = $expected->intersect($this->types);
 
-
             if ($direct_matches->isNotEmpty()) {
                 return true;
             }
@@ -91,7 +90,7 @@ class MethodFinder
             if ($interface_matches->isNotEmpty()) {
                 return true;
             }
-            
+
             return false;
         }
 
