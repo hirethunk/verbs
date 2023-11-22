@@ -2,6 +2,14 @@
 
 All notable changes to `:package_name` will be documented in this file.
 
+## v0.0.6 - 2023-11-22
+
+### What's Changed
+
+- Add support for interfaces in the expectsParameters check on MethodFi… by @DanielCoulbourne in https://github.com/hirethunk/verbs/pull/19
+
+**Full Changelog**: https://github.com/hirethunk/verbs/compare/0.0.5...v0.0.6
+
 ## v0.0.5 - 2023-11-20
 
 Fixes support for empty collection serialization.
