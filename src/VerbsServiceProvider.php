@@ -64,6 +64,10 @@ class VerbsServiceProvider extends PackageServiceProvider
     {
         parent::boot();
 
+        if (app()->has('livewire')) {
+            app('livewire')->componentHook(\Thunk\Verbs\Livewire\SupportVerbs::class);
+        }
+
         $this->app->terminating(function () {
             app(Broker::class)->commit();
         });
