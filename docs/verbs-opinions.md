@@ -27,7 +27,7 @@ class ApplicantRejected
     public function __construct(
         public int $applicant_id,
         public CarbonInterface $rejected_at,
-        public stirng $reason,
+        public string $reason,
     ) {}
 
     // Update State
