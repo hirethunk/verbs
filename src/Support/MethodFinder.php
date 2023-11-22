@@ -71,12 +71,28 @@ class MethodFinder
         }
 
         foreach ($method->getParameters() as $parameter) {
-            $expected = collect(Reflector::getParameterClassNames($parameter));
-            $matches = $expected->intersect($this->types)->count();
+            $typeHint = Reflector::getParameterClassNames($parameter);
+            $expected = collect($typeHint);
 
-            if ($matches < $expected->count() || $matches < $this->types->count()) {
-                return false;
+            $direct_matches = $expected->intersect($this->types);
+
+
+            if ($direct_matches->isNotEmpty()) {
+                return true;
             }
+
+            $interface_matches = $this
+                ->types
+                ->map(fn ($type) => class_implements($type))
+                ->flatten()
+                ->unique()
+                ->intersect($expected);
+
+            if ($interface_matches->isNotEmpty()) {
+                return true;
+            }
+            
+            return false;
         }
 
         return true;
