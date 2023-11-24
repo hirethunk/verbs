@@ -4,8 +4,10 @@ namespace Thunk\Verbs\Examples\Subscriptions\Models;
 
 use Glhd\Bits\Database\HasSnowflakes;
 use Illuminate\Database\Eloquent\Model;
+use Thunk\Verbs\Attributes\Autodiscovery\Replayable;
 use Thunk\Verbs\Examples\Subscriptions\Events\SubscriptionCancelled;
 
+#[Replayable]
 class Subscription extends Model
 {
     use HasSnowflakes;

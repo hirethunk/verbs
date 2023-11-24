@@ -5,8 +5,10 @@ namespace Thunk\Verbs\Examples\Bank\Models;
 use Glhd\Bits\Database\HasSnowflakes;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use Thunk\Verbs\Attributes\Autodiscovery\Replayable;
 use Thunk\Verbs\Examples\Bank\Events\AccountOpened;
 
+#[Replayable(truncate: true)]
 class Account extends Model
 {
     use HasSnowflakes;
