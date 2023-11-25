@@ -72,6 +72,10 @@ class Broker
                     ->each(fn ($state) => $this->dispatcher->apply($model->event(), $state))
                     ->each(fn ($state) => $this->dispatcher->replay($model->event(), $state));
 
+                if ($model->event()->states()->isEmpty()) {
+                    $this->dispatcher->replay($model->event());
+                }
+
                 return $model->event();
             });
 

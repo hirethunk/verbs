@@ -8,6 +8,7 @@ use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Thunk\Verbs\Commands\MakeVerbEventCommand;
 use Thunk\Verbs\Commands\MakeVerbStateCommand;
+use Thunk\Verbs\Commands\ReplayEventsCommand;
 use Thunk\Verbs\Lifecycle\Broker;
 use Thunk\Verbs\Lifecycle\Dispatcher;
 use Thunk\Verbs\Lifecycle\EventStore;
@@ -28,6 +29,7 @@ class VerbsServiceProvider extends PackageServiceProvider
             ->hasCommands(
                 MakeVerbEventCommand::class,
                 MakeVerbStateCommand::class,
+                ReplayEventsCommand::class,
             )
             ->hasMigrations(
                 'create_verb_events_table',
