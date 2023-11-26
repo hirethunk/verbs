@@ -57,7 +57,7 @@ class Dispatcher
     public function handle(Event $event): Collection
     {
         return $this->getHandleHooks($event)
-	        ->map(fn (Hook $hook) => $hook->handle($this->container, $event));
+            ->map(fn (Hook $hook) => $hook->handle($this->container, $event));
     }
 
     public function replay(Event $event, State $state): void

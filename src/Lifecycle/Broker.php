@@ -39,10 +39,10 @@ class Broker
         return $event;
     }
 
-    public function commit(?WeakMap $results = null): WeakMap
+    public function commit(WeakMap $results = null): WeakMap
     {
-	    $results ??= new WeakMap();
-		
+        $results ??= new WeakMap();
+
         $events = app(EventQueue::class)->flush();
 
         // FIXME: Only write changes + handle aggregate versioning

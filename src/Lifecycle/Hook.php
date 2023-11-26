@@ -103,8 +103,8 @@ class Hook
         if ($this->runsInPhase(Phase::Handle)) {
             return $container->call($this->callback, $this->guessParameters($event, $state));
         }
-		
-		return null;
+
+        return null;
     }
 
     public function replay(Container $container, Event $event, State $state = null): void
