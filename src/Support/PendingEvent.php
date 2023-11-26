@@ -4,7 +4,12 @@ namespace Thunk\Verbs\Support;
 
 use Closure;
 use Glhd\Bits\Snowflake;
+use Illuminate\Support\Arr;
 use Illuminate\Validation\ValidationException;
+use InvalidArgumentException;
+use ReflectionMethod;
+use ReflectionParameter;
+use RuntimeException;
 use Throwable;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\Broker;
@@ -18,8 +23,34 @@ class PendingEvent
 {
     protected Closure $exception_mapper;
 
-    public static function make(Event $event): static
+	/** @param class-string<Event> $class_name */
+    public static function make(string $class_name, array $args): static
     {
+	    // Turn a positional array to an associative array
+	    if (count($args) && ! Arr::isAssoc($args)) {
+		    if (! method_exists($class_name, '__construct')) {
+			    throw new InvalidArgumentException('You cannot pass positional arguments to '.class_basename($class_name).'::make()');
+		    }
+		   
+		    // TODO: Cache this
+		    $args = collect((new ReflectionMethod($class_name, '__construct'))->getParameters())
+			    ->mapWithKeys(function(ReflectionParameter $parameter, $index) use ($args) {
+				    return [
+						$parameter->getName() => match (true) {
+							isset($args[$index]) => $args[$index],
+							$parameter->isDefaultValueAvailable() => $parameter->getDefaultValue(),
+							$parameter->isOptional() => null,
+							$parameter->isVariadic() => throw new RuntimeException('Variadic positional arguments are not implemented.'),
+							default => throw new InvalidArgumentException("No valid value for '{$parameter->getName()}' provided."),
+						},
+				    ];
+			    })
+		        ->all();
+	    }
+	    
+	    $event = app(EventSerializer::class)->deserialize($class_name, $args);
+	    $event->id = Snowflake::make()->id();
+		
         return new static($event);
     }
 
@@ -60,6 +91,15 @@ class PendingEvent
             throw $this->prepareException($e);
         }
     }
+	
+	public function fireNow(...$args): mixed
+	{
+		$event = $this->fire(...$args);
+		
+		$results = app(Broker::class)->commit()[$event];
+		
+		return count($results) > 1 ? $results : $results[0];
+	}
 
     /** @param  callable(Throwable): Throwable  $handler */
     public function onError(Closure $handler): static
