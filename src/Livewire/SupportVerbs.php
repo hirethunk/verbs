@@ -7,7 +7,7 @@ use Thunk\Verbs\Facades\Verbs;
 
 class SupportVerbs extends ComponentHook
 {
-    function render()
+    public function render()
     {
         Verbs::commit();
     }
