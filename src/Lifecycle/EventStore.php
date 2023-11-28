@@ -26,7 +26,7 @@ class EventStore
     /** @var callable[] */
     protected static array $createMetadataCallbacks = [];
 
-    protected static Metadata $metadata;
+    protected static ?Metadata $metadata = null;
 
     protected static function withCreateMetadataHooks(): Metadata
     {
@@ -44,6 +44,7 @@ class EventStore
     {
         if (is_null($callback)) {
             static::$createMetadataCallbacks = [];
+            static::$metadata = null;
         } else {
             static::$createMetadataCallbacks[] = $callback;
         }
