@@ -21,7 +21,11 @@ class SnapshotStore
 
     public function write(array $states): bool
     {
-        return VerbSnapshot::upsert(static::formatForWrite($states), 'id', ['data', 'last_event_id', 'updated_at']);
+        $states = static::formatForWrite($states);
+
+        $uniqueStates = collect($states)->unique('id');
+
+        return VerbSnapshot::upsert($uniqueStates->toArray(), 'id', ['data', 'last_event_id', 'updated_at']);
     }
 
     public function reset(): bool
