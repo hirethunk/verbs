@@ -14,10 +14,12 @@ use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\ConcurrencyException;
 use Thunk\Verbs\Facades\Verbs;
+use Thunk\Verbs\Metadata;
 use Thunk\Verbs\Models\VerbEvent;
 use Thunk\Verbs\Models\VerbStateEvent;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\EventSerializer;
+use Thunk\Verbs\Support\MetadataSerializer;
 
 class EventStore
 {
@@ -111,16 +113,16 @@ class EventStore
         });
     }
 
-    protected static function withCreateMetadataHooks(Event $event): Event
+    protected static function withCreateMetadataHooks(): Metadata
     {
+        $metadata = new Metadata();
         if (! empty(static::$createMetadataCallbacks)) {
             foreach (static::$createMetadataCallbacks as $callback) {
-                $meta = $event->metadata ?? [];
-                $event->metadata = array_merge($meta, $callback($event::class, $meta));
+                $metadata = $callback($metadata);
             }
         }
 
-        return $event;
+        return $metadata;
     }
 
     /** @param  Event[]  $event_objects */
@@ -129,7 +131,8 @@ class EventStore
         return array_map(fn (Event $event) => [
             'id' => Verbs::toId($event->id),
             'type' => $event::class,
-            'data' => app(EventSerializer::class)->serialize(static::withCreateMetadataHooks($event)),
+            'data' => app(EventSerializer::class)->serialize($event),
+            'metadata' => app(MetadataSerializer::class)->serialize(static::withCreateMetadataHooks()),
             'created_at' => now(),
             'updated_at' => now(),
         ], $event_objects);

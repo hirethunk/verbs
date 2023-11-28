@@ -6,8 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\Phase;
+use Thunk\Verbs\Metadata;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\EventSerializer;
+use Thunk\Verbs\Support\MetadataSerializer;
 
 class VerbEvent extends Model
 {
@@ -17,9 +19,12 @@ class VerbEvent extends Model
 
     protected $casts = [
         'data' => 'array',
+        'metadata' => 'array',
     ];
 
     protected ?Event $event = null;
+
+    protected ?Metadata $meta = null;
 
     public function event(): Event
     {
@@ -27,6 +32,13 @@ class VerbEvent extends Model
         $this->event->phase = Phase::Replay;
 
         return $this->event;
+    }
+
+    public function metadata(): Metadata
+    {
+        $this->meta ??= app(MetadataSerializer::class)->deserialize(Metadata::class, $this->metadata);
+
+        return $this->meta;
     }
 
     public function states(): BelongsToMany
