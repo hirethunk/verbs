@@ -26,7 +26,21 @@ class EventStore
     /** @var callable[] */
     protected static array $createMetadataCallbacks = [];
 
-    public static function createMetadataUsing(?callable $callback = null): void
+    protected static Metadata $metadata;
+
+    protected static function withCreateMetadataHooks(): Metadata
+    {
+        $metadata = new Metadata();
+        if (! empty(static::$createMetadataCallbacks)) {
+            foreach (static::$createMetadataCallbacks as $callback) {
+                $metadata = $callback($metadata);
+            }
+        }
+
+        return $metadata;
+    }
+
+    public static function createMetadataUsing(callable $callback = null): void
     {
         if (is_null($callback)) {
             static::$createMetadataCallbacks = [];
@@ -113,18 +127,6 @@ class EventStore
         });
     }
 
-    protected static function withCreateMetadataHooks(): Metadata
-    {
-        $metadata = new Metadata();
-        if (! empty(static::$createMetadataCallbacks)) {
-            foreach (static::$createMetadataCallbacks as $callback) {
-                $metadata = $callback($metadata);
-            }
-        }
-
-        return $metadata;
-    }
-
     /** @param  Event[]  $event_objects */
     protected static function formatForWrite(array $event_objects): array
     {
@@ -132,10 +134,15 @@ class EventStore
             'id' => Verbs::toId($event->id),
             'type' => $event::class,
             'data' => app(EventSerializer::class)->serialize($event),
-            'metadata' => app(MetadataSerializer::class)->serialize(static::withCreateMetadataHooks()),
+            'metadata' => app(MetadataSerializer::class)->serialize(static::getMetadata()),
             'created_at' => now(),
             'updated_at' => now(),
         ], $event_objects);
+    }
+
+    public static function getMetadata(): Metadata
+    {
+        return static::$metadata ??= static::withCreateMetadataHooks();
     }
 
     /** @param  Event[]  $event_objects */

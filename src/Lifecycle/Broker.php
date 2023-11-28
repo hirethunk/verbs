@@ -52,7 +52,7 @@ class Broker
 
         foreach ($events as $event) {
             $event->phase = Phase::Handle;
-            $this->dispatcher->handle($event);
+            $this->dispatcher->handle($event, EventStore::getMetadata());
         }
 
         return $this->commit();

@@ -3,7 +3,6 @@
 namespace Thunk\Verbs\Support;
 
 use InvalidArgumentException;
-use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Thunk\Verbs\Event;
 
 class EventSerializer extends Serializer
@@ -17,14 +16,6 @@ class EventSerializer extends Serializer
             throw new InvalidArgumentException(class_basename($this).'::deserialize must be passed an Event class.');
         }
 
-        $type = $target;
-        $context = [];
-
-        if ($target instanceof Event) {
-            $type = $target::class;
-            $context[AbstractNormalizer::OBJECT_TO_POPULATE] = $target;
-        }
-
-        return parent::unserialize($data, $type, $context);
+        return parent::unserialize($target, $data);
     }
 }

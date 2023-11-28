@@ -9,6 +9,7 @@ use ReflectionMethod;
 use RuntimeException;
 use SplObjectStorage;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Metadata;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\Reflector;
 use Thunk\Verbs\Support\StateCollection;
@@ -98,10 +99,10 @@ class Hook
         }
     }
 
-    public function handle(Container $container, Event $event, State $state = null): void
+    public function handle(Container $container, Event $event, Metadata $metadata, State $state = null): void
     {
         if ($this->runsInPhase(Phase::Handle)) {
-            $container->call($this->callback, $this->guessParameters($event, $state));
+            $container->call($this->callback, array_merge($this->guessParameters($event, $state), [Metadata::class => $metadata]));
         }
     }
 

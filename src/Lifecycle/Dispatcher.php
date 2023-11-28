@@ -7,6 +7,7 @@ use Illuminate\Support\Collection;
 use ReflectionMethod;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
+use Thunk\Verbs\Metadata;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\MethodFinder;
 use Thunk\Verbs\Support\Reflector;
@@ -54,9 +55,9 @@ class Dispatcher
         $this->getFiredHooks($event)->each(fn (Hook $hook) => $hook->fired($this->container, $event, $states));
     }
 
-    public function handle(Event $event): void
+    public function handle(Event $event, Metadata $metadata): void
     {
-        $this->getHandleHooks($event)->each(fn (Hook $hook) => $hook->handle($this->container, $event));
+        $this->getHandleHooks($event)->each(fn (Hook $hook) => $hook->handle($this->container, $event, $metadata));
     }
 
     public function replay(Event $event, State $state): void
