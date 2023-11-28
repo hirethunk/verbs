@@ -8,7 +8,9 @@
 /phpunit.xml.dist   export-ignore
 /art                export-ignore
 /docs               export-ignore
+/examples           export-ignore
 /tests              export-ignore
+/workbench          export-ignore
 /.editorconfig      export-ignore
 /.php_cs.dist.php   export-ignore
 /psalm.xml          export-ignore
