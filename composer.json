@@ -16,12 +16,6 @@
             "role": "We build software for money. We also build it for fun."
         }
     ],
-    "repositories": {
-        "kathunk/bugg": {
-            "type": "vcs",
-            "url": "https://github.com/DanielCoulbourne/bugg.git"
-        }
-    },
     "require": {
         "php": "^8.1",
         "glhd/bits": "^0.2",
@@ -33,7 +27,6 @@
     },
     "require-dev": {
         "brick/money": "^0.8.1",
-        "kathunk/bugg": "dev-main",
         "laravel/pint": "^1.13",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^7.10",
