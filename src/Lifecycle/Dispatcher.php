@@ -2,6 +2,7 @@
 
 namespace Thunk\Verbs\Lifecycle;
 
+use Carbon\CarbonInterface;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Collection;
 use ReflectionMethod;
@@ -59,9 +60,9 @@ class Dispatcher
         $this->getHandleHooks($event)->each(fn (Hook $hook) => $hook->handle($this->container, $event));
     }
 
-    public function replay(Event $event, State $state): void
+    public function replay(Event $event, ?State $state, CarbonInterface $now): void
     {
-        $this->getReplayHooks($event)->each(fn (Hook $hook) => $hook->replay($this->container, $event, $state));
+        $this->getReplayHooks($event)->each(fn (Hook $hook) => $hook->replay($this->container, $event, $state, $now));
     }
 
     /** @return Collection<int, Hook> */

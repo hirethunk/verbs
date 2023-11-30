@@ -2,6 +2,9 @@
 
 namespace Thunk\Verbs\Lifecycle;
 
+use Carbon\Carbon;
+use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Closure;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Str;
@@ -105,10 +108,26 @@ class Hook
         }
     }
 
-    public function replay(Container $container, Event $event, State $state = null): void
+    public function replay(Container $container, Event $event, ?State $state, CarbonInterface $now): void
     {
         if ($this->runsInPhase(Phase::Replay)) {
-            $container->call($this->callback, $this->guessParameters($event, $state));
+            $this->withHistoricalNow($now, fn () => $container->call($this->callback, $this->guessParameters($event, $state)));
+        }
+    }
+
+    protected function withHistoricalNow(CarbonInterface $now, Closure $callback)
+    {
+        $immutable_now = CarbonImmutable::getTestNow();
+        $mutable_now = Carbon::getTestNow();
+
+        try {
+            CarbonImmutable::setTestNow($now);
+            Carbon::setTestNow($now);
+
+            $callback();
+        } finally {
+            CarbonImmutable::setTestNow($immutable_now);
+            Carbon::setTestNow($mutable_now);
         }
     }
 

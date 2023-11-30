@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Mail;
 use Thunk\Verbs\Examples\Bank\Events\AccountOpened;
 use Thunk\Verbs\Examples\Bank\Events\MoneyDeposited;
@@ -15,6 +16,7 @@ use Thunk\Verbs\Models\VerbEvent;
 
 test('a bank account can be opened and interacted with', function () {
     Mail::fake();
+    Date::setTestNow('2023-01-01 00:00:00');
 
     // $this->withoutExceptionHandling();
 
@@ -111,6 +113,7 @@ test('a bank account can be opened and interacted with', function () {
     // Finally, let's replay everything and make sure we get what's expected
 
     Mail::fake();
+    Date::setTestNow('2023-12-01 00:00:00');
 
     $account->delete();
 
@@ -119,8 +122,9 @@ test('a bank account can be opened and interacted with', function () {
     $account = Auth::user()->accounts()->sole();
     $account_state = AccountState::load($account->id);
 
-    expect($account->balance_in_cents)->toBe(100_00);
-    expect($account_state->balance_in_cents)->toBe(100_00);
+    expect($account->balance_in_cents)->toBe(100_00)
+        ->and($account->created_at->format('Y-m-d'))->toBe('2023-01-01')
+        ->and($account_state->balance_in_cents)->toBe(100_00);
 
     Mail::assertNothingOutgoing();
 
