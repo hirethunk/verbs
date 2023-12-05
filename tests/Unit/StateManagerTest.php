@@ -13,7 +13,7 @@ beforeEach(function () {
     $this->manager = new StateManager($this->dispatcher, $this->snapshots, $this->events);
 });
 
-it('it remembers state', function () {
+it('remembers state', function () {
     $state = new class extends State
     {
     };

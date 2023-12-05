@@ -89,7 +89,7 @@ class EventStore
 
         $query->each(function ($result) use ($max_event_ids) {
             $state_type = data_get($result, 'state_type');
-            $state_id = (int) data_get($result, 'state_id');
+            $state_id = data_get($result, 'state_id');
             $max_written_id = (int) data_get($result, 'max_event_id');
             $max_expected_id = $max_event_ids->get($state_type.$state_id, 0);
 
