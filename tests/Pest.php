@@ -2,6 +2,7 @@
 
 use Brick\Money\Money;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Query\Grammars\SQLiteGrammar;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\Finder\Finder;
@@ -53,9 +54,11 @@ expect()->extend('toBeMoney', function (Money|string|int|null $amount = null, ?s
 });
 
 uses(TestCase::class, RefreshDatabase::class)
-    ->beforeEach(fn () => DB::connection(DB::getDefaultConnection())
-        ->setQueryGrammar(
-            new PatchedSQLiteGrammar()
-        )
-    )
+    ->beforeEach(function() {
+	    $connection = DB::connection(DB::getDefaultConnection());
+		
+		if ($connection->getQueryGrammar() instanceof SQLiteGrammar) {
+			$connection->setQueryGrammar(new PatchedSQLiteGrammar());
+		}
+    })
     ->in(__DIR__, ...$examples);
