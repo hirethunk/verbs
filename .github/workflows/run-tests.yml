@@ -90,4 +90,5 @@ jobs:
         run: vendor/bin/pest
         env:
           DB_CONNECTION: pgsql
+          DB_DATABASE: forge
           DB_PASSWORD: password
