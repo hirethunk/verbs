@@ -13,13 +13,13 @@ class CollectionNormalizer implements DenormalizerInterface, NormalizerInterface
 {
     use AcceptsNormalizerAndDenormalizer;
 
-    public function supportsDenormalization(mixed $data, string $type, string $format = null): bool
+    public function supportsDenormalization(mixed $data, string $type, ?string $format = null): bool
     {
         return is_a($type, Collection::class, true);
     }
 
     /** @param  class-string<Collection>  $type */
-    public function denormalize(mixed $data, string $type, string $format = null, array $context = []): Collection
+    public function denormalize(mixed $data, string $type, ?string $format = null, array $context = []): Collection
     {
         $fqcn = data_get($data, 'fqcn', Collection::class);
         $items = data_get($data, 'items', []);
@@ -36,12 +36,12 @@ class CollectionNormalizer implements DenormalizerInterface, NormalizerInterface
         return $fqcn::make($items)->map(fn ($value) => $this->serializer->denormalize($value, $subtype, $format, $context));
     }
 
-    public function supportsNormalization(mixed $data, string $format = null): bool
+    public function supportsNormalization(mixed $data, ?string $format = null): bool
     {
         return $data instanceof Collection;
     }
 
-    public function normalize(mixed $object, string $format = null, array $context = []): array
+    public function normalize(mixed $object, ?string $format = null, array $context = []): array
     {
         if (! $object instanceof Collection) {
             throw new InvalidArgumentException(class_basename($this).' can only normalize Collection objects.');
