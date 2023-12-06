@@ -69,7 +69,7 @@ abstract class Event
      * @param  class-string<T>|null  $state_type
      * @return T|null
      */
-    public function state(string $state_type = null): ?State
+    public function state(?string $state_type = null): ?State
     {
         $states = $this->states();
 
