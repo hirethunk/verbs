@@ -5,6 +5,7 @@ namespace Thunk\Verbs\Lifecycle;
 use Glhd\Bits\Bits;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
+use Thunk\Verbs\Exceptions\StateIsNotSingletonException;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Models\VerbSnapshot;
 use Thunk\Verbs\State;
@@ -17,6 +18,20 @@ class SnapshotStore
         $snapshot = VerbSnapshot::find(Verbs::toId($id));
 
         return $snapshot?->state();
+    }
+
+    public function loadSingleton(string $type): ?State
+    {
+        $snapshots = VerbSnapshot::query()
+            ->where('type', $type)
+            ->limit(2)
+            ->get();
+
+        if ($snapshots->count() > 1) {
+            throw new StateIsNotSingletonException($type);
+        }
+
+        return $snapshots->first()?->state();
     }
 
     public function write(array $states): bool

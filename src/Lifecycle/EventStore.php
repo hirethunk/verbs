@@ -24,12 +24,13 @@ class EventStore
     public function read(
         State $state = null,
         Bits|UuidInterface|AbstractUid|int|string $after_id = null,
-        Bits|UuidInterface|AbstractUid|int|string $up_to_id = null
+        Bits|UuidInterface|AbstractUid|int|string $up_to_id = null,
+        bool $singleton = false,
     ): LazyCollection {
         if ($state) {
             return VerbStateEvent::query()
                 ->with('event')
-                ->where('state_id', $state->id)
+                ->unless($singleton, fn (Builder $query) => $query->where('state_id', $state->id))
                 ->where('state_type', $state::class)
                 ->when($after_id, fn (Builder $query) => $query->whereRelation('event', 'id', '>', Verbs::toId($after_id)))
                 ->when($up_to_id, fn (Builder $query) => $query->whereRelation('event', 'id', '<=', Verbs::toId($up_to_id)))

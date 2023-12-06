@@ -2,6 +2,7 @@
 
 use Thunk\Verbs\Lifecycle\Dispatcher;
 use Thunk\Verbs\Lifecycle\EventStore;
+use Thunk\Verbs\Lifecycle\Queue;
 use Thunk\Verbs\Lifecycle\SnapshotStore;
 use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\State;
@@ -10,7 +11,8 @@ beforeEach(function () {
     $this->dispatcher = Mockery::mock(Dispatcher::class);
     $this->snapshots = Mockery::mock(SnapshotStore::class);
     $this->events = Mockery::mock(EventStore::class);
-    $this->manager = new StateManager($this->dispatcher, $this->snapshots, $this->events);
+    $this->queue = Mockery::mock(Queue::class);
+    $this->manager = new StateManager($this->dispatcher, $this->snapshots, $this->events, $this->queue);
 });
 
 it('remembers state', function () {
