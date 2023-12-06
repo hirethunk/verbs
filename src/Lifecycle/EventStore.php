@@ -22,9 +22,9 @@ use Thunk\Verbs\Support\EventSerializer;
 class EventStore
 {
     public function read(
-        State $state = null,
-        Bits|UuidInterface|AbstractUid|int|string $after_id = null,
-        Bits|UuidInterface|AbstractUid|int|string $up_to_id = null
+        ?State $state = null,
+        Bits|UuidInterface|AbstractUid|int|string|null $after_id = null,
+        Bits|UuidInterface|AbstractUid|int|string|null $up_to_id = null
     ): LazyCollection {
         if ($state) {
             return VerbStateEvent::query()

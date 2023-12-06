@@ -9,7 +9,6 @@ use LogicException;
 use ReflectionMethod;
 use ReflectionParameter;
 use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
-use Thunk\Verbs\Lifecycle\Phase;
 use Thunk\Verbs\Support\EventSerializer;
 use Thunk\Verbs\Support\EventStateRegistry;
 use Thunk\Verbs\Support\PendingEvent;
@@ -67,7 +66,7 @@ abstract class Event
      * @param  class-string<T>|null  $state_type
      * @return T|null
      */
-    public function state(string $state_type = null): ?State
+    public function state(?string $state_type = null): ?State
     {
         $states = $this->states();
 

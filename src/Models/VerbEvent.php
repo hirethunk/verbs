@@ -5,7 +5,6 @@ namespace Thunk\Verbs\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Lifecycle\Phase;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\EventSerializer;
 

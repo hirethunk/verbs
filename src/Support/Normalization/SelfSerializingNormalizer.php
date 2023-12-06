@@ -12,13 +12,13 @@ class SelfSerializingNormalizer implements DenormalizerInterface, NormalizerInte
 {
     use AcceptsNormalizerAndDenormalizer;
 
-    public function supportsDenormalization(mixed $data, string $type, string $format = null): bool
+    public function supportsDenormalization(mixed $data, string $type, ?string $format = null): bool
     {
         return is_a($type, SerializedByVerbs::class, true);
     }
 
     /** @param  class-string<SerializedByVerbs>  $type */
-    public function denormalize(mixed $data, string $type, string $format = null, array $context = []): SerializedByVerbs
+    public function denormalize(mixed $data, string $type, ?string $format = null, array $context = []): SerializedByVerbs
     {
         if (is_string($data)) {
             $data = json_decode($data, true);
@@ -27,12 +27,12 @@ class SelfSerializingNormalizer implements DenormalizerInterface, NormalizerInte
         return $type::deserializeForVerbs($data, $this->serializer);
     }
 
-    public function supportsNormalization(mixed $data, string $format = null): bool
+    public function supportsNormalization(mixed $data, ?string $format = null): bool
     {
         return $data instanceof SerializedByVerbs;
     }
 
-    public function normalize(mixed $object, string $format = null, array $context = []): array|string
+    public function normalize(mixed $object, ?string $format = null, array $context = []): array|string
     {
         if (! $object instanceof SerializedByVerbs) {
             throw new InvalidArgumentException(class_basename($this).' can only normalize classes that implement SerializedByVerbs.');

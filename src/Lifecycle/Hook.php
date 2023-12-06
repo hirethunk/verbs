@@ -98,21 +98,21 @@ class Hook
         }
     }
 
-    public function handle(Container $container, Event $event, State $state = null): void
+    public function handle(Container $container, Event $event, ?State $state = null): void
     {
         if ($this->runsInPhase(Phase::Handle)) {
             $container->call($this->callback, $this->guessParameters($event, $state));
         }
     }
 
-    public function replay(Container $container, Event $event, State $state = null): void
+    public function replay(Container $container, Event $event, ?State $state = null): void
     {
         if ($this->runsInPhase(Phase::Replay)) {
             $container->call($this->callback, $this->guessParameters($event, $state));
         }
     }
 
-    protected function guessParameters(Event $event, State $state = null, StateCollection $states = null): array
+    protected function guessParameters(Event $event, ?State $state = null, ?StateCollection $states = null): array
     {
         $parameters = [
             'e' => $event,
