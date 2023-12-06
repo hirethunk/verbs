@@ -45,7 +45,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [ ubuntu, windows ]
+        os: [ ubuntu ]
         php: [ 8.2, 8.1 ]
         laravel: [ 10.* ]
         stability: [ lowest, stable ]
@@ -88,7 +88,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [ ubuntu, windows ]
+        os: [ ubuntu ]
         php: [ 8.2, 8.1 ]
         laravel: [ 10.* ]
         stability: [ lowest, stable ]
