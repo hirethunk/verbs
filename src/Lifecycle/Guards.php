@@ -29,8 +29,6 @@ class Guards
 
     public function authorize(): static
     {
-        $this->event->phase = Phase::Authorize;
-
         if ($this->passesAuthorization()) {
             return $this;
         }
@@ -44,8 +42,6 @@ class Guards
 
     public function validate(): static
     {
-        $this->event->phase = Phase::Validate;
-
         $exception = new EventNotValidForCurrentState();
 
         try {

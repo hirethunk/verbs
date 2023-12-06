@@ -25,7 +25,7 @@ class EventStore
         ?State $state = null,
         Bits|UuidInterface|AbstractUid|int|string|null $after_id = null,
         Bits|UuidInterface|AbstractUid|int|string|null $up_to_id = null,
-        bool $singleton = false,
+	    bool $singleton = false,
     ): LazyCollection {
         if ($state) {
             return VerbStateEvent::query()
