@@ -80,6 +80,7 @@ jobs:
         run: vendor/bin/pest
         env:
           DB_CONNECTION: mysql
+          DB_DATABASE: forge
           DB_USER: root
           DB_PASSWORD: password
           
@@ -124,4 +125,5 @@ jobs:
         run: vendor/bin/pest
         env:
           DB_CONNECTION: pgsql
+          DB_DATABASE: forge
           DB_PASSWORD: password
