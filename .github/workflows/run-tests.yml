@@ -7,6 +7,7 @@ on:
     branches: [main]
 
 jobs:
+  
   sqlite:
     runs-on: ${{ matrix.os }}-latest
     strategy:
@@ -16,34 +17,29 @@ jobs:
         php: [8.2, 8.1]
         laravel: [10.*]
         stability: [lowest, stable]
-
-    name: [${{ matrix.os }}/sqlite] ${{ matrix.php }}/${{ matrix.laravel }} - ${{ matrix.stability }}
-
+    name: ${{ matrix.os }}/sqlite P${{ matrix.php }}:L${{ matrix.laravel }} (${{ matrix.stability }})
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick, fileinfo, :php-psr
           coverage: none
-
       - name: Setup problem matchers
         run: |
           echo "::add-matcher::${{ runner.tool_cache }}/php.json"
           echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
-
       - name: Install dependencies
         run: |
           composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
           composer update --prefer-${{ matrix.stability }} --prefer-dist --no-interaction
-
       - name: Execute tests
         run: vendor/bin/pest
         env:
           DB_CONNECTION: sqlite
+          
   mysql:
     runs-on: ${{ matrix.os }}-latest
     strategy:
@@ -53,9 +49,7 @@ jobs:
         php: [ 8.2, 8.1 ]
         laravel: [ 10.* ]
         stability: [ lowest, stable ]
-
-    name: [ ${ { matrix.os } }/mysql ] ${{ matrix.php }}/${{ matrix.laravel }} - ${{ matrix.stability }}
-    
+    name: ${{ matrix.os }}/mysql P${{ matrix.php }}:L${{ matrix.laravel }} (${{ matrix.stability }})
     services:
       mysql:
         image: mysql:8
@@ -65,28 +59,23 @@ jobs:
         ports:
           - 33306:3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick, fileinfo, :php-psr
           coverage: none
-
       - name: Setup problem matchers
         run: |
           echo "::add-matcher::${{ runner.tool_cache }}/php.json"
           echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
-
       - name: Install dependencies
         run: |
           composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
           composer update --prefer-${{ matrix.stability }} --prefer-dist --no-interaction
-
       - name: Execute tests
         run: vendor/bin/pest
         env:
@@ -103,9 +92,7 @@ jobs:
         php: [ 8.2, 8.1 ]
         laravel: [ 10.* ]
         stability: [ lowest, stable ]
-
-    name: [ ${ { matrix.os } }/pgsql ] ${{ matrix.php }}/${{ matrix.laravel }} - ${{ matrix.stability }}
-            
+    name: ${{ matrix.os }}/pgsql P${{ matrix.php }}:L${{ matrix.laravel }} (${{ matrix.stability }})
     services:
       postgresql:
         image: postgres:14
@@ -116,28 +103,23 @@ jobs:
         ports:
           - 5432:5432
         options: --health-cmd=pg_isready --health-interval=10s --health-timeout=5s --health-retries=3
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick, fileinfo, :php-psr
           coverage: none
-
       - name: Setup problem matchers
         run: |
           echo "::add-matcher::${{ runner.tool_cache }}/php.json"
           echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
-
       - name: Install dependencies
         run: |
           composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
           composer update --prefer-${{ matrix.stability }} --prefer-dist --no-interaction
-
       - name: Execute tests
         run: vendor/bin/pest
         env:
