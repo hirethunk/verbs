@@ -20,8 +20,6 @@ abstract class Event
 {
     public int $id;
 
-    public Phase $phase;
-
     /** @return PendingEvent<static> */
     public static function make(...$args): PendingEvent
     {
@@ -44,7 +42,7 @@ abstract class Event
 
         $event = app(EventSerializer::class)->deserialize(static::class, $args);
 
-        $event->id = Snowflake::make()->id();
+        $event->id ??= Snowflake::make()->id();
 
         return PendingEvent::make($event);
     }

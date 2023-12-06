@@ -24,7 +24,6 @@ class VerbEvent extends Model
     public function event(): Event
     {
         $this->event ??= app(EventSerializer::class)->deserialize($this->type, $this->data);
-        $this->event->phase = Phase::Replay;
 
         return $this->event;
     }
