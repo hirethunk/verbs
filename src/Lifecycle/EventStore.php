@@ -87,6 +87,12 @@ class EventStore
             }
         });
 
+        // We can abort if there are no states associated with any of the
+        // events that we're writing (since concurrency doesn't apply in that case)
+        if ($max_event_ids->isEmpty()) {
+            return;
+        }
+
         $query->each(function ($result) use ($max_event_ids) {
             $state_type = data_get($result, 'state_type');
             $state_id = data_get($result, 'state_id');
