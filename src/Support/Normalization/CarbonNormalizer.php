@@ -10,25 +10,25 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
 class CarbonNormalizer implements DenormalizerInterface, NormalizerInterface
 {
-    public function supportsDenormalization(mixed $data, string $type, string $format = null): bool
+    public function supportsDenormalization(mixed $data, string $type, ?string $format = null): bool
     {
         return is_a($type, CarbonInterface::class, true);
     }
 
     /** @param  class-string<CarbonInterface>  $type */
-    public function denormalize(mixed $data, string $type, string $format = null, array $context = []): CarbonInterface
+    public function denormalize(mixed $data, string $type, ?string $format = null, array $context = []): CarbonInterface
     {
         return $type === CarbonInterface::class
             ? Date::parse($data)
             : $type::parse($data);
     }
 
-    public function supportsNormalization(mixed $data, string $format = null): bool
+    public function supportsNormalization(mixed $data, ?string $format = null): bool
     {
         return $data instanceof CarbonInterface;
     }
 
-    public function normalize(mixed $object, string $format = null, array $context = []): string
+    public function normalize(mixed $object, ?string $format = null, array $context = []): string
     {
         if (! $object instanceof CarbonInterface) {
             throw new InvalidArgumentException(class_basename($this).' can only normalize Carbon objects.');
