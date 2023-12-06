@@ -17,7 +17,7 @@ jobs:
         laravel: [10.*]
         stability: [prefer-lowest, prefer-stable]
 
-    name: P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.stability }} - ${{ matrix.os }}
+    name: P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.stability }} - ${{ matrix.os }} - sqlite
 
     steps:
       - name: Checkout code
@@ -47,7 +47,7 @@ jobs:
         run: vendor/bin/pest
 
   pgsql:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
 
     services:
       postgresql:
@@ -60,7 +60,7 @@ jobs:
           - 5432:5432
         options: --health-cmd=pg_isready --health-interval=10s --health-timeout=5s --health-retries=3
 
-    name: P8.2 - L10 - prefer-stable - PostgreSQL
+    name: P8.2 - L10.* - prefer-stable - ubuntu-latest - pgsql
 
     steps:
       - name: Checkout code
