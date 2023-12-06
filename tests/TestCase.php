@@ -18,6 +18,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Finder\SplFileInfo;
 use Thunk\Verbs\VerbsServiceProvider;
 
+use function Orchestra\Testbench\artisan;
+
 class TestCase extends Orchestra
 {
     protected function getPackageProviders($app)
@@ -30,7 +32,15 @@ class TestCase extends Orchestra
 
     protected function defineDatabaseMigrations()
     {
-        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+        $options = [
+            '--path' => [
+                __DIR__.'/../database/migrations',
+                "{$this->getExamplePath()}/database/migrations"
+            ],
+            '--realpath' => true,
+        ];
+
+        artisan($this, 'migrate:fresh', $options);
     }
 
     /** @param  Application  $app */
@@ -45,22 +55,25 @@ class TestCase extends Orchestra
             }
         );
 
-        $example = Str::of(static::class)->after('Examples\\')->before('\\');
-        $example_path = realpath(__DIR__.'/../examples/'.$example);
-
-        $app->resolving(Migrator::class, fn (Migrator $migrator) => $migrator->path("{$example_path}/database/migrations"));
-
         FinderCollection::forFiles()
             ->depth(0)
             ->name('*.php')
             ->sortByName()
-            ->inOrEmpty("{$example_path}/routes/")
+            ->inOrEmpty("{$this->getExamplePath()}/routes/")
             ->each(fn (SplFileInfo $file) => require $file->getRealPath());
 
         // TODO: Factories
         // TODO: Views
         // TODO: Blade Components
         // TODO: Commands
+    }
+
+    protected function getExamplePath(): string
+    {
+        $example = Str::of(static::class)->after('Examples\\')->before('\\');
+        $example_path = realpath(__DIR__.'/../examples/'.$example);
+
+        return $example_path;
     }
 
     protected function watchDatabaseQueries(): self

@@ -7,8 +7,6 @@ use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\Models\VerbEvent;
 use Thunk\Verbs\Models\VerbSnapshot;
 
-uses(RefreshDatabase::class);
-
 it('supports rehydrating a state from snapshots', function () {
     $state = IncrementCount::fire()->state();
 

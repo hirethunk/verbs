@@ -52,10 +52,9 @@ expect()->extend('toBeMoney', function (Money|string|int $amount = null, string 
     }
 });
 
-uses(TestCase::class, RefreshDatabase::class)
-    ->beforeEach(fn () => DB::connection(DB::getDefaultConnection())
-        ->setQueryGrammar(
-            new PatchedSQLiteGrammar()
-        )
-    )
+uses(TestCase::class)
+    ->beforeEach(fn () => match(DB::connection()->getDriverName()) {
+        'sqlite' => DB::connection()->setQueryGrammar(new PatchedSQLiteGrammar()),
+        default => null,
+    })
     ->in(__DIR__, ...$examples);
