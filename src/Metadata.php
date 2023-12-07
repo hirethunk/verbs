@@ -11,7 +11,9 @@ class Metadata implements ArrayAccess
 
     public function __construct(array $data = [])
     {
-        $this->extra = new Collection($data);
+        $this->extra = new Collection();
+
+        $this->merge($data);
     }
 
     public function merge(iterable $data): static
