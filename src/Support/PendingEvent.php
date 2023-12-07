@@ -107,7 +107,7 @@ class PendingEvent
         }
     }
 
-	// FIXME: This name *may* change, so be prepared to refactor
+    // FIXME: This name *may* change, so be prepared to refactor
     public function fireAndCommit(...$args): mixed
     {
         $event = $this->fire(...$args);
