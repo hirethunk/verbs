@@ -67,7 +67,7 @@ class TestCase extends Orchestra
         // TODO: Commands
     }
 
-    protected function getExamplePath(string $path = null): string
+    protected function getExamplePath(?string $path = null): string
     {
         $example = Str::of(static::class)->after('Examples\\')->before('\\');
 
