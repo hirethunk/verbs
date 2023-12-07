@@ -5,7 +5,6 @@ namespace Thunk\Verbs\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Lifecycle\Phase;
 use Thunk\Verbs\Metadata;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\EventSerializer;
@@ -29,7 +28,6 @@ class VerbEvent extends Model
     public function event(): Event
     {
         $this->event ??= app(EventSerializer::class)->deserialize($this->type, $this->data);
-        $this->event->phase = Phase::Replay;
 
         return $this->event;
     }

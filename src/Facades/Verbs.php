@@ -10,7 +10,6 @@ use Thunk\Verbs\Lifecycle\Broker;
  * @method static bool commit()
  * @method static bool isReplaying()
  * @method static void unlessReplaying(callable $callback)
- * @method static bool isReplaying()
  * @method static int|string|null toId($id)
  * @method static Event fire(Event $event)
  */
