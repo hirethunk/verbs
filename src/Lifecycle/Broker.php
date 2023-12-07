@@ -8,7 +8,6 @@ use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 use Thunk\Verbs\Models\VerbEvent;
-use WeakMap;
 
 class Broker
 {
@@ -16,6 +15,7 @@ class Broker
 
     public function __construct(
         protected Dispatcher $dispatcher,
+        protected MetadataManager $metadata,
     ) {
     }
 
@@ -37,25 +37,21 @@ class Broker
         return $event;
     }
 
-    public function commit(?WeakMap $results = null): WeakMap
+    public function commit()
     {
-        $results ??= new WeakMap();
-
         $events = app(EventQueue::class)->flush();
-
-        // FIXME: Only write changes + handle aggregate versioning
 
         app(StateManager::class)->writeSnapshots();
 
         if (empty($events)) {
-            return $results;
+            return null;
         }
 
         foreach ($events as $event) {
-            $results[$event] = $this->dispatcher->handle($event);
+            $this->metadata->setLastResults($event, $this->dispatcher->handle($event));
         }
 
-        return $this->commit($results);
+        return $this->commit();
     }
 
     public function replay()

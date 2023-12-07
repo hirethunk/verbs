@@ -14,6 +14,7 @@ use RuntimeException;
 use Throwable;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\Broker;
+use Thunk\Verbs\Lifecycle\MetadataManager;
 
 /**
  * @template T
@@ -110,9 +111,11 @@ class PendingEvent
     {
         $event = $this->fire(...$args);
 
-        $results = app(Broker::class)->commit()[$event];
+        app(Broker::class)->commit();
 
-        return count($results) > 1 ? $results : $results[0];
+        $results = app(MetadataManager::class)->getLastResults($event);
+
+        return $results->count() > 1 ? $results : $results->first();
     }
 
     /** @param  callable(Throwable): Throwable  $handler */
