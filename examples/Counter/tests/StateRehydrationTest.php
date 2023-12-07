@@ -1,13 +1,10 @@
 <?php
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Thunk\Verbs\Examples\Counter\Events\IncrementCount;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\Models\VerbEvent;
 use Thunk\Verbs\Models\VerbSnapshot;
-
-uses(RefreshDatabase::class);
 
 it('supports rehydrating a state from snapshots', function () {
     $state = IncrementCount::fire()->state();
