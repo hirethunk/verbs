@@ -37,14 +37,16 @@ class Broker
         return $event;
     }
 
-    public function commit()
+    public function commit(): bool
     {
         $events = app(EventQueue::class)->flush();
+
+        // FIXME: Only write changes + handle aggregate versioning
 
         app(StateManager::class)->writeSnapshots();
 
         if (empty($events)) {
-            return null;
+            return true;
         }
 
         foreach ($events as $event) {
