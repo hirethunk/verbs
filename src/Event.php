@@ -16,16 +16,16 @@ use WeakMap;
 abstract class Event
 {
     public int $id;
-	
-	public static function __callStatic(string $name, array $arguments)
-	{
-		return static::make()->$name(...$arguments);
-	}
-	
-	public static function make(...$args)
-	{
-		return PendingEvent::make(static::class, $args);
-	}
+
+    public static function __callStatic(string $name, array $arguments)
+    {
+        return static::make()->$name(...$arguments);
+    }
+
+    public static function make(...$args)
+    {
+        return PendingEvent::make(static::class, $args);
+    }
 
     public function states(): StateCollection
     {

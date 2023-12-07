@@ -37,7 +37,7 @@ class Broker
         return $event;
     }
 
-    public function commit(WeakMap $results = null): WeakMap
+    public function commit(?WeakMap $results = null): WeakMap
     {
         $results ??= new WeakMap();
 
@@ -52,7 +52,7 @@ class Broker
         }
 
         foreach ($events as $event) {
-	        $results[$event] = $this->dispatcher->handle($event);
+            $results[$event] = $this->dispatcher->handle($event);
         }
 
         return $this->commit($results);

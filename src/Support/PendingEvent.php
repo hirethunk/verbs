@@ -49,7 +49,7 @@ class PendingEvent
         }
 
         $event = app(EventSerializer::class)->deserialize($class_name, $args);
-        $event->id = Snowflake::make()->id();
+        $event->id ??= Snowflake::make()->id();
 
         return new static($event);
     }
