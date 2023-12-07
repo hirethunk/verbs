@@ -18,8 +18,6 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Finder\SplFileInfo;
 use Thunk\Verbs\VerbsServiceProvider;
 
-use function Orchestra\Testbench\artisan;
-
 class TestCase extends Orchestra
 {
     protected function getPackageProviders($app)
@@ -32,15 +30,14 @@ class TestCase extends Orchestra
 
     protected function defineDatabaseMigrations()
     {
-        $options = [
+        // $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+        $this->artisan('migrate:fresh', [
             '--path' => [
-                __DIR__.'/../database/migrations',
-                "{$this->getExamplePath()}/database/migrations"
+                realpath(__DIR__.'/../database/migrations'),
+                $this->getExamplePath('/database/migrations'),
             ],
             '--realpath' => true,
-        ];
-
-        artisan($this, 'migrate:fresh', $options);
+        ]);
     }
 
     /** @param  Application  $app */
@@ -55,11 +52,13 @@ class TestCase extends Orchestra
             }
         );
 
+        $app->resolving(Migrator::class, fn (Migrator $migrator) => $migrator->path($this->getExamplePath('/database/migrations')));
+
         FinderCollection::forFiles()
             ->depth(0)
             ->name('*.php')
             ->sortByName()
-            ->inOrEmpty("{$this->getExamplePath()}/routes/")
+            ->inOrEmpty($this->getExamplePath('/routes/'))
             ->each(fn (SplFileInfo $file) => require $file->getRealPath());
 
         // TODO: Factories
@@ -68,12 +67,13 @@ class TestCase extends Orchestra
         // TODO: Commands
     }
 
-    protected function getExamplePath(): string
+    protected function getExamplePath(?string $path = null): string
     {
         $example = Str::of(static::class)->after('Examples\\')->before('\\');
-        $example_path = realpath(__DIR__.'/../examples/'.$example);
 
-        return $example_path;
+        $base = realpath(__DIR__.'/../examples/'.$example);
+
+        return $base.($path != '' ? DIRECTORY_SEPARATOR.ltrim($path, DIRECTORY_SEPARATOR) : '');
     }
 
     protected function watchDatabaseQueries(): self

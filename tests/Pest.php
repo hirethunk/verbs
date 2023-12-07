@@ -2,7 +2,6 @@
 
 use Brick\Money\Money;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
@@ -53,7 +52,7 @@ expect()->extend('toBeMoney', function (Money|string|int|null $amount = null, ?s
 });
 
 uses(TestCase::class)
-    ->beforeEach(fn () => match(DB::connection()->getDriverName()) {
+    ->beforeEach(fn () => match (DB::connection()->getDriverName()) {
         'sqlite' => DB::connection()->setQueryGrammar(new PatchedSQLiteGrammar()),
         default => null,
     })
