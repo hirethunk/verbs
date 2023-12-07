@@ -30,7 +30,14 @@ class TestCase extends Orchestra
 
     protected function defineDatabaseMigrations()
     {
-        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+        // $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+        $this->artisan('migrate:fresh', [
+            '--path' => [
+                realpath(__DIR__.'/../database/migrations'),
+                $this->getExamplePath('/database/migrations'),
+            ],
+            '--realpath' => true,
+        ]);
     }
 
     /** @param  Application  $app */
@@ -45,22 +52,28 @@ class TestCase extends Orchestra
             }
         );
 
-        $example = Str::of(static::class)->after('Examples\\')->before('\\');
-        $example_path = realpath(__DIR__.'/../examples/'.$example);
-
-        $app->resolving(Migrator::class, fn (Migrator $migrator) => $migrator->path("{$example_path}/database/migrations"));
+        $app->resolving(Migrator::class, fn (Migrator $migrator) => $migrator->path($this->getExamplePath('/database/migrations')));
 
         FinderCollection::forFiles()
             ->depth(0)
             ->name('*.php')
             ->sortByName()
-            ->inOrEmpty("{$example_path}/routes/")
+            ->inOrEmpty($this->getExamplePath('/routes/'))
             ->each(fn (SplFileInfo $file) => require $file->getRealPath());
 
         // TODO: Factories
         // TODO: Views
         // TODO: Blade Components
         // TODO: Commands
+    }
+
+    protected function getExamplePath(string $path = null): string
+    {
+        $example = Str::of(static::class)->after('Examples\\')->before('\\');
+
+        $base = realpath(__DIR__.'/../examples/'.$example);
+
+        return $base.($path != '' ? DIRECTORY_SEPARATOR.ltrim($path, DIRECTORY_SEPARATOR) : '');
     }
 
     protected function watchDatabaseQueries(): self
