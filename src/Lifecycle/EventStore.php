@@ -22,14 +22,15 @@ use Thunk\Verbs\Support\EventSerializer;
 class EventStore
 {
     public function read(
-        State $state = null,
-        Bits|UuidInterface|AbstractUid|int|string $after_id = null,
-        Bits|UuidInterface|AbstractUid|int|string $up_to_id = null
+        ?State $state = null,
+        Bits|UuidInterface|AbstractUid|int|string|null $after_id = null,
+        Bits|UuidInterface|AbstractUid|int|string|null $up_to_id = null,
+        bool $singleton = false,
     ): LazyCollection {
         if ($state) {
             return VerbStateEvent::query()
                 ->with('event')
-                ->where('state_id', $state->id)
+                ->unless($singleton, fn (Builder $query) => $query->where('state_id', $state->id))
                 ->where('state_type', $state::class)
                 ->when($after_id, fn (Builder $query) => $query->whereRelation('event', 'id', '>', Verbs::toId($after_id)))
                 ->when($up_to_id, fn (Builder $query) => $query->whereRelation('event', 'id', '<=', Verbs::toId($up_to_id)))
@@ -87,9 +88,15 @@ class EventStore
             }
         });
 
+        // We can abort if there are no states associated with any of the
+        // events that we're writing (since concurrency doesn't apply in that case)
+        if ($max_event_ids->isEmpty()) {
+            return;
+        }
+
         $query->each(function ($result) use ($max_event_ids) {
             $state_type = data_get($result, 'state_type');
-            $state_id = (int) data_get($result, 'state_id');
+            $state_id = data_get($result, 'state_id');
             $max_written_id = (int) data_get($result, 'max_event_id');
             $max_expected_id = $max_event_ids->get($state_type.$state_id, 0);
 

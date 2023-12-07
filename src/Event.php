@@ -4,7 +4,6 @@ namespace Thunk\Verbs;
 
 use LogicException;
 use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
-use Thunk\Verbs\Lifecycle\Phase;
 use Thunk\Verbs\Support\EventStateRegistry;
 use Thunk\Verbs\Support\PendingEvent;
 use Thunk\Verbs\Support\StateCollection;
@@ -17,18 +16,16 @@ use WeakMap;
 abstract class Event
 {
     public int $id;
-
-    public Phase $phase;
-
-    public static function __callStatic(string $name, array $arguments)
-    {
-        return static::make()->$name(...$arguments);
-    }
-
-    public static function make(...$args)
-    {
-        return PendingEvent::make(static::class, $args);
-    }
+	
+	public static function __callStatic(string $name, array $arguments)
+	{
+		return static::make()->$name(...$arguments);
+	}
+	
+	public static function make(...$args)
+	{
+		return PendingEvent::make(static::class, $args);
+	}
 
     public function states(): StateCollection
     {
@@ -45,7 +42,7 @@ abstract class Event
      * @param  class-string<T>|null  $state_type
      * @return T|null
      */
-    public function state(string $state_type = null): ?State
+    public function state(?string $state_type = null): ?State
     {
         $states = $this->states();
 

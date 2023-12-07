@@ -60,7 +60,7 @@ class Dispatcher
             ->map(fn (Hook $hook) => $hook->handle($this->container, $event));
     }
 
-    public function replay(Event $event, State $state): void
+    public function replay(Event $event, ?State $state): void
     {
         $this->getReplayHooks($event)->each(fn (Hook $hook) => $hook->replay($this->container, $event, $state));
     }

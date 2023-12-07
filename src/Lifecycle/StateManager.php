@@ -62,9 +62,26 @@ class StateManager
         return $this->remember($state);
     }
 
+    /** @param  class-string<State>  $type */
     public function singleton(string $type): State
     {
-        return $this->load(0, $type);
+        // FIXME: If the state we're loading has a last_event_id that's ahead of the registry's last_event_id, we need to re-build the state
+
+        if ($state = $this->states->get($type)) {
+            return $state;
+        }
+
+        $state = $this->snapshots->loadSingleton($type) ?? $type::make();
+        $state->id ??= Snowflake::make()->id();
+
+        $this->events
+            ->read(state: $state, after_id: $state->last_event_id, up_to_id: $this->max_event_id, singleton: true)
+            ->each(fn (Event $event) => $this->dispatcher->apply($event, $state));
+
+        // We'll store a reference to it by the type for future singleton access
+        $this->states->put($type, $state);
+
+        return $this->remember($state);
     }
 
     public function writeSnapshots(): bool

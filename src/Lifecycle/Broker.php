@@ -28,10 +28,8 @@ class Broker
 
         $states->each(fn ($state) => Guards::for($event, $state)->check());
 
-        $event->phase = Phase::Apply;
         $states->each(fn ($state) => $this->dispatcher->apply($event, $state));
 
-        $event->phase = Phase::Fired;
         $this->dispatcher->fired($event, $states);
 
         app(Queue::class)->queue($event);
@@ -54,8 +52,7 @@ class Broker
         }
 
         foreach ($events as $event) {
-            $event->phase = Phase::Handle;
-            $results[$event] = $this->dispatcher->handle($event);
+	        $results[$event] = $this->dispatcher->handle($event);
         }
 
         return $this->commit($results);
@@ -73,7 +70,8 @@ class Broker
 
                 $model->event()->states()
                     ->each(fn ($state) => $this->dispatcher->apply($model->event(), $state))
-                    ->each(fn ($state) => $this->dispatcher->replay($model->event(), $state));
+                    ->each(fn ($state) => $this->dispatcher->replay($model->event(), $state))
+                    ->whenEmpty(fn () => $this->dispatcher->replay($model->event(), null));
 
                 return $model->event();
             });
