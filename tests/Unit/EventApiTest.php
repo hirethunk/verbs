@@ -8,7 +8,11 @@ it('returns a pending event when you call Event::make', function () {
     $pending = UserRegistered::make();
 
     expect($pending)->toBeInstanceOf(PendingEvent::class)
-        ->and($pending->event)->toBeInstanceOf(UserRegistered::class);
+        ->and($pending->event)->toBeString(UserRegistered::class);
+	
+	$pending->hydrate([]);
+	
+	expect($pending->event)->toBeInstanceOf(UserRegistered::class);
 });
 
 it('calls fire on the broker when you call Event::fire', function () {

@@ -5,6 +5,7 @@ namespace Thunk\Verbs\Support;
 use Closure;
 use Glhd\Bits\Snowflake;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Traits\Conditionable;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 use ReflectionMethod;
@@ -21,44 +22,59 @@ use Thunk\Verbs\Lifecycle\Broker;
  */
 class PendingEvent
 {
+	use Conditionable;
+	
     protected Closure $exception_mapper;
 
     /** @param  class-string<Event>  $class_name */
     public static function make(string $class_name, array $args): static
     {
-        // Turn a positional array to an associative array
+		$args = static::normalizeArgs($args);
+		
         if (count($args) && ! Arr::isAssoc($args)) {
-            if (! method_exists($class_name, '__construct')) {
-                throw new InvalidArgumentException('You cannot pass positional arguments to '.class_basename($class_name).'::make()');
-            }
-
-            // TODO: Cache this
-            $args = collect((new ReflectionMethod($class_name, '__construct'))->getParameters())
-                ->mapWithKeys(function (ReflectionParameter $parameter, $index) use ($args) {
-                    return [
-                        $parameter->getName() => match (true) {
-                            isset($args[$index]) => $args[$index],
-                            $parameter->isDefaultValueAvailable() => $parameter->getDefaultValue(),
-                            $parameter->isOptional() => null,
-                            $parameter->isVariadic() => throw new RuntimeException('Variadic positional arguments are not implemented.'),
-                            default => throw new InvalidArgumentException("No valid value for '{$parameter->getName()}' provided."),
-                        },
-                    ];
-                })
-                ->all();
+            $args = static::inferNamesForPositionalArgs($class_name, $args);
         }
-
-        $event = app(EventSerializer::class)->deserialize($class_name, $args);
-        $event->id ??= Snowflake::make()->id();
-
-        return new static($event);
+		
+        return (new static($class_name))
+	        ->when(count($args), fn(self $pending) => $pending->hydrate($args));
     }
+	
+	protected static function normalizeArgs(array $args): array
+	{
+		if (count($args) === 1 && isset($args[0]) && is_array($args[0])) {
+			$args = $args[0];
+		}
+		
+		return $args;
+	}
+	
+	protected static function inferNamesForPositionalArgs(string $class_name, array $args): array
+	{
+		if (! method_exists($class_name, '__construct')) {
+			throw new InvalidArgumentException('You cannot pass positional arguments to '.class_basename($class_name));
+		}
+		
+		// TODO: Cache this
+		return collect((new ReflectionMethod($class_name, '__construct'))->getParameters())
+			->mapWithKeys(function(ReflectionParameter $parameter, $index) use ($args) {
+				return [
+					$parameter->getName() => match (true) {
+						isset($args[$index]) => $args[$index],
+						$parameter->isDefaultValueAvailable() => $parameter->getDefaultValue(),
+						$parameter->isOptional() => null,
+						$parameter->isVariadic() => throw new RuntimeException('Variadic positional arguments are not implemented.'),
+						default => throw new InvalidArgumentException("No valid value for '{$parameter->getName()}' provided."),
+					},
+				];
+			})
+			->all();
+	}
 
     public function __construct(
-        public Event $event
+        public Event|string|null $event,
     ) {
-        $this->event->id ??= Snowflake::make()->id();
-        $this->exception_mapper = fn ($e) => $e;
+        $this->conditionallySetId();
+        $this->setDefaultExceptionMapper();
     }
 
     public function shouldFire(): static
@@ -70,19 +86,17 @@ class PendingEvent
 
     public function hydrate(array $data): static
     {
-        app(EventSerializer::class)->deserialize($this->event, $data);
+        $this->event = app(EventSerializer::class)->deserialize($this->event, $data);
+		
+		$this->conditionallySetId();
 
         return $this;
     }
 
     public function fire(...$args): Event
     {
-        if (! empty($args)) {
-            if (count($args) === 1 && isset($args[0]) && is_array($args[0])) {
-                $args = $args[0];
-            }
-
-            $this->hydrate($args);
+        if (! empty($args) || is_string($this->event)) {
+            $this->hydrate(static::normalizeArgs($args));
         }
 
         try {
@@ -119,4 +133,16 @@ class PendingEvent
 
         return $result;
     }
+	
+	protected function setDefaultExceptionMapper(): void
+	{
+		$this->exception_mapper = fn($e) => $e;
+	}
+	
+	protected function conditionallySetId(): void
+	{
+		if ($this->event instanceof Event) {
+			$this->event->id ??= Snowflake::make()->id();
+		}
+	}
 }
