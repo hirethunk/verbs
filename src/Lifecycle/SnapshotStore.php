@@ -37,8 +37,8 @@ class SnapshotStore
     public function write(array $states): bool
     {
         $values = collect(static::formatForWrite($states))
-	        ->unique('id')
-	        ->all();
+            ->unique('id')
+            ->all();
 
         return VerbSnapshot::upsert($values, 'id', ['data', 'last_event_id', 'updated_at']);
     }
