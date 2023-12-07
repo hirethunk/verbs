@@ -5,10 +5,17 @@ Verbs makes it _very easy_ to automatically include additional metadata on your 
 In a `ServiceProvider` or `Middleware` call the following method:
 
 ```php
-\Thunk\Verbs\Lifecycle\EventStore::createMetadataUsing(function () {
- return ['team_id' => current_team_id()];
+Verbs::createMetadataUsing(function (Metadata $metadata, Event $event) {
+  $metadata->team_id = current_team_id();
 });
 ```
 
-You can call this method as many times as you would like, and Verbs will merge
-these arrays together into a `metadata` key on each event that is fired.
+You can call this method as many times as you would like. This is particularly useful
+for third-party packages, allowing them to add metadata automatically.
+
+It's also possible to simply return an array (or Collection), and Verbs will merge 
+that in for you:
+
+```php
+Verbs::createMetadataUsing(fn () => ['team_id' => current_team_id()]);
+```
