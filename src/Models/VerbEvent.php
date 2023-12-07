@@ -21,6 +21,11 @@ class VerbEvent extends Model
         'metadata' => 'array',
     ];
 
+    protected $attributes = [
+        'data' => '{}',
+        'metadata' => '{}',
+    ];
+
     protected ?Event $event = null;
 
     protected ?Metadata $meta = null;

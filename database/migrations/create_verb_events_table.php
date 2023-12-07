@@ -13,7 +13,7 @@ return new class extends Migration
 
             $table->string('type')->index();
             $table->json('data');
-            $table->json('metadata')->default(json_encode([]));
+            $table->json('metadata');
 
             $table->timestamps();
         });
