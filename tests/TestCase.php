@@ -16,7 +16,6 @@ use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Finder\SplFileInfo;
-use Thunk\Verbs\Lifecycle\EventStore;
 use Thunk\Verbs\VerbsServiceProvider;
 
 class TestCase extends Orchestra
@@ -91,13 +90,5 @@ class TestCase extends Orchestra
         });
 
         return $this;
-    }
-
-
-    protected function tearDown(): void
-    {
-        EventStore::createMetadataUsing(null);
-
-        parent::tearDown();
     }
 }

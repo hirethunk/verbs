@@ -9,6 +9,7 @@ use LogicException;
 use ReflectionMethod;
 use ReflectionParameter;
 use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
+use Thunk\Verbs\Lifecycle\MetadataManager;
 use Thunk\Verbs\Support\EventSerializer;
 use Thunk\Verbs\Support\EventStateRegistry;
 use Thunk\Verbs\Support\PendingEvent;
@@ -43,12 +44,19 @@ abstract class Event
 
         $event->id ??= Snowflake::make()->id();
 
+        app(MetadataManager::class)->initialize($event);
+
         return PendingEvent::make($event);
     }
 
     public static function fire(...$args): static
     {
         return static::make(...$args)->fire();
+    }
+
+    public function metadata(?string $key = null, mixed $default = null): mixed
+    {
+        return app(MetadataManager::class)->get($this, $key, $default);
     }
 
     public function states(): StateCollection

@@ -2,41 +2,36 @@
 
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Verbs;
-use Thunk\Verbs\Lifecycle\EventStore;
 use Thunk\Verbs\Metadata;
 use Thunk\Verbs\Models\VerbEvent;
 
 it('creates metadata for events', function () {
-    EventStore::createMetadataUsing(function (Metadata $metadata) {
+    // Test both the `Metadata` class API
+    Verbs::createMetadataUsing(function (Metadata $metadata) {
         $metadata->initiator_id = 888888;
-
-        return $metadata;
     });
+
+    // And the array shorthand API
+    Verbs::createMetadataUsing(fn (Metadata $metadata) => ['request_id' => 'abc']);
 
     $event = MetadataTestEvent::make(name: 'Verbs');
     $event->event->id = 1;
-
     $event->fire();
-
-    EventStore::createMetadataUsing(function (Metadata $metadata) {
-        $metadata->request_id = 'abc';
-
-        return $metadata;
-    });
 
     expect(HandleChecker::$handled)->toBeFalse();
 
     Verbs::commit();
 
-    $event = VerbEvent::sole();
-    expect($event->data)->toMatchArray([
-        'name' => 'Verbs',
-        'id' => 1,
-    ])->and($event->metadata)->toMatchArray([
-        'request_id' => 'abc',
-        'initiator_id' => 888888,
-    ])
-        ->and($event->metadata())->toBeInstanceOf(Metadata::class)
+    $model = VerbEvent::sole();
+
+    expect($model->data)->toMatchArray(['name' => 'Verbs', 'id' => 1])
+        ->and($model->metadata)->toMatchArray(['request_id' => 'abc', 'initiator_id' => 888888])
+        ->and($model->metadata())->toBeInstanceOf(Metadata::class)
+        ->and($model->event()->metadata())->toBeInstanceOf(Metadata::class)
+        ->and($model->event()->metadata('request_id'))->toBe('abc')
+        ->and($model->event()->metadata('initiator_id'))->toBe(888888)
+        ->and($model->event()->metadata('foo'))->toBeNull()
+        ->and($model->event()->metadata('bar', 'baz'))->toBe('baz')
         ->and(HandleChecker::$handled)->toBeTrue();
 });
 

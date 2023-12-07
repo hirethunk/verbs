@@ -98,11 +98,11 @@ class Hook
             $container->call($this->callback, $this->guessParameters($event, states: $states));
         }
     }
-	
-    public function handle(Container $container, Event $event, Metadata $metadata, ?State $state = null): void
+
+    public function handle(Container $container, Event $event, ?State $state = null): void
     {
         if ($this->runsInPhase(Phase::Handle)) {
-            $container->call($this->callback, array_merge($this->guessParameters($event, $state), [Metadata::class => $metadata]));
+            $container->call($this->callback, $this->guessParameters($event, $state));
         }
     }
 
@@ -115,12 +115,19 @@ class Hook
 
     protected function guessParameters(Event $event, ?State $state = null, ?StateCollection $states = null): array
     {
+        $metadata = $event->metadata();
+
         $parameters = [
             'e' => $event,
             'event' => $event,
             $event::class => $event,
             (string) Str::of($event::class)->classBasename()->snake() => $event,
             (string) Str::of($event::class)->classBasename()->studly() => $event,
+            'meta' => $metadata,
+            'metadata' => $metadata,
+            'metaData' => $metadata,
+            'meta_data' => $metadata,
+            Metadata::class => $metadata,
         ];
 
         if ($state) {

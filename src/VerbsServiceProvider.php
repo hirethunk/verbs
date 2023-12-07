@@ -11,6 +11,7 @@ use Thunk\Verbs\Commands\MakeVerbStateCommand;
 use Thunk\Verbs\Lifecycle\Broker;
 use Thunk\Verbs\Lifecycle\Dispatcher;
 use Thunk\Verbs\Lifecycle\EventStore;
+use Thunk\Verbs\Lifecycle\MetadataManager;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 use Thunk\Verbs\Lifecycle\SnapshotStore;
 use Thunk\Verbs\Lifecycle\StateManager;
@@ -53,6 +54,7 @@ class VerbsServiceProvider extends PackageServiceProvider
         $this->app->singleton(EventQueue::class);
         $this->app->singleton(StateManager::class);
         $this->app->singleton(EventStateRegistry::class);
+        $this->app->singleton(MetadataManager::class);
 
         $this->app->singleton(EventSerializer::class, function () {
             return new EventSerializer(Serializer::defaultSymfonySerializer());
