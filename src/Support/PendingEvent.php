@@ -72,7 +72,7 @@ class PendingEvent
     }
 
     public function __construct(
-        public Event|string|null $event,
+        public Event|string $event,
     ) {
         $this->conditionallySetId();
         $this->setDefaultExceptionMapper();
