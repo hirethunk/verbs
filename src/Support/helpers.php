@@ -8,6 +8,6 @@ if (! function_exists('verb')) {
     {
         $pending = new PendingEvent($event);
 
-        return $commit ? $pending->fireAndCommit() : $pending->fire();
+        return $commit ? $pending->commit() : $pending->fire();
     }
 }

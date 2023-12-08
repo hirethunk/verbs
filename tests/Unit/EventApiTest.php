@@ -24,8 +24,8 @@ it('calls fire on the broker when you call Event::fire', function () {
         ->and($event_queue[0])->toBe($user_registered);
 });
 
-it('immediately commits, and returns the results of handle when you call Event::fireAndCommit', function () {
-    $result = UserRegistered::fireAndCommit();
+it('immediately commits, and returns the results of handle when you call Event::commit', function () {
+    $result = UserRegistered::commit();
 
     expect($result)->toBeInstanceOf(stdClass::class)
         ->and($result->name)->toBe('Chris')

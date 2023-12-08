@@ -11,7 +11,7 @@ use WeakMap;
 
 /**
  * @method static static fire(...$args)
- * @method static mixed fireAndCommit(...$args)
+ * @method static mixed commit(...$args)
  */
 abstract class Event
 {
