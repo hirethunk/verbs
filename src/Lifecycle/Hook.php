@@ -9,6 +9,7 @@ use ReflectionMethod;
 use RuntimeException;
 use SplObjectStorage;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Metadata;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\Reflector;
 use Thunk\Verbs\Support\StateCollection;
@@ -116,12 +117,19 @@ class Hook
 
     protected function guessParameters(Event $event, ?State $state = null, ?StateCollection $states = null): array
     {
+        $metadata = $event->metadata();
+
         $parameters = [
             'e' => $event,
             'event' => $event,
             $event::class => $event,
             (string) Str::of($event::class)->classBasename()->snake() => $event,
             (string) Str::of($event::class)->classBasename()->studly() => $event,
+            'meta' => $metadata,
+            'metadata' => $metadata,
+            'metaData' => $metadata,
+            'meta_data' => $metadata,
+            Metadata::class => $metadata,
         ];
 
         if ($state) {

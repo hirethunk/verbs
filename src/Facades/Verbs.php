@@ -12,6 +12,7 @@ use Thunk\Verbs\Lifecycle\Broker;
  * @method static void unlessReplaying(callable $callback)
  * @method static int|string|null toId($id)
  * @method static Event fire(Event $event)
+ * @method static void createMetadataUsing(callable $callback)
  */
 class Verbs extends Facade
 {

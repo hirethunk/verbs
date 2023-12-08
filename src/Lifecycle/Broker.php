@@ -7,7 +7,6 @@ use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
-use Thunk\Verbs\Models\VerbEvent;
 
 class Broker
 {
@@ -63,15 +62,15 @@ class Broker
         app(SnapshotStore::class)->reset();
 
         app(EventStore::class)->read()
-            ->each(function (VerbEvent $model) {
-                app(StateManager::class)->setMaxEventId($model->id);
+            ->each(function (Event $event) {
+                app(StateManager::class)->setMaxEventId($event->id);
 
-                $model->event()->states()
-                    ->each(fn ($state) => $this->dispatcher->apply($model->event(), $state))
-                    ->each(fn ($state) => $this->dispatcher->replay($model->event(), $state))
-                    ->whenEmpty(fn () => $this->dispatcher->replay($model->event(), null));
+                $event->states()
+                    ->each(fn ($state) => $this->dispatcher->apply($event, $state))
+                    ->each(fn ($state) => $this->dispatcher->replay($event, $state))
+                    ->whenEmpty(fn () => $this->dispatcher->replay($event, null));
 
-                return $model->event();
+                return $event;
             });
 
         $this->is_replaying = false;
@@ -87,6 +86,11 @@ class Broker
         if (! $this->is_replaying) {
             $callback();
         }
+    }
+
+    public function createMetadataUsing(?callable $callback = null): void
+    {
+        app(MetadataManager::class)->createMetadataUsing($callback);
     }
 
     public function toId(Bits|UuidInterface|AbstractUid|int|string|null $id): int|string|null

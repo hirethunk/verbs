@@ -18,6 +18,8 @@ use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\Livewire\SupportVerbs;
 use Thunk\Verbs\Support\EventSerializer;
 use Thunk\Verbs\Support\EventStateRegistry;
+use Thunk\Verbs\Support\MetadataSerializer;
+use Thunk\Verbs\Support\Serializer;
 use Thunk\Verbs\Support\StateSerializer;
 
 class VerbsServiceProvider extends PackageServiceProvider
@@ -55,7 +57,11 @@ class VerbsServiceProvider extends PackageServiceProvider
         $this->app->singleton(MetadataManager::class);
 
         $this->app->singleton(EventSerializer::class, function () {
-            return new EventSerializer(EventSerializer::defaultSymfonySerializer());
+            return new EventSerializer(Serializer::defaultSymfonySerializer());
+        });
+
+        $this->app->singleton(MetadataSerializer::class, function () {
+            return new MetadataSerializer(Serializer::defaultSymfonySerializer());
         });
 
         $this->app->singleton(StateSerializer::class, function () {

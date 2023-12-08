@@ -4,6 +4,7 @@ namespace Thunk\Verbs;
 
 use LogicException;
 use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
+use Thunk\Verbs\Lifecycle\MetadataManager;
 use Thunk\Verbs\Support\EventStateRegistry;
 use Thunk\Verbs\Support\PendingEvent;
 use Thunk\Verbs\Support\StateCollection;
@@ -25,6 +26,11 @@ abstract class Event
     public static function make(...$args)
     {
         return PendingEvent::make(static::class, $args);
+    }
+
+    public function metadata(?string $key = null, mixed $default = null): mixed
+    {
+        return app(MetadataManager::class)->get($this, $key, $default);
     }
 
     public function states(): StateCollection

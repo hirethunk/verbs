@@ -89,6 +89,8 @@ class PendingEvent
     {
         $this->event = app(EventSerializer::class)->deserialize($this->event, $data);
 
+        app(MetadataManager::class)->initialize($this->event);
+
         $this->conditionallySetId();
 
         return $this;
