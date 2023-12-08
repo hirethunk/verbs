@@ -4,8 +4,10 @@ use Thunk\Verbs\Event;
 use Thunk\Verbs\Support\PendingEvent;
 
 if (! function_exists('verb')) {
-    function verb(Event $event): Event
+    function verb(Event $event, bool $commit = false): Event
     {
-        return (new PendingEvent($event))->fire();
+        $pending = new PendingEvent($event);
+
+        return $commit ? $pending->commit() : $pending->fire();
     }
 }
