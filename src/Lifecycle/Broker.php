@@ -15,6 +15,7 @@ class Broker
 
     public function __construct(
         protected Dispatcher $dispatcher,
+        protected MetadataManager $metadata,
     ) {
     }
 
@@ -49,7 +50,7 @@ class Broker
         }
 
         foreach ($events as $event) {
-            $this->dispatcher->handle($event);
+            $this->metadata->setLastResults($event, $this->dispatcher->handle($event));
         }
 
         return $this->commit();

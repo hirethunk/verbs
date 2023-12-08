@@ -98,11 +98,13 @@ class Hook
         }
     }
 
-    public function handle(Container $container, Event $event, ?State $state = null): void
+    public function handle(Container $container, Event $event, ?State $state = null): mixed
     {
         if ($this->runsInPhase(Phase::Handle)) {
-            $container->call($this->callback, $this->guessParameters($event, $state));
+            return $container->call($this->callback, $this->guessParameters($event, $state));
         }
+
+        return null;
     }
 
     public function replay(Container $container, Event $event, ?State $state = null): void
