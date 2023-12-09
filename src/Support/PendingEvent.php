@@ -96,7 +96,7 @@ class PendingEvent
         return $this;
     }
 
-    public function fire(...$args): Event
+    public function fire(...$args): Event|null
     {
         if (! empty($args) || is_string($this->event)) {
             $this->hydrate(static::normalizeArgs($args));
