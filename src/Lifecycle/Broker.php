@@ -18,7 +18,7 @@ class Broker
     ) {
     }
 
-    public function fire(Event $event): Event|null
+    public function fire(Event $event): ?Event
     {
         if ($this->is_replaying) {
             return null;

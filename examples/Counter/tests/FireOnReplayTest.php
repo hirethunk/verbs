@@ -1,7 +1,7 @@
 <?php
 
-use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Examples\Counter\Events\DecrementCount;
+use Thunk\Verbs\Facades\Verbs;
 
 it('does not fire nested events while replaying', function () {
     $state = DecrementCount::fire()->state();
