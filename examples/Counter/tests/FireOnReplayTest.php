@@ -1,19 +1,18 @@
 <?php
 
-use Thunk\Verbs\Examples\Counter\Events\DecrementCount;
+use Thunk\Verbs\Models\VerbEvent;
+use Thunk\Verbs\Examples\Counter\Events\IncrementCount;
+use Thunk\Verbs\Examples\Counter\Events\IncrementCountTwice;
 use Thunk\Verbs\Facades\Verbs;
 
-it('does not fire nested events while replaying', function () {
-    $state = DecrementCount::fire()->state();
+it('firing events from the handle method is ignored while replaying', function () {
+    IncrementCountTwice::fire();
 
     Verbs::commit();
 
-    // The DecrementCount handle() fires
-    // ResetCount since count < 0
-    expect($state->count)->toBe(0);
+    expect(VerbEvent::where('type', IncrementCount::class)->count())->toBe(2);
 
     Verbs::replay();
 
-    // This time only DecrementCount fires
-    expect($state->fresh()->count)->toBe(-1);
+    expect(VerbEvent::where('type', IncrementCount::class)->count())->toBe(2);
 });

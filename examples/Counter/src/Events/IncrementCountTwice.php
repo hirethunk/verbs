@@ -7,17 +7,11 @@ use Thunk\Verbs\Event;
 use Thunk\Verbs\Examples\Counter\States\CountState;
 
 #[AppliesToSingletonState(CountState::class)]
-class DecrementCount extends Event
+class IncrementCountTwice extends Event
 {
-    public function apply(CountState $state)
-    {
-        $state->count--;
-    }
-
     public function handle()
     {
-        if ($this->state(CountState::class)->count < 0) {
-            ResetCount::fire();
-        }
+        IncrementCount::fire();
+        IncrementCount::fire();
     }
 }
