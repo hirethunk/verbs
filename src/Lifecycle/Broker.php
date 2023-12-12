@@ -38,7 +38,10 @@ class Broker
 
         app(Queue::class)->queue($event);
 
-        if ($this->commit_immediately) {
+        if (
+            $this->commit_immediately
+            || $event->shouldCommitImmediately()
+        ) {
             $this->commit();
         }
 

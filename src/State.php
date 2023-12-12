@@ -4,16 +4,19 @@ namespace Thunk\Verbs;
 
 use Glhd\Bits\Bits;
 use Ramsey\Uuid\UuidInterface;
-use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Lifecycle\EventStore;
+use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\Support\StateSerializer;
+use Thunk\Verbs\Events\VerbsStateInitialized;
 
 abstract class State
 {
     public Bits|UuidInterface|AbstractUid|int|string|null $id = null;
 
     public Bits|UuidInterface|AbstractUid|int|string|null $last_event_id = null;
+
+    public bool $__verbs_initialized = false;
 
     public static function make(...$args): static
     {
@@ -62,5 +65,14 @@ abstract class State
     public function fresh(): static
     {
         return app(StateManager::class)->load($this->id, static::class);
+    }
+
+    public static function factory(array $data, ?int $id = null): static
+    {
+        return VerbsStateInitialized::fire(
+            state_id: $id,
+            state_class: static::class,
+            state_data: $data
+        )->state();
     }
 }
