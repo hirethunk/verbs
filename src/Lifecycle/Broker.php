@@ -18,8 +18,12 @@ class Broker
     ) {
     }
 
-    public function fire(Event $event): Event
+    public function fire(Event $event): ?Event
     {
+        if ($this->is_replaying) {
+            return null;
+        }
+
         // NOTE: Any changes to how the dispatcher is called here
         // should also be applied to the `replay` method
 
