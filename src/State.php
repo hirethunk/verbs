@@ -4,11 +4,11 @@ namespace Thunk\Verbs;
 
 use Glhd\Bits\Bits;
 use Ramsey\Uuid\UuidInterface;
-use Thunk\Verbs\Lifecycle\EventStore;
 use Symfony\Component\Uid\AbstractUid;
+use Thunk\Verbs\Events\VerbsStateInitialized;
+use Thunk\Verbs\Lifecycle\EventStore;
 use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\Support\StateSerializer;
-use Thunk\Verbs\Events\VerbsStateInitialized;
 
 abstract class State
 {

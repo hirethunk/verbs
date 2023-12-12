@@ -12,7 +12,8 @@ class VerbsStateInitialized extends Event
         public int|string|null $state_id,
         public string $state_class,
         public array $state_data,
-    ) {}
+    ) {
+    }
 
     public function registerStates(): array
     {
