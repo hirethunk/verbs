@@ -11,6 +11,7 @@ use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 class Broker
 {
     public bool $is_replaying = false;
+
     public bool $commit_immediately = false;
 
     public function __construct(
@@ -118,8 +119,8 @@ class Broker
     public function commitImmediately(): void
     {
         if (
-            !app()->runningUnitTests()
-            && !config('verbs.allow_commit_immediately_outside_tests', false)
+            ! app()->runningUnitTests()
+            && ! config('verbs.allow_commit_immediately_outside_tests', false)
         ) {
             throw new \RuntimeException('Committing immediately is only allowed in tests. Use `Verbs::commit()` instead. If you are really, really sure, you can set `allow_commit_immediately_outside_tests` to `true` in your config/verbs.php file.');
         }
