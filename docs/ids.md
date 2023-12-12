@@ -1,5 +1,5 @@
 Often, "ID" is synonymous with the auto-incrementing `id` column in your database of choice. For
-mose applications, there really is no distinction. But in event sourcing, you need to think of IDs
+most applications, there really is no distinction. But in event sourcing, you need to think of IDs
 as globally-unique identity—separate from the database that you happen to be using at any given time.
 
 ## Globally-Unique Identity?
