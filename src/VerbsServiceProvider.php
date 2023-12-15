@@ -12,6 +12,7 @@ use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Mapping\ClassDiscriminatorFromClassMetadata;
 use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
+use Symfony\Component\Serializer\Mapping\Loader\AnnotationLoader;
 use Symfony\Component\Serializer\Mapping\Loader\AttributeLoader;
 use Symfony\Component\Serializer\Normalizer\PropertyNormalizer;
 use Symfony\Component\Serializer\Serializer as SymfonySerializer;
@@ -64,9 +65,13 @@ class VerbsServiceProvider extends PackageServiceProvider
         $this->app->singleton(Serializer::class);
 
         $this->app->singleton(PropertyNormalizer::class, function () {
-            return new PropertyNormalizer(
+	        $loader = class_exists(AttributeLoader::class)
+	            ? new AttributeLoader()
+	            : new AnnotationLoader();
+			
+	        return new PropertyNormalizer(
                 propertyTypeExtractor: new ReflectionExtractor(),
-                classDiscriminatorResolver: new ClassDiscriminatorFromClassMetadata(new ClassMetadataFactory(new AttributeLoader())),
+                classDiscriminatorResolver: new ClassDiscriminatorFromClassMetadata(new ClassMetadataFactory($loader)),
             );
         });
 
