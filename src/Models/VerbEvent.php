@@ -7,8 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Metadata;
 use Thunk\Verbs\State;
-use Thunk\Verbs\Support\EventSerializer;
-use Thunk\Verbs\Support\MetadataSerializer;
+use Thunk\Verbs\Support\Serializer;
 
 class VerbEvent extends Model
 {
@@ -32,14 +31,14 @@ class VerbEvent extends Model
 
     public function event(): Event
     {
-        $this->event ??= app(EventSerializer::class)->deserialize($this->type, $this->data);
+        $this->event ??= app(Serializer::class)->deserialize($this->type, $this->data);
 
         return $this->event;
     }
 
     public function metadata(): Metadata
     {
-        $this->meta ??= app(MetadataSerializer::class)->deserialize(Metadata::class, $this->metadata);
+        $this->meta ??= app(Serializer::class)->deserialize(Metadata::class, $this->metadata);
 
         return $this->meta;
     }
