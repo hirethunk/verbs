@@ -3,6 +3,7 @@
 namespace Thunk\Verbs\Models;
 
 use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\StateSerializer;
@@ -39,5 +40,23 @@ class VerbSnapshot extends Model
     public function scopeWhereDataContains($query, array $data)
     {
         return $query->whereJsonContains('data', $data);
+    }
+
+    //
+    // To support custom IDs, we need to override the default Eloquent behavior.
+    //
+
+    public function getKeyType()
+    {
+       return match (config('verbs.id_type', 'snowflake')) {
+           'snowflake' => 'int',
+           'ulid' => 'string',
+           'uuid' => 'string',
+       };
+    }
+
+    public function getIncrementing()
+    {
+        return false;
     }
 }

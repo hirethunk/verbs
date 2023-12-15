@@ -13,7 +13,12 @@ return new class extends Migration
 
             $table->snowflake('event_id')->index();
 
-            $table->snowflake('state_id')->index();
+            match (config('verbs.id_type', 'snowflake')) {
+                'snowflake' => $table->snowflake('state_id')->index(),
+                'ulid' => $table->ulid('state_id')->index(),
+                'uuid' => $table->uuid('state_id')->index(),
+            };
+
             $table->string('state_type')->index();
 
             $table->timestamps();

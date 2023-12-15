@@ -9,7 +9,11 @@ return new class extends Migration
     public function up()
     {
         Schema::create('verb_snapshots', function (Blueprint $table) {
-            $table->snowflakeId();
+            match (config('verbs.id_type', 'snowflake')) {
+                'snowflake' => $table->snowflakeId(),
+                'ulid' => $table->ulid('id')->primary(),
+                'uuid' => $table->uuid('id')->primary(),
+            };
 
             $table->string('type')->index();
             $table->json('data');
