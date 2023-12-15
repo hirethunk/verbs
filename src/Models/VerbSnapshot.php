@@ -3,7 +3,6 @@
 namespace Thunk\Verbs\Models;
 
 use Carbon\CarbonInterface;
-use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\StateSerializer;
@@ -48,11 +47,11 @@ class VerbSnapshot extends Model
 
     public function getKeyType()
     {
-       return match (config('verbs.id_type', 'snowflake')) {
-           'snowflake' => 'int',
-           'ulid' => 'string',
-           'uuid' => 'string',
-       };
+        return match (config('verbs.id_type', 'snowflake')) {
+            'snowflake' => 'int',
+            'ulid' => 'string',
+            'uuid' => 'string',
+        };
     }
 
     public function getIncrementing()

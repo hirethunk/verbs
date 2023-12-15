@@ -1,5 +1,5 @@
 <?php
 
 return [
-    'id_type' => env('VERBS_ID_TYPE', 'snowflake') // snowflake, ulid, uuid
+    'id_type' => env('VERBS_ID_TYPE', 'snowflake'), // snowflake, ulid, uuid
 ];
