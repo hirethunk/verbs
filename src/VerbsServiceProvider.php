@@ -65,11 +65,11 @@ class VerbsServiceProvider extends PackageServiceProvider
         $this->app->singleton(Serializer::class);
 
         $this->app->singleton(PropertyNormalizer::class, function () {
-	        $loader = class_exists(AttributeLoader::class)
-	            ? new AttributeLoader()
-	            : new AnnotationLoader();
-			
-	        return new PropertyNormalizer(
+            $loader = class_exists(AttributeLoader::class)
+                ? new AttributeLoader()
+                : new AnnotationLoader();
+
+            return new PropertyNormalizer(
                 propertyTypeExtractor: new ReflectionExtractor(),
                 classDiscriminatorResolver: new ClassDiscriminatorFromClassMetadata(new ClassMetadataFactory($loader)),
             );
