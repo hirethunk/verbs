@@ -5,7 +5,7 @@ namespace Thunk\Verbs\Models;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 use Thunk\Verbs\State;
-use Thunk\Verbs\Support\StateSerializer;
+use Thunk\Verbs\Support\Serializer;
 
 /**
  * @property  int $id
@@ -24,7 +24,7 @@ class VerbSnapshot extends Model
 
     public function state(): State
     {
-        $this->state ??= app(StateSerializer::class)->deserialize($this->type, $this->data);
+        $this->state ??= app(Serializer::class)->deserialize($this->type, $this->data);
         $this->state->id = $this->id;
         $this->state->last_event_id = $this->last_event_id;
 

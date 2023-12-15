@@ -9,7 +9,7 @@ use Thunk\Verbs\Exceptions\StateIsNotSingletonException;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Models\VerbSnapshot;
 use Thunk\Verbs\State;
-use Thunk\Verbs\Support\StateSerializer;
+use Thunk\Verbs\Support\Serializer;
 
 class SnapshotStore
 {
@@ -55,7 +55,7 @@ class SnapshotStore
         return array_map(fn (State $state) => [
             'id' => Verbs::toId($state->id),
             'type' => $state::class,
-            'data' => app(StateSerializer::class)->serialize($state),
+            'data' => app(Serializer::class)->serialize($state),
             'last_event_id' => Verbs::toId($state->last_event_id),
             'created_at' => now(),
             'updated_at' => now(),
