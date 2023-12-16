@@ -17,8 +17,6 @@ use UnexpectedValueException;
  */
 class VerbSnapshot extends Model
 {
-    use UsesVerbsIdType;
-
     public $table = 'verb_snapshots';
 
     public $guarded = [];
