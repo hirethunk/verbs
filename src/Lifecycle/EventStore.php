@@ -17,8 +17,7 @@ use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Models\VerbEvent;
 use Thunk\Verbs\Models\VerbStateEvent;
 use Thunk\Verbs\State;
-use Thunk\Verbs\Support\EventSerializer;
-use Thunk\Verbs\Support\MetadataSerializer;
+use Thunk\Verbs\Support\Serializer;
 
 class EventStore
 {
@@ -129,8 +128,8 @@ class EventStore
         return array_map(fn (Event $event) => [
             'id' => Verbs::toId($event->id),
             'type' => $event::class,
-            'data' => app(EventSerializer::class)->serialize($event),
-            'metadata' => app(MetadataSerializer::class)->serialize($this->metadata->get($event)),
+            'data' => app(Serializer::class)->serialize($event),
+            'metadata' => app(Serializer::class)->serialize($this->metadata->get($event)),
             'created_at' => now(),
             'updated_at' => now(),
         ], $event_objects);
