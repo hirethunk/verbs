@@ -57,9 +57,9 @@ class VerbEvent extends Model
     {
         return $query->whereJsonContains('data', $data);
     }
-	
-	public function getIncrementing()
-	{
-		return false;
-	}
+
+    public function getIncrementing()
+    {
+        return false;
+    }
 }

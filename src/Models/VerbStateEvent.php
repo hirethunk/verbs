@@ -20,9 +20,9 @@ class VerbStateEvent extends Model
     {
         return $this->state_type::load($this->state_id);
     }
-	
-	public function getIncrementing()
-	{
-		return false;
-	}
+
+    public function getIncrementing()
+    {
+        return false;
+    }
 }

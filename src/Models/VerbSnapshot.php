@@ -43,20 +43,20 @@ class VerbSnapshot extends Model
     {
         return $query->whereJsonContains('data', $data);
     }
-	
-	public function getKeyType()
-	{
-		$id_type = strtolower(config('verbs.id_type', 'snowflake'));
-		
-		return match ($id_type) {
-			'snowflake' => 'int',
-			'ulid', 'uuid' => 'string',
-			'default' => throw new UnexpectedValueException("Unknown Verbs ID type: '{$id_type}'"),
-		};
-	}
-	
-	public function getIncrementing()
-	{
-		return false;
-	}
+
+    public function getKeyType()
+    {
+        $id_type = strtolower(config('verbs.id_type', 'snowflake'));
+
+        return match ($id_type) {
+            'snowflake' => 'int',
+            'ulid', 'uuid' => 'string',
+            'default' => throw new UnexpectedValueException("Unknown Verbs ID type: '{$id_type}'"),
+        };
+    }
+
+    public function getIncrementing()
+    {
+        return false;
+    }
 }
