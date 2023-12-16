@@ -11,8 +11,6 @@ use Thunk\Verbs\Support\Serializer;
 
 class VerbEvent extends Model
 {
-    use UsesVerbsIdType;
-
     public $table = 'verb_events';
 
     public $guarded = [];
@@ -59,4 +57,9 @@ class VerbEvent extends Model
     {
         return $query->whereJsonContains('data', $data);
     }
+	
+	public function getIncrementing()
+	{
+		return false;
+	}
 }
