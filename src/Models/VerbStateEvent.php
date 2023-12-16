@@ -7,6 +7,8 @@ use Thunk\Verbs\State;
 
 class VerbStateEvent extends Model
 {
+    use UsesVerbsIdType;
+
     public $table = 'verb_state_events';
 
     public $guarded = [];

@@ -11,6 +11,8 @@ use Thunk\Verbs\Support\Serializer;
 
 class VerbEvent extends Model
 {
+    use UsesVerbsIdType;
+
     public $table = 'verb_events';
 
     public $guarded = [];
