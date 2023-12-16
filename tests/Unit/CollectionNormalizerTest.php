@@ -5,7 +5,7 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use Symfony\Component\Serializer\Normalizer\PropertyNormalizer;
 use Symfony\Component\Serializer\Serializer as SymfonySerializer;
 use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\SerializedByVerbs;
@@ -105,7 +105,7 @@ it('can normalize a collection all of states', function () {
         normalizers: [
             $normalizer = new CollectionNormalizer(),
             new StateNormalizer(),
-            new ObjectNormalizer(propertyTypeExtractor: new ReflectionExtractor()),
+            new PropertyNormalizer(propertyTypeExtractor: new ReflectionExtractor()),
         ],
         encoders: [
             new JsonEncoder(),
@@ -138,7 +138,7 @@ it('can normalize collections of objects that implement SerializedByVerbs', func
             $normalizer = new CollectionNormalizer(),
             new CarbonNormalizer(),
             new SelfSerializingNormalizer(),
-            new ObjectNormalizer(propertyTypeExtractor: new ReflectionExtractor()),
+            new PropertyNormalizer(propertyTypeExtractor: new ReflectionExtractor()),
         ],
         encoders: [
             new JsonEncoder(),

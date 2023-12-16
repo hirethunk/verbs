@@ -87,7 +87,7 @@ class PendingEvent
 
     public function hydrate(array $data): static
     {
-        $this->event = app(EventSerializer::class)->deserialize($this->event, $data);
+        $this->event = app(Serializer::class)->deserialize($this->event, $data);
 
         app(MetadataManager::class)->initialize($this->event);
 
