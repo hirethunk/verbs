@@ -10,9 +10,9 @@ return new class extends Migration
     {
         Schema::create('verb_snapshots', function (Blueprint $table) {
             match (config('verbs.id_type', 'snowflake')) {
-                'snowflake' => $table->snowflakeId(),
                 'ulid' => $table->ulid('id')->primary(),
                 'uuid' => $table->uuid('id')->primary(),
+                default => $table->snowflakeId(),
             };
 
             $table->string('type')->index();
