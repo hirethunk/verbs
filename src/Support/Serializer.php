@@ -8,6 +8,8 @@ use Symfony\Component\Serializer\Serializer as SymfonySerializer;
 
 class Serializer
 {
+    public $active_normalization_target = null;
+
     public function __construct(
         public SymfonySerializer $serializer,
     ) {
@@ -19,7 +21,13 @@ class Serializer
             $class = $class->__sleep();
         }
 
-        return $this->serializer->serialize($class, 'json');
+        try {
+            $this->active_normalization_target = $class;
+
+            return $this->serializer->serialize($class, 'json');
+        } finally {
+            $this->active_normalization_target = null;
+        }
     }
 
     public function deserialize(

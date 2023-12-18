@@ -7,6 +7,7 @@ use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\State;
+use Thunk\Verbs\Support\Serializer;
 
 class StateNormalizer implements DenormalizerInterface, NormalizerInterface
 {
@@ -23,7 +24,8 @@ class StateNormalizer implements DenormalizerInterface, NormalizerInterface
 
     public function supportsNormalization(mixed $data, ?string $format = null): bool
     {
-        return $data instanceof State;
+        return $data instanceof State
+            && $data !== app(Serializer::class)->active_normalization_target;
     }
 
     public function normalize(mixed $object, ?string $format = null, array $context = []): string

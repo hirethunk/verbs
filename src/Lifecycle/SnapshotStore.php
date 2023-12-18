@@ -36,6 +36,10 @@ class SnapshotStore
 
     public function write(array $states): bool
     {
+        if (! count($states)) {
+            return true;
+        }
+
         $values = collect(static::formatForWrite($states))
             ->unique('id')
             ->all();
