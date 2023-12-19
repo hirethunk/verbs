@@ -20,9 +20,9 @@ use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Models\VerbSnapshot;
 
-beforeEach(function() {
-	$normalizers = array_merge([MoneyNormalizer::class], config('verbs.normalizers'));
-	config()->set('verbs.normalizers', $normalizers);
+beforeEach(function () {
+    $normalizers = array_merge([MoneyNormalizer::class], config('verbs.normalizers'));
+    config()->set('verbs.normalizers', $normalizers);
 });
 
 it('can play a game of Monopoly', function () {
