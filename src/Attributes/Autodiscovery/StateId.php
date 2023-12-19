@@ -4,6 +4,8 @@ namespace Thunk\Verbs\Attributes\Autodiscovery;
 
 use Attribute;
 use Glhd\Bits\Snowflake;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\StateManager;
@@ -22,16 +24,22 @@ class StateId extends StateDiscoveryAttribute
         }
     }
 
-    public function discoverState(Event $event, StateManager $manager): State
+    public function discoverState(Event $event, StateManager $manager): array
     {
-        $value = $this->property->getValue($event);
+        $id = $this->property->getValue($event);
 
         // If the ID hasn't been set yet, we'll automatically set one
-        if ($value === null && $this->autofill) {
-            $value = Snowflake::make()->id();
-            $this->property->setValue($event, $value);
+        if ($id === null && $this->autofill) {
+            $id = Snowflake::make()->id();
+            $this->property->setValue($event, $id);
         }
 
-        return $manager->load($value, $this->state_type);
+        if (! is_array($id)) {
+            $this->alias = (string) Str::of($this->property->getName())->beforeLast('_id');
+        }
+
+        return collect(Arr::wrap($id))
+            ->map(fn ($id) => $manager->load($id, $this->state_type))
+            ->all();
     }
 }

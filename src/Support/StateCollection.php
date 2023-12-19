@@ -2,7 +2,10 @@
 
 namespace Thunk\Verbs\Support;
 
+use Glhd\Bits\Bits;
 use Illuminate\Support\Collection;
+use Ramsey\Uuid\UuidInterface;
+use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\State;
 
 /**
@@ -15,10 +18,10 @@ class StateCollection extends Collection
 {
     protected array $aliases = [];
 
-    public function alias(?string $alias, string $key): static
+    public function alias(?string $alias, State $state): static
     {
         if ($alias) {
-            $this->aliases[$alias] = $key;
+            $this->aliases[$alias] = [$state::class, $state->id];
         }
 
         return $this;
@@ -27,7 +30,9 @@ class StateCollection extends Collection
     public function get($key, $default = null)
     {
         if (! $this->has($key) && isset($this->aliases[$key])) {
-            $key = $this->aliases[$key];
+            [$target_class, $target_id] = $this->aliases[$key];
+
+            return $this->first(fn (State $state) => $state instanceof $target_class && $state->id === $target_id);
         }
 
         return parent::get($key, $default);
@@ -37,6 +42,11 @@ class StateCollection extends Collection
     public function ofType(string $state_type): static
     {
         return $this->filter(fn (State $state) => $state instanceof $state_type);
+    }
+
+    public function withId(Bits|UuidInterface|AbstractUid|int|string|null $id): static
+    {
+        return $this->filter(fn (State $state) => $state->id === $id);
     }
 
     /** @param  class-string<State>  $state_type  */
