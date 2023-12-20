@@ -30,15 +30,17 @@ class ModelNormalizer implements DenormalizerInterface, NormalizerInterface
     /** @param  class-string<QueueableEntity|QueueableCollection>  $type */
     public function denormalize(mixed $data, string $type, ?string $format = null, array $context = []): QueueableEntity|QueueableCollection
     {
-        if (is_array($data)) {
-            $data = new ModelIdentifier($data['class'], $data['id'], $data['relations'], $data['connection']);
+        $identifier = $data;
+
+        if (is_array($data) && $this->isDenormalizedModelIdentifier($data)) {
+            $identifier = new ModelIdentifier($data['class'], $data['id'], $data['relations'] ?? [], $data['connection'] ?? null);
 
             if (isset($data['collectionClass'])) {
-                $data->useCollectionClass($data['collectionClass']);
+                $identifier->useCollectionClass($data['collectionClass']);
             }
         }
 
-        return $this->getRestoredPropertyValue($data);
+        return $this->getRestoredPropertyValue($identifier);
     }
 
     public function supportsNormalization(mixed $data, ?string $format = null): bool
@@ -54,7 +56,7 @@ class ModelNormalizer implements DenormalizerInterface, NormalizerInterface
         }
 
         if (static::$allow_normalization) {
-            return (array) $this->getSerializedPropertyValue($object);
+            return array_filter((array) $this->getSerializedPropertyValue($object));
         }
 
         throw new DoNotStoreModelsOnEventsOrStates($object);
@@ -77,6 +79,6 @@ class ModelNormalizer implements DenormalizerInterface, NormalizerInterface
     protected function isDenormalizedModelIdentifier($denormalized): bool
     {
         return $denormalized instanceof ModelIdentifier
-            || isset($denormalized['class'], $denormalized['id'], $denormalized['relations'], $denormalized['connection']);
+            || isset($denormalized['class'], $denormalized['id']);
     }
 }
