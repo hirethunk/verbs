@@ -4,6 +4,7 @@ namespace Thunk\Verbs\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Arr;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Metadata;
 use Thunk\Verbs\State;
@@ -53,9 +54,15 @@ class VerbEvent extends Model
         return $query->where('type', $type);
     }
 
-    public function scopeWhereDataContains($query, array $data)
+    public function scopeWhereDataContains($query, $data)
     {
-        return $query->whereJsonContains('data', $data);
+        $data = Arr::wrap($data);
+
+        return $query->where(function($query) use ($data) {
+            foreach ($data as $value) {
+                $query->whereJsonContains('data', $value);
+            }
+        });
     }
 
     public function getIncrementing()

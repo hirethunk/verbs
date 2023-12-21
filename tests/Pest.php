@@ -3,6 +3,7 @@
 use Brick\Money\Money;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Grammars\SQLiteGrammar;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
@@ -55,7 +56,10 @@ expect()->extend('toBeMoney', function (Money|string|int|null $amount = null, ?s
 uses(TestCase::class)
     ->beforeEach(function () {
         $db = DB::connection();
-        if ($db->getQueryGrammar() instanceof SQLiteGrammar) {
+        if (
+            version_compare(App::version(), '10.38.0', '<')
+            && $db->getQueryGrammar() instanceof SQLiteGrammar
+        ) {
             $db->setQueryGrammar(new PatchedSQLiteGrammar());
         }
     })
