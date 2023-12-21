@@ -53,10 +53,10 @@ expect()->extend('toBeMoney', function (Money|string|int|null $amount = null, ?s
 });
 
 uses(TestCase::class)
-	->beforeEach(function() {
-		$db = DB::connection();
-		if ($db->getQueryGrammar() instanceof SQLiteGrammar) {
-			$db->setQueryGrammar(new PatchedSQLiteGrammar());	
-		}
-	})
+    ->beforeEach(function () {
+        $db = DB::connection();
+        if ($db->getQueryGrammar() instanceof SQLiteGrammar) {
+            $db->setQueryGrammar(new PatchedSQLiteGrammar());
+        }
+    })
     ->in(__DIR__, ...$examples);

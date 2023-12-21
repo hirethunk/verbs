@@ -2,6 +2,7 @@
 
 namespace Thunk\Verbs\Tests\Support;
 
+use Illuminate\Database\Concerns\CompilesJsonPaths;
 use Illuminate\Database\Query\Grammars\SQLiteGrammar;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -13,6 +14,8 @@ use Illuminate\Support\Facades\DB;
 
 class PatchedSQLiteGrammar extends SQLiteGrammar
 {
+    use CompilesJsonPaths;
+
     public function __construct()
     {
         DB::connection()
