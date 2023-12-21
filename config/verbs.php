@@ -6,6 +6,7 @@ use Symfony\Component\Serializer\Normalizer\PropertyNormalizer;
 use Thunk\Verbs\Support\Normalization\BitsNormalizer;
 use Thunk\Verbs\Support\Normalization\CarbonNormalizer;
 use Thunk\Verbs\Support\Normalization\CollectionNormalizer;
+use Thunk\Verbs\Support\Normalization\ModelNormalizer;
 use Thunk\Verbs\Support\Normalization\SelfSerializingNormalizer;
 use Thunk\Verbs\Support\Normalization\StateNormalizer;
 
@@ -41,6 +42,7 @@ return [
     'normalizers' => [
         SelfSerializingNormalizer::class,
         CollectionNormalizer::class,
+        ModelNormalizer::class,
         StateNormalizer::class,
         BitsNormalizer::class,
         CarbonNormalizer::class,
