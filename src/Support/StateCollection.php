@@ -3,7 +3,6 @@
 namespace Thunk\Verbs\Support;
 
 use Glhd\Bits\Bits;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
@@ -59,7 +58,7 @@ class StateCollection extends Collection
         return $this->ofType($state_type)->first();
     }
 
-    public function filter(callable $callback = null)
+    public function filter(?callable $callback = null)
     {
         $result = parent::filter($callback);
 

@@ -7,11 +7,13 @@ use Thunk\Verbs\State;
 use Thunk\Verbs\Support\StateCollection;
 
 test('states can be aliased', function () {
-    $state1 = new class extends State {
+    $state1 = new class extends State
+    {
         public Bits|UuidInterface|AbstractUid|int|string|null $id = 1;
     };
 
-    $state2 = new class extends State {
+    $state2 = new class extends State
+    {
         public Bits|UuidInterface|AbstractUid|int|string|null $id = 2;
     };
 
