@@ -4,7 +4,6 @@ namespace Thunk\Verbs\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Support\Arr;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Metadata;
 use Thunk\Verbs\State;
