@@ -58,7 +58,7 @@ class VerbEvent extends Model
     {
         $data = Arr::wrap($data);
 
-        return $query->where(function($query) use ($data) {
+        return $query->where(function ($query) use ($data) {
             foreach ($data as $value) {
                 $query->whereJsonContains('data', $value);
             }
