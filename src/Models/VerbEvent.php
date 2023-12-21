@@ -54,17 +54,6 @@ class VerbEvent extends Model
         return $query->where('type', $type);
     }
 
-    public function scopeWhereDataContains($query, $data)
-    {
-        $data = Arr::wrap($data);
-
-        return $query->where(function ($query) use ($data) {
-            foreach ($data as $value) {
-                $query->whereJsonContains('data', $value);
-            }
-        });
-    }
-
     public function getIncrementing()
     {
         return false;
