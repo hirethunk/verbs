@@ -13,7 +13,7 @@ class PatchedSQLiteGrammar extends SQLiteGrammar
     {
         [$field, $path] = $this->wrapJsonFieldAndPath($column);
 
-        return 'exists (select 1 from json_each(' . $field . $path . ') where ' . $this->wrap('json_each.value') . ' is ' . $value . ')';
+        return 'exists (select 1 from json_each('.$field.$path.') where '.$this->wrap('json_each.value').' is '.$value.')';
     }
 
     public function prepareBindingForJsonContains($binding)
