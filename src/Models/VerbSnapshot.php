@@ -37,11 +37,6 @@ class VerbSnapshot extends Model
         return $query->where('type', $type);
     }
 
-    public function scopeWhereDataContains($query, array $data)
-    {
-        return $query->whereJsonContains('data', $data);
-    }
-
     public function getKeyType()
     {
         $id_type = strtolower(config('verbs.id_type', 'snowflake'));
