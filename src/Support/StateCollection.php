@@ -3,6 +3,7 @@
 namespace Thunk\Verbs\Support;
 
 use Glhd\Bits\Bits;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
@@ -32,7 +33,10 @@ class StateCollection extends Collection
         if (! $this->has($key) && isset($this->aliases[$key])) {
             [$target_class, $target_id] = $this->aliases[$key];
 
-            return $this->first(fn (State $state) => $state instanceof $target_class && $state->id === $target_id);
+            return $this->first(
+                fn (State $state) => $state instanceof $target_class && $state->id === $target_id,
+                $default
+            );
         }
 
         return parent::get($key, $default);
@@ -53,5 +57,14 @@ class StateCollection extends Collection
     public function firstOfType(string $state_type): ?State
     {
         return $this->ofType($state_type)->first();
+    }
+
+    public function filter(callable $callback = null)
+    {
+        $result = parent::filter($callback);
+
+        $result->aliases = $this->aliases;
+
+        return $result;
     }
 }
