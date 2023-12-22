@@ -5,7 +5,6 @@ namespace Thunk\Verbs\Attributes\Autodiscovery;
 use Attribute;
 use Glhd\Bits\Snowflake;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\StateManager;
