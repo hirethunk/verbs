@@ -38,14 +38,6 @@ class EventStateRegistry
             }
         }
 
-        foreach ($event->registerStates() as $alias => $state) {
-            $discovered->push($state);
-
-            if (! is_numeric($alias)) {
-                $discovered->alias($alias, $state::class);
-            }
-        }
-
         // Once we've loaded everything else, try to discover any deferred attributes
         $deferred->each(fn (StateDiscoveryAttribute $attr) => $this->discoverAndPushState($attr, $event, $discovered));
 

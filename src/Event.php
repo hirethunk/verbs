@@ -16,8 +16,6 @@ use WeakMap;
  */
 abstract class Event
 {
-    protected $verbs_should_commit_immediately = false;
-
     public int $id;
 
     public static function __callStatic(string $name, array $arguments)
@@ -33,11 +31,6 @@ abstract class Event
     public function metadata(?string $key = null, mixed $default = null): mixed
     {
         return app(MetadataManager::class)->get($this, $key, $default);
-    }
-
-    public function registerStates(): array
-    {
-        return [];
     }
 
     public function states(): StateCollection
@@ -80,10 +73,5 @@ abstract class Event
         }
 
         return $this;
-    }
-
-    public function shouldCommitImmediately(): bool
-    {
-        return $this->verbs_should_commit_immediately;
     }
 }

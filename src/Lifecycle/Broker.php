@@ -5,6 +5,7 @@ namespace Thunk\Verbs\Lifecycle;
 use Glhd\Bits\Bits;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
+use Thunk\Verbs\CommitsImmediately;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 
@@ -39,10 +40,7 @@ class Broker
 
         app(Queue::class)->queue($event);
 
-        if (
-            $this->commit_immediately
-            || $event->shouldCommitImmediately()
-        ) {
+        if ($this->commit_immediately || $event instanceof CommitsImmediately) {
             $this->commit();
         }
 
@@ -116,15 +114,8 @@ class Broker
         };
     }
 
-    public function commitImmediately(): void
+    public function commitImmediately(bool $commit_immediately = true): void
     {
-        if (
-            ! app()->runningUnitTests()
-            && ! config('verbs.allow_commit_immediately_outside_tests', false)
-        ) {
-            throw new \RuntimeException('Committing immediately is only allowed in tests. Use `Verbs::commit()` instead. If you are really, really sure, you can set `allow_commit_immediately_outside_tests` to `true` in your config/verbs.php file.');
-        }
-
-        $this->commit_immediately = true;
+        $this->commit_immediately = $commit_immediately;
     }
 }

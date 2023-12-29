@@ -16,6 +16,7 @@ abstract class State
 
     public Bits|UuidInterface|AbstractUid|int|string|null $last_event_id = null;
 
+    // TODO: This should move to state metadata eventually
     public bool $__verbs_initialized = false;
 
     public static function make(...$args): static

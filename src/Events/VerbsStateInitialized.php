@@ -2,12 +2,12 @@
 
 namespace Thunk\Verbs\Events;
 
+use Thunk\Verbs\CommitsImmediately;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Support\StateCollection;
 
-class VerbsStateInitialized extends Event
+class VerbsStateInitialized extends Event implements CommitsImmediately
 {
-    protected $verbs_should_commit_immediately = true;
-
     public function __construct(
         public int|string|null $state_id,
         public string $state_class,
@@ -15,13 +15,13 @@ class VerbsStateInitialized extends Event
     ) {
     }
 
-    public function registerStates(): array
+    public function states(): StateCollection
     {
-        return [
+        return StateCollection::make([
             $this->state_id
                 ? $this->state_class::load($this->state_id)
                 : $this->state_class::singleton(),
-        ];
+        ]);
     }
 
     public function validate()
