@@ -19,7 +19,7 @@ class StateId extends StateDiscoveryAttribute
         public bool $autofill = true,
     ) {
         if (! is_a($this->state_type, State::class, true)) {
-            throw new InvalidArgumentException('You must pass state class names to the "Identifies" attribute.');
+            throw new InvalidArgumentException('You must pass state class names to the "StateId" attribute.');
         }
     }
 
