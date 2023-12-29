@@ -4,6 +4,8 @@ use Carbon\CarbonInterface;
 use Glhd\Bits\Snowflake;
 use Illuminate\Support\Str;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\SerializedByVerbs;
+use Thunk\Verbs\Support\Normalization\NormalizeToPropertiesAndClassName;
 
 it('supports instantiation via an associative array', function () {
     $snowflake = Snowflake::make();
@@ -59,6 +61,14 @@ it('triggers an error when using positional arguments with an event that does no
     );
 })->throws(InvalidArgumentException::class);
 
+it('allows us to store a serializable class as a property', function () {
+    expect(function () {
+        EventWithDto::fire(
+            dto: new DTO
+        );
+    })->not->toThrow(TypeError::class);
+});
+
 class EventWithConstructorPromotion extends Event
 {
     public function __construct(
@@ -76,4 +86,16 @@ class EventWithJustPublicProperties extends Event
     public CarbonInterface $timestamp;
 
     public string $string;
+}
+
+class DTO implements SerializedByVerbs
+{
+    use NormalizeToPropertiesAndClassName;
+
+    public int $foo = 1;
+}
+
+class EventWithDto extends Event
+{
+    public DTO $dto;
 }
