@@ -66,20 +66,28 @@ class Broker
         return $this->commit();
     }
 
-    public function replay()
+    public function replay(?callable $beforeEach = null, ?callable $afterEach = null)
     {
         $this->is_replaying = true;
 
         app(SnapshotStore::class)->reset();
 
         app(EventStore::class)->read()
-            ->each(function (Event $event) {
+            ->each(function (Event $event) use ($beforeEach, $afterEach) {
                 app(StateManager::class)->setMaxEventId($event->id);
+
+                if ($beforeEach) {
+                    $beforeEach($event);
+                }
 
                 $event->states()
                     ->each(fn ($state) => $this->dispatcher->apply($event, $state))
                     ->each(fn ($state) => $this->dispatcher->replay($event, $state))
                     ->whenEmpty(fn () => $this->dispatcher->replay($event, null));
+
+                if ($afterEach) {
+                    $afterEach($event);
+                }
 
                 return $event;
             });

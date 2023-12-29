@@ -3,50 +3,21 @@
 namespace Thunk\Verbs\Tests\Support;
 
 use Illuminate\Database\Query\Grammars\SQLiteGrammar;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 
-// Stolen from: @joecampo
-// Original Laracasts Answer: https://laracasts.com/discuss/channels/laravel/wherejsoncontains-equivalent-for-sqlite-database?page=1&replyId=894087
-// Modified slightly to not use strict mode
-// Modified to use collection diff
+// This just brings in the 10.38.0 code:
+// https://github.com/laravel/framework/pull/49401
 
 class PatchedSQLiteGrammar extends SQLiteGrammar
 {
-    public function __construct()
-    {
-        DB::connection()
-            ->getPdo()
-            ->sqliteCreateFunction(
-                'JSON_CONTAINS',
-                function ($json, $val, $path = null) {
-                    $decoded_needle = collect(json_decode(trim($val, '"'), true, 512, JSON_THROW_ON_ERROR));
-                    $decoded_haystack = collect(json_decode($json, true, 512, JSON_THROW_ON_ERROR));
-
-                    if ($path) {
-                        return $this->collectionContainsCollection(
-                            $decoded_needle,
-                            $decoded_haystack->pluck($path)
-                        );
-                    }
-
-                    return $this->collectionContainsCollection(
-                        $decoded_needle,
-                        $decoded_haystack
-                    );
-                }
-            );
-    }
-
     protected function compileJsonContains($column, $value)
     {
         [$field, $path] = $this->wrapJsonFieldAndPath($column);
 
-        return 'json_contains('.$field.', '.$value.$path.')';
+        return 'exists (select 1 from json_each('.$field.$path.') where '.$this->wrap('json_each.value').' is '.$value.')';
     }
 
-    protected function collectionContainsCollection(Collection $needle, Collection $haystack): bool
+    public function prepareBindingForJsonContains($binding)
     {
-        return $needle->intersect($haystack)->count() == $needle->count();
+        return $binding;
     }
 }

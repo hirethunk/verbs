@@ -24,6 +24,10 @@ class SelfSerializingNormalizer implements DenormalizerInterface, NormalizerInte
             $data = json_decode($data, true);
         }
 
+        if (is_a($data, $type)) {
+            return $data;
+        }
+
         return $type::deserializeForVerbs($data, $this->serializer);
     }
 
