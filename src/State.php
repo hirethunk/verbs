@@ -32,6 +32,11 @@ abstract class State
         return $state;
     }
 
+    public static function factory(): StateFactory
+    {
+        return new StateFactory(static::class);
+    }
+
     public function __construct()
     {
         app(StateManager::class)->register($this);
@@ -66,14 +71,5 @@ abstract class State
     public function fresh(): static
     {
         return app(StateManager::class)->load($this->id, static::class);
-    }
-
-    public static function factory(array $data, ?int $id = null): static
-    {
-        return VerbsStateInitialized::fire(
-            state_id: $id,
-            state_class: static::class,
-            state_data: $data
-        )->state();
     }
 }
