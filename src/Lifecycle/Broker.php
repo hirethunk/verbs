@@ -5,12 +5,15 @@ namespace Thunk\Verbs\Lifecycle;
 use Glhd\Bits\Bits;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
+use Thunk\Verbs\CommitsImmediately;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 
 class Broker
 {
     public bool $is_replaying = false;
+
+    public bool $commit_immediately = false;
 
     public function __construct(
         protected Dispatcher $dispatcher,
@@ -36,6 +39,10 @@ class Broker
         $this->dispatcher->fired($event, $states);
 
         app(Queue::class)->queue($event);
+
+        if ($this->commit_immediately || $event instanceof CommitsImmediately) {
+            $this->commit();
+        }
 
         return $event;
     }
@@ -113,5 +120,10 @@ class Broker
             $id instanceof AbstractUid => (string) $id,
             default => $id,
         };
+    }
+
+    public function commitImmediately(bool $commit_immediately = true): void
+    {
+        $this->commit_immediately = $commit_immediately;
     }
 }

@@ -1,0 +1,8 @@
+{
+  "disabled": [],
+  "hooks": {
+    "pre-commit": [
+      "./bin/pre-commit.sh"
+    ]
+  }
+}

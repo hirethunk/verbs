@@ -15,6 +15,9 @@ abstract class State
 
     public Bits|UuidInterface|AbstractUid|int|string|null $last_event_id = null;
 
+    // TODO: This should move to state metadata eventually
+    public bool $__verbs_initialized = false;
+
     public static function make(...$args): static
     {
         if ((count($args) === 1 && isset($args[0]) && is_array($args[0]))) {
@@ -26,6 +29,11 @@ abstract class State
         app(StateManager::class)->register($state);
 
         return $state;
+    }
+
+    public static function factory(): StateFactory
+    {
+        return new StateFactory(static::class);
     }
 
     public function __construct()
