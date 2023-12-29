@@ -60,7 +60,7 @@ class EventStateRegistry
                 throw new InvalidArgumentException('You cannot provide an alias for an array of states.');
             }
 
-            $discovered->alias($alias, $states[0]::class);
+            $discovered->alias($alias, $states[0]);
         }
 
         return $discovered;
