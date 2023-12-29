@@ -6,12 +6,14 @@ use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\Models\VerbEvent;
 use Thunk\Verbs\Models\VerbSnapshot;
 
+beforeEach(function () {
+    Verbs::commitImmediately();
+});
+
 it('supports rehydrating a state from snapshots', function () {
     $state = IncrementCount::fire()->state();
 
     expect($state->count)->toBe(1);
-
-    Verbs::commit();
 
     expect(VerbSnapshot::query()->count())->toBe(1);
 
@@ -27,8 +29,6 @@ it('supports rehydrating a state from events', function () {
 
     expect($state->count)->toBe(1);
 
-    Verbs::commit();
-
     expect(VerbEvent::query()->count())->toBe(1);
 
     app(StateManager::class)->reset(include_storage: true);
@@ -41,8 +41,6 @@ it('supports rehydrating a state from events', function () {
 it('supports rehydrating a state from a combination of snapshots and events', function () {
     expect(IncrementCount::fire()->state()->count)->toBe(1);
 
-    Verbs::commit();
-
     expect(VerbSnapshot::query()->count())->toBe(1);
     expect(VerbEvent::query()->count())->toBe(1);
 
@@ -51,8 +49,6 @@ it('supports rehydrating a state from a combination of snapshots and events', fu
     $snapshot = VerbSnapshot::first();
 
     expect(IncrementCount::fire()->state()->count)->toBe(2);
-
-    Verbs::commit();
 
     expect(VerbEvent::query()->count())->toBe(1);
 
