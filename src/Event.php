@@ -20,7 +20,7 @@ abstract class Event
 
     public static function __callStatic(string $name, array $arguments)
     {
-        return static::make()->$name(...$arguments);
+        return       static::make()->$name(...$arguments);
     }
 
     public static function make(...$args)

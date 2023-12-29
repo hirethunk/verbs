@@ -36,6 +36,7 @@
         "pestphp/pest-plugin-laravel": "^2.2",
         "pestphp/pest-plugin-watch": "^2.0",
         "phpunit/phpunit": "^10.4.2",
+        "projektgopher/whisky": "^0.5.1",
         "spatie/laravel-ray": "^1.33"
     },
     "autoload": {
@@ -73,6 +74,12 @@
         "post-autoload-dump": [
             "@clear",
             "@prepare"
+        ],
+        "post-install-cmd": [
+            "whisky update"
+        ],
+        "post-update-cmd": [
+            "whisky update"
         ],
         "test": "vendor/bin/pest",
         "test-coverage": "vendor/bin/pest --coverage",
