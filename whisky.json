@@ -2,7 +2,7 @@
   "disabled": [],
   "hooks": {
     "pre-commit": [
-      "composer format"
+      "./bin/pre-commit.sh"
     ]
   }
 }
