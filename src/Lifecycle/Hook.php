@@ -120,6 +120,10 @@ class Hook
 
     protected function withHistoricalNow(CarbonInterface $now, Closure $callback)
     {
+        if (config('verbs.set_now_during_replay', true) === false) {
+            return $callback();
+        }
+
         $immutable_now = CarbonImmutable::getTestNow();
         $mutable_now = Carbon::getTestNow();
 
@@ -127,7 +131,7 @@ class Hook
             CarbonImmutable::setTestNow($now);
             Carbon::setTestNow($now);
 
-            $callback();
+            return $callback();
         } finally {
             CarbonImmutable::setTestNow($immutable_now);
             Carbon::setTestNow($mutable_now);

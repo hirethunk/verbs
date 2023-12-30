@@ -50,4 +50,17 @@ return [
         BackedEnumNormalizer::class,
         PropertyNormalizer::class,
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Historical `now()`
+    |--------------------------------------------------------------------------
+    |
+    | When replaying events, Verbs will set the "now" timestamp for `Carbon`
+    | and `CarbonImmutable` instances to the moment the original event was
+    | stored in the database. This allows you to use the `now()` helper in your
+    | event handlers easily. You can disable this feature if you'd like.
+    |
+    */
+    'set_now_during_replay' => true,
 ];
