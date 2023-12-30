@@ -3,21 +3,31 @@
 namespace Thunk\Verbs;
 
 use Glhd\Bits\Snowflake;
+use Illuminate\Contracts\Config\Repository;
+use Illuminate\Contracts\Container\Container;
 use Illuminate\Events\Dispatcher as LaravelDispatcher;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Symfony\Component\Serializer\Mapping\ClassDiscriminatorFromClassMetadata;
+use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
+use Symfony\Component\Serializer\Mapping\Loader\AnnotationLoader;
+use Symfony\Component\Serializer\Mapping\Loader\AttributeLoader;
+use Symfony\Component\Serializer\Normalizer\PropertyNormalizer;
+use Symfony\Component\Serializer\Serializer as SymfonySerializer;
 use Thunk\Verbs\Commands\MakeVerbEventCommand;
 use Thunk\Verbs\Commands\MakeVerbStateCommand;
 use Thunk\Verbs\Lifecycle\Broker;
 use Thunk\Verbs\Lifecycle\Dispatcher;
 use Thunk\Verbs\Lifecycle\EventStore;
+use Thunk\Verbs\Lifecycle\MetadataManager;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 use Thunk\Verbs\Lifecycle\SnapshotStore;
 use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\Livewire\SupportVerbs;
-use Thunk\Verbs\Support\EventSerializer;
 use Thunk\Verbs\Support\EventStateRegistry;
-use Thunk\Verbs\Support\StateSerializer;
+use Thunk\Verbs\Support\Serializer;
 
 class VerbsServiceProvider extends PackageServiceProvider
 {
@@ -51,13 +61,30 @@ class VerbsServiceProvider extends PackageServiceProvider
         $this->app->singleton(EventQueue::class);
         $this->app->singleton(StateManager::class);
         $this->app->singleton(EventStateRegistry::class);
+        $this->app->singleton(MetadataManager::class);
+        $this->app->singleton(Serializer::class);
 
-        $this->app->singleton(EventSerializer::class, function () {
-            return new EventSerializer(EventSerializer::defaultSymfonySerializer());
+        $this->app->singleton(PropertyNormalizer::class, function () {
+            $loader = class_exists(AttributeLoader::class)
+                ? new AttributeLoader()
+                : new AnnotationLoader();
+
+            return new PropertyNormalizer(
+                propertyTypeExtractor: new ReflectionExtractor(),
+                classDiscriminatorResolver: new ClassDiscriminatorFromClassMetadata(new ClassMetadataFactory($loader)),
+            );
         });
 
-        $this->app->singleton(StateSerializer::class, function () {
-            return new StateSerializer(StateSerializer::defaultSymfonySerializer());
+        $this->app->singleton(SymfonySerializer::class, function (Container $app) {
+            $config = $app->make(Repository::class);
+
+            return new SymfonySerializer(
+                normalizers: collect($config->get('verbs.normalizers'))
+                    ->map(fn ($class_name) => app($class_name))
+                    ->values()
+                    ->all(),
+                encoders: [new JsonEncoder()],
+            );
         });
     }
 

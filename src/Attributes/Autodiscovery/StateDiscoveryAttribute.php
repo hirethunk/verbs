@@ -3,6 +3,7 @@
 namespace Thunk\Verbs\Attributes\Autodiscovery;
 
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use ReflectionProperty;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\StateManager;
@@ -46,5 +47,12 @@ abstract class StateDiscoveryAttribute
     public function hasDependencies(): bool
     {
         return count($this->dependencies()) > 0;
+    }
+
+    protected function inferAliasFromVariableName(string $name)
+    {
+        return str_contains($name, '_')
+            ? Str::beforeLast($name, '_id')
+            : Str::beforeLast($name, 'Id');
     }
 }

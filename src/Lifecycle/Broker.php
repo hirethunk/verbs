@@ -5,21 +5,28 @@ namespace Thunk\Verbs\Lifecycle;
 use Glhd\Bits\Bits;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
+use Thunk\Verbs\CommitsImmediately;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
-use Thunk\Verbs\Models\VerbEvent;
 
 class Broker
 {
     public bool $is_replaying = false;
 
+    public bool $commit_immediately = false;
+
     public function __construct(
         protected Dispatcher $dispatcher,
+        protected MetadataManager $metadata,
     ) {
     }
 
-    public function fire(Event $event): Event
+    public function fire(Event $event): ?Event
     {
+        if ($this->is_replaying) {
+            return null;
+        }
+
         // NOTE: Any changes to how the dispatcher is called here
         // should also be applied to the `replay` method
 
@@ -27,13 +34,15 @@ class Broker
 
         $states->each(fn ($state) => Guards::for($event, $state)->check());
 
-        $event->phase = Phase::Apply;
         $states->each(fn ($state) => $this->dispatcher->apply($event, $state));
 
-        $event->phase = Phase::Fired;
         $this->dispatcher->fired($event, $states);
 
         app(Queue::class)->queue($event);
+
+        if ($this->commit_immediately || $event instanceof CommitsImmediately) {
+            $this->commit();
+        }
 
         return $event;
     }
@@ -51,29 +60,36 @@ class Broker
         }
 
         foreach ($events as $event) {
-            $event->phase = Phase::Handle;
-            $this->dispatcher->handle($event);
+            $this->metadata->setLastResults($event, $this->dispatcher->handle($event));
         }
 
         return $this->commit();
     }
 
-    public function replay()
+    public function replay(?callable $beforeEach = null, ?callable $afterEach = null)
     {
         $this->is_replaying = true;
 
         app(SnapshotStore::class)->reset();
 
         app(EventStore::class)->read()
-            ->each(function (VerbEvent $model) {
-                app(StateManager::class)->setMaxEventId($model->id);
+            ->each(function (Event $event) use ($beforeEach, $afterEach) {
+                app(StateManager::class)->setMaxEventId($event->id);
 
-                $model->event()->states()
-                    ->each(fn ($state) => $this->dispatcher->apply($model->event(), $state))
-                    ->each(fn ($state) => $this->dispatcher->replay($model->event(), $state, $model->created_at))
-                    ->whenEmpty(fn () => $this->dispatcher->replay($model->event(), null, $model->created_at));
+                if ($beforeEach) {
+                    $beforeEach($event);
+                }
 
-                return $model->event();
+                $event->states()
+                    ->each(fn ($state) => $this->dispatcher->apply($event, $state))
+                    ->each(fn ($state) => $this->dispatcher->replay($event, $state, $model->created_at)) // FIXME
+                    ->whenEmpty(fn () => $this->dispatcher->replay($event, null, $model->created_at)); // FIXME
+
+                if ($afterEach) {
+                    $afterEach($event);
+                }
+
+                return $event;
             });
 
         $this->is_replaying = false;
@@ -91,6 +107,11 @@ class Broker
         }
     }
 
+    public function createMetadataUsing(?callable $callback = null): void
+    {
+        app(MetadataManager::class)->createMetadataUsing($callback);
+    }
+
     public function toId(Bits|UuidInterface|AbstractUid|int|string|null $id): int|string|null
     {
         return match (true) {
@@ -99,5 +120,10 @@ class Broker
             $id instanceof AbstractUid => (string) $id,
             default => $id,
         };
+    }
+
+    public function commitImmediately(bool $commit_immediately = true): void
+    {
+        $this->commit_immediately = $commit_immediately;
     }
 }

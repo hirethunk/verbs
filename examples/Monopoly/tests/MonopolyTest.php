@@ -15,9 +15,15 @@ use Thunk\Verbs\Examples\Monopoly\Game\Spaces\Properties\OrientalAvenue;
 use Thunk\Verbs\Examples\Monopoly\Game\Token;
 use Thunk\Verbs\Examples\Monopoly\States\GameState;
 use Thunk\Verbs\Examples\Monopoly\States\PlayerState;
+use Thunk\Verbs\Examples\Monopoly\Support\MoneyNormalizer;
 use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Models\VerbSnapshot;
+
+beforeEach(function () {
+    $normalizers = array_merge([MoneyNormalizer::class], config('verbs.normalizers'));
+    config()->set('verbs.normalizers', $normalizers);
+});
 
 it('can play a game of Monopoly', function () {
 

@@ -12,6 +12,7 @@ use ReflectionMethod;
 use RuntimeException;
 use SplObjectStorage;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Metadata;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\Reflector;
 use Thunk\Verbs\Support\StateCollection;
@@ -101,11 +102,13 @@ class Hook
         }
     }
 
-    public function handle(Container $container, Event $event, State $state = null): void
+    public function handle(Container $container, Event $event, ?State $state = null): mixed
     {
         if ($this->runsInPhase(Phase::Handle)) {
-            $container->call($this->callback, $this->guessParameters($event, $state));
+            return $container->call($this->callback, $this->guessParameters($event, $state));
         }
+
+        return null;
     }
 
     public function replay(Container $container, Event $event, ?State $state, CarbonInterface $now): void
@@ -131,14 +134,21 @@ class Hook
         }
     }
 
-    protected function guessParameters(Event $event, State $state = null, StateCollection $states = null): array
+    protected function guessParameters(Event $event, ?State $state = null, ?StateCollection $states = null): array
     {
+        $metadata = $event->metadata();
+
         $parameters = [
             'e' => $event,
             'event' => $event,
             $event::class => $event,
             (string) Str::of($event::class)->classBasename()->snake() => $event,
             (string) Str::of($event::class)->classBasename()->studly() => $event,
+            'meta' => $metadata,
+            'metadata' => $metadata,
+            'metaData' => $metadata,
+            'meta_data' => $metadata,
+            Metadata::class => $metadata,
         ];
 
         if ($state) {

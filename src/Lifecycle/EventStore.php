@@ -17,27 +17,24 @@ use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Models\VerbEvent;
 use Thunk\Verbs\Models\VerbStateEvent;
 use Thunk\Verbs\State;
-use Thunk\Verbs\Support\EventSerializer;
+use Thunk\Verbs\Support\Serializer;
 
 class EventStore
 {
-    public function read(
-        State $state = null,
-        Bits|UuidInterface|AbstractUid|int|string $after_id = null,
-        Bits|UuidInterface|AbstractUid|int|string $up_to_id = null
-    ): LazyCollection {
-        if ($state) {
-            return VerbStateEvent::query()
-                ->with('event')
-                ->where('state_id', $state->id)
-                ->where('state_type', $state::class)
-                ->when($after_id, fn (Builder $query) => $query->whereRelation('event', 'id', '>', Verbs::toId($after_id)))
-                ->when($up_to_id, fn (Builder $query) => $query->whereRelation('event', 'id', '<=', Verbs::toId($up_to_id)))
-                ->lazyById()
-                ->map(fn (VerbStateEvent $pivot) => $pivot->event->event());
-        }
+    public function __construct(
+        protected MetadataManager $metadata,
+    ) {
+    }
 
-        return VerbEvent::query()->lazyById();
+    public function read(
+        ?State $state = null,
+        Bits|UuidInterface|AbstractUid|int|string|null $after_id = null,
+        Bits|UuidInterface|AbstractUid|int|string|null $up_to_id = null,
+        bool $singleton = false,
+    ): LazyCollection {
+        return $this->readEvents($state, $after_id, $up_to_id, $singleton)
+            ->each(fn (VerbEvent $model) => $this->metadata->set($model->event(), $model->metadata()))
+            ->map(fn (VerbEvent $model) => $model->event());
     }
 
     /** @param  Event[]  $events */
@@ -49,8 +46,28 @@ class EventStore
 
         $this->guardAgainstConcurrentWrites($events);
 
-        return VerbEvent::insert(static::formatForWrite($events))
-            && VerbStateEvent::insert(static::formatRelationshipsForWrite($events));
+        return VerbEvent::insert($this->formatForWrite($events))
+            && VerbStateEvent::insert($this->formatRelationshipsForWrite($events));
+    }
+
+    protected function readEvents(
+        ?State $state,
+        Bits|UuidInterface|AbstractUid|int|string|null $after_id,
+        Bits|UuidInterface|AbstractUid|int|string|null $up_to_id,
+        bool $singleton,
+    ): LazyCollection {
+        if ($state) {
+            return VerbStateEvent::query()
+                ->with('event')
+                ->unless($singleton, fn (Builder $query) => $query->where('state_id', $state->id))
+                ->where('state_type', $state::class)
+                ->when($after_id, fn (Builder $query) => $query->whereRelation('event', 'id', '>', Verbs::toId($after_id)))
+                ->when($up_to_id, fn (Builder $query) => $query->whereRelation('event', 'id', '<=', Verbs::toId($up_to_id)))
+                ->lazyById()
+                ->map(fn (VerbStateEvent $pivot) => $pivot->event);
+        }
+
+        return VerbEvent::query()->lazyById();
     }
 
     /** @param  Event[]  $events */
@@ -87,6 +104,12 @@ class EventStore
             }
         });
 
+        // We can abort if there are no states associated with any of the
+        // events that we're writing (since concurrency doesn't apply in that case)
+        if ($max_event_ids->isEmpty()) {
+            return;
+        }
+
         $query->each(function ($result) use ($max_event_ids) {
             $state_type = data_get($result, 'state_type');
             $state_id = data_get($result, 'state_id');
@@ -100,19 +123,20 @@ class EventStore
     }
 
     /** @param  Event[]  $event_objects */
-    protected static function formatForWrite(array $event_objects): array
+    protected function formatForWrite(array $event_objects): array
     {
         return array_map(fn (Event $event) => [
             'id' => Verbs::toId($event->id),
             'type' => $event::class,
-            'data' => app(EventSerializer::class)->serialize($event),
+            'data' => app(Serializer::class)->serialize($event),
+            'metadata' => app(Serializer::class)->serialize($this->metadata->get($event)),
             'created_at' => now(),
             'updated_at' => now(),
         ], $event_objects);
     }
 
     /** @param  Event[]  $event_objects */
-    protected static function formatRelationshipsForWrite(array $event_objects): array
+    protected function formatRelationshipsForWrite(array $event_objects): array
     {
         return collect($event_objects)
             ->flatMap(fn (Event $event) => $event->states()->map(fn ($state) => [

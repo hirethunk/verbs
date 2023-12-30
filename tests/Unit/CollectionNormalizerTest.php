@@ -5,7 +5,7 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Support\Collection;
 use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
-use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
+use Symfony\Component\Serializer\Normalizer\PropertyNormalizer;
 use Symfony\Component\Serializer\Serializer as SymfonySerializer;
 use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\SerializedByVerbs;
@@ -16,7 +16,7 @@ use Thunk\Verbs\Support\Normalization\NormalizeToPropertiesAndClassName;
 use Thunk\Verbs\Support\Normalization\SelfSerializingNormalizer;
 use Thunk\Verbs\Support\Normalization\StateNormalizer;
 
-it('it can normalize an empty collection', function () {
+it('can normalize an empty collection', function () {
     $serializer = new SymfonySerializer(
         normalizers: [$normalizer = new CollectionNormalizer()],
         encoders: [new JsonEncoder()],
@@ -40,7 +40,7 @@ it('it can normalize an empty collection', function () {
         ->and($denormalized->isEmpty())->toBeTrue();
 });
 
-it('it can normalize an empty Eloquent collection', function () {
+it('can normalize an empty Eloquent collection', function () {
     $serializer = new SymfonySerializer(
         normalizers: [$normalizer = new CollectionNormalizer()],
         encoders: [new JsonEncoder()],
@@ -64,7 +64,7 @@ it('it can normalize an empty Eloquent collection', function () {
         ->and($denormalized->isEmpty())->toBeTrue();
 });
 
-it('it can normalize a collection all of scalars', function () {
+it('can normalize a collection all of scalars', function () {
     $collections = [
         [Collection::make([1, 2, 3]), '{"type":"int","items":[1,2,3]}'],
         [Collection::make([1.5, 2.2, 3.99]), '{"type":"float","items":[1.5,2.2,3.99]}'],
@@ -98,14 +98,14 @@ it('it can normalize a collection all of scalars', function () {
     }
 });
 
-it('it can normalize a collection all of states', function () {
+it('can normalize a collection all of states', function () {
     $manager = app(StateManager::class);
 
     $serializer = new SymfonySerializer(
         normalizers: [
             $normalizer = new CollectionNormalizer(),
             new StateNormalizer(),
-            new ObjectNormalizer(propertyTypeExtractor: new ReflectionExtractor()),
+            new PropertyNormalizer(propertyTypeExtractor: new ReflectionExtractor()),
         ],
         encoders: [
             new JsonEncoder(),
@@ -138,7 +138,7 @@ it('can normalize collections of objects that implement SerializedByVerbs', func
             $normalizer = new CollectionNormalizer(),
             new CarbonNormalizer(),
             new SelfSerializingNormalizer(),
-            new ObjectNormalizer(propertyTypeExtractor: new ReflectionExtractor()),
+            new PropertyNormalizer(propertyTypeExtractor: new ReflectionExtractor()),
         ],
         encoders: [
             new JsonEncoder(),

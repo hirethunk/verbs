@@ -24,19 +24,12 @@ test('a bank account can be opened and interacted with', function () {
 
     // First we'll open the account
 
-    $this->post(
-        route('bank.accounts.store'),
-        [
-            'initial_deposit_in_cents' => 1000_00,
-        ]
-    )->assertSuccessful();
+    $this->post(route('bank.accounts.store'), ['initial_deposit_in_cents' => 1000_00])
+        ->assertSuccessful();
 
-    expect(
-        $open_event = VerbEvent::type(AccountOpened::class)->whereDataContains([
-            'user_id' => User::first()->id,
-            'initial_deposit_in_cents' => 1000_00,
-        ])->first()
-    )->not->toBeNull();
+    $open_event = VerbEvent::type(AccountOpened::class)->sole();
+    expect($open_event->data['user_id'])->toBe(User::first()->id)
+        ->and($open_event->data['initial_deposit_in_cents'])->toBe(1000_00);
 
     $account = Auth::user()->accounts()->sole();
     expect($account->balance_in_cents)->toBe(1000_00);
@@ -45,62 +38,38 @@ test('a bank account can be opened and interacted with', function () {
 
     // Then we'll deposit some money
 
-    $this->post(
-        route('bank.accounts.deposits.store', $account),
-        [
-            'deposit_in_cents' => 499_99,
-        ]
-    )->assertSuccessful();
+    $this->post(route('bank.accounts.deposits.store', $account), ['deposit_in_cents' => 499_99])
+        ->assertSuccessful();
 
-    expect(
-        $deposit_event = VerbEvent::type(MoneyDeposited::class)->whereDataContains([
-            'account_id' => $account->id,
-            'cents' => 499_99,
-        ])->first()
-    )->not->toBeNull();
+    $deposit_event = VerbEvent::type(MoneyDeposited::class)->sole();
 
-    expect($account->refresh()->balance_in_cents)->toBe(1499_99);
+    expect($deposit_event->data['account_id'])->toBe($account->id)
+        ->and($deposit_event->data['cents'])->toBe(499_99)
+        ->and($account->refresh()->balance_in_cents)->toBe(1499_99);
 
     Mail::assertSent(fn (DepositAvailable $email) => $email->user_id === Auth::id());
 
     // Now we'll withdraw an amount that we have available to us
 
-    $this->post(
-        route('bank.accounts.withdrawals.store', $account),
-        [
-            'withdrawal_in_cents' => 1399_99,
-        ]
-    )
+    $this->post(route('bank.accounts.withdrawals.store', $account), ['withdrawal_in_cents' => 1399_99])
         ->assertSessionHasNoErrors()
         ->assertSuccessful();
 
-    expect(
-        $withdraw_event = VerbEvent::type(MoneyWithdrawn::class)->whereDataContains([
-            'account_id' => $account->id,
-            'cents' => 1399_99,
-        ])->first()
-    )->not->toBeNull();
+    $withdraw_event = VerbEvent::type(MoneyWithdrawn::class)->sole();
 
-    expect($account->refresh()->balance_in_cents)->toBe(100_00);
+    expect($withdraw_event->data['account_id'])->toBe($account->id)
+        ->and($withdraw_event->data['cents'])->toBe(1399_99)
+        ->and($account->refresh()->balance_in_cents)->toBe(100_00);
 
     // Next let's try to withdraw an amount that we don't have
 
-    // $this->withoutExceptionHandling();
+    $this->post(route('bank.accounts.withdrawals.store', $account), ['withdrawal_in_cents' => 100_01])
+        ->assertSessionHasErrors();
 
-    $this->post(
-        route('bank.accounts.withdrawals.store', $account),
-        [
-            'withdrawal_in_cents' => 100_01,
-        ]
-    )->assertSessionHasErrors();
+    expect(VerbEvent::type(MoneyWithdrawn::class)->count())->toBe(1)
+        ->and($account->refresh()->balance_in_cents)->toBe(100_00);
 
-    expect(
-        VerbEvent::type(MoneyWithdrawn::class)->count()
-    )->toBe(1);
-
-    expect($account->refresh()->balance_in_cents)->toBe(100_00);
-
-    // Lets assert the events are on the state store in the correct order
+    // Let's assert the events are on the state store in the correct order
 
     expect(AccountState::load($account->id)->storedEvents())
         ->toHaveCount(3)

@@ -2,7 +2,8 @@
 
 use Brick\Money\Money;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Database\Query\Grammars\SQLiteGrammar;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\Finder\Finder;
 use Symfony\Component\Finder\SplFileInfo;
@@ -16,7 +17,7 @@ $examples = collect(Finder::create()->directories()->in(__DIR__.'/../examples/')
     ->values()
     ->all();
 
-expect()->extend('toThrow', function (string|Throwable $expected, string $message = null) {
+expect()->extend('toThrow', function (string|Throwable $expected, ?string $message = null) {
     if ($expected instanceof Throwable) {
         $message = $expected->getMessage();
         $expected = $expected::class;
@@ -38,7 +39,7 @@ expect()->extend('toThrow', function (string|Throwable $expected, string $messag
     return false;
 });
 
-expect()->extend('toBeMoney', function (Money|string|int $amount = null, string $currency = null) {
+expect()->extend('toBeMoney', function (Money|string|int|null $amount = null, ?string $currency = null) {
     $this->toBeInstanceOf(Money::class);
 
     if (isset($amount, $currency)) {
@@ -52,10 +53,14 @@ expect()->extend('toBeMoney', function (Money|string|int $amount = null, string 
     }
 });
 
-uses(TestCase::class, RefreshDatabase::class)
-    ->beforeEach(fn () => DB::connection(DB::getDefaultConnection())
-        ->setQueryGrammar(
-            new PatchedSQLiteGrammar()
-        )
-    )
+uses(TestCase::class)
+    ->beforeEach(function () {
+        $db = DB::connection();
+        if (
+            version_compare(App::version(), '10.38.0', '<')
+            && $db->getQueryGrammar() instanceof SQLiteGrammar
+        ) {
+            $db->setQueryGrammar(new PatchedSQLiteGrammar());
+        }
+    })
     ->in(__DIR__, ...$examples);

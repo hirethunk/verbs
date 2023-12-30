@@ -38,14 +38,13 @@ class AppliesToState extends StateDiscoveryAttribute
 
         // TODO: Check type of data
 
+        if (! is_array($id)) {
+            $this->alias = $this->inferAliasFromVariableName($property);
+        }
+
         return collect(Arr::wrap($id))
             ->map(fn ($id) => $manager->load($id, $this->state_type))
             ->all();
-    }
-
-    public function getAlias(): ?string
-    {
-        return $this->alias;
     }
 
     protected function getStateIdProperty(Event $event): string

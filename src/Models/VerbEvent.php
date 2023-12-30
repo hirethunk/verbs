@@ -5,9 +5,9 @@ namespace Thunk\Verbs\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Lifecycle\Phase;
+use Thunk\Verbs\Metadata;
 use Thunk\Verbs\State;
-use Thunk\Verbs\Support\EventSerializer;
+use Thunk\Verbs\Support\Serializer;
 
 class VerbEvent extends Model
 {
@@ -17,16 +17,30 @@ class VerbEvent extends Model
 
     protected $casts = [
         'data' => 'array',
+        'metadata' => 'array',
+    ];
+
+    protected $attributes = [
+        'data' => '{}',
+        'metadata' => '{}',
     ];
 
     protected ?Event $event = null;
 
+    protected ?Metadata $meta = null;
+
     public function event(): Event
     {
-        $this->event ??= app(EventSerializer::class)->deserialize($this->type, $this->data);
-        $this->event->phase = Phase::Replay;
+        $this->event ??= app(Serializer::class)->deserialize($this->type, $this->data);
 
         return $this->event;
+    }
+
+    public function metadata(): Metadata
+    {
+        $this->meta ??= app(Serializer::class)->deserialize(Metadata::class, $this->metadata);
+
+        return $this->meta;
     }
 
     public function states(): BelongsToMany
@@ -39,8 +53,8 @@ class VerbEvent extends Model
         return $query->where('type', $type);
     }
 
-    public function scopeWhereDataContains($query, array $data)
+    public function getIncrementing()
     {
-        return $query->whereJsonContains('data', $data);
+        return false;
     }
 }
