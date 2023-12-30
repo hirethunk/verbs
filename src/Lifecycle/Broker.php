@@ -80,10 +80,12 @@ class Broker
                     $beforeEach($event);
                 }
 
+                $created_at = app(MetadataManager::class)->getEphemeral($event, 'created_at', now());
+
                 $event->states()
                     ->each(fn ($state) => $this->dispatcher->apply($event, $state))
-                    ->each(fn ($state) => $this->dispatcher->replay($event, $state, $model->created_at)) // FIXME
-                    ->whenEmpty(fn () => $this->dispatcher->replay($event, null, $model->created_at)); // FIXME
+                    ->each(fn ($state) => $this->dispatcher->replay($event, $state, $created_at))
+                    ->whenEmpty(fn () => $this->dispatcher->replay($event, null, $created_at));
 
                 if ($afterEach) {
                     $afterEach($event);
