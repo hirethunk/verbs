@@ -3,14 +3,13 @@
 namespace Thunk\Verbs\Lifecycle;
 
 use Glhd\Bits\Bits;
-use Thunk\Verbs\Event;
 use Ramsey\Uuid\UuidInterface;
-use Thunk\Verbs\CommitsImmediately;
 use Symfony\Component\Uid\AbstractUid;
-use Thunk\Verbs\Lifecycle\Queue as EventQueue;
-use Illuminate\Auth\Access\AuthorizationException;
 use Throwable;
+use Thunk\Verbs\CommitsImmediately;
+use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
+use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 
 class Broker
 {

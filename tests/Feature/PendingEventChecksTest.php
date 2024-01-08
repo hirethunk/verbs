@@ -1,13 +1,8 @@
 <?php
 
+use Thunk\Verbs\Attributes\Autodiscovery\StateId;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\State;
-use Glhd\Bits\Snowflake;
-use Carbon\CarbonInterface;
-use Illuminate\Support\Str;
-use Thunk\Verbs\SerializedByVerbs;
-use Thunk\Verbs\Attributes\Autodiscovery\StateId;
-use Thunk\Verbs\Support\Normalization\NormalizeToPropertiesAndClassName;
 
 it('can test authorization on a pending event', function () {
     $event = EventWithMultipleStates::make([
@@ -65,7 +60,6 @@ it('can test validation on a pending event', function () {
     $this->assertFalse($event->isValid());
 });
 
-
 class EventWithMultipleStates extends Event
 {
     #[StateId(SpecialState::class)]
@@ -84,7 +78,8 @@ class EventWithMultipleStates extends Event
         );
     }
 
-    public function validate() {
+    public function validate()
+    {
         $this->assert(
             $this->allowed === true,
             'Allowed has to be true.'
