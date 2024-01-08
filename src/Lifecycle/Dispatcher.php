@@ -33,7 +33,7 @@ class Dispatcher
         }
     }
 
-    public function validate(Event $event, State $state): bool
+    public function validate(Event $event, ?State $state = null): bool
     {
         foreach ($this->getValidationHooks($event, $state) as $hook) {
             if (! $hook->validate($this->container, $event, $state)) {
@@ -107,16 +107,18 @@ class Dispatcher
     }
 
     /** @return Collection<int, Hook> */
-    protected function getValidationHooks(Event $event, State $state): Collection
+    protected function getValidationHooks(Event $event, ?State $state = null): Collection
     {
         $hooks = collect($this->hooks[$event::class] ?? []);
 
-        $validation_hooks = MethodFinder::for($event)
-            ->prefixed('validate')
-            ->expecting($state::class)
-            ->map(fn (ReflectionMethod $name) => Hook::fromClassMethod($event, $name)->forcePhases(Phase::Validate));
-
-        // FIXME: We need to handle special `validate()` hook with no suffix
+        $validation_hooks = $state === null
+            ? MethodFinder::for($event)
+                ->prefixed('validate')
+                ->map(fn (ReflectionMethod $name) => Hook::fromClassMethod($event, $name)->forcePhases(Phase::Validate))
+            : MethodFinder::for($event)
+                ->prefixed('validate')
+                ->expecting($state::class)
+                ->map(fn (ReflectionMethod $name) => Hook::fromClassMethod($event, $name)->forcePhases(Phase::Validate));
 
         return $hooks
             ->merge($validation_hooks)

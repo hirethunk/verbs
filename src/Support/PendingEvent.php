@@ -121,6 +121,16 @@ class PendingEvent
         return $results->count() > 1 ? $results : $results->first();
     }
 
+    public function isAllowed(): bool
+    {
+        return app(Broker::class)->isAllowed($this->event);
+    }
+
+    public function isValid(): bool
+    {
+        return app(Broker::class)->isValid($this->event);
+    }
+
     /** @param  callable(Throwable): Throwable  $handler */
     public function onError(Closure $handler): static
     {
