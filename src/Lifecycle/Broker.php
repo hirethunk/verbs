@@ -5,8 +5,10 @@ namespace Thunk\Verbs\Lifecycle;
 use Glhd\Bits\Bits;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
+use Throwable;
 use Thunk\Verbs\CommitsImmediately;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 
 class Broker
@@ -33,6 +35,8 @@ class Broker
         $states = $event->states();
 
         $states->each(fn ($state) => Guards::for($event, $state)->check());
+
+        Guards::for($event, null)->check();
 
         $states->each(fn ($state) => $this->dispatcher->apply($event, $state));
 
@@ -64,6 +68,34 @@ class Broker
         }
 
         return $this->commit();
+    }
+
+    public function isValid(Event $event): bool
+    {
+        try {
+            $states = $event->states();
+
+            Guards::for($event, null)->validate();
+            $states->each(fn ($state) => Guards::for($event, $state)->validate());
+
+            return true;
+        } catch (EventNotValidForCurrentState $e) {
+            return false;
+        }
+    }
+
+    public function isAllowed(Event $event): bool
+    {
+        try {
+            $states = $event->states();
+
+            Guards::for($event, null)->authorize();
+            $states->each(fn ($state) => Guards::for($event, $state)->authorize());
+
+            return true;
+        } catch (Throwable $e) {
+            return false;
+        }
     }
 
     public function replay(?callable $beforeEach = null, ?callable $afterEach = null)

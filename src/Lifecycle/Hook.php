@@ -75,7 +75,7 @@ class Hook
         return isset($this->phases[$phase]) && $this->phases[$phase] === true;
     }
 
-    public function validate(Container $container, Event $event, State $state): bool
+    public function validate(Container $container, Event $event, ?State $state = null): bool
     {
         if ($this->runsInPhase(Phase::Validate)) {
             return $container->call($this->callback, $this->guessParameters($event, $state)) ?? true;
