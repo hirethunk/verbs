@@ -98,6 +98,37 @@ it('can normalize a collection all of scalars', function () {
     }
 });
 
+it('can normalize a collection with keys and restore key order', function () {
+    $collection = Collection::make([
+        2 => 2,
+        1 => 1,
+        3 => 3,
+    ]);
+
+    $expected_json = '{"type":"int","items":[[2,2],[1,1],[3,3]]}';
+
+    $serializer = new SymfonySerializer(
+        normalizers: [$normalizer = new CollectionNormalizer()],
+        encoders: [new JsonEncoder()],
+    );
+
+    // We should be able to normalize
+    expect($normalizer->supportsNormalization($collection))->toBeTrue();
+    $normalized = $serializer->normalize($collection, 'json');
+
+    // And encode to JSON
+    $encoded = json_encode($normalized);
+    expect($encoded)->toBe($expected_json);
+
+    // And then denormalize that JSON
+    expect($normalizer->supportsDenormalization($encoded, Collection::class, 'json'))->toBeTrue();
+    $denormalized = $serializer->denormalize(json_decode($encoded), Collection::class);
+
+    // And the denormalized data should be the same
+    expect($denormalized)->toBeInstanceOf(Collection::class);
+    expect($denormalized->all())->toBe($collection->all());
+});
+
 it('can normalize a collection all of states', function () {
     $manager = app(StateManager::class);
 

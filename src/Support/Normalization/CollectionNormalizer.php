@@ -33,7 +33,11 @@ class CollectionNormalizer implements DenormalizerInterface, NormalizerInterface
             throw new InvalidArgumentException('Cannot denormalize a Collection that has no type information.');
         }
 
-        return $fqcn::make($items)->map(fn ($value) => $this->serializer->denormalize($value, $subtype, $format, $context));
+        return $fqcn::make($items)->mapWithKeys(
+            fn ($value) => [
+                $value[0] => $this->serializer->denormalize($value[1], $subtype, $format, $context)
+            ]
+        );
     }
 
     public function supportsNormalization(mixed $data, ?string $format = null): bool
@@ -50,7 +54,7 @@ class CollectionNormalizer implements DenormalizerInterface, NormalizerInterface
         return array_filter([
             'fqcn' => $object::class === Collection::class ? null : $object::class,
             'type' => $this->determineContainedType($object),
-            'items' => $object->map(fn ($value) => $this->serializer->normalize($value, $format, $context))->all(),
+            'items' => $object->map(fn ($value, $key) => [$key, $this->serializer->normalize($value, $format, $context)])->values()->all(),
         ]);
     }
 
