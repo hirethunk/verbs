@@ -2,6 +2,7 @@
 
 namespace Thunk\Verbs\Support\Normalization;
 
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use InvalidArgumentException;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
@@ -23,6 +24,7 @@ class CollectionNormalizer implements DenormalizerInterface, NormalizerInterface
     {
         $fqcn = data_get($data, 'fqcn', Collection::class);
         $items = data_get($data, 'items', []);
+        $isAssoc = data_get($data, 'assoc', false);
 
         if ($items === []) {
             return new $fqcn();
@@ -33,11 +35,9 @@ class CollectionNormalizer implements DenormalizerInterface, NormalizerInterface
             throw new InvalidArgumentException('Cannot denormalize a Collection that has no type information.');
         }
 
-        return $fqcn::make($items)->mapWithKeys(
-            fn ($value) => [
-                $value[0] => $this->serializer->denormalize($value[1], $subtype, $format, $context),
-            ]
-        );
+        return $fqcn::make($items)
+            ->when($isAssoc, fn ($collection) => $collection->mapWithKeys(fn ($value) => [$value[0] => $value[1]]))
+            ->map(fn ($value) => $this->serializer->denormalize($value, $subtype, $format, $context));
     }
 
     public function supportsNormalization(mixed $data, ?string $format = null): bool
@@ -54,7 +54,10 @@ class CollectionNormalizer implements DenormalizerInterface, NormalizerInterface
         return array_filter([
             'fqcn' => $object::class === Collection::class ? null : $object::class,
             'type' => $this->determineContainedType($object),
-            'items' => $object->map(fn ($value, $key) => [$key, $this->serializer->normalize($value, $format, $context)])->values()->all(),
+            'items' => Arr::isAssoc($object->all())
+                ? $object->map(fn ($value, $key) => [$key, $this->serializer->normalize($value, $format, $context)])->values()->all()
+                : $object->map(fn ($value) => $this->serializer->normalize($value, $format, $context))->values()->all(),
+            'assoc' => Arr::isAssoc($object->all())
         ]);
     }
 

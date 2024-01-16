@@ -105,7 +105,7 @@ it('can normalize a collection with keys and restore key order', function () {
         3 => 3,
     ]);
 
-    $expected_json = '{"type":"int","items":[[2,2],[1,1],[3,3]]}';
+    $expected_json = '{"type":"int","items":[[2,2],[1,1],[3,3]],"assoc":true}';
 
     $serializer = new SymfonySerializer(
         normalizers: [$normalizer = new CollectionNormalizer()],
