@@ -35,7 +35,7 @@ class CollectionNormalizer implements DenormalizerInterface, NormalizerInterface
 
         return $fqcn::make($items)->mapWithKeys(
             fn ($value) => [
-                $value[0] => $this->serializer->denormalize($value[1], $subtype, $format, $context)
+                $value[0] => $this->serializer->denormalize($value[1], $subtype, $format, $context),
             ]
         );
     }
