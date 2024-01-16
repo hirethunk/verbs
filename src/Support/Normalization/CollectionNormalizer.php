@@ -57,7 +57,7 @@ class CollectionNormalizer implements DenormalizerInterface, NormalizerInterface
             'items' => Arr::isAssoc($object->all())
                 ? $object->map(fn ($value, $key) => [$key, $this->serializer->normalize($value, $format, $context)])->values()->all()
                 : $object->map(fn ($value) => $this->serializer->normalize($value, $format, $context))->values()->all(),
-            'assoc' => Arr::isAssoc($object->all())
+            'assoc' => Arr::isAssoc($object->all()),
         ]);
     }
 
