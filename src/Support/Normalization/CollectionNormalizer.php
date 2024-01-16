@@ -24,7 +24,7 @@ class CollectionNormalizer implements DenormalizerInterface, NormalizerInterface
     {
         $fqcn = data_get($data, 'fqcn', Collection::class);
         $items = data_get($data, 'items', []);
-        $isAssoc = data_get($data, 'assoc', false);
+        $isAssoc = data_get($data, 'associative', false);
 
         if ($items === []) {
             return new $fqcn();
@@ -57,7 +57,7 @@ class CollectionNormalizer implements DenormalizerInterface, NormalizerInterface
             'items' => Arr::isAssoc($object->all())
                 ? $object->map(fn ($value, $key) => [$key, $this->serializer->normalize($value, $format, $context)])->values()->all()
                 : $object->map(fn ($value) => $this->serializer->normalize($value, $format, $context))->values()->all(),
-            'assoc' => Arr::isAssoc($object->all()),
+            'associative' => Arr::isAssoc($object->all())
         ]);
     }
 
