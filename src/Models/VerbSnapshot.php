@@ -9,11 +9,11 @@ use Thunk\Verbs\Support\Serializer;
 use UnexpectedValueException;
 
 /**
- * @property  int $id
- * @property  string $data
- * @property  int|null $last_event_id
- * @property  CarbonInterface $created_at
- * @property  CarbonInterface $updated_at
+ * @property int $id
+ * @property string $data
+ * @property int|null $last_event_id
+ * @property CarbonInterface $created_at
+ * @property CarbonInterface $updated_at
  */
 class VerbSnapshot extends Model
 {
