@@ -2,6 +2,15 @@
 
 All notable changes to `:package_name` will be documented in this file.
 
+## v0.0.8.1 - 2024-01-23
+
+### What's Changed
+
+* Fix the mysql json order bug by @joshhanley in https://github.com/hirethunk/verbs/pull/53
+* Check for `componentHook` before calling it by @inxilpro in https://github.com/hirethunk/verbs/pull/54
+
+**Full Changelog**: https://github.com/hirethunk/verbs/compare/0.0.8...0.0.8.1
+
 ## v0.0.8 - 2024-01-16
 
 ### What's Changed
