@@ -2,6 +2,20 @@
 
 use Thunk\Verbs\State;
 
+test('a factory can create a state', function () {
+    $state = StateWithId::factory()->create([
+        'name' => 'daniel',
+    ]);
+
+    expect($state->name)->toBe('daniel');
+});
+
+test('a factory without parameters can create a state', function () {
+    $state = StateWithId::factory()->create();
+
+    expect($state)->toBeInstanceOf(StateWithId::class);
+});
+
 test('a factory can accept an id using the create method', function () {
     $state = StateWithId::factory()->create([
         'name' => 'daniel',

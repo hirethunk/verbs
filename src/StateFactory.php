@@ -13,14 +13,14 @@ class StateFactory
     ) {
     }
 
-    public function for(int $id)
+    public function for(int $id): static
     {
         $this->id = $id;
 
         return $this;
     }
 
-    public function create(array $data, ?int $id = null): State
+    public function create(array $data = [], ?int $id = null): State
     {
         return VerbsStateInitialized::fire(
             state_id: $id ?? $this->id,
