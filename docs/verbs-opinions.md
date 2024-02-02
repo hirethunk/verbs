@@ -22,7 +22,7 @@ ApplicantRejected::fire(
 ```
 
 ```php
-class ApplicantRejected
+class ApplicantRejected extends Event
 {
     public function __construct(
         public int $applicant_id,
