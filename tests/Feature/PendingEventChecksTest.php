@@ -22,6 +22,20 @@ it('can test authorization on a pending event', function () {
     $this->assertFalse($event->isAllowed());
 });
 
+it('supports boolean authorization', function () {
+    $event = EventWithBooleanAuth::make([
+        'allowed' => true,
+    ]);
+
+    $this->assertTrue($event->isAllowed());
+
+    $event =  EventWithBooleanAuth::make([
+        'allowed' => false,
+    ]);
+
+    $this->assertFalse($event->isAllowed());
+});
+
 it('can test validation on a pending event', function () {
     SpecialState::factory()->create([
         'name' => 'daniel',
@@ -59,6 +73,17 @@ it('can test validation on a pending event', function () {
 
     $this->assertFalse($event->isValid());
 });
+
+
+class EventWithBooleanAuth extends Event
+{
+    public bool $allowed;
+
+    public function authorize()
+    {
+        return $this->allowed;
+    }
+}
 
 class EventWithMultipleStates extends Event
 {
