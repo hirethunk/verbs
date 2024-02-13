@@ -6,6 +6,7 @@ use Closure;
 use Glhd\Bits\Snowflake;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Traits\Conditionable;
+use Illuminate\Support\Traits\Macroable;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 use ReflectionMethod;
@@ -23,7 +24,7 @@ use Thunk\Verbs\Lifecycle\MetadataManager;
  */
 class PendingEvent
 {
-    use Conditionable;
+    use Conditionable, Macroable;
 
     protected Closure $exception_mapper;
 
@@ -119,6 +120,16 @@ class PendingEvent
         $results = app(MetadataManager::class)->getLastResults($event);
 
         return $results->count() > 1 ? $results : $results->first();
+    }
+
+    public function isAllowed(): bool
+    {
+        return app(Broker::class)->isAllowed($this->event);
+    }
+
+    public function isValid(): bool
+    {
+        return app(Broker::class)->isValid($this->event);
     }
 
     /** @param  callable(Throwable): Throwable  $handler */

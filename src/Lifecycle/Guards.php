@@ -64,9 +64,15 @@ class Guards
         if (method_exists($this->event, 'authorize')) {
             $result = app()->call([$this->event, 'authorize']);
 
-            return $result instanceof Response
-                ? $result->authorize()
-                : $result;
+            if ($result instanceof Response) {
+                return $result->authorize();
+            }
+
+            if (is_bool($result)) {
+                return $result;
+            }
+
+            return true;
         }
 
         return true;

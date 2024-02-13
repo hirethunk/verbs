@@ -93,7 +93,12 @@ class VerbsServiceProvider extends PackageServiceProvider
         parent::boot();
 
         if ($this->app->has('livewire')) {
-            $this->app->make('livewire')->componentHook(SupportVerbs::class);
+            $manager = $this->app->make('livewire');
+
+            // Component hooks only exist in v3, so we need to check before registering our hook
+            if (method_exists($manager, 'componentHook')) {
+                $manager->componentHook(SupportVerbs::class);
+            }
         }
 
         $this->app->terminating(function () {

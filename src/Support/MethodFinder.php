@@ -66,7 +66,7 @@ class MethodFinder
 
     protected function expectsParameters(ReflectionMethod $method): bool
     {
-        if (count($this->types) === 0) {
+        if ($this->types && count($this->types) === 0) {
             return true;
         }
 
@@ -80,8 +80,7 @@ class MethodFinder
                 return true;
             }
 
-            $interface_matches = $this
-                ->types
+            $interface_matches = ($this->types ?? collect())
                 ->map(fn ($type) => class_implements($type))
                 ->flatten()
                 ->unique()
