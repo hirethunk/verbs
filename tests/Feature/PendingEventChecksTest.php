@@ -29,7 +29,7 @@ it('supports boolean authorization', function () {
 
     $this->assertTrue($event->isAllowed());
 
-    $event =  EventWithBooleanAuth::make([
+    $event = EventWithBooleanAuth::make([
         'allowed' => false,
     ]);
 
@@ -73,7 +73,6 @@ it('can test validation on a pending event', function () {
 
     $this->assertFalse($event->isValid());
 });
-
 
 class EventWithBooleanAuth extends Event
 {

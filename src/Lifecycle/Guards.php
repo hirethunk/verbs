@@ -67,7 +67,7 @@ class Guards
             if ($result instanceof Response) {
                 return $result->authorize();
             }
-            
+
             if (is_bool($result)) {
                 return $result;
             }
