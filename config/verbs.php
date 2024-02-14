@@ -53,7 +53,7 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Historical `now()`
+    | Wormhole
     |--------------------------------------------------------------------------
     |
     | When replaying events, Verbs will set the "now" timestamp for `Carbon`
@@ -62,5 +62,5 @@ return [
     | event handlers easily. You can disable this feature if you'd like.
     |
     */
-    'set_now_during_replay' => true,
+    'wormhole' => true,
 ];

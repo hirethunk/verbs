@@ -2,9 +2,6 @@
 
 namespace Thunk\Verbs\Lifecycle;
 
-use Carbon\Carbon;
-use Carbon\CarbonImmutable;
-use Carbon\CarbonInterface;
 use Closure;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Str;
@@ -16,6 +13,7 @@ use Thunk\Verbs\Metadata;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\Reflector;
 use Thunk\Verbs\Support\StateCollection;
+use Thunk\Verbs\Support\Wormhole;
 
 class Hook
 {
@@ -111,30 +109,10 @@ class Hook
         return null;
     }
 
-    public function replay(Container $container, Event $event, ?State $state, CarbonInterface $now): void
+    public function replay(Container $container, Event $event, ?State $state): void
     {
         if ($this->runsInPhase(Phase::Replay)) {
-            $this->withHistoricalNow($now, fn () => $container->call($this->callback, $this->guessParameters($event, $state)));
-        }
-    }
-
-    protected function withHistoricalNow(CarbonInterface $now, Closure $callback)
-    {
-        if (config('verbs.set_now_during_replay', true) === false) {
-            return $callback();
-        }
-
-        $immutable_now = CarbonImmutable::getTestNow();
-        $mutable_now = Carbon::getTestNow();
-
-        try {
-            CarbonImmutable::setTestNow($now);
-            Carbon::setTestNow($now);
-
-            return $callback();
-        } finally {
-            CarbonImmutable::setTestNow($immutable_now);
-            Carbon::setTestNow($mutable_now);
+            app(Wormhole::class)->replay($event, fn () => $container->call($this->callback, $this->guessParameters($event, $state)));
         }
     }
 
