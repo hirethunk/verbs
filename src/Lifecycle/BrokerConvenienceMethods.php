@@ -13,6 +13,16 @@ trait BrokerConvenienceMethods
 {
     public bool $is_replaying = false;
 
+    public function toId(Bits|UuidInterface|AbstractUid|int|string|null $id): int|string|null
+    {
+        return match (true) {
+            $id instanceof Bits => $id->id(),
+            $id instanceof UuidInterface => $id->toString(),
+            $id instanceof AbstractUid => (string) $id,
+            default => $id,
+        };
+    }
+
     public function createMetadataUsing(?callable $callback = null): void
     {
         app(MetadataManager::class)->createMetadataUsing($callback);
@@ -32,11 +42,6 @@ trait BrokerConvenienceMethods
         }
     }
 
-    public function isReplaying(): bool
-    {
-        return $this->is_replaying;
-    }
-
     public function isAllowed(Event $event): bool
     {
         try {
@@ -51,14 +56,9 @@ trait BrokerConvenienceMethods
         }
     }
 
-    public function toId(Bits|UuidInterface|AbstractUid|int|string|null $id): int|string|null
+    public function isReplaying(): bool
     {
-        return match (true) {
-            $id instanceof Bits => $id->id(),
-            $id instanceof UuidInterface => $id->toString(),
-            $id instanceof AbstractUid => (string) $id,
-            default => $id,
-        };
+        return $this->is_replaying;
     }
 
     public function unlessReplaying(callable $callback)
