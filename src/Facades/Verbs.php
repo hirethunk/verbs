@@ -14,6 +14,7 @@ use Thunk\Verbs\Lifecycle\Broker;
  * @method static Event fire(Event $event)
  * @method static void createMetadataUsing(callable $callback)
  * @method static void commitImmediately(bool $commit_immediately = true)
+ * @method static void fake()
  */
 class Verbs extends Facade
 {
