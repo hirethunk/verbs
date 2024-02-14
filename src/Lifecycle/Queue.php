@@ -2,6 +2,7 @@
 
 namespace Thunk\Verbs\Lifecycle;
 
+use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
 
 class Queue
@@ -19,7 +20,7 @@ class Queue
 
         // TODO: Concurrency check
 
-        if (! app(EventStore::class)->write($events)) {
+        if (! app(StoresEvents::class)->write($events)) {
             throw new \Exception('Failed to write events to store.');
         }
 

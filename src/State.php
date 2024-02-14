@@ -5,7 +5,7 @@ namespace Thunk\Verbs;
 use Glhd\Bits\Bits;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
-use Thunk\Verbs\Lifecycle\EventStore;
+use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\Support\Serializer;
 
@@ -62,7 +62,7 @@ abstract class State
 
     public function storedEvents()
     {
-        return app(EventStore::class)
+        return app(StoresEvents::class)
             ->read(state: $this)
             ->collect();
     }
