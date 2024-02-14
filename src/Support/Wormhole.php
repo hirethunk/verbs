@@ -34,7 +34,7 @@ class Wormhole
 
     public function realMutableNow(): Carbon
     {
-        return $this->mutable_now->copy() ?? Carbon::instance(new DateTime());
+        return $this->mutable_now?->copy() ?? Carbon::instance(new DateTime());
     }
 
     public function realImmutableNow(): CarbonImmutable
