@@ -3,8 +3,8 @@
 namespace Thunk\Verbs\Facades;
 
 use Illuminate\Support\Facades\Facade;
+use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Lifecycle\Broker;
 
 /**
  * @method static bool commit()
@@ -14,12 +14,11 @@ use Thunk\Verbs\Lifecycle\Broker;
  * @method static Event fire(Event $event)
  * @method static void createMetadataUsing(callable $callback)
  * @method static void commitImmediately(bool $commit_immediately = true)
- * @method static void fake()
  */
 class Verbs extends Facade
 {
     protected static function getFacadeAccessor()
     {
-        return Broker::class;
+        return BrokersEvents::class;
     }
 }

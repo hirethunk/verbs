@@ -7,11 +7,12 @@ use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
 use Throwable;
 use Thunk\Verbs\CommitsImmediately;
+use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 
-class Broker
+class Broker implements BrokersEvents
 {
     public bool $is_replaying = false;
 

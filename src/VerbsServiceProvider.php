@@ -18,6 +18,8 @@ use Symfony\Component\Serializer\Normalizer\PropertyNormalizer;
 use Symfony\Component\Serializer\Serializer as SymfonySerializer;
 use Thunk\Verbs\Commands\MakeVerbEventCommand;
 use Thunk\Verbs\Commands\MakeVerbStateCommand;
+use Thunk\Verbs\Contracts\BrokersEvents;
+use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Lifecycle\Broker;
 use Thunk\Verbs\Lifecycle\Dispatcher;
 use Thunk\Verbs\Lifecycle\EventStore;
@@ -86,6 +88,9 @@ class VerbsServiceProvider extends PackageServiceProvider
                 encoders: [new JsonEncoder()],
             );
         });
+
+        $this->app->alias(Broker::class, BrokersEvents::class);
+        $this->app->alias(EventStore::class, StoresEvents::class);
     }
 
     public function boot()
@@ -102,7 +107,7 @@ class VerbsServiceProvider extends PackageServiceProvider
         }
 
         $this->app->terminating(function () {
-            app(Broker::class)->commit();
+            app(BrokersEvents::class)->commit();
         });
 
         // Allow for firing events with traditional Laravel dispatcher
@@ -110,7 +115,7 @@ class VerbsServiceProvider extends PackageServiceProvider
             [$event] = $data;
             if (isset($event) && $event instanceof Event) {
                 $event->id ??= Snowflake::make()->id();
-                $this->app->make(Broker::class)->fire($event);
+                $this->app->make(BrokersEvents::class)->fire($event);
             }
         });
     }

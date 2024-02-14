@@ -13,8 +13,8 @@ use ReflectionMethod;
 use ReflectionParameter;
 use RuntimeException;
 use Throwable;
+use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Lifecycle\Broker;
 use Thunk\Verbs\Lifecycle\MetadataManager;
 
 /**
@@ -104,7 +104,7 @@ class PendingEvent
         }
 
         try {
-            return app(Broker::class)->fire($this->event);
+            return app(BrokersEvents::class)->fire($this->event);
         } catch (Throwable $e) {
             throw $this->prepareException($e);
         }
@@ -115,7 +115,7 @@ class PendingEvent
     {
         $event = $this->fire(...$args);
 
-        app(Broker::class)->commit();
+        app(BrokersEvents::class)->commit();
 
         $results = app(MetadataManager::class)->getLastResults($event);
 
@@ -124,12 +124,12 @@ class PendingEvent
 
     public function isAllowed(): bool
     {
-        return app(Broker::class)->isAllowed($this->event);
+        return app(BrokersEvents::class)->isAllowed($this->event);
     }
 
     public function isValid(): bool
     {
-        return app(Broker::class)->isValid($this->event);
+        return app(BrokersEvents::class)->isValid($this->event);
     }
 
     /** @param  callable(Throwable): Throwable  $handler */
