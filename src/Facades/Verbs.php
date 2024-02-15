@@ -2,6 +2,7 @@
 
 namespace Thunk\Verbs\Facades;
 
+use Carbon\CarbonInterface;
 use Illuminate\Support\Facades\Facade;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\Broker;
@@ -14,6 +15,7 @@ use Thunk\Verbs\Lifecycle\Broker;
  * @method static Event fire(Event $event)
  * @method static void createMetadataUsing(callable $callback)
  * @method static void commitImmediately(bool $commit_immediately = true)
+ * @method static CarbonInterface realNow()
  */
 class Verbs extends Facade
 {

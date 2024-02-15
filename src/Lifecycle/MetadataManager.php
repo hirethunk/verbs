@@ -71,6 +71,9 @@ class MetadataManager
 
     public function initialize(Event $event): Metadata
     {
+        $this->ephemeral[$event] ??= [];
+        $this->ephemeral[$event]['created_at'] ??= now();
+
         return $this->persistent[$event] ??= $this->makeMetadata($event);
     }
 
