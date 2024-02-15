@@ -3,7 +3,6 @@
 namespace Thunk\Verbs\Attributes\Autodiscovery;
 
 use Attribute;
-use Glhd\Bits\Snowflake;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
@@ -32,7 +31,7 @@ class AppliesToState extends StateDiscoveryAttribute
 
         // If the ID hasn't been set yet, we'll automatically set one
         if ($id === null && $this->autofill) {
-            $id = Snowflake::make()->id();
+            $id = snowflake_id();
             $event->{$property} = $id;
         }
 

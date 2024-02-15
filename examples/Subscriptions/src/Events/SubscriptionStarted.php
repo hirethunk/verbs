@@ -2,7 +2,6 @@
 
 namespace Thunk\Verbs\Examples\Subscriptions\Events;
 
-use Glhd\Bits\Snowflake;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Examples\Subscriptions\Models\Subscription;
 use Thunk\Verbs\Examples\Subscriptions\States\GlobalReportState;
@@ -20,7 +19,7 @@ class SubscriptionStarted extends Event
 
     public function states(): StateCollection
     {
-        $this->subscription_id ??= Snowflake::make()->id();
+        $this->subscription_id ??= snowflake_id();
 
         return new StateCollection([
             SubscriptionState::load($this->subscription_id),

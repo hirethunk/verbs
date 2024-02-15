@@ -1,6 +1,5 @@
 <?php
 
-use Glhd\Bits\Snowflake;
 use Thunk\Verbs\Examples\Monopoly\Events\Gameplay\EndedTurn;
 use Thunk\Verbs\Examples\Monopoly\Events\Gameplay\PaidRent;
 use Thunk\Verbs\Examples\Monopoly\Events\Gameplay\PlayerMoved;
@@ -30,8 +29,8 @@ it('can play a game of Monopoly', function () {
     // Game setup
     // ---------------------------------------------------------------------------------------------------------------------------
 
-    $player1_id = Snowflake::make()->id();
-    $player2_id = Snowflake::make()->id();
+    $player1_id = snowflake_id();
+    $player2_id = snowflake_id();
 
     $game_state = verb(new GameStarted())->state(GameState::class);
 

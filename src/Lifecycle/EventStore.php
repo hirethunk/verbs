@@ -3,7 +3,6 @@
 namespace Thunk\Verbs\Lifecycle;
 
 use Glhd\Bits\Bits;
-use Glhd\Bits\Snowflake;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Builder as BaseBuilder;
 use Illuminate\Support\Collection;
@@ -143,7 +142,7 @@ class EventStore implements StoresEvents
     {
         return collect($event_objects)
             ->flatMap(fn (Event $event) => $event->states()->map(fn ($state) => [
-                'id' => Snowflake::make()->id(),
+                'id' => snowflake_id(),
                 'event_id' => Verbs::toId($event->id),
                 'state_id' => Verbs::toId($state->id),
                 'state_type' => $state::class,

@@ -3,7 +3,6 @@
 namespace Thunk\Verbs\Lifecycle;
 
 use Glhd\Bits\Bits;
-use Glhd\Bits\Snowflake;
 use Illuminate\Database\Eloquent\Collection;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
@@ -30,7 +29,7 @@ class StateManager
 
     public function register(State $state): State
     {
-        $state->id ??= Snowflake::make()->id();
+        $state->id ??= snowflake_id();
 
         return $this->remember($state);
     }
@@ -73,7 +72,7 @@ class StateManager
         }
 
         $state = $this->snapshots->loadSingleton($type) ?? $type::make();
-        $state->id ??= Snowflake::make()->id();
+        $state->id ??= snowflake_id();
 
         $this->events
             ->read(state: $state, after_id: $state->last_event_id, up_to_id: $this->max_event_id, singleton: true)

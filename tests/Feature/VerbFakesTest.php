@@ -1,6 +1,5 @@
 <?php
 
-use Glhd\Bits\Snowflake;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Verbs;
@@ -50,7 +49,7 @@ class VerbFakesTestEvent extends Event
 {
     public function __construct(?int $id = null)
     {
-        $this->id = $id ?? Snowflake::make()->id();
+        $this->id = $id ?? snowflake_id();
     }
 }
 
@@ -58,6 +57,6 @@ class UncommittedVerbFakesTestEvent extends Event
 {
     public function __construct(?int $id = null)
     {
-        $this->id = $id ?? Snowflake::make()->id();
+        $this->id = $id ?? snowflake_id();
     }
 }

@@ -81,7 +81,7 @@ class JobApplicationController
 {
     public function store(JobApplicationRequest $request) {
         ApplicationSubmitted::fire(
-            applicant_id: Snowflake::make()->id(),
+            applicant_id: snowflake_id(),
             // ...
         );
     }
