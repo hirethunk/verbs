@@ -3,8 +3,6 @@
 namespace Thunk\Verbs;
 
 use Glhd\Bits\Bits;
-use Illuminate\Support\Collection;
-use InvalidArgumentException;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Contracts\StoresEvents;
@@ -33,32 +31,9 @@ abstract class State
         return $state;
     }
 
-    /** @return StateFactory<static> */
-    public static function factory(
-        array|callable|int|null $count = null,
-        array|callable|null $data = null
-    ): StateFactory {
-        if (is_array($count) || is_callable($count)) {
-            if (is_array($data) || is_callable($data)) {
-                throw new InvalidArgumentException('You cannot pass data to both factory arguments.');
-            }
-
-            [$data, $count] = [$count, null];
-        }
-
-        return static::newFactory(
-            transformations: $data ? Collection::make([$data]) : new Collection(),
-            count: $count,
-        );
-    }
-
-    protected static function newFactory(Collection $transformations, ?int $count)
+    public static function factory(): StateFactory
     {
-        return new StateFactory(
-            state_class: static::class,
-            transformations: $transformations,
-            count: $count,
-        );
+        return new StateFactory(static::class);
     }
 
     public function __construct()

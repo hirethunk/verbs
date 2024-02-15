@@ -26,7 +26,7 @@ test('a factory can accept an id using the create method', function () {
 });
 
 test('a factory can accept an id using for method', function () {
-    $state = StateWithId::factory()->id(1)->create([
+    $state = StateWithId::factory()->for(1)->create([
         'name' => 'daniel',
     ]);
 
@@ -35,7 +35,7 @@ test('a factory can accept an id using for method', function () {
 });
 
 test('a factory can accept an id using the create method over the for method', function () {
-    $state = StateWithId::factory()->id(1)->create([
+    $state = StateWithId::factory()->for(1)->create([
         'name' => 'daniel',
     ], 2);
 
