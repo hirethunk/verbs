@@ -2,13 +2,11 @@
 
 namespace Thunk\Verbs\Lifecycle;
 
-use Carbon\CarbonInterface;
 use Thunk\Verbs\CommitsImmediately;
 use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
-use Thunk\Verbs\Support\Wormhole;
 
 class Broker implements BrokersEvents
 {
@@ -19,7 +17,6 @@ class Broker implements BrokersEvents
     public function __construct(
         protected Dispatcher $dispatcher,
         protected MetadataManager $metadata,
-        protected Wormhole $wormhole,
     ) {
     }
 
@@ -102,10 +99,5 @@ class Broker implements BrokersEvents
     public function commitImmediately(bool $commit_immediately = true): void
     {
         $this->commit_immediately = $commit_immediately;
-    }
-
-    public function realNow(): CarbonInterface
-    {
-        return $this->wormhole->realNow();
     }
 }

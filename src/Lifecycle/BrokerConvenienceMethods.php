@@ -2,12 +2,14 @@
 
 namespace Thunk\Verbs\Lifecycle;
 
+use Carbon\CarbonInterface;
 use Glhd\Bits\Bits;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
 use Throwable;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
+use Thunk\Verbs\Support\Wormhole;
 
 trait BrokerConvenienceMethods
 {
@@ -66,5 +68,10 @@ trait BrokerConvenienceMethods
         if (! $this->is_replaying) {
             $callback();
         }
+    }
+
+    public function realNow(): CarbonInterface
+    {
+        return app(Wormhole::class)->realNow();
     }
 }
