@@ -3,7 +3,6 @@
 namespace Thunk\Verbs\Support;
 
 use Closure;
-use Glhd\Bits\Snowflake;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Traits\Conditionable;
 use Illuminate\Support\Traits\Macroable;
@@ -159,7 +158,7 @@ class PendingEvent
     protected function conditionallySetId(): void
     {
         if ($this->event instanceof Event) {
-            $this->event->id ??= Snowflake::make()->id();
+            $this->event->id ??= snowflake_id();
         }
     }
 }

@@ -2,7 +2,6 @@
 
 namespace Thunk\Verbs\Examples\Monopoly\Http\Controllers;
 
-use Glhd\Bits\Snowflake;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Session;
@@ -13,7 +12,7 @@ class PlayerController extends Controller
 {
     public function store(Request $request, int $game_id)
     {
-        $player_id = Snowflake::make()->id();
+        $player_id = snowflake_id();
 
         Session::put('user.current_player_id', $player_id);
 

@@ -1,6 +1,5 @@
 <?php
 
-use Glhd\Bits\Snowflake;
 use Thunk\Verbs\Attributes\Autodiscovery\AppliesToState;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
@@ -117,7 +116,7 @@ class EventStoreFakeTestEvent extends Event
 {
     public function __construct(?int $id = null)
     {
-        $this->id = $id ?? Snowflake::make()->id();
+        $this->id = $id ?? snowflake_id();
     }
 }
 
@@ -125,7 +124,7 @@ class UncommittedEventStoreFakeTestEvent extends Event
 {
     public function __construct(?int $id = null)
     {
-        $this->id = $id ?? Snowflake::make()->id();
+        $this->id = $id ?? snowflake_id();
     }
 }
 
@@ -140,6 +139,6 @@ class EventStoreFakeTestStatefulEvent extends Event
         public ?int $state_id = null,
         ?int $id = null
     ) {
-        $this->id = $id ?? Snowflake::make()->id();
+        $this->id = $id ?? snowflake_id();
     }
 }
