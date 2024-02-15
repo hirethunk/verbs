@@ -30,20 +30,6 @@ trait BrokerConvenienceMethods
         app(MetadataManager::class)->createMetadataUsing($callback);
     }
 
-    public function isValid(Event $event): bool
-    {
-        try {
-            $states = $event->states();
-
-            Guards::for($event, null)->validate();
-            $states->each(fn ($state) => Guards::for($event, $state)->validate());
-
-            return true;
-        } catch (EventNotValidForCurrentState $e) {
-            return false;
-        }
-    }
-
     public function isAllowed(Event $event): bool
     {
         try {
@@ -54,6 +40,20 @@ trait BrokerConvenienceMethods
 
             return true;
         } catch (Throwable $e) {
+            return false;
+        }
+    }
+
+    public function isValid(Event $event): bool
+    {
+        try {
+            $states = $event->states();
+
+            Guards::for($event, null)->validate();
+            $states->each(fn ($state) => Guards::for($event, $state)->validate());
+
+            return true;
+        } catch (EventNotValidForCurrentState $e) {
             return false;
         }
     }
