@@ -4,9 +4,9 @@ namespace Thunk\Verbs\Lifecycle;
 
 use Carbon\CarbonInterface;
 use Glhd\Bits\Bits;
+use Illuminate\Auth\Access\AuthorizationException;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
-use Throwable;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
 use Thunk\Verbs\Support\Wormhole;
@@ -30,16 +30,14 @@ trait BrokerConvenienceMethods
         app(MetadataManager::class)->createMetadataUsing($callback);
     }
 
-    public function isAllowed(Event $event): bool
+    public function isAuthorized(Event $event): bool
     {
         try {
-            $states = $event->states();
-
-            Guards::for($event, null)->authorize();
-            $states->each(fn ($state) => Guards::for($event, $state)->authorize());
+            Guards::for($event)->authorize();
+            $event->states()->each(fn ($state) => Guards::for($event, $state)->authorize());
 
             return true;
-        } catch (Throwable $e) {
+        } catch (AuthorizationException) {
             return false;
         }
     }
@@ -47,13 +45,11 @@ trait BrokerConvenienceMethods
     public function isValid(Event $event): bool
     {
         try {
-            $states = $event->states();
-
-            Guards::for($event, null)->validate();
-            $states->each(fn ($state) => Guards::for($event, $state)->validate());
+            Guards::for($event)->validate();
+            $event->states()->each(fn ($state) => Guards::for($event, $state)->validate());
 
             return true;
-        } catch (EventNotValidForCurrentState $e) {
+        } catch (EventNotValidForCurrentState) {
             return false;
         }
     }
