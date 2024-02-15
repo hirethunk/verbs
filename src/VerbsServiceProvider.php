@@ -6,6 +6,7 @@ use Glhd\Bits\Snowflake;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Events\Dispatcher as LaravelDispatcher;
+use Illuminate\Support\DateFactory;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
@@ -30,6 +31,7 @@ use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\Livewire\SupportVerbs;
 use Thunk\Verbs\Support\EventStateRegistry;
 use Thunk\Verbs\Support\Serializer;
+use Thunk\Verbs\Support\Wormhole;
 
 class VerbsServiceProvider extends PackageServiceProvider
 {
@@ -65,6 +67,16 @@ class VerbsServiceProvider extends PackageServiceProvider
         $this->app->singleton(EventStateRegistry::class);
         $this->app->singleton(MetadataManager::class);
         $this->app->singleton(Serializer::class);
+
+        $this->app->singleton(Wormhole::class, function (Container $app) {
+            $config = $app->make(Repository::class);
+
+            return new Wormhole(
+                $app->make(MetadataManager::class),
+                $app->make(DateFactory::class),
+                $config->get('verbs.wormhole', true),
+            );
+        });
 
         $this->app->singleton(PropertyNormalizer::class, function () {
             $loader = class_exists(AttributeLoader::class)

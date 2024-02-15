@@ -2,6 +2,7 @@
 
 namespace Thunk\Verbs\Facades;
 
+use Carbon\CarbonInterface;
 use Closure;
 use Illuminate\Support\Facades\Facade;
 use Thunk\Verbs\Contracts\BrokersEvents;
@@ -20,6 +21,7 @@ use Thunk\Verbs\Testing\EventStoreFake;
  * @method static EventStoreFake assertCommitted(string|Closure $event, Closure|int|null $callback = null)
  * @method static EventStoreFake assertNotCommitted(string|Closure $event, ?Closure $callback = null)
  * @method static EventStoreFake assertNothingCommitted()
+ * @method static CarbonInterface realNow()
  */
 class Verbs extends Facade
 {
