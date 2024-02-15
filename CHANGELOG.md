@@ -2,6 +2,25 @@
 
 All notable changes to `:package_name` will be documented in this file.
 
+## 0.0.9 - 2024-02-15
+
+### What's Changed
+
+* make pending event macroable by @jdiddydave in https://github.com/hirethunk/verbs/pull/55
+* Add `for` method to factory by @joshhanley in https://github.com/hirethunk/verbs/pull/56
+* Change state factory to not require an array to be passed in by @joshhanley in https://github.com/hirethunk/verbs/pull/57
+* adding missing inheritance from docs by @da-mask in https://github.com/hirethunk/verbs/pull/58
+* Fix the stupidest type check ever. by @DanielCoulbourne in https://github.com/hirethunk/verbs/pull/59
+* Use "historical" `now()` when replaying events by @inxilpro in https://github.com/hirethunk/verbs/pull/29
+* Event store testing by @inxilpro in https://github.com/hirethunk/verbs/pull/62
+* Switch to bits 0.3.0 and `snowflake_id()` by @inxilpro in https://github.com/hirethunk/verbs/pull/63
+
+### New Contributors
+
+* @da-mask made their first contribution in https://github.com/hirethunk/verbs/pull/58
+
+**Full Changelog**: https://github.com/hirethunk/verbs/compare/0.0.8.1...0.0.9
+
 ## v0.0.8.1 - 2024-01-23
 
 ### What's Changed
