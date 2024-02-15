@@ -3,8 +3,8 @@
 namespace Thunk\Verbs\Commands;
 
 use Illuminate\Console\Command;
+use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Lifecycle\Broker;
 
 class ReplayCommand extends Command
 {
@@ -12,7 +12,7 @@ class ReplayCommand extends Command
 
     protected $description = 'Replay all Verbs events.';
 
-    public function handle(Broker $broker): void
+    public function handle(BrokersEvents $broker): void
     {
         $broker->replay(
             beforeEach: fn (Event $event) => $this->getOutput()->write(sprintf(

@@ -2,27 +2,21 @@
 
 namespace Thunk\Verbs\Lifecycle;
 
-use Carbon\CarbonInterface;
-use Glhd\Bits\Bits;
-use Ramsey\Uuid\UuidInterface;
-use Symfony\Component\Uid\AbstractUid;
-use Throwable;
 use Thunk\Verbs\CommitsImmediately;
+use Thunk\Verbs\Contracts\BrokersEvents;
+use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
-use Thunk\Verbs\Support\Wormhole;
 
-class Broker
+class Broker implements BrokersEvents
 {
-    public bool $is_replaying = false;
+    use BrokerConvenienceMethods;
 
     public bool $commit_immediately = false;
 
     public function __construct(
         protected Dispatcher $dispatcher,
         protected MetadataManager $metadata,
-        protected Wormhole $wormhole,
     ) {
     }
 
@@ -73,41 +67,13 @@ class Broker
         return $this->commit();
     }
 
-    public function isValid(Event $event): bool
-    {
-        try {
-            $states = $event->states();
-
-            Guards::for($event, null)->validate();
-            $states->each(fn ($state) => Guards::for($event, $state)->validate());
-
-            return true;
-        } catch (EventNotValidForCurrentState $e) {
-            return false;
-        }
-    }
-
-    public function isAllowed(Event $event): bool
-    {
-        try {
-            $states = $event->states();
-
-            Guards::for($event, null)->authorize();
-            $states->each(fn ($state) => Guards::for($event, $state)->authorize());
-
-            return true;
-        } catch (Throwable $e) {
-            return false;
-        }
-    }
-
     public function replay(?callable $beforeEach = null, ?callable $afterEach = null)
     {
         $this->is_replaying = true;
 
         app(SnapshotStore::class)->reset();
 
-        app(EventStore::class)->read()
+        app(StoresEvents::class)->read()
             ->each(function (Event $event) use ($beforeEach, $afterEach) {
                 app(StateManager::class)->setMaxEventId($event->id);
 
@@ -130,40 +96,8 @@ class Broker
         $this->is_replaying = false;
     }
 
-    public function isReplaying(): bool
-    {
-        return $this->is_replaying;
-    }
-
-    public function unlessReplaying(callable $callback)
-    {
-        if (! $this->is_replaying) {
-            $callback();
-        }
-    }
-
-    public function createMetadataUsing(?callable $callback = null): void
-    {
-        app(MetadataManager::class)->createMetadataUsing($callback);
-    }
-
-    public function toId(Bits|UuidInterface|AbstractUid|int|string|null $id): int|string|null
-    {
-        return match (true) {
-            $id instanceof Bits => $id->id(),
-            $id instanceof UuidInterface => $id->toString(),
-            $id instanceof AbstractUid => (string) $id,
-            default => $id,
-        };
-    }
-
     public function commitImmediately(bool $commit_immediately = true): void
     {
         $this->commit_immediately = $commit_immediately;
-    }
-
-    public function realNow(): CarbonInterface
-    {
-        return $this->wormhole->realNow();
     }
 }

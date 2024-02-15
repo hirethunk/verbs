@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\LazyCollection;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
+use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\ConcurrencyException;
 use Thunk\Verbs\Facades\Verbs;
@@ -19,7 +20,7 @@ use Thunk\Verbs\Models\VerbStateEvent;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\Serializer;
 
-class EventStore
+class EventStore implements StoresEvents
 {
     public function __construct(
         protected MetadataManager $metadata,
@@ -37,7 +38,6 @@ class EventStore
             ->map(fn (VerbEvent $model) => $model->event());
     }
 
-    /** @param  Event[]  $events */
     public function write(array $events): bool
     {
         if (empty($events)) {
@@ -67,7 +67,10 @@ class EventStore
                 ->map(fn (VerbStateEvent $pivot) => $pivot->event);
         }
 
-        return VerbEvent::query()->lazyById();
+        return VerbEvent::query()
+            ->when($after_id, fn (Builder $query) => $query->where('id', '>', Verbs::toId($after_id)))
+            ->when($up_to_id, fn (Builder $query) => $query->where('id', '<=', Verbs::toId($up_to_id)))
+            ->lazyById();
     }
 
     /** @param  Event[]  $events */
