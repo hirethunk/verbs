@@ -6,8 +6,10 @@ use Thunk\Verbs\CommitsImmediately;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Support\StateCollection;
 
+/** @template TStateType */
 class VerbsStateInitialized extends Event implements CommitsImmediately
 {
+    /** @param  class-string<TStateType>  $state_class  */
     public function __construct(
         public int|string|null $state_id,
         public string $state_class,
@@ -34,10 +36,12 @@ class VerbsStateInitialized extends Event implements CommitsImmediately
 
     public function apply()
     {
+        $state = $this->state($this->state_class);
+
         foreach ($this->state_data as $key => $value) {
-            $this->state()->$key = $value;
+            $state->$key = $value;
         }
 
-        $this->state()->__verbs_initialized = true;
+        $state->__verbs_initialized = true;
     }
 }
