@@ -23,7 +23,8 @@ abstract class Event
         return static::make()->$name(...$arguments);
     }
 
-    public static function make(...$args)
+    /** @return PendingEvent<$this> */
+    public static function make(...$args): PendingEvent
     {
         return PendingEvent::make(static::class, $args);
     }
@@ -43,10 +44,10 @@ abstract class Event
     }
 
     /**
-     * @template T
+     * @template TStateType
      *
-     * @param  class-string<T>|null  $state_type
-     * @return T|null
+     * @param  class-string<TStateType>|null  $state_type
+     * @return TStateType|State|null
      */
     public function state(?string $state_type = null): ?State
     {
