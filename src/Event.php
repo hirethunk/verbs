@@ -2,6 +2,10 @@
 
 namespace Thunk\Verbs;
 
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
+use InvalidArgumentException;
 use LogicException;
 use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
 use Thunk\Verbs\Lifecycle\MetadataManager;
@@ -66,12 +70,23 @@ abstract class Event
 
     protected function assert($assertion, string $message): static
     {
+        $caller = Arr::first(
+            debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2),
+            static fn ($trace) => ($trace['function'] ?? 'assert') !== 'assert'
+        )['function'] ?? 'validate';
+
         $result = (bool) value($assertion, $this);
 
-        if (! $result) {
-            throw new EventNotValidForCurrentState($message);
+        if ($result === true) {
+            return $this;
         }
 
-        return $this;
+        // Determine the exception to throw based on the event phase that assert() was
+        // called from. If we can't guess, we'll assume `validate()`.
+        match (true) {
+            Str::startsWith($caller, 'authorize') => throw new AuthorizationException($message),
+            $caller === '__construct' => throw new InvalidArgumentException($message),
+            default => throw new EventNotValidForCurrentState($message),
+        };
     }
 }
