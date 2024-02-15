@@ -12,12 +12,10 @@ it('State factory initializes a state', function () {
     ]);
 
     expect($events = VerbEvent::all())
-        ->toHaveCount(1);
-
-    expect($events->first())
-        ->type->toBe(VerbsStateInitialized::class);
-
-    expect($count_state)
+        ->toHaveCount(1)
+        ->and($events->first())
+        ->type->toBe(VerbsStateInitialized::class)
+        ->and($count_state)
         ->toBeInstanceOf(CountState::class)
         ->count
         ->toBe(1337);

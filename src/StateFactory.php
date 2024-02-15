@@ -9,6 +9,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Traits\Conditionable;
 use Illuminate\Support\Traits\Macroable;
 use Ramsey\Uuid\UuidInterface;
+use RuntimeException;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Events\VerbsStateInitialized;
 use Thunk\Verbs\Support\IdManager;
@@ -94,14 +95,24 @@ class StateFactory
             return new Collection();
         }
 
-        return Collection::range(1, $this->count)->map(fn () => $this->createState());
+        if ($this->count === 1) {
+            return Collection::make([$this->createState()]);
+        }
+
+        if ($this->id) {
+            throw new RuntimeException('You cannot create multiple states with the same ID.');
+        }
+
+        $ids = app(IdManager::class);
+
+        return Collection::range(1, $this->count)->map(fn () => $this->id($ids->make())->createState());
     }
 
     /** @return TStateType */
     protected function createState(): State
     {
         $initialized = VerbsStateInitialized::fire(
-            state_id: $this->id ?? app(IdManager::class)->make(),
+            state_id: $this->id,
             state_class: $this->state_class,
             state_data: $this->getRawData(),
         );
