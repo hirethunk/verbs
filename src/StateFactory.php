@@ -12,6 +12,7 @@ use Ramsey\Uuid\UuidInterface;
 use RuntimeException;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Events\VerbsStateInitialized;
+use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Support\StateCollection;
 
 /**
@@ -40,7 +41,7 @@ class StateFactory
         protected string $state_class,
         protected Collection $transformations = new Collection(),
         protected ?int $count = null,
-        protected ?int $id = null,
+        protected Bits|UuidInterface|AbstractUid|int|string|null $id = null,
         protected bool $singleton = false,
         protected ?Generator $faker = null,
     ) {
@@ -83,7 +84,7 @@ class StateFactory
     }
 
     /** @return TStateType|StateCollection<TStateType> */
-    public function create(array $data = [], ?int $id = null): State|StateCollection
+    public function create(array $data = [], Bits|UuidInterface|AbstractUid|int|string|null $id = null): State|StateCollection
     {
         if (! empty($data)) {
             return $this->state($data)->create(id: $id);
@@ -121,7 +122,7 @@ class StateFactory
     protected function createState(): State
     {
         $initialized = VerbsStateInitialized::fire(
-            state_id: $this->id ?? snowflake_id(), // To be replaced with Id::make()
+            state_id: Verbs::toId($this->id ?? snowflake_id()), // To be replaced with Id::make()
             state_class: $this->state_class,
             state_data: $this->getRawData(),
             singleton: $this->singleton,
