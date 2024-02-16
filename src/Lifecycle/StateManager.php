@@ -6,6 +6,7 @@ use Glhd\Bits\Bits;
 use Illuminate\Database\Eloquent\Collection;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
+use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Id;
@@ -23,7 +24,8 @@ class StateManager
         protected Dispatcher $dispatcher,
         protected SnapshotStore $snapshots,
         protected StoresEvents $events,
-    ) {
+    )
+    {
         $this->states = new Collection();
     }
 
@@ -55,9 +57,14 @@ class StateManager
             $state->id = $id;
         }
 
-        $this->events
-            ->read(state: $state, after_id: $state->last_event_id, up_to_id: $this->max_event_id)
-            ->each(fn (Event $event) => $this->dispatcher->apply($event, $state));
+        // If we're replaying, the broker will handle applying the events to the state, otherwise,
+        // we need to apply them to ensure that the State is up-to-date. This is just a temporary
+        // hack until the flow can be refactored.
+        if (! app(BrokersEvents::class)->isReplaying()) {
+            $this->events
+                ->read(state: $state, after_id: $state->last_event_id, up_to_id: $this->max_event_id)
+                ->each(fn (Event $event) => $this->dispatcher->apply($event, $state));
+        }
 
         return $this->remember($state);
     }
