@@ -2,23 +2,11 @@
 
 use Thunk\Verbs\Attributes\Autodiscovery\StateId;
 use Thunk\Verbs\Commands\ReplayCommand;
-use Thunk\Verbs\Contracts\BrokersEvents;
-use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Facades\Verbs;
-use Thunk\Verbs\Lifecycle\Broker;
-use Thunk\Verbs\Lifecycle\EventStore;
-use Thunk\Verbs\Lifecycle\MetadataManager;
-use Thunk\Verbs\Lifecycle\SnapshotStore;
 use Thunk\Verbs\Lifecycle\StateManager;
-use Thunk\Verbs\Models\VerbEvent;
-use Thunk\Verbs\Models\VerbSnapshot;
 use Thunk\Verbs\State;
-use Thunk\Verbs\Support\EventStateRegistry;
-use Thunk\Verbs\Support\IdManager;
-use Thunk\Verbs\Support\Serializer;
-use Thunk\Verbs\Support\Wormhole;
 
 beforeEach(function () {
     $GLOBALS['replay_test_counts'] = [];
@@ -76,7 +64,8 @@ class ReplayCommandTestEvent extends Event
         public int $add = 0,
         public int $subtract = 0,
         #[StateId(ReplayCommandTestState::class)] public ?int $state_id = null,
-    ) {}
+    ) {
+    }
 
     public function apply(ReplayCommandTestState $state)
     {

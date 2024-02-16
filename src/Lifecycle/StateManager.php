@@ -24,8 +24,7 @@ class StateManager
         protected Dispatcher $dispatcher,
         protected SnapshotStore $snapshots,
         protected StoresEvents $events,
-    )
-    {
+    ) {
         $this->states = new Collection();
     }
 
