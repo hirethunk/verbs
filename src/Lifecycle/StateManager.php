@@ -9,7 +9,6 @@ use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Id;
-use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\State;
 use UnexpectedValueException;
 

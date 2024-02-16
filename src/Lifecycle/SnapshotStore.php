@@ -7,7 +7,6 @@ use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Exceptions\StateIsNotSingletonException;
 use Thunk\Verbs\Facades\Id;
-use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Models\VerbSnapshot;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\Serializer;

@@ -4,7 +4,6 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Thunk\Verbs\Facades\Id;
-use Thunk\Verbs\Support\IdManager;
 
 return new class extends Migration
 {
