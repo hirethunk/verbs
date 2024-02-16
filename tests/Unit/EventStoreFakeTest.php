@@ -69,11 +69,7 @@ it('reads and writes stateless events normally', function () {
     expect($store->read()->map(fn (Event $event) => $event->id)->all())
         ->toBe([1, 2, 3, 4, 5])
         ->and($store->read(after_id: 2)->map(fn (Event $event) => $event->id)->all())
-        ->toBe([3, 4, 5])
-        ->and($store->read(up_to_id: 4)->map(fn (Event $event) => $event->id)->all())
-        ->toBe([1, 2, 3, 4])
-        ->and($store->read(after_id: 2, up_to_id: 4)->map(fn (Event $event) => $event->id)->all())
-        ->toBe([3, 4]);
+        ->toBe([3, 4, 5]);
 });
 
 it('reads and writes stateful events normally', function () {
@@ -105,11 +101,7 @@ it('reads and writes stateful events normally', function () {
         ->and($store->read(state: $state2)->map(fn (Event $event) => $event->id)->all())
         ->toBe([201, 202, 203])
         ->and($store->read(state: $state2, after_id: 201)->map(fn (Event $event) => $event->id)->all())
-        ->toBe([202, 203])
-        ->and($store->read(state: $state2, up_to_id: 202)->map(fn (Event $event) => $event->id)->all())
-        ->toBe([201, 202])
-        ->and($store->read(state: $state2, after_id: 201, up_to_id: 202)->map(fn (Event $event) => $event->id)->all())
-        ->toBe([202]);
+        ->toBe([202, 203]);
 });
 
 class EventStoreFakeTestEvent extends Event

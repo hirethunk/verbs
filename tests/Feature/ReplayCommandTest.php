@@ -43,8 +43,9 @@ it('can replay events', function () {
         ->toBe(4)
         ->and($GLOBALS['handle_count'])->toBe(10);
 
-    // Reset 'projected' state
+    // Reset 'projected' state and change data that only is touched when not replaying
     $GLOBALS['replay_test_counts'] = [];
+    $GLOBALS['handle_count'] = 1337;
 
     $this->artisan(ReplayCommand::class);
 
@@ -56,7 +57,7 @@ it('can replay events', function () {
         ->toBe(4)
         ->and($GLOBALS['replay_test_counts'][$state2_id])
         ->toBe(4)
-        ->and($GLOBALS['handle_count'])->toBe(10);
+        ->and($GLOBALS['handle_count'])->toBe(1337);
 });
 
 class ReplayCommandTestEvent extends Event

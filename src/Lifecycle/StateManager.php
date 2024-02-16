@@ -18,7 +18,7 @@ class StateManager
     /** @var Collection<string, State> */
     protected Collection $states;
 
-    protected int|string|null $max_event_id = null;
+    protected bool $is_replaying = false;
 
     public function __construct(
         protected Dispatcher $dispatcher,
@@ -56,12 +56,9 @@ class StateManager
             $state->id = $id;
         }
 
-        // If we're replaying, the broker will handle applying the events to the state, otherwise,
-        // we need to apply them to ensure that the State is up-to-date. This is just a temporary
-        // hack until the flow can be refactored.
-        if (! app(BrokersEvents::class)->isReplaying()) {
+        if (! $this->is_replaying) {
             $this->events
-                ->read(state: $state, after_id: $state->last_event_id, up_to_id: $this->max_event_id)
+                ->read(state: $state, after_id: $state->last_event_id)
                 ->each(fn (Event $event) => $this->dispatcher->apply($event, $state));
         }
 
@@ -80,9 +77,11 @@ class StateManager
         $state = $this->snapshots->loadSingleton($type) ?? $type::make();
         $state->id ??= snowflake_id();
 
-        $this->events
-            ->read(state: $state, after_id: $state->last_event_id, up_to_id: $this->max_event_id, singleton: true)
-            ->each(fn (Event $event) => $this->dispatcher->apply($event, $state));
+        if (! $this->is_replaying) {
+            $this->events
+                ->read(state: $state, after_id: $state->last_event_id, singleton: true)
+                ->each(fn (Event $event) => $this->dispatcher->apply($event, $state));
+        }
 
         // We'll store a reference to it by the type for future singleton access
         $this->states->put($type, $state);
@@ -95,9 +94,9 @@ class StateManager
         return $this->snapshots->write($this->states->values()->all());
     }
 
-    public function setMaxEventId(Bits|UuidInterface|AbstractUid|int|string $max_event_id): static
+    public function setReplaying(bool $replaying): static
     {
-        $this->max_event_id = Id::from($max_event_id);
+        $this->is_replaying = $replaying;
 
         return $this;
     }
@@ -105,7 +104,7 @@ class StateManager
     public function reset(bool $include_storage = false): static
     {
         $this->states = new Collection();
-        $this->max_event_id = null;
+        $this->is_replaying = false;
 
         if ($include_storage) {
             $this->snapshots->reset();
