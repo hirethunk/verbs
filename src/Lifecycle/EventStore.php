@@ -29,10 +29,9 @@ class EventStore implements StoresEvents
     public function read(
         ?State $state = null,
         Bits|UuidInterface|AbstractUid|int|string|null $after_id = null,
-        Bits|UuidInterface|AbstractUid|int|string|null $up_to_id = null,
         bool $singleton = false,
     ): LazyCollection {
-        return $this->readEvents($state, $after_id, $up_to_id, $singleton)
+        return $this->readEvents($state, $after_id, $singleton)
             ->each(fn (VerbEvent $model) => $this->metadata->set($model->event(), $model->metadata()))
             ->map(fn (VerbEvent $model) => $model->event());
     }
@@ -52,7 +51,6 @@ class EventStore implements StoresEvents
     protected function readEvents(
         ?State $state,
         Bits|UuidInterface|AbstractUid|int|string|null $after_id,
-        Bits|UuidInterface|AbstractUid|int|string|null $up_to_id,
         bool $singleton,
     ): LazyCollection {
         if ($state) {
@@ -61,14 +59,12 @@ class EventStore implements StoresEvents
                 ->unless($singleton, fn (Builder $query) => $query->where('state_id', $state->id))
                 ->where('state_type', $state::class)
                 ->when($after_id, fn (Builder $query) => $query->whereRelation('event', 'id', '>', Id::from($after_id)))
-                ->when($up_to_id, fn (Builder $query) => $query->whereRelation('event', 'id', '<=', Id::from($up_to_id)))
                 ->lazyById()
                 ->map(fn (VerbStateEvent $pivot) => $pivot->event);
         }
 
         return VerbEvent::query()
             ->when($after_id, fn (Builder $query) => $query->where('id', '>', Id::from($after_id)))
-            ->when($up_to_id, fn (Builder $query) => $query->where('id', '<=', Id::from($up_to_id)))
             ->lazyById();
     }
 

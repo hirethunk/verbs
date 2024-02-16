@@ -71,29 +71,32 @@ class Broker implements BrokersEvents
     {
         $this->is_replaying = true;
 
-        app(SnapshotStore::class)->reset();
+        try {
+            app(StateManager::class)->reset(include_storage: true);
 
-        app(StoresEvents::class)->read()
-            ->each(function (Event $event) use ($beforeEach, $afterEach) {
-                app(StateManager::class)->setMaxEventId($event->id);
+            app(StoresEvents::class)->read()
+                ->each(function (Event $event) use ($beforeEach, $afterEach) {
+                    app(StateManager::class)->setReplaying(true);
 
-                if ($beforeEach) {
-                    $beforeEach($event);
-                }
+                    if ($beforeEach) {
+                        $beforeEach($event);
+                    }
 
-                $event->states()
-                    ->each(fn ($state) => $this->dispatcher->apply($event, $state))
-                    ->each(fn ($state) => $this->dispatcher->replay($event, $state))
-                    ->whenEmpty(fn () => $this->dispatcher->replay($event, null));
+                    $event->states()
+                        ->each(fn ($state) => $this->dispatcher->apply($event, $state))
+                        ->each(fn ($state) => $this->dispatcher->replay($event, $state))
+                        ->whenEmpty(fn () => $this->dispatcher->replay($event, null));
 
-                if ($afterEach) {
-                    $afterEach($event);
-                }
+                    if ($afterEach) {
+                        $afterEach($event);
+                    }
 
-                return $event;
-            });
-
-        $this->is_replaying = false;
+                    return $event;
+                });
+        } finally {
+            app(StateManager::class)->setReplaying(false);
+            $this->is_replaying = false;
+        }
     }
 
     public function commitImmediately(bool $commit_immediately = true): void

@@ -32,16 +32,12 @@ class EventStoreFake implements StoresEvents
     public function read(
         ?State $state = null,
         UuidInterface|string|int|AbstractUid|Bits|null $after_id = null,
-        UuidInterface|string|int|AbstractUid|Bits|null $up_to_id = null,
         bool $singleton = false
     ): LazyCollection {
         return LazyCollection::make($this->events)
             ->flatten()
             ->when($after_id, function (LazyCollection $events, $after_id) {
                 return $events->filter(fn (Event $event) => $event->id > Id::from($after_id));
-            })
-            ->when($up_to_id, function (LazyCollection $events, $up_to_id) {
-                return $events->filter(fn (Event $event) => $event->id <= Id::from($up_to_id));
             })
             ->when($state, function (LazyCollection $events, State $state) use ($singleton) {
                 return $singleton
