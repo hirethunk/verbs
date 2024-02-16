@@ -113,14 +113,15 @@ class StateFactory
             throw new RuntimeException('You cannot create multiple states with the same ID.');
         }
 
-        return StateCollection::range(1, $this->count)->map(fn () => $this->id(make_id())->createState());
+        // Note: this will be replaced with Id::make() if IdManager is merged
+        return StateCollection::range(1, $this->count)->map(fn () => $this->id(snowflake_id())->createState());
     }
 
     /** @return TStateType */
     protected function createState(): State
     {
         $initialized = VerbsStateInitialized::fire(
-            state_id: $this->id ?? make_id(),
+            state_id: $this->id ?? snowflake_id(), // To be replaced with Id::make()
             state_class: $this->state_class,
             state_data: $this->getRawData(),
             singleton: $this->singleton,
