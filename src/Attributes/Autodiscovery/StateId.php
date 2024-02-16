@@ -12,6 +12,7 @@ use Thunk\Verbs\State;
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class StateId extends StateDiscoveryAttribute
 {
+    /** @param  class-string<State>  $state_type */
     public function __construct(
         public string $state_type,
         public ?string $alias = null,
