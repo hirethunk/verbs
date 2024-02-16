@@ -3,7 +3,6 @@
 namespace Thunk\Verbs\Commands;
 
 use Illuminate\Console\GeneratorCommand;
-use Illuminate\Support\Arr;
 use Thunk\Verbs\Support\LilWayneLyrics;
 
 abstract class VerbGeneratorCommand extends GeneratorCommand

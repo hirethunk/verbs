@@ -2,14 +2,7 @@
 
 namespace Thunk\Verbs\Support;
 
-use Glhd\Bits\Bits;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Database\Schema\ColumnDefinition;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
-use InvalidArgumentException;
-use Ramsey\Uuid\UuidInterface;
-use Symfony\Component\Uid\AbstractUid;
 
 class LilWayneLyrics
 {
