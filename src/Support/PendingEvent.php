@@ -126,9 +126,9 @@ class PendingEvent
         return $results->count() > 1 ? $results : $results->first();
     }
 
-    public function isAllowed(): bool
+    public function isAuthorized(): bool
     {
-        return app(BrokersEvents::class)->isAllowed($this->event);
+        return app(BrokersEvents::class)->isAuthorized($this->event);
     }
 
     public function isValid(): bool

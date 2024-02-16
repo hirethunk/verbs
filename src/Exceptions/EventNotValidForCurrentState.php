@@ -2,8 +2,6 @@
 
 namespace Thunk\Verbs\Exceptions;
 
-use InvalidArgumentException;
-
-class EventNotValidForCurrentState extends InvalidArgumentException
+class EventNotValidForCurrentState extends EventNotValid
 {
 }
