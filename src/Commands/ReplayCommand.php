@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\App;
 use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Models\VerbEvent;
+
 use function Laravel\Prompts\alert;
 use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\progress;
