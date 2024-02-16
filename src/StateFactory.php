@@ -12,7 +12,7 @@ use Ramsey\Uuid\UuidInterface;
 use RuntimeException;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Events\VerbsStateInitialized;
-use Thunk\Verbs\Facades\Verbs;
+use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Support\StateCollection;
 
 /**
@@ -41,11 +41,10 @@ class StateFactory
         protected string $state_class,
         protected Collection $transformations = new Collection(),
         protected ?int $count = null,
-        protected Bits|UuidInterface|AbstractUid|int|string|null $id = null,
+        protected int|string|null $id = null,
         protected bool $singleton = false,
         protected ?Generator $faker = null,
-    ) {
-    }
+    ) {}
 
     public function definition(): array
     {
@@ -75,7 +74,7 @@ class StateFactory
 
     public function id(Bits|UuidInterface|AbstractUid|int|string $id): static
     {
-        return $this->clone(['id' => $id]);
+        return $this->clone(['id' => Id::from($id)]);
     }
 
     public function singleton(bool $singleton = true): static
@@ -114,15 +113,14 @@ class StateFactory
             throw new RuntimeException('You cannot create multiple states with the same ID.');
         }
 
-        // Note: this will be replaced with Id::make() if IdManager is merged
-        return StateCollection::range(1, $this->count)->map(fn () => $this->id(snowflake_id())->createState());
+        return StateCollection::range(1, $this->count)->map(fn () => $this->id(Id::make())->createState());
     }
 
     /** @return TStateType */
     protected function createState(): State
     {
         $initialized = VerbsStateInitialized::fire(
-            state_id: Verbs::toId($this->id ?? snowflake_id()), // To be replaced with Id::make()
+            state_id: $this->id ?? Id::make(),
             state_class: $this->state_class,
             state_data: $this->getRawData(),
             singleton: $this->singleton,
