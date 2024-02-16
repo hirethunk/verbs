@@ -95,9 +95,9 @@ class CustomFactoryTestState extends State
 {
     public string $name;
 
-    protected static function newFactory(Collection $transformations, ?int $count)
+    protected static function newFactory(): StateFactory
     {
-        return new class(state_class: static::class, transformations: $transformations, count: $count) extends StateFactory
+        return new class(state_class: static::class) extends StateFactory
         {
             public function definition(): array
             {
