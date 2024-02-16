@@ -8,6 +8,8 @@ use Illuminate\Auth\Access\AuthorizationException;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Exceptions\EventNotAuthorized;
+use Thunk\Verbs\Exceptions\EventNotValid;
 use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
 use Thunk\Verbs\Support\Wormhole;
 
@@ -49,7 +51,7 @@ trait BrokerConvenienceMethods
             $event->states()->each(fn ($state) => Guards::for($event, $state)->validate());
 
             return true;
-        } catch (EventNotValidForCurrentState) {
+        } catch (EventNotValid|EventNotAuthorized) {
             return false;
         }
     }

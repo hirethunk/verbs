@@ -7,6 +7,9 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 use LogicException;
+use Throwable;
+use Thunk\Verbs\Exceptions\EventNotAuthorized;
+use Thunk\Verbs\Exceptions\EventNotValid;
 use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
 use Thunk\Verbs\Lifecycle\MetadataManager;
 use Thunk\Verbs\Support\EventStateRegistry;
@@ -68,12 +71,28 @@ abstract class Event
         return $states->firstWhere(fn (State $state) => $state::class === $state_type);
     }
 
-    protected function assert($assertion, string $message): static
+    protected function assert($assertion, ?string $exception = null, ?string $message = null): static
     {
-        $caller = Arr::first(
-            debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2),
-            static fn ($trace) => ($trace['function'] ?? 'assert') !== 'assert'
-        )['function'] ?? 'validate';
+        if ($exception && null === $message && ! is_a($exception, Throwable::class, true)) {
+            [$message, $exception] = [$exception, null];
+        }
+
+        if (null === $message) {
+            $message = 'The event is not valid';
+        }
+
+        if (null === $exception) {
+            $caller = Arr::first(
+                debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2),
+                static fn ($trace) => ($trace['function'] ?? 'assert') !== 'assert'
+            )['function'] ?? 'validate';
+
+            $exception = match (true) {
+                Str::startsWith($caller, 'authorize') => EventNotAuthorized::class,
+                Str::startsWith($caller, 'validate') => EventNotValidForCurrentState::class,
+                default => EventNotValid::class,
+            };
+        }
 
         $result = (bool) value($assertion, $this);
 
@@ -81,12 +100,6 @@ abstract class Event
             return $this;
         }
 
-        // Determine the exception to throw based on the event phase that assert() was
-        // called from. If we can't guess, we'll assume `validate()`.
-        match (true) {
-            Str::startsWith($caller, 'authorize') => throw new AuthorizationException($message),
-            $caller === '__construct' => throw new InvalidArgumentException($message),
-            default => throw new EventNotValidForCurrentState($message),
-        };
+        throw new $exception($message);
     }
 }
