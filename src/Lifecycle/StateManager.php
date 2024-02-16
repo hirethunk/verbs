@@ -56,13 +56,7 @@ class StateManager
             $state->id = $id;
         }
 
-        if (! $this->is_replaying) {
-            $this->events
-                ->read(state: $state, after_id: $state->last_event_id)
-                ->each(fn (Event $event) => $this->dispatcher->apply($event, $state));
-        }
-
-        return $this->remember($state);
+        return $this->reconstitute($state)->remember($state);
     }
 
     /** @param  class-string<State>  $type */
@@ -77,11 +71,7 @@ class StateManager
         $state = $this->snapshots->loadSingleton($type) ?? $type::make();
         $state->id ??= snowflake_id();
 
-        if (! $this->is_replaying) {
-            $this->events
-                ->read(state: $state, after_id: $state->last_event_id, singleton: true)
-                ->each(fn (Event $event) => $this->dispatcher->apply($event, $state));
-        }
+        $this->reconstitute($state, singleton: true);
 
         // We'll store a reference to it by the type for future singleton access
         $this->states->put($type, $state);
@@ -108,6 +98,19 @@ class StateManager
 
         if ($include_storage) {
             $this->snapshots->reset();
+        }
+
+        return $this;
+    }
+
+    protected function reconstitute(State $state, bool $singleton = false): static
+    {
+        // When we're replaying, the Broker is in charge of applying the correct events
+        // to the State, so we only need to do it *outside* of replays.
+        if (! $this->is_replaying) {
+            $this->events
+                ->read(state: $state, after_id: $state->last_event_id, singleton: $singleton)
+                ->each(fn (Event $event) => $this->dispatcher->apply($event, $state));
         }
 
         return $this;
