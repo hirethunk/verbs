@@ -2,19 +2,29 @@
 
 namespace Thunk\Verbs\Commands;
 
-use Illuminate\Console\Command;
-use Thunk\Verbs\Helpers\Stub;
+use InterNACHI\Modular\Console\Commands\Make\Modularize;
+use Symfony\Component\Console\Attribute\AsCommand;
 
-class MakeVerbStateCommand extends Command
+#[AsCommand(name: 'verbs:state')]
+class MakeVerbStateCommand extends VerbGeneratorCommand
 {
-    protected $signature = 'verbs:state {name}';
+    use Modularize {
+        getDefaultNamespace as getModularizedNamespace;
+    }
 
-    protected $description = 'Generate a Verbs state class.';
+    protected $name = 'verbs:state';
 
-    public function handle(): void
+    protected $description = 'Create a new Verbs state';
+
+    protected $type = 'State';
+
+    protected function getStub()
     {
-        $path = Stub::state($this->argument('name'));
+        return $this->resolveStubPath('state.stub');
+    }
 
-        $this->info("State created at: $path");
+    protected function getDefaultNamespace($rootNamespace)
+    {
+        return $this->getModularizedNamespace($rootNamespace).'\\States';
     }
 }
