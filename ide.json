@@ -27,5 +27,22 @@
                 }
             ]
         }
-    ]
+    ],
+    "helperCode": {
+        "methodsWithConstructorParameters": [
+            {
+                "baseFqn": "Thunk\\Verbs\\Event",
+                "methods": [
+                    {
+                        "name": "make",
+                        "returnType": "PendingEvent<$this>"
+                    },
+                    {
+                        "name": "fire",
+                        "returnType": "$this"
+                    }
+                ]
+            }
+        ]
+    }
 }
