@@ -2,10 +2,8 @@
 
 namespace Thunk\Verbs;
 
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
-use InvalidArgumentException;
 use LogicException;
 use Throwable;
 use Thunk\Verbs\Exceptions\EventNotAuthorized;
@@ -73,15 +71,15 @@ abstract class Event
 
     protected function assert($assertion, ?string $exception = null, ?string $message = null): static
     {
-        if ($exception && null === $message && ! is_a($exception, Throwable::class, true)) {
+        if ($exception && $message === null && ! is_a($exception, Throwable::class, true)) {
             [$message, $exception] = [$exception, null];
         }
 
-        if (null === $message) {
+        if ($message === null) {
             $message = 'The event is not valid';
         }
 
-        if (null === $exception) {
+        if ($exception === null) {
             $caller = Arr::first(
                 debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2),
                 static fn ($trace) => ($trace['function'] ?? 'assert') !== 'assert'

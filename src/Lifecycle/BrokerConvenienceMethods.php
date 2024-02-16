@@ -10,7 +10,6 @@ use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\EventNotAuthorized;
 use Thunk\Verbs\Exceptions\EventNotValid;
-use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
 use Thunk\Verbs\Support\Wormhole;
 
 trait BrokerConvenienceMethods
