@@ -44,7 +44,7 @@ abstract class Event
     }
 
     /**
-     * @template TStateType
+     * @template TStateType of State
      *
      * @param  class-string<TStateType>|null  $state_type
      * @return TStateType|State|null
