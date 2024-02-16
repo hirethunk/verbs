@@ -11,8 +11,8 @@ use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Support\IdManager;
 
 /**
- * @method static int|string|null coerce(Bits|UuidInterface|AbstractUid|int|string|null $id)
- * @method static int|string coerceOrFail(Bits|UuidInterface|AbstractUid|int|string $id)
+ * @method static int|string|null tryFrom(Bits|UuidInterface|AbstractUid|int|string|null $id)
+ * @method static int|string from(Bits|UuidInterface|AbstractUid|int|string $id)
  * @method static int|string make()
  * @method static ColumnDefinition createColumnDefinition(Blueprint $table, string $name = 'id')
  */

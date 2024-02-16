@@ -37,7 +37,7 @@ class StateManager
     /** @param  class-string<State>  $type */
     public function load(Bits|UuidInterface|AbstractUid|int|string $id, string $type): State
     {
-        $id = Id::coerceOrFail($id);
+        $id = Id::from($id);
         $key = $this->key($id, $type);
 
         // FIXME: If the state we're loading has a last_event_id that's ahead of the registry's last_event_id, we need to re-build the state
@@ -91,7 +91,7 @@ class StateManager
 
     public function setMaxEventId(Bits|UuidInterface|AbstractUid|int|string $max_event_id): static
     {
-        $this->max_event_id = Id::coerceOrFail($max_event_id);
+        $this->max_event_id = Id::from($max_event_id);
 
         return $this;
     }
