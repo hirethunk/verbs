@@ -17,9 +17,9 @@ use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\MetadataManager;
 
 /**
- * @template T
+ * @template TEventType of Event
  *
- * @property T $event
+ * @property TEventType $event
  */
 class PendingEvent
 {
@@ -27,7 +27,10 @@ class PendingEvent
 
     protected Closure $exception_mapper;
 
-    /** @param  class-string<Event>  $class_name */
+    /**
+     * @param  class-string<TEventType>  $class_name
+     * @return static<TEventType>
+     */
     public static function make(string $class_name, array $args): static
     {
         $args = static::normalizeArgs($args);
@@ -71,6 +74,7 @@ class PendingEvent
             ->all();
     }
 
+    /** @param  TEventType|class-string<TEventType>  $event */
     public function __construct(
         public Event|string $event,
     ) {
@@ -96,6 +100,7 @@ class PendingEvent
         return $this;
     }
 
+    /** @return null|TEventType */
     public function fire(...$args): ?Event
     {
         if (! empty($args) || is_string($this->event)) {

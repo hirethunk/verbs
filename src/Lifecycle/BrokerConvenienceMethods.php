@@ -10,12 +10,19 @@ use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\EventNotAuthorized;
 use Thunk\Verbs\Exceptions\EventNotValid;
+use Thunk\Verbs\Facades\Id;
+use Thunk\Verbs\Support\IdManager;
 use Thunk\Verbs\Support\Wormhole;
 
 trait BrokerConvenienceMethods
 {
     public bool $is_replaying = false;
 
+    /**
+     * @deprecated
+     * @see IdManager
+     * @see Id
+     */
     public function toId(Bits|UuidInterface|AbstractUid|int|string|null $id): int|string|null
     {
         return match (true) {

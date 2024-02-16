@@ -8,7 +8,7 @@ use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Facades\Verbs;
+use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\State;
 use UnexpectedValueException;
 
@@ -37,7 +37,7 @@ class StateManager
     /** @param  class-string<State>  $type */
     public function load(Bits|UuidInterface|AbstractUid|int|string $id, string $type): State
     {
-        $id = Verbs::toId($id);
+        $id = Id::from($id);
         $key = $this->key($id, $type);
 
         // FIXME: If the state we're loading has a last_event_id that's ahead of the registry's last_event_id, we need to re-build the state
@@ -91,7 +91,7 @@ class StateManager
 
     public function setMaxEventId(Bits|UuidInterface|AbstractUid|int|string $max_event_id): static
     {
-        $this->max_event_id = Verbs::toId($max_event_id);
+        $this->max_event_id = Id::from($max_event_id);
 
         return $this;
     }

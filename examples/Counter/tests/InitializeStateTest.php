@@ -7,17 +7,15 @@ use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Models\VerbEvent;
 
 it('State factory initializes a state', function () {
-    $count_state = CountState::factory()->create([
+    $count_state = CountState::factory()->singleton()->create([
         'count' => 1337,
     ]);
 
     expect($events = VerbEvent::all())
-        ->toHaveCount(1);
-
-    expect($events->first())
-        ->type->toBe(VerbsStateInitialized::class);
-
-    expect($count_state)
+        ->toHaveCount(1)
+        ->and($events->first())
+        ->type->toBe(VerbsStateInitialized::class)
+        ->and($count_state)
         ->toBeInstanceOf(CountState::class)
         ->count
         ->toBe(1337);
