@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Collection;
+use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\State;
 use Thunk\Verbs\StateFactory;
 
@@ -43,6 +44,25 @@ test('a factory can accept an id using the create method over the for method', f
 
     expect($state->id)->toBe(2);
     expect($state->name)->toBe('daniel');
+});
+
+test('it auto-generates an IDs', function () {
+    $state1 = FactoryTestState::factory()->create();
+    $state2 = FactoryTestState::factory()->create();
+
+    expect($state1->id)->not->toBeNull()
+        ->and($state2->id)->not->toBeNull()
+        ->not->toBe($state1->id);
+});
+
+test('it can create a singleton state', function () {
+    $singleton_state = FactoryTestState::factory()->singleton()->create();
+
+    expect($singleton_state->id)->not->toBeNull();
+
+    $retreived_state = app(StateManager::class)->singleton(FactoryTestState::class);
+
+    expect($retreived_state)->toBe($singleton_state);
 });
 
 test('a custom factory can have a default definition', function () {

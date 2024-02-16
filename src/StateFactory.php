@@ -12,7 +12,7 @@ use Ramsey\Uuid\UuidInterface;
 use RuntimeException;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Events\VerbsStateInitialized;
-use Thunk\Verbs\Support\IdManager;
+use Thunk\Verbs\Support\StateCollection;
 
 /**
  * @template TStateType of State
@@ -41,6 +41,7 @@ class StateFactory
         protected Collection $transformations = new Collection(),
         protected ?int $count = null,
         protected ?int $id = null,
+        protected bool $singleton = false,
         protected ?Generator $faker = null,
     ) {
     }
@@ -76,8 +77,13 @@ class StateFactory
         return $this->clone(['id' => $id]);
     }
 
-    /** @return TStateType|Collection<TStateType> */
-    public function create(array $data = [], ?int $id = null): State|Collection
+    public function singleton(bool $singleton = true): static
+    {
+        return $this->clone(['singleton' => $singleton]);
+    }
+
+    /** @return TStateType|StateCollection<TStateType> */
+    public function create(array $data = [], ?int $id = null): State|StateCollection
     {
         if (! empty($data)) {
             return $this->state($data)->create(id: $id);
@@ -92,29 +98,32 @@ class StateFactory
         }
 
         if ($this->count < 1) {
-            return new Collection();
+            return new StateCollection();
         }
 
         if ($this->count === 1) {
-            return Collection::make([$this->createState()]);
+            return StateCollection::make([$this->createState()]);
+        }
+
+        if ($this->singleton) {
+            throw new RuntimeException('You cannot create multiple singleton states of the same type.');
         }
 
         if ($this->id) {
             throw new RuntimeException('You cannot create multiple states with the same ID.');
         }
 
-        $ids = app(IdManager::class);
-
-        return Collection::range(1, $this->count)->map(fn () => $this->id($ids->make())->createState());
+        return StateCollection::range(1, $this->count)->map(fn () => $this->id(make_id())->createState());
     }
 
     /** @return TStateType */
     protected function createState(): State
     {
         $initialized = VerbsStateInitialized::fire(
-            state_id: $this->id,
+            state_id: $this->id ?? make_id(),
             state_class: $this->state_class,
             state_data: $this->getRawData(),
+            singleton: $this->singleton,
         );
 
         return $initialized->state($this->state_class);
@@ -139,6 +148,7 @@ class StateFactory
             transformations: $with['transformations'] ?? $this->transformations,
             count: $with['count'] ?? $this->count,
             id: $with['id'] ?? $this->id,
+            singleton: $with['singleton'] ?? $this->singleton,
             faker: $with['faker'] ?? $this->faker,
         );
     }
