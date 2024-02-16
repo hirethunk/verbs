@@ -2,27 +2,15 @@
 
 use Thunk\Verbs\Attributes\Autodiscovery\StateId;
 use Thunk\Verbs\Commands\ReplayCommand;
-use Thunk\Verbs\Contracts\BrokersEvents;
-use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Facades\Verbs;
-use Thunk\Verbs\Lifecycle\Broker;
-use Thunk\Verbs\Lifecycle\EventStore;
-use Thunk\Verbs\Lifecycle\MetadataManager;
-use Thunk\Verbs\Lifecycle\SnapshotStore;
 use Thunk\Verbs\Lifecycle\StateManager;
-use Thunk\Verbs\Models\VerbEvent;
-use Thunk\Verbs\Models\VerbSnapshot;
 use Thunk\Verbs\State;
-use Thunk\Verbs\Support\EventStateRegistry;
-use Thunk\Verbs\Support\IdManager;
-use Thunk\Verbs\Support\Serializer;
-use Thunk\Verbs\Support\Wormhole;
 
 beforeEach(function () {
     $GLOBALS['replay_test_counts'] = [];
-    $GLOBALS['replaying'] = false;
+    $GLOBALS['handle_count'] = 0;
 });
 
 it('can replay events', function () {
@@ -52,10 +40,10 @@ it('can replay events', function () {
         ->and(app(StateManager::class)->load($state2_id, ReplayCommandTestState::class)->count)
         ->toBe(4)
         ->and($GLOBALS['replay_test_counts'][$state2_id])
-        ->toBe(4);
+        ->toBe(4)
+        ->and($GLOBALS['handle_count'])->toBe(10);
 
-    // Truncate
-    app(StateManager::class)->reset(include_storage: true);
+    // Reset 'projected' state
     $GLOBALS['replay_test_counts'] = [];
 
     $this->artisan(ReplayCommand::class);
@@ -67,7 +55,8 @@ it('can replay events', function () {
         ->and(app(StateManager::class)->load($state2_id, ReplayCommandTestState::class)->count)
         ->toBe(4)
         ->and($GLOBALS['replay_test_counts'][$state2_id])
-        ->toBe(4);
+        ->toBe(4)
+        ->and($GLOBALS['handle_count'])->toBe(10);
 });
 
 class ReplayCommandTestEvent extends Event
@@ -86,7 +75,11 @@ class ReplayCommandTestEvent extends Event
 
     public function handle()
     {
-        $GLOBALS['replay_test_counts'][$this->state_id] = $this->state()->count;
+        $GLOBALS['replay_test_counts'][$this->state_id] ??= 0;
+        $GLOBALS['replay_test_counts'][$this->state_id] += $this->add;
+        $GLOBALS['replay_test_counts'][$this->state_id] -= $this->subtract;
+
+        Verbs::unlessReplaying(fn () => $GLOBALS['handle_count']++);
     }
 }
 

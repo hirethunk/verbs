@@ -71,7 +71,7 @@ class Broker implements BrokersEvents
     {
         $this->is_replaying = true;
 
-        app(SnapshotStore::class)->reset();
+        app(StateManager::class)->reset(include_storage: true);
 
         app(StoresEvents::class)->read()
             ->each(function (Event $event) use ($beforeEach, $afterEach) {
