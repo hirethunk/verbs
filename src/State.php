@@ -3,7 +3,6 @@
 namespace Thunk\Verbs;
 
 use Glhd\Bits\Bits;
-use Illuminate\Support\Collection;
 use InvalidArgumentException;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
@@ -44,8 +43,8 @@ abstract class State
         }
 
         return static::newFactory()
-            ->when($count !== null, fn(StateFactory $factory) => $factory->count($count))
-            ->when($data !== null, fn(StateFactory $factory) => $factory->state($data));
+            ->when($count !== null, fn (StateFactory $factory) => $factory->count($count))
+            ->when($data !== null, fn (StateFactory $factory) => $factory->state($data));
     }
 
     protected static function newFactory(): StateFactory
