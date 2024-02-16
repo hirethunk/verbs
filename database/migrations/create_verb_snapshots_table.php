@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Support\IdManager;
 
 return new class extends Migration
@@ -12,7 +13,7 @@ return new class extends Migration
         Schema::create('verb_snapshots', function (Blueprint $table) {
             // The 'id' column needs to be set up differently depending
             // on if you're using Snowflakes vs. ULIDs/etc.
-            app(IdManager::class)->createColumnDefinition($table)->primary();
+            Id::createColumnDefinition($table)->primary();
 
             $table->string('type')->index();
             $table->json('data');

@@ -26,7 +26,7 @@ class IdManager
         }
     }
 
-    public function toId(Bits|UuidInterface|AbstractUid|int|string|null $id): int|string|null
+    public function coerce(Bits|UuidInterface|AbstractUid|int|string|null $id): int|string|null
     {
         return match (true) {
             $id instanceof Bits => $id->id(),
@@ -36,9 +36,9 @@ class IdManager
         };
     }
 
-    public function toIdOrFail(Bits|UuidInterface|AbstractUid|int|string $id): int|string
+    public function coerceOrFail(Bits|UuidInterface|AbstractUid|int|string $id): int|string
     {
-        $coerced = $this->toId($id);
+        $coerced = $this->coerce($id);
 
         if (is_int($coerced) || is_string($coerced)) {
             return $coerced;

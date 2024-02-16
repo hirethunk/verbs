@@ -13,6 +13,7 @@ use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\ConcurrencyException;
+use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Models\VerbEvent;
 use Thunk\Verbs\Models\VerbStateEvent;
@@ -60,15 +61,15 @@ class EventStore implements StoresEvents
                 ->with('event')
                 ->unless($singleton, fn (Builder $query) => $query->where('state_id', $state->id))
                 ->where('state_type', $state::class)
-                ->when($after_id, fn (Builder $query) => $query->whereRelation('event', 'id', '>', Verbs::toId($after_id)))
-                ->when($up_to_id, fn (Builder $query) => $query->whereRelation('event', 'id', '<=', Verbs::toId($up_to_id)))
+                ->when($after_id, fn (Builder $query) => $query->whereRelation('event', 'id', '>', Id::coerceOrFail($after_id)))
+                ->when($up_to_id, fn (Builder $query) => $query->whereRelation('event', 'id', '<=', Id::coerceOrFail($up_to_id)))
                 ->lazyById()
                 ->map(fn (VerbStateEvent $pivot) => $pivot->event);
         }
 
         return VerbEvent::query()
-            ->when($after_id, fn (Builder $query) => $query->where('id', '>', Verbs::toId($after_id)))
-            ->when($up_to_id, fn (Builder $query) => $query->where('id', '<=', Verbs::toId($up_to_id)))
+            ->when($after_id, fn (Builder $query) => $query->where('id', '>', Id::coerceOrFail($after_id)))
+            ->when($up_to_id, fn (Builder $query) => $query->where('id', '<=', Id::coerceOrFail($up_to_id)))
             ->lazyById();
     }
 
@@ -128,7 +129,7 @@ class EventStore implements StoresEvents
     protected function formatForWrite(array $event_objects): array
     {
         return array_map(fn (Event $event) => [
-            'id' => Verbs::toId($event->id),
+            'id' => Id::coerceOrFail($event->id),
             'type' => $event::class,
             'data' => app(Serializer::class)->serialize($event),
             'metadata' => app(Serializer::class)->serialize($this->metadata->get($event)),
@@ -143,8 +144,8 @@ class EventStore implements StoresEvents
         return collect($event_objects)
             ->flatMap(fn (Event $event) => $event->states()->map(fn ($state) => [
                 'id' => snowflake_id(),
-                'event_id' => Verbs::toId($event->id),
-                'state_id' => Verbs::toId($state->id),
+                'event_id' => Id::coerceOrFail($event->id),
+                'state_id' => Id::coerceOrFail($state->id),
                 'state_type' => $state::class,
             ]))
             ->all();

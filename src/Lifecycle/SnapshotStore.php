@@ -6,6 +6,7 @@ use Glhd\Bits\Bits;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Exceptions\StateIsNotSingletonException;
+use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Models\VerbSnapshot;
 use Thunk\Verbs\State;
@@ -15,7 +16,7 @@ class SnapshotStore
 {
     public function load(Bits|UuidInterface|AbstractUid|int|string $id): ?State
     {
-        $snapshot = VerbSnapshot::find(Verbs::toId($id));
+        $snapshot = VerbSnapshot::find(Id::coerceOrFail($id));
 
         return $snapshot?->state();
     }
@@ -57,10 +58,10 @@ class SnapshotStore
     protected static function formatForWrite(array $states): array
     {
         return array_map(fn (State $state) => [
-            'id' => Verbs::toId($state->id),
+            'id' => Id::coerceOrFail($state->id),
             'type' => $state::class,
             'data' => app(Serializer::class)->serialize($state),
-            'last_event_id' => Verbs::toId($state->last_event_id),
+            'last_event_id' => Id::coerce($state->last_event_id),
             'created_at' => now(),
             'updated_at' => now(),
         ], $states);

@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Support\IdManager;
 
 return new class extends Migration
@@ -16,7 +17,7 @@ return new class extends Migration
 
             // The 'state_id' column needs to be set up differently depending
             // on if you're using Snowflakes vs. ULIDs/etc.
-            app(IdManager::class)->createColumnDefinition($table, 'state_id')->index();
+            Id::createColumnDefinition($table, 'state_id')->index();
 
             $table->string('state_type')->index();
 
