@@ -27,13 +27,13 @@ class StateFactory
      * @param  class-string<TStateType>  $state_class
      * @return static<TStateType>
      */
-    public static function new(string $state_class, array $data = [])
+    public static function new(string $state_class, array $data = []): static
     {
         $factory = new static($state_class);
 
         $factory->configure();
 
-        return $factory->state($data);
+        return $data ? $factory->state($data) : $factory;
     }
 
     /** @param  class-string<TStateType>  $state_class */

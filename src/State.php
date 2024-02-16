@@ -39,26 +39,18 @@ abstract class State
         array|callable|null $data = null
     ): StateFactory {
         if (is_array($count) || is_callable($count)) {
-            if (is_array($data) || is_callable($data)) {
-                throw new InvalidArgumentException('You cannot pass data to both factory arguments.');
-            }
-
+            throw_if($data !== null, new InvalidArgumentException('You cannot pass data to both factory arguments.'));
             [$data, $count] = [$count, null];
         }
 
-        return static::newFactory(
-            transformations: $data ? Collection::make([$data]) : new Collection(),
-            count: $count,
-        );
+        return static::newFactory()
+            ->when($count !== null, fn(StateFactory $factory) => $factory->count($count))
+            ->when($data !== null, fn(StateFactory $factory) => $factory->state($data));
     }
 
-    protected static function newFactory(Collection $transformations, ?int $count)
+    protected static function newFactory(): StateFactory
     {
-        return new StateFactory(
-            state_class: static::class,
-            transformations: $transformations,
-            count: $count,
-        );
+        return StateFactory::new(static::class);
     }
 
     public function __construct()
