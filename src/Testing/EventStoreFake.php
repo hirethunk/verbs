@@ -12,7 +12,7 @@ use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Facades\Verbs;
+use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Lifecycle\MetadataManager;
 use Thunk\Verbs\State;
 
@@ -38,10 +38,10 @@ class EventStoreFake implements StoresEvents
         return LazyCollection::make($this->events)
             ->flatten()
             ->when($after_id, function (LazyCollection $events, $after_id) {
-                return $events->filter(fn (Event $event) => $event->id > Verbs::toId($after_id));
+                return $events->filter(fn (Event $event) => $event->id > Id::from($after_id));
             })
             ->when($up_to_id, function (LazyCollection $events, $up_to_id) {
-                return $events->filter(fn (Event $event) => $event->id <= Verbs::toId($up_to_id));
+                return $events->filter(fn (Event $event) => $event->id <= Id::from($up_to_id));
             })
             ->when($state, function (LazyCollection $events, State $state) use ($singleton) {
                 return $singleton

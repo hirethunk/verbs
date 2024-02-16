@@ -29,6 +29,7 @@ use Thunk\Verbs\Lifecycle\SnapshotStore;
 use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\Livewire\SupportVerbs;
 use Thunk\Verbs\Support\EventStateRegistry;
+use Thunk\Verbs\Support\IdManager;
 use Thunk\Verbs\Support\Serializer;
 use Thunk\Verbs\Support\Wormhole;
 
@@ -66,6 +67,12 @@ class VerbsServiceProvider extends PackageServiceProvider
         $this->app->singleton(EventStateRegistry::class);
         $this->app->singleton(MetadataManager::class);
         $this->app->singleton(Serializer::class);
+
+        $this->app->singleton(IdManager::class, function (Container $app) {
+            return new IdManager(
+                id_type: $app->make(Repository::class)->get('verbs.id_type', 'snowflake'),
+            );
+        });
 
         $this->app->singleton(Wormhole::class, function (Container $app) {
             $config = $app->make(Repository::class);

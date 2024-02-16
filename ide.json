@@ -1,0 +1,48 @@
+{
+    "$schema": "https://laravel-ide.com/schema/laravel-ide-v2.json",
+    "completions": [
+        {
+            "complete": "classFields",
+            "options": {
+                "fieldsFilter": {
+                    "fetch": "own",
+                    "modifier": [
+                        "public"
+                    ]
+                }
+            },
+            "condition": [
+                {
+                    "methodNames": [
+                        "make",
+                        "fire"
+                    ],
+                    "parameters": [
+                        1
+                    ],
+                    "classFqn": [
+                        "\\Thunk\\Verbs\\Event"
+                    ],
+                    "place": "arrayKey"
+                }
+            ]
+        }
+    ],
+    "helperCode": {
+        "methodsWithConstructorParameters": [
+            {
+                "baseFqn": "Thunk\\Verbs\\Event",
+                "methods": [
+                    {
+                        "name": "make",
+                        "returnType": "PendingEvent<$this>"
+                    },
+                    {
+                        "name": "fire",
+                        "returnType": "$this"
+                    }
+                ]
+            }
+        ]
+    }
+}
