@@ -2,19 +2,24 @@
 
 namespace Thunk\Verbs\Commands;
 
-use Illuminate\Console\Command;
-use Thunk\Verbs\Helpers\Stub;
+use Symfony\Component\Console\Attribute\AsCommand;
 
-class MakeVerbEventCommand extends Command
+#[AsCommand(name: 'verbs:event')]
+class MakeVerbEventCommand extends VerbGeneratorCommand
 {
-    protected $signature = 'verbs:event {name}';
+    protected $name = 'verbs:event';
 
-    protected $description = 'Generate a Verbs event class.';
+    protected $description = 'Create a new Verbs event';
 
-    public function handle(): void
+    protected $type = 'Event';
+
+    protected function getStub()
     {
-        $path = Stub::event($this->argument('name'));
+        return $this->resolveStubPath('event.stub');
+    }
 
-        $this->info("Event created at: $path");
+    protected function getDefaultNamespace($rootNamespace)
+    {
+        return $rootNamespace.'\Events';
     }
 }
