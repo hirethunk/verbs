@@ -44,7 +44,8 @@ class StateFactory
         protected int|string|null $id = null,
         protected bool $singleton = false,
         protected ?Generator $faker = null,
-    ) {}
+    ) {
+    }
 
     public function definition(): array
     {
