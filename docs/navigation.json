@@ -1,55 +1,37 @@
 [
     {
-        "title": "Rewrite",
-        "slug": "rewrite",
-        "items": [
-            {
-                "title": "One",
-                "slug": "one",
-                "icon": "adjustments-horizontal",
-                "url": "/rewrite/one"
-            },
-            {
-                "title": "Two",
-                "slug": "two",
-                "icon": "banknotes",
-                "url": "/rewrite/two"
-            }
-        ]
-    },
-    {
         "title": "Getting Started",
         "slug": "getting-started",
         "items": [
+            {
+                "title": "What is Event Sourcing?",
+                "slug": "event-sourcing",
+                "icon": "arrow-right"
+            },
             {
                 "title": "Quickstart",
                 "slug": "quickstart",
                 "icon": "arrow-right"
             },
             {
-                "title": "Building Blocks",
-                "slug": "building-blocks",
-                "icon": "cube"
+                "title": "Events",
+                "slug": "events",
+                "icon": "arrow-right"
             },
             {
-                "title": "Don't Read This",
-                "slug": "verbs-opinions",
-                "icon": "exclamation-triangle"
+                "title": "States",
+                "slug": "states",
+                "icon": "arrow-right"
             },
             {
-                "title": "Common Gotchas",
-                "slug": "gotchas",
-                "icon": "information-circle"
+                "title": "Replaying Events",
+                "slug": "replaying-events",
+                "icon": "arrow-right"
             },
             {
-                "title": "Event Lifecycle",
-                "slug": "lifecycle",
-                "icon": "queue-list"
-            },
-            {
-                "title": "Event Metadata",
-                "slug": "metadata",
-                "icon": "cube-transparent"
+                "title": "Testing",
+                "slug": "testing",
+                "icon": "arrow-right"
             }
         ]
     },
@@ -84,29 +66,62 @@
         ]
     },
     {
-        "title": "Event Sourcing Crash Course",
-        "slug": "crash-course",
+        "title": "Technical",
+        "slug": "technical",
         "items": [
             {
-                "title": "Combating Jargon",
-                "slug": "verbs-verbiage",
-                "icon": "scale"
+                "title": "Metadata",
+                "slug": "metadata",
+                "icon": "cursor-arrow-rays",
+                "url": "/examples/subscriptions"
             },
             {
-                "title": "ID as in Identity",
+                "title": "Attributes",
+                "slug": "monopoly",
+                "icon": "puzzle-piece",
+                "url": "/examples/monopoly"
+            },
+            {
+                "title": "IDs",
                 "slug": "ids",
-                "icon": "identification"
-            },
-            {
-                "title": "State vs. Model",
-                "slug": "state-vs-model",
-                "icon": "circle-stack"
-            },
-            {
-                "title": "One-Time Side Effects",
-                "slug": "one-time-handlers",
-                "icon": "hand-raised"
+                "icon": "puzzle-piece",
+                "url": "/examples/monopoly"
             }
         ]
+    },
+    {
+        "title": "Techniques",
+        "slug": "techniques",
+        "items": [
+            {
+                "title": "Why Snowflakes?",
+                "slug": "why-snowflakes",
+                "icon": "cursor-arrow-rays",
+                "url": "/examples/subscriptions"
+            },
+            {
+                "title": "State-first development",
+                "slug": "state-first-development",
+                "icon": "puzzle-piece",
+                "url": "/examples/monopoly"
+            },
+            {
+                "title": "Livewire",
+                "slug": "livewire",
+                "icon": "puzzle-piece",
+                "url": "/examples/monopoly"
+            },
+            {
+                "title": "Extending Verbs for 3rd Party packages",
+                "slug": "extending-verbs",
+                "icon": "puzzle-piece",
+                "url": "/examples/monopoly"
+            }
+        ]
+    },
+    {
+        "title": "Verbs Packages",
+        "slug": "verbs-packages",
+        "items": []
     }
 ]
