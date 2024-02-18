@@ -1,8 +1,1 @@
-metadata",
-monopoly",
-ids",
-techniques",
-why-snowflakes",
-state-first-development",
-livewire",
-extending-verbs",
+why-snowflakes.md

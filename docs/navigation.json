@@ -6,7 +6,7 @@
             {
                 "title": "What is Event Sourcing?",
                 "slug": "event-sourcing",
-                "icon": "arrow-right"
+                "icon": "information-circle"
             },
             {
                 "title": "Quickstart",
@@ -16,22 +16,22 @@
             {
                 "title": "Events",
                 "slug": "events",
-                "icon": "arrow-right"
+                "icon": "cube"
             },
             {
                 "title": "States",
                 "slug": "states",
-                "icon": "arrow-right"
+                "icon": "queue-list"
             },
             {
                 "title": "Replaying Events",
                 "slug": "replaying-events",
-                "icon": "arrow-right"
+                "icon": "arrow-path"
             },
             {
                 "title": "Testing",
                 "slug": "testing",
-                "icon": "arrow-right"
+                "icon": "beaker"
             }
         ]
     },
@@ -72,20 +72,17 @@
             {
                 "title": "Metadata",
                 "slug": "metadata",
-                "icon": "cursor-arrow-rays",
-                "url": "/examples/subscriptions"
+                "icon": "cube-transparent"
             },
             {
                 "title": "Attributes",
-                "slug": "monopoly",
-                "icon": "puzzle-piece",
-                "url": "/examples/monopoly"
+                "slug": "attributes",
+                "icon": "hashtag"
             },
             {
                 "title": "IDs",
                 "slug": "ids",
-                "icon": "puzzle-piece",
-                "url": "/examples/monopoly"
+                "icon": "identification"
             }
         ]
     },
@@ -96,32 +93,34 @@
             {
                 "title": "Why Snowflakes?",
                 "slug": "why-snowflakes",
-                "icon": "cursor-arrow-rays",
-                "url": "/examples/subscriptions"
+                "icon": "cog-8-tooth"
             },
             {
                 "title": "State-first development",
                 "slug": "state-first-development",
-                "icon": "puzzle-piece",
-                "url": "/examples/monopoly"
+                "icon": "circle-stack"
             },
             {
                 "title": "Livewire",
                 "slug": "livewire",
-                "icon": "puzzle-piece",
-                "url": "/examples/monopoly"
+                "icon": "bolt"
             },
             {
                 "title": "Extending Verbs for 3rd Party packages",
                 "slug": "extending-verbs",
-                "icon": "puzzle-piece",
-                "url": "/examples/monopoly"
+                "icon": "rocket-launch"
             }
         ]
     },
     {
         "title": "Verbs Packages",
         "slug": "verbs-packages",
-        "items": []
+        "items": [
+            {
+                "title": "Verbs Commands",
+                "slug": "verbs-commands",
+                "icon": "gift"
+            }
+        ]
     }
 ]
