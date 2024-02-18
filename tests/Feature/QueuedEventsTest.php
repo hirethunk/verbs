@@ -2,9 +2,11 @@
 
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Queue;
+use Thunk\Verbs\Attributes\Autodiscovery\StateId;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Jobs\HandleEventJob;
+use Thunk\Verbs\State;
 
 beforeEach(fn () => $GLOBALS['event_log'] = []);
 
@@ -12,12 +14,14 @@ it('can handle queued and sync events', function () {
     Verbs::fake();
     Queue::fake();
 
-    $sync1 = QueuedEventsTestSyncEvent::fire(message: 'sync 1');
-    $queue1 = QueuedEventsTestQueuedEvent::fire(message: 'queue 1');
-    $sync2 = QueuedEventsTestSyncEvent::fire(message: 'sync 2');
-    $sync3 = QueuedEventsTestSyncEvent::fire(message: 'sync 3');
-    $queue2 = QueuedEventsTestQueuedEvent::fire(message: 'queue 2');
-    $sync4 = QueuedEventsTestSyncEvent::fire(message: 'sync 4');
+    $sync1 = QueuedEventsTestSyncEvent::fire(state_id: 1, message: 'sync 1');
+    $queue1 = QueuedEventsTestQueuedEvent::fire(state_id: 1, message: 'queue 1');
+    $sync2 = QueuedEventsTestSyncEvent::fire(state_id: 1, message: 'sync 2');
+    $sync3 = QueuedEventsTestSyncEvent::fire(state_id: 1, message: 'sync 3');
+    $queue2 = QueuedEventsTestQueuedEvent::fire(state_id: 1, message: 'queue 2');
+    $sync4 = QueuedEventsTestSyncEvent::fire(state_id: 1, message: 'sync 4');
+
+    expect($sync1->state(QueuedEventsTestState::class)->apply_count)->toBe(6);
 
     Verbs::commit();
 
@@ -34,7 +38,8 @@ it('can handle queued and sync events', function () {
         if ($job->event_id !== $queue1->id) {
             return false;
         }
-        expect($job->replaying)->toBeFalse();
+        expect($job->replaying)->toBeFalse()
+            ->and($event->state(QueuedEventsTestState::class)->apply_count)->toBe(2);
 
         app()->call([$job, 'handle']);
 
@@ -47,7 +52,8 @@ it('can handle queued and sync events', function () {
         if ($job->event_id !== $queue2->id) {
             return false;
         }
-        expect($job->replaying)->toBeFalse();
+        expect($job->replaying)->toBeFalse()
+            ->and($event->state(QueuedEventsTestState::class)->apply_count)->toBe(5);
 
         app()->call([$job, 'handle']);
 
@@ -59,8 +65,15 @@ it('can handle queued and sync events', function () {
 
 class QueuedEventsTestSyncEvent extends Event
 {
-    public function __construct(public string $message)
+    public function __construct(
+        #[StateId(QueuedEventsTestState::class)] public int $state_id,
+        public string $message
+    ) {
+    }
+
+    public function apply(QueuedEventsTestState $state)
     {
+        $state->apply_count++;
     }
 
     public function handle()
@@ -69,14 +82,11 @@ class QueuedEventsTestSyncEvent extends Event
     }
 }
 
-class QueuedEventsTestQueuedEvent extends Event implements ShouldQueue
+class QueuedEventsTestQueuedEvent extends QueuedEventsTestSyncEvent implements ShouldQueue
 {
-    public function __construct(public string $message)
-    {
-    }
+}
 
-    public function handle()
-    {
-        $GLOBALS['event_log'][] = $this->message;
-    }
+class QueuedEventsTestState extends State
+{
+    public int $apply_count = 0;
 }
