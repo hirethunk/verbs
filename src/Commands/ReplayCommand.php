@@ -50,7 +50,7 @@ class ReplayCommand extends Command
         warning('Be sure to either reset that data before replaying, or confirm that all handle() calls are idempotent.');
         warning('Replaying events without thinking thru the consequences can have VERY negative side-effects.');
 
-        return confirm(
+        return app()->environment('testing') || confirm(
             label: 'Are you sure you want to replay all events?',
             default: ! $this->input->isInteractive(),
         );
