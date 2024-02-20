@@ -49,8 +49,6 @@ class SubscriptionState extends State
 
 class GrantAccountCredit extends Event
 {
-    public const SIGNUP_BONUS_CENTS = 50000;
-
     public function __construct(
         #[StateId(AccountCreditState::class)]
         public string $organisation_id,
