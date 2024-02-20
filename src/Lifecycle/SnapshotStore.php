@@ -13,9 +13,9 @@ use Thunk\Verbs\Support\Serializer;
 
 class SnapshotStore
 {
-    public function load(Bits|UuidInterface|AbstractUid|int|string $id): ?State
+    public function load(Bits|UuidInterface|AbstractUid|int|string $id, string $type): ?State
     {
-        $snapshot = VerbSnapshot::find(Id::from($id));
+        $snapshot = VerbSnapshot::whereKey(Id::from($id))->whereType($type)->first();
 
         return $snapshot?->state();
     }
