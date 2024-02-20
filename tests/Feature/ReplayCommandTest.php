@@ -1,12 +1,14 @@
 <?php
 
-use Thunk\Verbs\Attributes\Autodiscovery\StateId;
-use Thunk\Verbs\Commands\ReplayCommand;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\State;
+use Laravel\Prompts\Key;
+use Laravel\Prompts\Prompt;
 use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Facades\Verbs;
+use Thunk\Verbs\Commands\ReplayCommand;
 use Thunk\Verbs\Lifecycle\StateManager;
-use Thunk\Verbs\State;
+use Thunk\Verbs\Attributes\Autodiscovery\StateId;
 
 beforeEach(function () {
     $GLOBALS['replay_test_counts'] = [];
@@ -47,6 +49,7 @@ it('can replay events', function () {
     $GLOBALS['replay_test_counts'] = [];
     $GLOBALS['handle_count'] = 1337;
 
+    config(['app.env' => 'testing']);
     $this->artisan(ReplayCommand::class);
 
     expect(app(StateManager::class)->load($state1_id, ReplayCommandTestState::class)->count)
