@@ -55,7 +55,8 @@ class GrantAccountCredit extends Event
         #[StateId(AccountCreditState::class)]
         public string $organisation_id,
         public int $credit_amount_cents,
-    ) {}
+    ) {
+    }
 
     public function apply(AccountCreditState $state): void
     {
