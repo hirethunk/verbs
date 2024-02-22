@@ -44,6 +44,7 @@ class StateFactory
         protected int|string|null $id = null,
         protected bool $singleton = false,
         protected ?Generator $faker = null,
+        protected string $initial_event = VerbsStateInitialized::class,
     ) {
     }
 
@@ -120,7 +121,7 @@ class StateFactory
     /** @return TStateType */
     protected function createState(): State
     {
-        $initialized = VerbsStateInitialized::fire(
+        $initialized = $this->initial_event::fire(
             state_id: $this->id ?? Id::make(),
             state_class: $this->state_class,
             state_data: $this->getRawData(),
