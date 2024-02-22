@@ -29,12 +29,10 @@ class StateFactory
      */
     public static function new(string $state_class, array $data = []): static
     {
-        $factory = new static($state_class);
-
-        return $data ? $factory->state($data) : $factory;
+        return (new static($state_class))
+            ->state($data)
+            ->configure();
     }
-
-    protected string $initial_event = VerbsStateInitialized::class;
 
     /** @param  class-string<TStateType>  $state_class */
     public function __construct(
@@ -43,9 +41,9 @@ class StateFactory
         protected ?int $count = null,
         protected int|string|null $id = null,
         protected bool $singleton = false,
+        protected ?Closure $initialize_using = null,
+        protected Collection $after_creating = new Collection(),
         protected ?Generator $faker = null,
-        protected Collection $makeCallbacks = new Collection(),
-        protected Collection $createCallbacks = new Collection(),
     ) {
     }
 
@@ -54,23 +52,19 @@ class StateFactory
         return [];
     }
 
-    public function configure(): void
+    public function configure(): static
     {
-        //
+        return $this;
     }
 
-    public function afterMaking(Closure $callback): static
+    public function initializeUsing(Closure $callback): static
     {
-        $this->makeCallbacks->push($callback);
-
-        return $this;
+        return $this->clone(['initialize_using' => $callback]);
     }
 
     public function afterCreating(Closure $callback): static
     {
-        $this->createCallbacks->push($callback);
-
-        return $this;
+        return $this->clone(['after_creating' => $this->after_creating->concat([$callback])]);
     }
 
     /** @return static<TStateType> */
@@ -136,29 +130,25 @@ class StateFactory
     /** @return TStateType */
     protected function createState(): State
     {
-        $this->makeCallbacks->each(
-            fn (Closure $callback) => $callback->bindTo($this)()
-        );
+        $state = $this->fireEvent()->state($this->state_class);
 
-        $this->configure();
-
-        $initialized = $this->initial_event === VerbsStateInitialized::class
-            ? VerbsStateInitialized::fire(
-                state_id: $this->id ?? Id::make(),
-                state_class: $this->state_class,
-                state_data: $this->getRawData(),
-                singleton: $this->singleton,
-            )
-            : $this->initial_event::fire(
-                ...$this->getRawData(),
-                id: $this->id ?? Id::make(),
-            );
-
-        $state = $initialized->state($this->state_class);
-
-        $this->createCallbacks->each(fn (Closure $callback) => $callback($state));
+        $this->after_creating->each(fn (Closure $callback) => $callback($state));
 
         return $state;
+    }
+
+    protected function fireEvent(): Event
+    {
+        if ($this->initialize_using) {
+            return $this->initialize_using->call($this);
+        }
+
+        return VerbsStateInitialized::fire(
+            state_id: $this->id ?? Id::make(),
+            state_class: $this->state_class,
+            state_data: $this->getRawData(),
+            singleton: $this->singleton,
+        );
     }
 
     protected function getRawData(): array
@@ -175,18 +165,16 @@ class StateFactory
     /** @return static<TStateType> */
     protected function clone(array $with = []): static
     {
-        $state = new static(
+        return new static(
             state_class: $with['state_class'] ?? $this->state_class,
             transformations: $with['transformations'] ?? $this->transformations,
             count: $with['count'] ?? $this->count,
             id: $with['id'] ?? $this->id,
             singleton: $with['singleton'] ?? $this->singleton,
+            initialize_using: $with['initialize_using'] ?? $this->initialize_using,
+            after_creating: $with['after_creating'] ?? $this->after_creating,
             faker: $with['faker'] ?? $this->faker,
-            makeCallbacks: $with['makeCallbacks'] ?? $this->makeCallbacks,
-            createCallbacks: $with['createCallbacks'] ?? $this->createCallbacks,
         );
-
-        return $state;
     }
 
     protected function faker(): Generator
