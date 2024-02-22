@@ -153,7 +153,6 @@ class StateFactory
                 ...$this->getRawData(),
                 id: $this->id ?? Id::make(),
             );
-            
 
         $state = $initialized->state($this->state_class);
 
