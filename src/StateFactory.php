@@ -44,7 +44,9 @@ class StateFactory
         protected int|string|null $id = null,
         protected bool $singleton = false,
         protected ?Generator $faker = null,
-        protected string $initial_event = VerbsStateInitialized::class,
+        protected ?string $initial_event = null,
+        protected Collection $makeCallbacks = new Collection(),
+        protected Collection $createCallbacks = new Collection(),
     ) {
     }
 
@@ -56,6 +58,20 @@ class StateFactory
     public function configure(): void
     {
         //
+    }
+
+    public function afterMaking(Closure $callback): static
+    {
+        $this->makeCallbacks->push($callback);
+
+        return $this;
+    }
+
+    public function afterCreating(Closure $callback): static
+    {
+        $this->createCallbacks->push($callback);
+
+        return $this;
     }
 
     /** @return static<TStateType> */
@@ -121,12 +137,21 @@ class StateFactory
     /** @return TStateType */
     protected function createState(): State
     {
-        $initialized = $this->initial_event::fire(
-            state_id: $this->id ?? Id::make(),
-            state_class: $this->state_class,
-            state_data: $this->getRawData(),
-            singleton: $this->singleton,
-        );
+        $this->makeCallbacks->each(fn (Closure $callback) => $callback($this));
+
+        $initialized = $this->initial_event
+            ? $this->initial_event::fire(
+                ...$this->getRawData(),
+                id: $this->id ?? Id::make(),
+            )
+            : VerbsStateInitialized::fire(
+                state_id: $this->id ?? Id::make(),
+                state_class: $this->state_class,
+                state_data: $this->getRawData(),
+                singleton: $this->singleton,
+            );
+
+        $this->createCallbacks->each(fn (Closure $callback) => $callback($initialized));
 
         return $initialized->state($this->state_class);
     }
