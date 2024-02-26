@@ -23,7 +23,7 @@ test('VerbSnapshot table name can be configured', function () {
 });
 
 test('VerbStateEvent table name can be configured', function () {
-    $expected_table_name = 'verb_snapshots';
+    $expected_table_name = 'verb_state_events';
 
     $verb_model = new VerbStateEvent();
     $actual_table_name = $verb_model->getTable();
