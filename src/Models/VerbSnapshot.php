@@ -23,7 +23,12 @@ class VerbSnapshot extends Model
 
     public function setTable($table): void
     {
-        $this->table = config('verbs.tables.verb_snapshots');
+        $this->table = $this->getTable();
+    }
+
+    public function getTable()
+    {
+        return config('verbs.tables.verb_snapshots');
     }
 
     public function state(): State

@@ -30,7 +30,12 @@ class VerbEvent extends Model
 
     public function setTable($table): void
     {
-        $this->table = config('verbs.tables.verb_events');
+        $this->table = $this->getTable();
+    }
+
+    public function getTable()
+    {
+        return config('verbs.tables.verb_events');
     }
 
     public function event(): Event
