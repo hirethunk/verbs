@@ -7,9 +7,12 @@ use Thunk\Verbs\State;
 
 class VerbStateEvent extends Model
 {
-    public $table = 'verb_state_events';
-
     public $guarded = [];
+
+    protected function setTable(): void
+    {
+        $this->table = config('verbs.tables.verb_state_events');
+    }
 
     public function event()
     {
