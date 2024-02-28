@@ -144,6 +144,8 @@ class EventStore
                 'event_id' => Verbs::toId($event->id),
                 'state_id' => Verbs::toId($state->id),
                 'state_type' => $state::class,
+                'created_at' => now(),
+                'updated_at' => now(),
             ]))
             ->all();
     }
