@@ -2,18 +2,15 @@
 
 namespace Thunk\Verbs\Lifecycle;
 
-use Glhd\Bits\Bits;
-use Ramsey\Uuid\UuidInterface;
-use Symfony\Component\Uid\AbstractUid;
-use Throwable;
 use Thunk\Verbs\CommitsImmediately;
+use Thunk\Verbs\Contracts\BrokersEvents;
+use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 
-class Broker
+class Broker implements BrokersEvents
 {
-    public bool $is_replaying = false;
+    use BrokerConvenienceMethods;
 
     public bool $commit_immediately = false;
 
@@ -70,88 +67,36 @@ class Broker
         return $this->commit();
     }
 
-    public function isValid(Event $event): bool
-    {
-        try {
-            $states = $event->states();
-
-            Guards::for($event, null)->validate();
-            $states->each(fn ($state) => Guards::for($event, $state)->validate());
-
-            return true;
-        } catch (EventNotValidForCurrentState $e) {
-            return false;
-        }
-    }
-
-    public function isAllowed(Event $event): bool
-    {
-        try {
-            $states = $event->states();
-
-            Guards::for($event, null)->authorize();
-            $states->each(fn ($state) => Guards::for($event, $state)->authorize());
-
-            return true;
-        } catch (Throwable $e) {
-            return false;
-        }
-    }
-
     public function replay(?callable $beforeEach = null, ?callable $afterEach = null)
     {
         $this->is_replaying = true;
 
-        app(SnapshotStore::class)->reset();
+        try {
+            app(StateManager::class)->reset(include_storage: true);
 
-        app(EventStore::class)->read()
-            ->each(function (Event $event) use ($beforeEach, $afterEach) {
-                app(StateManager::class)->setMaxEventId($event->id);
+            app(StoresEvents::class)->read()
+                ->each(function (Event $event) use ($beforeEach, $afterEach) {
+                    app(StateManager::class)->setReplaying(true);
 
-                if ($beforeEach) {
-                    $beforeEach($event);
-                }
+                    if ($beforeEach) {
+                        $beforeEach($event);
+                    }
 
-                $event->states()
-                    ->each(fn ($state) => $this->dispatcher->apply($event, $state))
-                    ->each(fn ($state) => $this->dispatcher->replay($event, $state))
-                    ->whenEmpty(fn () => $this->dispatcher->replay($event, null));
+                    $event->states()
+                        ->each(fn ($state) => $this->dispatcher->apply($event, $state))
+                        ->each(fn ($state) => $this->dispatcher->replay($event, $state))
+                        ->whenEmpty(fn () => $this->dispatcher->replay($event, null));
 
-                if ($afterEach) {
-                    $afterEach($event);
-                }
+                    if ($afterEach) {
+                        $afterEach($event);
+                    }
 
-                return $event;
-            });
-
-        $this->is_replaying = false;
-    }
-
-    public function isReplaying(): bool
-    {
-        return $this->is_replaying;
-    }
-
-    public function unlessReplaying(callable $callback)
-    {
-        if (! $this->is_replaying) {
-            $callback();
+                    return $event;
+                });
+        } finally {
+            app(StateManager::class)->setReplaying(false);
+            $this->is_replaying = false;
         }
-    }
-
-    public function createMetadataUsing(?callable $callback = null): void
-    {
-        app(MetadataManager::class)->createMetadataUsing($callback);
-    }
-
-    public function toId(Bits|UuidInterface|AbstractUid|int|string|null $id): int|string|null
-    {
-        return match (true) {
-            $id instanceof Bits => $id->id(),
-            $id instanceof UuidInterface => $id->toString(),
-            $id instanceof AbstractUid => (string) $id,
-            default => $id,
-        };
     }
 
     public function commitImmediately(bool $commit_immediately = true): void

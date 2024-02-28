@@ -50,4 +50,17 @@ return [
         BackedEnumNormalizer::class,
         PropertyNormalizer::class,
     ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Wormhole
+    |--------------------------------------------------------------------------
+    |
+    | When replaying events, Verbs will set the "now" timestamp for `Carbon`
+    | and `CarbonImmutable` instances to the moment the original event was
+    | stored in the database. This allows you to use the `now()` helper in your
+    | event handlers easily. You can disable this feature if you'd like.
+    |
+    */
+    'wormhole' => true,
 ];

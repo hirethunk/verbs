@@ -1,12 +1,12 @@
 <?php
 
-namespace Thunk\Verbs\Helpers;
+namespace Thunk\Verbs\Support;
 
 use Illuminate\Support\Arr;
 
 class LilWayneLyrics
 {
-    public static $lyrics = [
+    protected const LYRICS = [
         'I need a Wynn-Dixie grocery bag full of money rig ',
         "You think you're calling shots, you got the wrong number. I love Benjamin Franklin more than his own mother.",
         'I play the hand that was dealt, I got a deck full of aces. I gave birth to your style, I need a check for my labor',
@@ -24,6 +24,6 @@ class LilWayneLyrics
 
     public static function random(): string
     {
-        return Arr::random(self::$lyrics);
+        return Arr::random(self::LYRICS);
     }
 }

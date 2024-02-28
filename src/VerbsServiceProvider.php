@@ -2,10 +2,10 @@
 
 namespace Thunk\Verbs;
 
-use Glhd\Bits\Snowflake;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Events\Dispatcher as LaravelDispatcher;
+use Illuminate\Support\DateFactory;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
 use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
@@ -18,6 +18,9 @@ use Symfony\Component\Serializer\Normalizer\PropertyNormalizer;
 use Symfony\Component\Serializer\Serializer as SymfonySerializer;
 use Thunk\Verbs\Commands\MakeVerbEventCommand;
 use Thunk\Verbs\Commands\MakeVerbStateCommand;
+use Thunk\Verbs\Commands\ReplayCommand;
+use Thunk\Verbs\Contracts\BrokersEvents;
+use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Lifecycle\Broker;
 use Thunk\Verbs\Lifecycle\Dispatcher;
 use Thunk\Verbs\Lifecycle\EventStore;
@@ -27,7 +30,9 @@ use Thunk\Verbs\Lifecycle\SnapshotStore;
 use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\Livewire\SupportVerbs;
 use Thunk\Verbs\Support\EventStateRegistry;
+use Thunk\Verbs\Support\IdManager;
 use Thunk\Verbs\Support\Serializer;
+use Thunk\Verbs\Support\Wormhole;
 
 class VerbsServiceProvider extends PackageServiceProvider
 {
@@ -39,6 +44,7 @@ class VerbsServiceProvider extends PackageServiceProvider
             ->hasCommands(
                 MakeVerbEventCommand::class,
                 MakeVerbStateCommand::class,
+                ReplayCommand::class,
             )
             ->hasMigrations(
                 'create_verb_events_table',
@@ -64,6 +70,22 @@ class VerbsServiceProvider extends PackageServiceProvider
         $this->app->singleton(MetadataManager::class);
         $this->app->singleton(Serializer::class);
 
+        $this->app->singleton(IdManager::class, function (Container $app) {
+            return new IdManager(
+                id_type: $app->make(Repository::class)->get('verbs.id_type', 'snowflake'),
+            );
+        });
+
+        $this->app->singleton(Wormhole::class, function (Container $app) {
+            $config = $app->make(Repository::class);
+
+            return new Wormhole(
+                $app->make(MetadataManager::class),
+                $app->make(DateFactory::class),
+                $config->get('verbs.wormhole', true),
+            );
+        });
+
         $this->app->singleton(PropertyNormalizer::class, function () {
             $loader = class_exists(AttributeLoader::class)
                 ? new AttributeLoader()
@@ -86,6 +108,9 @@ class VerbsServiceProvider extends PackageServiceProvider
                 encoders: [new JsonEncoder()],
             );
         });
+
+        $this->app->alias(Broker::class, BrokersEvents::class);
+        $this->app->alias(EventStore::class, StoresEvents::class);
     }
 
     public function boot()
@@ -102,15 +127,15 @@ class VerbsServiceProvider extends PackageServiceProvider
         }
 
         $this->app->terminating(function () {
-            app(Broker::class)->commit();
+            app(BrokersEvents::class)->commit();
         });
 
         // Allow for firing events with traditional Laravel dispatcher
         $this->app->make(LaravelDispatcher::class)->listen('*', function (string $name, array $data) {
             [$event] = $data;
             if (isset($event) && $event instanceof Event) {
-                $event->id ??= Snowflake::make()->id();
-                $this->app->make(Broker::class)->fire($event);
+                $event->id ??= snowflake_id();
+                $this->app->make(BrokersEvents::class)->fire($event);
             }
         });
     }

@@ -5,6 +5,7 @@ namespace Thunk\Verbs\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Lifecycle\MetadataManager;
 use Thunk\Verbs\Metadata;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\Serializer;
@@ -32,6 +33,8 @@ class VerbEvent extends Model
     public function event(): Event
     {
         $this->event ??= app(Serializer::class)->deserialize($this->type, $this->data);
+
+        app(MetadataManager::class)->setEphemeral($this->event, 'created_at', $this->created_at);
 
         return $this->event;
     }

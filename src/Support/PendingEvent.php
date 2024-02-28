@@ -3,31 +3,34 @@
 namespace Thunk\Verbs\Support;
 
 use Closure;
-use Glhd\Bits\Snowflake;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Traits\Conditionable;
+use Illuminate\Support\Traits\Macroable;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 use ReflectionMethod;
 use ReflectionParameter;
 use RuntimeException;
 use Throwable;
+use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Lifecycle\Broker;
 use Thunk\Verbs\Lifecycle\MetadataManager;
 
 /**
- * @template T
+ * @template TEventType of Event
  *
- * @property T $event
+ * @property TEventType $event
  */
 class PendingEvent
 {
-    use Conditionable;
+    use Conditionable, Macroable;
 
     protected Closure $exception_mapper;
 
-    /** @param  class-string<Event>  $class_name */
+    /**
+     * @param  class-string<TEventType>  $class_name
+     * @return static<TEventType>
+     */
     public static function make(string $class_name, array $args): static
     {
         $args = static::normalizeArgs($args);
@@ -71,6 +74,7 @@ class PendingEvent
             ->all();
     }
 
+    /** @param  TEventType|class-string<TEventType>  $event */
     public function __construct(
         public Event|string $event,
     ) {
@@ -96,6 +100,7 @@ class PendingEvent
         return $this;
     }
 
+    /** @return null|TEventType */
     public function fire(...$args): ?Event
     {
         if (! empty($args) || is_string($this->event)) {
@@ -103,7 +108,7 @@ class PendingEvent
         }
 
         try {
-            return app(Broker::class)->fire($this->event);
+            return app(BrokersEvents::class)->fire($this->event);
         } catch (Throwable $e) {
             throw $this->prepareException($e);
         }
@@ -114,21 +119,21 @@ class PendingEvent
     {
         $event = $this->fire(...$args);
 
-        app(Broker::class)->commit();
+        app(BrokersEvents::class)->commit();
 
         $results = app(MetadataManager::class)->getLastResults($event);
 
         return $results->count() > 1 ? $results : $results->first();
     }
 
-    public function isAllowed(): bool
+    public function isAuthorized(): bool
     {
-        return app(Broker::class)->isAllowed($this->event);
+        return app(BrokersEvents::class)->isAuthorized($this->event);
     }
 
     public function isValid(): bool
     {
-        return app(Broker::class)->isValid($this->event);
+        return app(BrokersEvents::class)->isValid($this->event);
     }
 
     /** @param  callable(Throwable): Throwable  $handler */
@@ -158,7 +163,7 @@ class PendingEvent
     protected function conditionallySetId(): void
     {
         if ($this->event instanceof Event) {
-            $this->event->id ??= Snowflake::make()->id();
+            $this->event->id ??= snowflake_id();
         }
     }
 }

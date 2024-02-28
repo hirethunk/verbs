@@ -13,6 +13,7 @@ use Thunk\Verbs\Metadata;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\Reflector;
 use Thunk\Verbs\Support\StateCollection;
+use Thunk\Verbs\Support\Wormhole;
 
 class Hook
 {
@@ -108,10 +109,10 @@ class Hook
         return null;
     }
 
-    public function replay(Container $container, Event $event, ?State $state = null): void
+    public function replay(Container $container, Event $event, ?State $state): void
     {
         if ($this->runsInPhase(Phase::Replay)) {
-            $container->call($this->callback, $this->guessParameters($event, $state));
+            app(Wormhole::class)->replay($event, fn () => $container->call($this->callback, $this->guessParameters($event, $state)));
         }
     }
 

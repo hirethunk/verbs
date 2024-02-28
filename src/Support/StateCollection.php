@@ -9,10 +9,11 @@ use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\State;
 
 /**
+ * @template TStateType of State
  * @template TKey of array-key
  *
- * @implements \ArrayAccess<TKey, State>
- * @implements \Illuminate\Support\Enumerable<TKey, State>
+ * @implements \ArrayAccess<TKey, TStateType>
+ * @implements \Illuminate\Support\Enumerable<TKey, TStateType>
  */
 class StateCollection extends Collection
 {

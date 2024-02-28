@@ -3,7 +3,6 @@
 namespace Thunk\Verbs\Lifecycle;
 
 use Glhd\Bits\Bits;
-use Glhd\Bits\Snowflake;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Builder as BaseBuilder;
 use Illuminate\Support\Collection;
@@ -11,15 +10,16 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\LazyCollection;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
+use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\ConcurrencyException;
-use Thunk\Verbs\Facades\Verbs;
+use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Models\VerbEvent;
 use Thunk\Verbs\Models\VerbStateEvent;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\Serializer;
 
-class EventStore
+class EventStore implements StoresEvents
 {
     public function __construct(
         protected MetadataManager $metadata,
@@ -29,15 +29,13 @@ class EventStore
     public function read(
         ?State $state = null,
         Bits|UuidInterface|AbstractUid|int|string|null $after_id = null,
-        Bits|UuidInterface|AbstractUid|int|string|null $up_to_id = null,
         bool $singleton = false,
     ): LazyCollection {
-        return $this->readEvents($state, $after_id, $up_to_id, $singleton)
+        return $this->readEvents($state, $after_id, $singleton)
             ->each(fn (VerbEvent $model) => $this->metadata->set($model->event(), $model->metadata()))
             ->map(fn (VerbEvent $model) => $model->event());
     }
 
-    /** @param  Event[]  $events */
     public function write(array $events): bool
     {
         if (empty($events)) {
@@ -53,7 +51,6 @@ class EventStore
     protected function readEvents(
         ?State $state,
         Bits|UuidInterface|AbstractUid|int|string|null $after_id,
-        Bits|UuidInterface|AbstractUid|int|string|null $up_to_id,
         bool $singleton,
     ): LazyCollection {
         if ($state) {
@@ -61,13 +58,14 @@ class EventStore
                 ->with('event')
                 ->unless($singleton, fn (Builder $query) => $query->where('state_id', $state->id))
                 ->where('state_type', $state::class)
-                ->when($after_id, fn (Builder $query) => $query->whereRelation('event', 'id', '>', Verbs::toId($after_id)))
-                ->when($up_to_id, fn (Builder $query) => $query->whereRelation('event', 'id', '<=', Verbs::toId($up_to_id)))
+                ->when($after_id, fn (Builder $query) => $query->whereRelation('event', 'id', '>', Id::from($after_id)))
                 ->lazyById()
                 ->map(fn (VerbStateEvent $pivot) => $pivot->event);
         }
 
-        return VerbEvent::query()->lazyById();
+        return VerbEvent::query()
+            ->when($after_id, fn (Builder $query) => $query->where('id', '>', Id::from($after_id)))
+            ->lazyById();
     }
 
     /** @param  Event[]  $events */
@@ -126,11 +124,11 @@ class EventStore
     protected function formatForWrite(array $event_objects): array
     {
         return array_map(fn (Event $event) => [
-            'id' => Verbs::toId($event->id),
+            'id' => Id::from($event->id),
             'type' => $event::class,
             'data' => app(Serializer::class)->serialize($event),
             'metadata' => app(Serializer::class)->serialize($this->metadata->get($event)),
-            'created_at' => now(),
+            'created_at' => app(MetadataManager::class)->getEphemeral($event, 'created_at', now()),
             'updated_at' => now(),
         ], $event_objects);
     }
@@ -140,9 +138,9 @@ class EventStore
     {
         return collect($event_objects)
             ->flatMap(fn (Event $event) => $event->states()->map(fn ($state) => [
-                'id' => Snowflake::make()->id(),
-                'event_id' => Verbs::toId($event->id),
-                'state_id' => Verbs::toId($state->id),
+                'id' => snowflake_id(),
+                'event_id' => Id::from($event->id),
+                'state_id' => Id::from($state->id),
                 'state_type' => $state::class,
                 'created_at' => now(),
                 'updated_at' => now(),

@@ -3,9 +3,10 @@
 namespace Thunk\Verbs;
 
 use Glhd\Bits\Bits;
+use InvalidArgumentException;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
-use Thunk\Verbs\Lifecycle\EventStore;
+use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\Support\Serializer;
 
@@ -31,9 +32,24 @@ abstract class State
         return $state;
     }
 
-    public static function factory(): StateFactory
+    /** @return StateFactory<static> */
+    public static function factory(
+        array|callable|int|null $count = null,
+        array|callable|null $data = null
+    ): StateFactory {
+        if (is_array($count) || is_callable($count)) {
+            throw_if($data !== null, new InvalidArgumentException('You cannot pass data to both factory arguments.'));
+            [$data, $count] = [$count, null];
+        }
+
+        return static::newFactory()
+            ->when($count !== null, fn (StateFactory $factory) => $factory->count($count))
+            ->when($data !== null, fn (StateFactory $factory) => $factory->state($data));
+    }
+
+    protected static function newFactory(): StateFactory
     {
-        return new StateFactory(static::class);
+        return StateFactory::new(static::class);
     }
 
     public function __construct()
@@ -62,7 +78,7 @@ abstract class State
 
     public function storedEvents()
     {
-        return app(EventStore::class)
+        return app(StoresEvents::class)
             ->read(state: $this)
             ->collect();
     }

@@ -22,7 +22,7 @@ ApplicantRejected::fire(
 ```
 
 ```php
-class ApplicantRejected
+class ApplicantRejected extends Event
 {
     public function __construct(
         public int $applicant_id,
@@ -81,7 +81,7 @@ class JobApplicationController
 {
     public function store(JobApplicationRequest $request) {
         ApplicationSubmitted::fire(
-            applicant_id: Snowflake::make()->id(),
+            applicant_id: snowflake_id(),
             // ...
         );
     }
