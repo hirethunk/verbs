@@ -28,14 +28,9 @@ class VerbEvent extends Model
 
     protected ?Metadata $meta = null;
 
-    public function setTable($table): void
+    public function setTable($table = null): void
     {
-        $this->table = $this->getTable();
-    }
-
-    public function getTable()
-    {
-        return config('verbs.tables.verb_events');
+        $this->table = config('verbs.tables.verb_events');
     }
 
     public function event(): Event
