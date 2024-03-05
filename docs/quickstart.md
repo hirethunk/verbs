@@ -64,7 +64,8 @@ CustomerBeganTrial::fire(customer_id: 1);
 [States](/docs/getting-started/states) in Verbs are simple PHP objects containing data which is mutated over time by events.
 
 Let's assume we want to prevent a customer from signing up for a free trial if they have already signed up for one in the past year.
-- We can store a `latest_trial_started_at` timestamp on the `CustomerState` whenever `CustomerBeganTrial` fires.
+
+- We can store a `latest_trial_started_at` timestamp on the `CustomerState`, updating it whenever `CustomerBeganTrial` fires.
 - We can check that timestamp each time the `CustomerBeganTrial` event is fired using `validate()` to see if that the customer is allowed to start a trial.
 
 Let's create our new state using another built-in artisan command:
@@ -73,7 +74,7 @@ Let's create our new state using another built-in artisan command:
 php artisan verbs:state CustomerState
 ```
 
-This will create a `CustomerState` class in our `app/States` directory. We can customize it to add our timestamp.
+This will create a `CustomerState` class in our `app/States` directory. We'll customize it to add our timestamp.
 
 ```php
 class CustomerState extends State
@@ -84,9 +85,14 @@ class CustomerState extends State
 
 We can now add a few things to our event to take advantage of our new state:
 
-- We can add a `#[StateId(CustomerState::class)` attribute to our `$customer_id` property telling Verbs that we want to look up the `CustomerState` using this ID.
-- We can add a `validate()` method which accepts an instance of `CustomerState`. If the validate method returns `true`, the event can be fired. If it returns `false` or throws an exception, the event will not be fired.
+- We can add a `#[StateId(CustomerState::class)` [attribute](/docs/technical/attributes) to our `$customer_id` property telling Verbs that we want to look up the `CustomerState` using this ID.
+- We can add a `validate()` method which accepts an instance of `CustomerState`.
+    - If the validate method returns `true`, the event can be fired.
+    - If it returns `false` or throws an exception, the event will not be fired.
 - We can add an `apply()` method which accepts an instance of `CustomerState` to mutate the state when our event fires.
+
+
+- thanks
 
 ```php
 class CustomerBeganTrial extends Event
