@@ -57,16 +57,13 @@ return [
     |--------------------------------------------------------------------------
     |
     | By default, Verbs prefixes all of its table names with "verb_". However, you
-    | may wish to customized these table names to better fit your application.
-    | You can do so here. Just be sure to update your migrations accordingly.
-    | If you have not yet run the verbs migrations, then we will will use these
-    | values when creating the verbs tables.
+    | may wish to customize these table names to better fit your application.
     |
     */
     'tables' => [
-        'verb_events' => 'verb_events',
-        'verb_snapshots' => 'verb_snapshots',
-        'verb_state_events' => 'verb_state_events',
+        'events' => 'verb_events',
+        'snapshots' => 'verb_snapshots',
+        'state_events' => 'verb_state_events',
     ],
 
     /*

@@ -21,9 +21,9 @@ class VerbSnapshot extends Model
 
     protected ?State $state = null;
 
-    public function setTable($table = null): void
+    public function getTable()
     {
-        $this->table = config('verbs.tables.verb_snapshots');
+        return $this->table ?? config('verbs.tables.snapshots', 'verb_snapshots');
     }
 
     public function state(): State

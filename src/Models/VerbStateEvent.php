@@ -9,9 +9,9 @@ class VerbStateEvent extends Model
 {
     public $guarded = [];
 
-    public function setTable($table = null): void
+    public function getTable()
     {
-        $this->table = config('verbs.tables.verb_state_events');
+        return $this->table ?? config('verbs.tables.state_events', 'verb_state_events');
     }
 
     public function event()

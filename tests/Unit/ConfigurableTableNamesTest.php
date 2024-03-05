@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Support\Facades\Config;
 use Thunk\Verbs\Models\VerbEvent;
 use Thunk\Verbs\Models\VerbSnapshot;
 use Thunk\Verbs\Models\VerbStateEvent;
@@ -17,10 +16,9 @@ test('VerbEvent table name can be configured', function () {
 test('VerbEvent table name can be configured with different table name', function () {
     $expected_table_name = 'sys_verb_events';
 
-    config()->set('verbs.tables.verb_events', $expected_table_name);
+    config()->set('verbs.tables.events', $expected_table_name);
 
     $verb_model = new VerbEvent();
-    $verb_model->setTable();
     $actual_table_name = $verb_model->getTable();
 
     expect($expected_table_name)->toBe($actual_table_name);
@@ -38,10 +36,9 @@ test('VerbSnapshot table name can be configured', function () {
 test('VerbSnapshot table name can be configured with different table name', function () {
     $expected_table_name = 'sys_verb_snapshots';
 
-    config(['verbs.tables.verb_snapshots' => $expected_table_name]);
+    config(['verbs.tables.snapshots' => $expected_table_name]);
 
     $verb_model = new VerbSnapshot();
-    $verb_model->setTable();
     $actual_table_name = $verb_model->getTable();
 
     expect($expected_table_name)->toBe($actual_table_name);
@@ -59,10 +56,9 @@ test('VerbStateEvent table name can be configured', function () {
 test('VerbStateEvent table name can be configured with different table name', function () {
     $expected_table_name = 'sys_verb_state_events';
 
-    config(['verbs.tables.verb_state_events' => $expected_table_name]);
+    config(['verbs.tables.state_events' => $expected_table_name]);
 
     $verb_model = new VerbStateEvent();
-    $verb_model->setTable();
     $actual_table_name = $verb_model->getTable();
 
     expect($expected_table_name)->toBe($actual_table_name);
