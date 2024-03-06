@@ -29,6 +29,13 @@ class EventStoreFake implements StoresEvents
         $this->events = new Collection();
     }
 
+    public function get(UuidInterface|string|int|AbstractUid|Bits $event_id): ?Event
+    {
+        return $this->events
+            ->flatten()
+            ->firstWhere('id', '=', Id::from($event_id));
+    }
+
     public function read(
         ?State $state = null,
         UuidInterface|string|int|AbstractUid|Bits|null $after_id = null,

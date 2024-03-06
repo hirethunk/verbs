@@ -11,6 +11,8 @@ use Thunk\Verbs\State;
 
 interface StoresEvents
 {
+    public function get(Bits|UuidInterface|AbstractUid|int|string $event_id): ?Event;
+
     public function read(
         ?State $state = null,
         Bits|UuidInterface|AbstractUid|int|string|null $after_id = null,

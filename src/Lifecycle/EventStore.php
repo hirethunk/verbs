@@ -26,6 +26,17 @@ class EventStore implements StoresEvents
     ) {
     }
 
+    public function get(UuidInterface|string|int|AbstractUid|Bits $event_id): ?Event
+    {
+        if ($model = VerbEvent::find(Id::from($event_id))) {
+            $this->metadata->set($model->event(), $model->metadata());
+
+            return $model->event();
+        }
+
+        return null;
+    }
+
     public function read(
         ?State $state = null,
         Bits|UuidInterface|AbstractUid|int|string|null $after_id = null,

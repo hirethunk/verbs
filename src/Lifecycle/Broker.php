@@ -2,10 +2,12 @@
 
 namespace Thunk\Verbs\Lifecycle;
 
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Thunk\Verbs\CommitsImmediately;
 use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Jobs\HandleEventJob;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 
 class Broker implements BrokersEvents
@@ -61,6 +63,12 @@ class Broker implements BrokersEvents
         }
 
         foreach ($events as $event) {
+            if ($event instanceof ShouldQueue) {
+                dispatch(new HandleEventJob($event->id));
+
+                continue;
+            }
+
             $this->metadata->setLastResults($event, $this->dispatcher->handle($event));
         }
 
