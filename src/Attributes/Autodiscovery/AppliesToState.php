@@ -52,7 +52,7 @@ class AppliesToState extends StateDiscoveryAttribute
             return $this->id;
         }
 
-        $prefix = Str::of($this->state_type)->classBasename()->beforeLast('State')->kebab();
+        $prefix = Str::of($this->state_type)->classBasename()->beforeLast('State')->snake();
 
         if (property_exists($event, $singular = "{$prefix}_id")) {
             return $singular;
