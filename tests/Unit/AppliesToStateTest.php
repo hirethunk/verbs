@@ -16,7 +16,6 @@ it('can find the state ID property', function () {
     $this->assertTrue($state->acknowledged);
 });
 
-
 class ContactRequestState extends State
 {
     public bool $acknowledged = false;
