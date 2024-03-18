@@ -135,4 +135,5 @@ jobs:
         env:
           DB_CONNECTION: pgsql
           DB_DATABASE: forge
+          DB_USERNAME: forge
           DB_PASSWORD: password
