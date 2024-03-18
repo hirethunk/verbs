@@ -19,10 +19,10 @@
     "require": {
         "php": "^8.1",
         "glhd/bits": "^0.3.0",
-        "illuminate/contracts": "^10.0",
+        "illuminate/contracts": "^11.0",
         "internachi/modular": "^2.0",
-        "laravel/prompts": "^0.1.15",
-        "spatie/laravel-package-tools": "^1.14.0",
+        "laravel/prompts": "^0.1",
+        "spatie/laravel-package-tools": "^1.16",
         "symfony/property-access": "^6.2",
         "symfony/serializer": "^6.3"
     },
@@ -30,15 +30,15 @@
         "brick/money": "^0.8.1",
         "laravel/pint": "^1.13",
         "mockery/mockery": "^1.6",
-        "nunomaduro/collision": "^7.10",
-        "orchestra/testbench": "^8.14",
-        "pestphp/pest": "^2.24",
-        "pestphp/pest-plugin-arch": "^2.4",
-        "pestphp/pest-plugin-laravel": "^2.2",
+        "nunomaduro/collision": "^8.1",
+        "orchestra/testbench": "^9.0",
+        "pestphp/pest": "^2.34",
+        "pestphp/pest-plugin-arch": "^2.7",
+        "pestphp/pest-plugin-laravel": "^2.3",
         "pestphp/pest-plugin-watch": "^2.0",
         "phpunit/phpunit": "^10.4.2",
         "projektgopher/whisky": "^0.5.1",
-        "spatie/laravel-ray": "^1.33"
+        "spatie/laravel-ray": "^1.35"
     },
     "autoload": {
         "psr-4": {
