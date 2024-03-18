@@ -17,6 +17,9 @@ jobs:
         php: [8.3, 8.2, 8.1]
         laravel: [11.*, 10.*]
         stability: [stable, lowest]
+        exclude:
+          - php: 8.1
+            laravel: 11.*
     name: ${{ matrix.os }}/sqlite P${{ matrix.php }}:L${{ matrix.laravel }} (${{ matrix.stability }})
     steps:
       - name: Checkout code
@@ -49,6 +52,9 @@ jobs:
         php: [ 8.3, 8.2, 8.1 ]
         laravel: [ 11.*, 10.* ]
         stability: [ lowest, stable ]
+        exclude:
+          - php: 8.1
+            laravel: 11.*
     name: ${{ matrix.os }}/mysql P${{ matrix.php }}:L${{ matrix.laravel }} (${{ matrix.stability }})
     services:
       mysql:
@@ -93,6 +99,9 @@ jobs:
         php: [ 8.3, 8.2, 8.1 ]
         laravel: [ 11.*, 10.* ]
         stability: [ lowest, stable ]
+        exclude:
+          - php: 8.1
+            laravel: 11.*
     name: ${{ matrix.os }}/pgsql P${{ matrix.php }}:L${{ matrix.laravel }} (${{ matrix.stability }})
     services:
       postgresql:
