@@ -14,7 +14,7 @@ jobs:
       fail-fast: true
       matrix:
         os: [ubuntu, windows]
-        php: [8.2, 8.1]
+        php: [8.2]
         laravel: [11.*]
         stability: [lowest, stable]
     name: ${{ matrix.os }}/sqlite P${{ matrix.php }}:L${{ matrix.laravel }} (${{ matrix.stability }})
@@ -46,7 +46,7 @@ jobs:
       fail-fast: true
       matrix:
         os: [ ubuntu ]
-        php: [ 8.2, 8.1 ]
+        php: [ 8.2 ]
         laravel: [ 11.* ]
         stability: [ lowest, stable ]
     name: ${{ matrix.os }}/mysql P${{ matrix.php }}:L${{ matrix.laravel }} (${{ matrix.stability }})
@@ -90,7 +90,7 @@ jobs:
       fail-fast: true
       matrix:
         os: [ ubuntu ]
-        php: [ 8.2, 8.1 ]
+        php: [ 8.2 ]
         laravel: [ 11.* ]
         stability: [ lowest, stable ]
     name: ${{ matrix.os }}/pgsql P${{ matrix.php }}:L${{ matrix.laravel }} (${{ matrix.stability }})
