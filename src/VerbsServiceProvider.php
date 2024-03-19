@@ -5,6 +5,7 @@ namespace Thunk\Verbs;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Events\Dispatcher as LaravelDispatcher;
+use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Support\DateFactory;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
@@ -130,13 +131,22 @@ class VerbsServiceProvider extends PackageServiceProvider
             app(BrokersEvents::class)->commit();
         });
 
+        // Hook into Laravel event dispatcher
+        $this->app->make(LaravelDispatcher::class)
+            ->listen('*', fn (string $name, array $data) => $this->handleEvent(...$data));
+    }
+
+    protected function handleEvent($event = null)
+    {
         // Allow for firing events with traditional Laravel dispatcher
-        $this->app->make(LaravelDispatcher::class)->listen('*', function (string $name, array $data) {
-            [$event] = $data;
-            if (isset($event) && $event instanceof Event) {
-                $event->id ??= snowflake_id();
-                $this->app->make(BrokersEvents::class)->fire($event);
-            }
-        });
+        if ($event instanceof Event) {
+            $event->id ??= snowflake_id();
+            $this->app->make(BrokersEvents::class)->fire($event);
+        }
+
+        // Auto-commit after each job on the queue is processed
+        if ($event instanceof JobProcessed) {
+            app(BrokersEvents::class)->commit();
+        }
     }
 }
