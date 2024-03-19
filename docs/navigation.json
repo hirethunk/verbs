@@ -4,15 +4,16 @@
         "slug": "getting-started",
         "items": [
             {
-                "title": "What is Event Sourcing?",
-                "slug": "event-sourcing",
-                "icon": "information-circle"
-            },
-            {
                 "title": "Quickstart",
                 "slug": "quickstart",
                 "icon": "arrow-right"
-            },
+            }
+        ]
+    },
+    {
+        "title": "Reference",
+        "slug": "reference",
+        "items": [
             {
                 "title": "Events",
                 "slug": "events",
@@ -24,14 +25,14 @@
                 "icon": "queue-list"
             },
             {
-                "title": "Replaying Events",
-                "slug": "replaying-events",
-                "icon": "arrow-path"
-            },
-            {
                 "title": "Testing",
                 "slug": "testing",
                 "icon": "beaker"
+            },
+            {
+                "title": "What is Event Sourcing?",
+                "slug": "event-sourcing",
+                "icon": "information-circle"
             }
         ]
     },
@@ -40,28 +41,16 @@
         "slug": "examples",
         "items": [
             {
-                "title": "Simple Counter",
-                "slug": "counter",
-                "icon": "adjustments-horizontal",
-                "url": "/examples/counter"
-            },
-            {
-                "title": "Banking",
-                "slug": "banking",
-                "icon": "banknotes",
-                "url": "/examples/bank"
+                "title": "Board Game",
+                "slug": "monopoly",
+                "icon": "puzzle-piece",
+                "url": "/examples/monopoly"
             },
             {
                 "title": "Subscriptions",
                 "slug": "subscriptions",
                 "icon": "cursor-arrow-rays",
                 "url": "/examples/subscriptions"
-            },
-            {
-                "title": "Board Game",
-                "slug": "monopoly",
-                "icon": "puzzle-piece",
-                "url": "/examples/monopoly"
             }
         ]
     },
@@ -83,6 +72,16 @@
                 "title": "IDs",
                 "slug": "ids",
                 "icon": "identification"
+            },
+            {
+                "title": "Event Lifecycle",
+                "slug": "event-lifecycle",
+                "icon": "arrow-path"
+            },
+            {
+                "title": "State Hydration / Snapshots",
+                "slug": "state-hydration-snapshots",
+                "icon": "photo"
             }
         ]
     },
@@ -96,17 +95,12 @@
                 "icon": "cog-8-tooth"
             },
             {
-                "title": "State-first development",
+                "title": "State-first Development",
                 "slug": "state-first-development",
                 "icon": "circle-stack"
             },
             {
-                "title": "Livewire",
-                "slug": "livewire",
-                "icon": "bolt"
-            },
-            {
-                "title": "Extending Verbs for 3rd Party packages",
+                "title": "Extending Verbs for 3rd Party Packages",
                 "slug": "extending-verbs",
                 "icon": "rocket-launch"
             }

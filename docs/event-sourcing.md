@@ -1,52 +1,49 @@
 ## Event Sourcing Defined
 
-Instead of storing just the current state, every change (event) that leads to the current state is stored. This allows for a more granular understanding of how the system arrived at its current state and offers the flexibility to reconstruct or analyze the state at any point in time, not just the latest.
+Instead of knowing just the current state of your app, every change (event) that leads to the current state is stored. This allows for a more granular understanding of how the system arrived at its current state and offers the flexibility to reconstruct or analyze the state at any point in time.
 
-<!-- @todo rephrase -->
-<!-- @todo add more relevant "what is event sourcing?" info -->
+Here are some of the advantages of event-sourcing
+- less database querying
+    - by having [states](states) to track event data over time, we can offload querying to states instead of models
+- A complete history of changes
+    - every event, with all its data, is stored in your events tables--enhancing
+    debugging, decision-making, and analytics.
+- The ability for your events to be replayed
+    - perhaps the biggest feature, this allows you to update and change your app's architecture while keeping the data you need
 
-## Combating Jargon
+## Terminology
 
-In traditional event sourcing, there's a lot of jargon that can make it hard to even get
-started. In Verbs, we tried to abandon a lot of the jargon for (what we believe are) simpler
-and more obvious terms.
+If you've had event sourcing experience, you may be used to certain terms. In Verbs, we've adopted new patterns, so we've moved some things around.
 
-If you have event sourcing experience, or have heard event sourcing terms before, it may
-be useful to compare them to what we have in Verbs.
+| DDD    | Verbs |
+| -------- | ------- |
+| Aggregates  | `States`    |
+| Projectors | `Event::handle()`     |
+| Reactors    | `Verbs::unlessReplaying()`    |
 
-### Aggregates
+### `States`
 
-Aggregates (or Aggregate Roots) are called **States** in Verbs. Aggregate Root is technically
-a great term, because they are used to _aggregate_ your events into a single state in the same
-way that _aggregate_ functions like `SUM()` or `MAX()` in a SQL database _aggregate_ a bunch of
-rows of data into a single value.
+What we use to catalogue like-events. `DaveLeavesHome`, `DavePicksUpGroceries`, `DaveArrivesHome`, need a `DaveState::class` so we can see if `$dave_state->isLockedOutside()` is true.
 
-Aggregates or States can also be thought of as _reducers_ (like `useReducer` in React), in that
-they take a stream of events and reduce them to a single state at a moment in time.
+- See: [States](/docs/reference/states)
 
-### Projectors
+### `Event::handle()`
 
-In many event sourcing system, you'll have dedicated Projectors that listen for events and
-_project_ data in a convenient shape for your views. These are sometimes called _Projections_
-or maybe View Models.
+Listens to events and _projects_ data in a convenient shape for your views.
 
-In Verbs, while it's possible to register dedicated Projectors, most projection is done in
-the `handle` method of an event. For example, an `AccountWasDeactivated` event may _project_
-a `cancelled_at` timestamp to the `Account` model.
+In Verbs, it's still possible to register dedicated Projectors--but we prefer setting projections directly on the event.
 
-### Reactors
+- See: [Events](/docs/reference/events), [Event Lifecycle](/docs/technical/event-lifecycle) and [State first Development](/docs/techniques/state-first-development)
 
-Reactors are similar to projectors, but they're meant for one-time side effects like sending
-mail or making external API requests (things that you wouldn't want to happen again if you
-ever replay your events). In Verbs, there is no formal concept of Reactors. Instead, you can
-just wrap code that you only want to run once inside of a `Verbs::unlessReplaying()` check.
+### `Verbs::unlessReplaying()`
 
-### Write Models and Read Models + CQRS
+Things that you wouldn't want to happen again if you
+ever replay your events (like sending a "Welcome to your `{{ $user->personalHell() }}`" email)
 
-CQRS stands for "Command Query Responsibility Segregation" and is a pattern where writes (commands)
-and reads (queries) are kept separate. Improved scalability and performance are often cited as
-reasons to introduce CQRS, but the real benefit for even small applications is the flexibility
-that it allows. Developers often have to make concessions in their data models to account for both
-read and write concerns. With event sourcing and separate read and write models, you can build
-Eloquent (read) models that are 100% custom-tailored to your application UI and access patterns,
-and create new data through events (writes) that map exactly to _what happened_ in your application.
+```php
+Verbs::unlessReplaying(function() {
+   // one-time side effect
+});
+```
+
+Alternatively, you may use the [`#[Once]`](/docs/technical/attributes#content-once) attribute.
