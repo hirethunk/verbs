@@ -16,11 +16,11 @@ Events are like pages in a book, which add to the story; the state is like the s
 
 ## State Artisan Command
 
+To generate a state, use the built-in artisan command:
+
 ```shell
 php artisan verbs:state GameState
 ```
-
-
 
 We find it a helpful rule of thumb to pair your States to your Models.
 

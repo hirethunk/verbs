@@ -1,6 +1,6 @@
 In Verbs, Events are the source of truth for your data changes.
 
-## How to name events
+## Naming Events
 
 Describe **what** (verb) happened to **who** (noun)
 
@@ -34,18 +34,44 @@ To execute an event, simply call `MyEvent::fire()` from anywhere in your app.
 
 When you fire the event, any of the [event hooks](/docs/technical/event-lifecycle) you've added within it, like `handle()`, will execute.
 
-## `Handle()`
+### Named Parameters
 
+When firing events, include named parameters that correspond to its properties, and vice versa.
+
+
+```php
+// On the Game Model Class
+
+PlayerAddedToGame::fire(
+    game_id: $this->id,
+    player_id: $player->id,
+);
+
+// On the PlayerAddedToGame Event Class
+
+#[StateId(GameState::class)]
+public string $game_id;
+
+#[StateId(PlayerState::class)]
+public string $player_id;
+```
+
+
+## `Handle()`
 
 Use the `handle()` method included in your event to update your chosen database / models / UI data.
 
 - Check out [State-first development](/docs/techniques/state-first-development) for how to utilize states to reduce your database querying, freeing up your models.
+
+
 
 ## Replaying Events
 
 @todo description
 
 ## Replay Artisan Command
+
+To replay your events, use the built-in artisan command:
 
 ```shell
 php artisan verbs:replay
