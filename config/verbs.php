@@ -53,6 +53,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Table Names
+    |--------------------------------------------------------------------------
+    |
+    | By default, Verbs prefixes all of its table names with "verb_". However, you
+    | may wish to customize these table names to better fit your application.
+    |
+    */
+    'tables' => [
+        'events' => 'verb_events',
+        'snapshots' => 'verb_snapshots',
+        'state_events' => 'verb_state_events',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Wormhole
     |--------------------------------------------------------------------------
     |

@@ -7,16 +7,19 @@ on:
     branches: [main]
 
 jobs:
-  
+
   sqlite:
     runs-on: ${{ matrix.os }}-latest
     strategy:
       fail-fast: true
       matrix:
         os: [ubuntu, windows]
-        php: [8.2, 8.1]
-        laravel: [10.*]
-        stability: [lowest, stable]
+        php: [8.3, 8.2, 8.1]
+        laravel: [11.*, 10.*]
+        stability: [stable, lowest]
+        exclude:
+          - php: 8.1
+            laravel: 11.*
     name: ${{ matrix.os }}/sqlite P${{ matrix.php }}:L${{ matrix.laravel }} (${{ matrix.stability }})
     steps:
       - name: Checkout code
@@ -39,16 +42,19 @@ jobs:
         run: vendor/bin/pest
         env:
           DB_CONNECTION: sqlite
-          
+
   mysql:
     runs-on: ${{ matrix.os }}-latest
     strategy:
       fail-fast: true
       matrix:
         os: [ ubuntu ]
-        php: [ 8.2, 8.1 ]
-        laravel: [ 10.* ]
+        php: [ 8.3, 8.2, 8.1 ]
+        laravel: [ 11.*, 10.* ]
         stability: [ lowest, stable ]
+        exclude:
+          - php: 8.1
+            laravel: 11.*
     name: ${{ matrix.os }}/mysql P${{ matrix.php }}:L${{ matrix.laravel }} (${{ matrix.stability }})
     services:
       mysql:
@@ -83,16 +89,19 @@ jobs:
           DB_DATABASE: forge
           DB_USERNAME: root
           DB_PASSWORD: password
-          
+
   pgsql:
     runs-on: ${{ matrix.os }}-latest
     strategy:
       fail-fast: true
       matrix:
         os: [ ubuntu ]
-        php: [ 8.2, 8.1 ]
-        laravel: [ 10.* ]
+        php: [ 8.3, 8.2, 8.1 ]
+        laravel: [ 11.*, 10.* ]
         stability: [ lowest, stable ]
+        exclude:
+          - php: 8.1
+            laravel: 11.*
     name: ${{ matrix.os }}/pgsql P${{ matrix.php }}:L${{ matrix.laravel }} (${{ matrix.stability }})
     services:
       postgresql:
@@ -126,4 +135,5 @@ jobs:
         env:
           DB_CONNECTION: pgsql
           DB_DATABASE: forge
+          DB_USERNAME: forge
           DB_PASSWORD: password

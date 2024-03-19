@@ -124,3 +124,33 @@ class CustomerBeganTrial extends Event
     }
 }
 ```
+
+## Using the results of your `handle` method
+
+Sometimes you need the results of your event immediately in your app. Imagine
+that the controller that fired `CustomerBeganTrial` needs to immediately redirect
+the customer to the subscription details page.
+
+The first step is to return the `Subscription` model from your handle method:
+
+```php
+public function handle()
+{
+    return Subscription::create([
+        'customer_id' => $this->customer_id,
+        'expires_at' => now()->addDays(30),
+    ]);
+}
+```
+
+Next, inside your controller, call `commit` rather than `fire`:
+
+```php
+class TrialController
+{
+    public function store(TrialRequest $request) {
+        $subscription = CustomerBeganTrial::commit(customer_id: Auth::id());
+        return to_route('subscriptions.show', $subscription);
+    }
+}
+```

@@ -17,11 +17,14 @@ use UnexpectedValueException;
  */
 class VerbSnapshot extends Model
 {
-    public $table = 'verb_snapshots';
-
     public $guarded = [];
 
     protected ?State $state = null;
+
+    public function getTable()
+    {
+        return $this->table ?? config('verbs.tables.snapshots', 'verb_snapshots');
+    }
 
     public function state(): State
     {
