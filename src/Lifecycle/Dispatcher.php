@@ -54,15 +54,15 @@ class Dispatcher
         $this->getFiredHooks($event)->each(fn (Hook $hook) => $hook->fired($this->container, $event, $states));
     }
 
-    public function handle(Event $event): Collection
+    public function handle(Event $event, StateCollection $states): Collection
     {
         return $this->getHandleHooks($event)
-            ->map(fn (Hook $hook) => $hook->handle($this->container, $event));
+            ->map(fn (Hook $hook) => $hook->handle($this->container, $event, $states));
     }
 
-    public function replay(Event $event, ?State $state): void
+    public function replay(Event $event, StateCollection $states): void
     {
-        $this->getReplayHooks($event)->each(fn (Hook $hook) => $hook->replay($this->container, $event, $state));
+        $this->getReplayHooks($event)->each(fn (Hook $hook) => $hook->replay($this->container, $event, $states));
     }
 
     /** @return Collection<int, Hook> */

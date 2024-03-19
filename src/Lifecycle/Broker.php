@@ -61,7 +61,7 @@ class Broker implements BrokersEvents
         }
 
         foreach ($events as $event) {
-            $this->metadata->setLastResults($event, $this->dispatcher->handle($event));
+            $this->metadata->setLastResults($event, $this->dispatcher->handle($event, $event->states()));
         }
 
         return $this->commit();
@@ -82,10 +82,8 @@ class Broker implements BrokersEvents
                         $beforeEach($event);
                     }
 
-                    $event->states()
-                        ->each(fn ($state) => $this->dispatcher->apply($event, $state))
-                        ->each(fn ($state) => $this->dispatcher->replay($event, $state))
-                        ->whenEmpty(fn () => $this->dispatcher->replay($event, null));
+                    $event->states()->each(fn ($state) => $this->dispatcher->apply($event, $state));
+                    $this->dispatcher->replay($event, $event->states());
 
                     if ($afterEach) {
                         $afterEach($event);
