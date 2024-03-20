@@ -2,9 +2,7 @@ We enjoy improving Verbs by providing easy, readable testing affordances.
 
 ## `Verbs::Commit()`
 
-When testing verbs events, there is an implicit `Verb::commit()` that does not happen because we're in a testing environment.
-
-// @todo why doesn't this happen?
+When testing verbs events, you'll need to call [commit](/docs/reference/events#content-committing) manually.
 
 You may continue manually adding `Verbs::commit()` after each `Event::fire()` method; however, we've created `Verbs::commitImmediately` to issue a blanket commit on all events you fire in tests.
 
@@ -78,6 +76,9 @@ class ExampleStateFactory extends StateFactory
 `VerbsStateInitialized` implements the `CommitsImmediately` interface detailed [above](testing#content-verbscommit), so if you change from this initial event makes sure to extend the interface on your replacement event.
 
 ### More Methods
+
+<!-- @todo break these up into individual items, like collection methods in laravel docs -->
+<!-- @todo maybe have a TOC list of methods at the top under "factory methods" -->
 
 ```php
 UserState::factory()

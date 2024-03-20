@@ -82,6 +82,11 @@
                 "title": "State Hydration / Snapshots",
                 "slug": "state-hydration-snapshots",
                 "icon": "photo"
+            },
+            {
+                "title": "Combating Jargon",
+                "slug": "combating-jargon",
+                "icon": "chat-bubble-bottom-center-text"
             }
         ]
     },
@@ -90,30 +95,30 @@
         "slug": "techniques",
         "items": [
             {
-                "title": "Why Snowflakes?",
-                "slug": "why-snowflakes",
-                "icon": "cog-8-tooth"
-            },
-            {
                 "title": "State-first Development",
                 "slug": "state-first-development",
                 "icon": "circle-stack"
-            },
-            {
-                "title": "Extending Verbs for 3rd Party Packages",
-                "slug": "extending-verbs",
-                "icon": "rocket-launch"
             }
         ]
     },
     {
-        "title": "Verbs Packages",
+        "title": "Coming Soon!",
         "slug": "verbs-packages",
         "items": [
             {
                 "title": "Verbs Commands",
                 "slug": "verbs-commands",
-                "icon": "gift"
+                "icon": "window"
+            },
+            {
+                "title": "Verbs History",
+                "slug": "verbs-history",
+                "icon": "book-open"
+            },
+            {
+                "title": "Verbs Livewire",
+                "slug": "verbs-livewire",
+                "icon": "bolt"
             }
         ]
     }

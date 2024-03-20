@@ -1,14 +1,18 @@
-It's incredibly helpful to understand that events influence states first, and models last.
+It's incredibly helpful to understand that events influence states first, and models last. Events affect states in memory, so they are available before they are persisted to the DB.
 
-Our [event lifecycle](/docs/technical/event-lifecycle) was built to emphasize this: before we even fire an event, we check you are authorized to do so, we then check its validation against the state, and the first place the data is applied is to the state. The LAST method in the event lifecycle is the `handle()` method, which is where you modify your model.
+## Events -> States -> Models
 
-Though it's not required, we order our event functions in the order they're called in the event lifecycle.
+Our [event lifecycle](/docs/technical/event-lifecycle) was built to emphasize this: before we even fire an event, we can check you are authorized to do so, we can then check its validation against the state, and the first place where your event data is applied is to the state. The LAST method in the event lifecycle is the `handle()` method, which is where you modify your model.
+
+Though it's not required, we find it's good practice to order our event functions in the order they're executed in the event lifecycle.
+
+## Leveraging the State
 
 States allow you to complete your complex calculations and business logic away from you models, radically reducing database query overhead.
 
 Here's a simple example of a nondescript game where players exchange money. The `PlayerTransaction` event fires:
 
-```
+```php
 public function apply(PlayerState $state)
 {
     $state->wealth += $this->amount;

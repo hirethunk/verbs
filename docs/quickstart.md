@@ -1,5 +1,6 @@
 Let's start with an example of a Subscription service, where a customer begins a free trial.
 
+<!-- @todo needs to be updated overall-->
 <!-- @todo I think this is a good example, but it would be nice if we could think of an example
 that anyone could do when they first get verbs
 i.e. in this example, you would have to make a subscription model with various fields for this to actually work-->
@@ -61,7 +62,7 @@ CustomerBeganTrial::fire(customer_id: 1);
 
 ## Compiling event data using states
 
-[States](/docs/getting-started/states) in Verbs are simple PHP objects containing data which is mutated over time by events.
+[States](/docs/reference/states) in Verbs are simple PHP objects containing data which is mutated over time by events.
 
 Let's assume we want to prevent a customer from signing up for a free trial if they have already signed up for one in the past year.
 
