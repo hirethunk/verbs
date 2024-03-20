@@ -73,7 +73,7 @@ Verbs::commit();
 ExampleState::load($id)->event_count // = 1
 ```
 
-If you have multiple states that need to be updates in one event, you can load both in the `apply()` hook, or even write separate, descriptive apply methods:
+If you have multiple states that need to be updated in one event, you can load both in the `apply()` hook, or even write separate, descriptive apply methods:
 
 ```php
 public function applyToGameState(GameState $state) {}
@@ -115,5 +115,7 @@ You can call `load()` multiple times without worrying about the performance hit 
 All state instances are singletons, scoped to an [id](/docs/technical/ids). i.e. say we had a Card Game app--if we apply a `CardDiscarded` event, we make sure only the `CardState` state with its particular `card_state_id` is affected.
 
 We find it a helpful rule of thumb to pair your states to your models. States are there to manage event data in memory, which frees up your models to better serve your frontfacing UI needs.
+
+That said: if you ever find yourself storing complex, nested, multi-faceted data in arrays, collections, or objects on your state, you __probably__ need another state. Particularly if the data in those collections, arrays, or objects is ever going to change.
 
 Read more about the role states play in [State-first development](/docs/techniques/state-first-development).
