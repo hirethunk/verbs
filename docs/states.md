@@ -81,7 +81,7 @@ public function applyToGameState(GameState $state) {}
 public function applyToPlayerState(PlayerState $state) {}
 ```
 
-### Validating Event data in your State
+### Validating Event data using your State
 
 It's possible to use your state to determine whether or not you want to fire your event in the first place.
 We've added a `validate()` hook for these instances. You can use `validate()` to check against properties in the state; if it returns false, the event will not fire.
@@ -110,7 +110,7 @@ ExampleState::load($state_id);
 
 You can call `load()` multiple times without worrying about the performance hit of multiple database queries. The state is loaded once and then kept in memory. Even as you `apply()` events, it's the same, in-memory copy that's being updated, which allows for real-time updates to the state without additional database overhead.
 
-## What should be a state?
+## What should be a State?
 
 All state instances are singletons, scoped to an [id](/docs/technical/ids). i.e. say we had a Card Game app--if we apply a `CardDiscarded` event, we make sure only the `CardState` state with its particular `card_state_id` is affected.
 
