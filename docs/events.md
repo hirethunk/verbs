@@ -74,17 +74,34 @@ You can call `MyEvent::commit()` as well, which will both fire and commit an eve
 
 Use the `handle()` method included in your event to update your chosen database / models / UI data.
 
-## Firing More Events
+```php
+class CustomerRenewedSubscription extends Event
+{
+    #[StateId(CustomerState::class)]
+    public int $customer_id;
+
+    public function handle()
+    {
+        Subscription::find($this->customer_id)
+            ->update([
+                'renewed_at' => now(),
+                'expires_at' => now()->addYear(),
+            ]);
+    }
+}
+```
+
+## Firing additional Events
 
 Sometimes you'll want your event to trigger subsequent events. The `fired()` hook executes in memory after the event fires but before its stored in the database. This allows your state to take care of any changes from your first event, and allows you to use the updated state in your next event.
+
+### Firing during Replays
+
+During a replay, the system isn't "firing" the event in the original sense (i.e., it's not going through the initial logic that might include checks, validations, or triggering of additional side effects like sending one-time-notifications). Instead, it directly applies the changes recorded in the event store.
 
 ## Replaying Events
 
 <!-- @todo description -->
-
-### A note about firing
-
-During a replay, the system isn't "firing" the event in the original sense (i.e., it's not going through the initial logic that might include checks, validations, or triggering of additional side effects like sending one-time-notifications). Instead, it directly applies the changes recorded in the event store.
 
 ## Executing a Replay
 
@@ -94,14 +111,17 @@ To replay your events, use the built-in artisan command:
 php artisan verbs:replay
 ```
 
-<!-- @todo unless replaying / once -->
-
 ### Warning!
 
 Verbs does not reset any model data that might be created in your event handlers.
 Be sure to either reset that data before replaying, or confirm that all `handle()` calls are idempotent.
 Replaying events without thinking thru the consequences can have VERY negative side-effects.
 
-<!-- @todo how to know its ok to replay -->
+### Preparing your app for a replay
 
-See also: [Metadata](technical/metadata),
+If you're replaying events, you probably want to truncate all the data that is created by your event handlers. If you don't, you may end up with lots of duplicate data.
+
+<!-- @todo more on how to know its ok to replay -->
+<!-- @todo unless replaying / once -->
+
+See also: Event [Metadata](technical/metadata),

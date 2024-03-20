@@ -1,4 +1,3 @@
-
 ### `#[StateId]`
 
 Link your event to its state with the `StateId` attribute

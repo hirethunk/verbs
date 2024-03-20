@@ -2,7 +2,7 @@ Let's start with an example of a Subscription service, where a customer begins a
 
 <!-- @todo needs to be updated overall-->
 <!-- @todo I think this is a good example, but it would be nice if we could think of an example
-that anyone could do when they first get verbs
+that someone could fully implement when they first get verbs
 i.e. in this example, you would have to make a subscription model with various fields for this to actually work-->
 
 ## Requirements
@@ -91,9 +91,6 @@ We can now add a few things to our event to take advantage of our new state:
     - If the validate method returns `true`, the event can be fired.
     - If it returns `false` or throws an exception, the event will not be fired.
 - We can add an `apply()` method which accepts an instance of `CustomerState` to mutate the state when our event fires.
-
-
-- thanks
 
 ```php
 class CustomerBeganTrial extends Event
