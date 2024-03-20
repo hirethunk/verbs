@@ -10,8 +10,7 @@ You may also use ULIDs or UUIDs instead; this can be configured in `vendor/hiret
 
 ## Snowflakes in Verbs
 
-Verbs uses [`glhd/bits`](https://github.com/glhd/bits) under the hood, and you can use it too. Bits makes
-it easy to use Snowflakes in Laravel.
+Verbs uses [`glhd/bits`](https://github.com/glhd/bits) under the hood, and you can use it too. Bits makes it easy to use Snowflakes in Laravel.
 
 A helper method you can use to generate a snowflake right out of the box: `snowflake_id()`
 

@@ -2,7 +2,7 @@ States in Verbs are simple PHP objects containing data which is mutated over tim
 
 ## A Mental Model
 
-Over time, you'll find your own analogue to improve your mental model of what a state is. This helps you understand when you need a state, and which events it needs to care about.
+Over time, you'll find your own analogue to improve your mental model of what a state does. This helps you understand when you need a state, and which events it needs to care about.
 
 Here are some to start:
 
@@ -49,19 +49,19 @@ Use the `apply()` [event hook](/docs/technical/event-lifecycle) with your state 
 
 ```php
 // ** in the event **
-class ExampleEvent class extends Event
+class IncrementCount class extends Event
 {
-    #[StateId(ExampleState::class)]
-    public int $example_state_id;
+    #[StateId(CountState::class)]
+    public int $example_id;
 
-    public function apply(ExampleState $state)
+    public function apply(CountState $state)
     {
         $state->event_count++;
     }
 }
 
 // ** in the State **
-class ExampleState extends State
+class CountState extends State
 {
     public $event_count = 0;
 }
@@ -69,9 +69,9 @@ class ExampleState extends State
 // ** in a file or test **
 $id = snowflake_id();
 
-ExampleEvent::fire(example_state_id: $id);
+IncrementCount::fire(example_id: $id);
 Verbs::commit();
-ExampleState::load($id)->event_count // = 1
+CountState::load($id)->event_count // = 1
 ```
 
 If you have multiple states that need to be updated in one event, you can load both in the `apply()` hook, or even write separate, descriptive apply methods:
@@ -99,7 +99,7 @@ public function validate()
 }
 ```
 
-You can now see how we use the state to hold a record of event data--how we can `apply()` event data to a particular state, and how we can `validate()` the event should be fired by referencing that same state data.
+You can now see how we use the state to hold a record of event data--how we can `apply()` event data to a particular state, and how we can `validate()` whether the event should be fired by referencing that same state data.
 These and other hooks that helps us maximize our events and states are located in [event lifecycle](/docs/technical/event-lifecycle).
 
 ## Loading a State
@@ -114,7 +114,7 @@ You can call `load()` multiple times without worrying about the performance hit 
 
 You may want a state that only needs one iteration across the entire application. This is a singleton state; singleton states require no id, since there is no need to differentiate among state instances.
 
-In our events that apply to a singleton state, we simply need to use the [AppliesToSingletonState](@todo) attribute.
+In our events that apply to a singleton state, we simply need to use the [`AppliesToSingletonState`](/docs/technical/attributes#content-appliestosingletonstate) attribute.
 
 ```php
 #[AppliesToSingletonState(CountState::class)]
@@ -127,13 +127,13 @@ class IncrementCount extends Event
 }
 ```
 
-This event uses AppliesToSingletonState to tell Verbs that it should always be applied to a single CountState across the entire application (as opposed to having different counts for different situations).
+This event uses `AppliesToSingletonState` to tell Verbs that it should always be applied to a single `CountState` across the entire application (as opposed to having different counts for different situations).
 
 <!-- @todo state collections -->
 
 ## What should be a State?
 
-All state instances are singletons, scoped to an [id](/docs/technical/ids). i.e. say we had a Card Game app--if we apply a `CardDiscarded` event, we make sure only the `CardState` state with its particular `card_state_id` is affected.
+All state instances are singletons, scoped to an [id](/docs/technical/ids). i.e. say we had a Card Game app--if we apply a `CardDiscarded` event, we make sure only the `CardState` state with its globablly unique `card_id` is affected.
 
 We find it a helpful rule of thumb to pair your states to your models. States are there to manage event data in memory, which frees up your models to better serve your frontfacing UI needs.
 

@@ -31,7 +31,7 @@ php artisan migrate
 
 ## Firing your first event
 
-To generate an event, use the built-in artisan command
+To generate an [event](/docs/reference/events), use the built-in artisan command:
 
 ```shell
 php artisan verbs:event CustomerBeganTrial
@@ -62,7 +62,7 @@ CustomerBeganTrial::fire(customer_id: 1);
 
 ## Compiling event data using states
 
-[States](/docs/reference/states) in Verbs are simple PHP objects containing data which is mutated over time by events.
+[States](/docs/reference/states) in Verbs are simple PHP objects containing data which is mutated over time by events. We can use our state data to verify event validation, perform data calculations, and ultimately save on DB requests.
 
 Let's assume we want to prevent a customer from signing up for a free trial if they have already signed up for one in the past year.
 
@@ -86,11 +86,13 @@ class CustomerState extends State
 
 We can now add a few things to our event to take advantage of our new state:
 
-- We can add a `#[StateId(CustomerState::class)` [attribute](/docs/technical/attributes) to our `$customer_id` property telling Verbs that we want to look up the `CustomerState` using this ID.
+- We can add a `#[StateId(CustomerState::class)` [attribute](/docs/technical/attributes) to our `$customer_id` property telling Verbs that we want to look up the `CustomerState` using this [globally unique ID](/docs/technical/ids).
 - We can add a `validate()` method which accepts an instance of `CustomerState`.
     - If the validate method returns `true`, the event can be fired.
     - If it returns `false` or throws an exception, the event will not be fired.
 - We can add an `apply()` method which accepts an instance of `CustomerState` to mutate the state when our event fires.
+
+You can read more about `apply`, `validate`, and other event hooks in [event lifecycle](docs/technical/event-lifecycle).
 
 ```php
 class CustomerBeganTrial extends Event

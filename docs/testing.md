@@ -48,9 +48,9 @@ BankAccountState::factory()
     );
 ```
 
-- If you accidentally pass an ID into both `for()` and `create()`, `create()` takes precedence.
+- If you accidentally pass an ID into both `id()` and `create()`, `create()` takes precedence.
 
-Or, in the case of a singleton state:
+Or, in the case of a [singleton state](/docs/reference/states#content-singleton-states):
 
 ```php
 ChurnState::factory()->create(['churn' => 40]);
@@ -77,8 +77,7 @@ class ExampleStateFactory extends StateFactory
 
 ### Factory Methods
 
-<!-- @todo maybe have a TOC list of methods at the top under "factory methods" -->
-Some methods accept Verbs [IDs](@todo), which, written longform, could be any of these types: `Bits|UuidInterface|AbstractUid|int|string`.
+Some methods accept Verbs [IDs](/docs/technical/ids), which, written longform, could be any of these types: `Bits|UuidInterface|AbstractUid|int|string`.
 
 For brevity, this will be abbreviated in the following applicable methods as `Id`.
 
@@ -100,7 +99,7 @@ UserState::factory()->id(123)->create();
 
 #### `singleton()`
 
-Mark that this is a [singleton state](@todo) (cannot be used with `count`).
+Mark that this is a singleton state (cannot be used with `count`).
 
 ```php
 UserState::factory()->singleton()->create();
@@ -141,9 +140,15 @@ class ExampleStateFactory extends StateFactory
 ExampleState::factory()->confirmed()->create(); // ->confirmed will be true
 ```
 
-If you'd like to chain behavior after your Factory `make()` or `create()` do so in your `configure()` method:
+If you'd like to chain behavior after your Factory `create()` do so in your `configure()` method:
 
-#### `afterMaking` and `afterCreating`
+#### `configure()`
+
+The configure method in your custom factory allows you to set `afterMaking` and `afterCreating` effects (see [laravel docs](https://laravel.com/docs/11.x/eloquent-factories#factory-callbacks)).
+
+<!-- @todo does configure do anything else? -->
+
+##### `afterMaking()` & `afterCreating()`
 
 ```php
 class UserStateFactory extends StateFactory
@@ -155,9 +160,13 @@ class UserStateFactory extends StateFactory
         $this->afterCreating(function (UserState $state) {
             UserJoinedTeam::fire(
                 user_id: $state->id,
-                 team_id: $this->team->id,
+                team_id: $this->team->id,
             );
         });
     }
 }
 ```
+
+#### `definition()`
+
+Returns an array of default property values for your custom state factory whenever you `create()`.

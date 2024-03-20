@@ -1,12 +1,15 @@
 ### `#[StateId]`
 
-Link your event to its state with the `StateId` attribute
+Link your event to its state(s) with the `StateId` attribute
 
 ```php
 class YourEvent extends Event
 {
-    #[StateId(YourState::class)]
-    public int $your_state_id,
+    #[StateId(GameState::class)]
+    public int $game_id;
+
+    #[StateID(PlayerState::class)]
+    public int $player_id;
 }
 ```
 

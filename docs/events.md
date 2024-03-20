@@ -1,14 +1,16 @@
-In Verbs, Events are the source of truth for your data changes.
+In Verbs, Events are the source of your data changes. Before we fire an event, we give it all the data we need it to track, and we describe in the event exactly what it should do with that data once its been fired.
 
 ## Naming Events
 
-Describe **what** (verb) happened to **who** (noun)
+Describe **what** (verb) happened to **who** (noun), in the format of `WhoWhat`
 
 `OrderCancelled`, `CarLocked`, `HolyGrailFound`
 
+Importantly, events _happened_, so they should be past tense.
+
 ## Generating an Event
 
-To generate an event, use the built-in artisan command
+To generate an event, use the built-in artisan command:
 
 ```shell
 php artisan verbs:event CustomerBeganTrial
@@ -66,9 +68,9 @@ Here's when a `commit()` occurs:
 - at the end of every console command
 - at the end of every queued job
 
-In [tests](testing), you'll need to call `Verbs::commit()` indepedently.
+In [tests](testing), you'll need to call `Verbs::commit()` manually.
 
-You can call `MyEvent::commit()` as well, which will both fire and commit an event, which is useful when you need to return the result of an event, such as a store method on a controller.
+You can call `MyEvent::commit()` as well (instead of `fire()`), which will both fire AND commit an event, which is useful when you need to return the result of an event, such as a store method on a controller.
 
 ## `Handle()`
 
@@ -93,11 +95,11 @@ class CustomerRenewedSubscription extends Event
 
 ## Firing additional Events
 
-Sometimes you'll want your event to trigger subsequent events. The `fired()` hook executes in memory after the event fires but before its stored in the database. This allows your state to take care of any changes from your first event, and allows you to use the updated state in your next event.
+Sometimes you'll want your event to trigger subsequent events. The `fired()` hook executes in memory after the event fires but before its stored in the database. This allows your [state](states) to take care of any changes from your first event, and allows you to use the updated state in your next event.
 
 ### Firing during Replays
 
-During a replay, the system isn't "firing" the event in the original sense (i.e., it's not going through the initial logic that might include checks, validations, or triggering of additional side effects like sending one-time-notifications). Instead, it directly applies the changes recorded in the event store.
+During a [replay](#content-replaying-events), the system isn't "firing" the event in the original sense (i.e., it's not going through the initial logic that might include checks, validations, or triggering of additional side effects like sending one-time-notifications). Instead, it directly applies the changes recorded in the event store.
 
 ## Replaying Events
 
@@ -117,11 +119,17 @@ Verbs does not reset any model data that might be created in your event handlers
 Be sure to either reset that data before replaying, or confirm that all `handle()` calls are idempotent.
 Replaying events without thinking thru the consequences can have VERY negative side-effects.
 
+Because of this, upon executing the `verbs:replay` command we will make you confirm your choice, and confirm _again_ if you're in production.
+
 ### Preparing your app for a replay
 
 If you're replaying events, you probably want to truncate all the data that is created by your event handlers. If you don't, you may end up with lots of duplicate data.
 
 <!-- @todo more on how to know its ok to replay -->
 <!-- @todo reference/document Verbs::unlessReplaying & Once attribute -->
+
+### Wormholes
+
+When replaying events, Verbs will set the "now" timestamp for `Carbon` and `CarbonImmutable` instances to the moment the original event was stored in the database. This allows you to use the `now()` helper in your event handlers easily. You can disable this feature if you'd like in `vendor/hirethunk/verbs/config/verbs.php`.
 
 See also: Event [Metadata](technical/metadata),
