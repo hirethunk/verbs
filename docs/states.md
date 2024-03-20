@@ -48,6 +48,7 @@ Like our examples suggest, we use states for tracking changes across our events.
 Use the `apply()` [event hook](/docs/technical/event-lifecycle) with your state to update any data you'd like the state to track:
 
 ```php
+// ** in the event **
 class ExampleEvent class extends Event
 {
     #[StateId(ExampleState::class)]
@@ -59,13 +60,13 @@ class ExampleEvent class extends Event
     }
 }
 
+// ** in the State **
 class ExampleState extends State
 {
     public $event_count = 0;
 }
 
-// ** In a file or test **
-
+// ** in a file or test **
 $id = snowflake_id();
 
 ExampleEvent::fire(example_state_id: $id);
@@ -101,7 +102,6 @@ public function validate()
 You can now see how we use the state to hold a record of event data--how we can `apply()` event data to a particular state, and how we can `validate()` the event should be fired by referencing that same state data.
 These and other hooks that helps us maximize our events and states are located in [event lifecycle](/docs/technical/event-lifecycle).
 
-
 ## Loading a State
 
 ```php
@@ -109,6 +109,27 @@ ExampleState::load($state_id);
 ```
 
 You can call `load()` multiple times without worrying about the performance hit of multiple database queries. The state is loaded once and then kept in memory. Even as you `apply()` events, it's the same, in-memory copy that's being updated, which allows for real-time updates to the state without additional database overhead.
+
+## Singleton States
+
+You may want a state that only needs one iteration across the entire application. This is a singleton state; singleton states require no id, since there is no need to differentiate among state instances.
+
+In our events that apply to a singleton state, we simply need to use the [AppliesToSingletonState](@todo) attribute.
+
+```php
+#[AppliesToSingletonState(CountState::class)]
+class IncrementCount extends Event
+{
+    public function apply(CountState $state)
+    {
+        $state->count++;
+    }
+}
+```
+
+This event uses AppliesToSingletonState to tell Verbs that it should always be applied to a single CountState across the entire application (as opposed to having different counts for different situations).
+
+<!-- @todo state collections -->
 
 ## What should be a State?
 

@@ -39,10 +39,10 @@ BankAccountState::factory()->create(
     id: $bank_account_id
 );
 
-// Or, using `for()` syntax:
+// Or, using `id()` syntax:
 
 BankAccountState::factory()
-    ->for($bank_account_id)
+    ->id($bank_account_id)
     ->create(
         data: ['balance' => 1337]
     );
@@ -56,7 +56,7 @@ Or, in the case of a singleton state:
 ChurnState::factory()->create(['churn' => 40]);
 ```
 
-Next, we'll get into how these factories work, and continue after with some [more Verbs factory methods](testing#content-more-methods) you may already be familiar with from Eloquent factories.
+Next, we'll get into how these factories work, and continue after with some [Verbs factory methods](testing#content-factory-methods) you may already be familiar with from Eloquent factories.
 
 ### `VerbsStateInitialized`
 
@@ -75,21 +75,58 @@ class ExampleStateFactory extends StateFactory
 
 `VerbsStateInitialized` implements the `CommitsImmediately` interface detailed [above](testing#content-verbscommit), so if you change from this initial event makes sure to extend the interface on your replacement event.
 
-### More Methods
+### Factory Methods
 
-<!-- @todo break these up into individual items, like collection methods in laravel docs -->
 <!-- @todo maybe have a TOC list of methods at the top under "factory methods" -->
+Some methods accept Verbs [IDs](@todo), which, written longform, could be any of these types: `Bits|UuidInterface|AbstractUid|int|string`.
+
+For brevity, this will be abbreviated in the following applicable methods as `Id`.
+
+#### `count(int $count)`
+
+Number of states to create. Returns a `StateCollection`.
 
 ```php
-UserState::factory()
-  ->count(3) // Number of states to create (if provided will return a collection)
-  ->id(123) // Set the state ID explicitly (cannot be used with count)
-  ->singleton() // Mark that this is a singleton state (cannot be used with count)
-  ->state([ /* state data */ ]) // Default data (will be overridden by create)
-  ->create([ /* state data */ ]); // Explicit state data
+UserState::factory()->count(3)->create();
 ```
 
-The state function is mostly useful for custom factories. Something like:
+#### `id(Id $id)`
+
+Set the state ID explicitly (cannot be used with `count`).
+
+```php
+UserState::factory()->id(123)->create();
+```
+
+#### `singleton()`
+
+Mark that this is a [singleton state](@todo) (cannot be used with `count`).
+
+```php
+UserState::factory()->singleton()->create();
+```
+
+#### `state(callable|array $data)`
+
+Default data (will be overridden by `create`).
+
+```php
+UserState::factory()->state([ /* state data */ ])->create();
+```
+
+#### `create(Id|null $id = null))`
+
+Explicit state data. Returns a `State` or `StateCollection`.
+
+```php
+UserState::factory()->create([ /* state data */ ]);
+```
+
+The state function is mostly useful for custom factories.
+
+<!-- @todo figure out how custom factories work -->
+
+Something like:
 
 ```php
 class ExampleStateFactory extends StateFactory
@@ -106,16 +143,21 @@ ExampleState::factory()->confirmed()->create(); // ->confirmed will be true
 
 If you'd like to chain behavior after your Factory `make()` or `create()` do so in your `configure()` method:
 
-### `afterMaking` and `afterCreating`
+#### `afterMaking` and `afterCreating`
 
 ```php
-public function configure(): void
+class UserStateFactory extends StateFactory
 {
-    $this->afterCreating(function (UserState $state) {
-        UserJoinedTeam::fire(
-            user_id: $state->id,
-            team_id: $this->team->id,
-        );
-    });
+    protected Team $team;
+
+    public function configure(): void
+    {
+        $this->afterCreating(function (UserState $state) {
+            UserJoinedTeam::fire(
+                user_id: $state->id,
+                 team_id: $this->team->id,
+            );
+        });
+    }
 }
 ```
