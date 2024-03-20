@@ -103,7 +103,7 @@ During a replay, the system isn't "firing" the event in the original sense (i.e.
 
 <!-- @todo description -->
 
-## Executing a Replay
+### Executing a Replay
 
 To replay your events, use the built-in artisan command:
 
@@ -122,6 +122,6 @@ Replaying events without thinking thru the consequences can have VERY negative s
 If you're replaying events, you probably want to truncate all the data that is created by your event handlers. If you don't, you may end up with lots of duplicate data.
 
 <!-- @todo more on how to know its ok to replay -->
-<!-- @todo unless replaying / once -->
+<!-- @todo reference/document Verbs::unlessReplaying & Once attribute -->
 
 See also: Event [Metadata](technical/metadata),
