@@ -91,3 +91,4 @@ class YourEvent extends Event
     }
 }
 ```
+(You may also use `Verbs::unlessReplaying`, mentioned in [one-time effects](/docs/reference/events/#content-one-time-effects))

@@ -104,8 +104,12 @@ These and other hooks that helps us maximize our events and states are located i
 
 ## Loading a State
 
+All state instances are singletons, scoped to an [id](/docs/technical/ids). i.e. say we had a Card Game app--if we apply a `CardDiscarded` event, we make sure only the `CardState` state with its globablly unique `card_id` is affected.
+
+To retrieve the State, simply call load:
+
 ```php
-ExampleState::load($state_id);
+CardState::load($card_id);
 ```
 
 You can call `load()` multiple times without worrying about the performance hit of multiple database queries. The state is loaded once and then kept in memory. Even as you `apply()` events, it's the same, in-memory copy that's being updated, which allows for real-time updates to the state without additional database overhead.
@@ -129,13 +133,100 @@ class IncrementCount extends Event
 
 This event uses `AppliesToSingletonState` to tell Verbs that it should always be applied to a single `CountState` across the entire application (as opposed to having different counts for different situations).
 
-<!-- @todo state collections -->
+### Loading the singleton state
+
+Since singleton's require no IDs, simply call the `singleton()` method.
+
+```php
+YourState::singleton();
+```
+
+## State Collections
+
+Your events may sometimes need to affect multiple states.
+
+Verbs supports State Collections out of the box, with several convenience methods:
+
+```php
+$event_with_single_state->state(); // State
+$event_with_multiple_states->states(); // StateCollection
+```
+
+### `alias(?string $alias, State $state)`
+
+Allows you to set a shorthand name for any of your states.
+
+```php
+$collection->alias('foo', $state_1);
+```
+
+You can also set state aliases by setting them in the optional params of some of our [attributes](/docs/technical/attributes): any `#[AppliesTo]` attribute, and `#[StateId]`.
+
+### `get($key, $default = null)`
+
+Like the `get()` [collection method](https://laravel.com/docs/11.x/collections#method-get), but also preserves any aliases. Returns a state.
+
+```php
+$collection->get(0); // returns the first state in the collection
+$collection->get('foo'); // returns the state with the alias
+```
+
+### `ofType(string $state_type)`
+
+Returns a state collection with only the state items of the given type.
+
+```php
+$collection->ofType(FooState::class);
+```
+
+### `firstOfType()`
+
+Returns the `first()` state item with the given type.
+
+```php
+$collection->firstOfType(FooState::class);
+```
+
+### `withId(Id $id)`
+
+(`Id` is a stand-in for `Bits|UuidInterface|AbstractUid|int|string`)
+
+Returns the collection with only the state items with the given id.
+
+```php
+$collection->withId(1);
+```
+
+### `filter(?callable $callback = null)`
+
+Like the `filter()` collection method, but also preserves any aliases. Returns a state collection.
+
+```php
+$activeStates = $stateCollection->filter(function ($state) {
+    return $state->isActive;
+});
+```
 
 ## What should be a State?
 
-All state instances are singletons, scoped to an [id](/docs/technical/ids). i.e. say we had a Card Game app--if we apply a `CardDiscarded` event, we make sure only the `CardState` state with its globablly unique `card_id` is affected.
+We find it a helpful rule of thumb to pair your states to your models. States are there to manage event data in memory, which frees up your models to better serve your frontfacing UI needs. Once you've converted to GUIDs, you can use your state instance's id to correspond directly to a model instance.
 
-We find it a helpful rule of thumb to pair your states to your models. States are there to manage event data in memory, which frees up your models to better serve your frontfacing UI needs. Once you've converted to GUIDs, you can have your model instance id correspond directly to a state instance.
+```php
+class FooCreated class
+{
+    #[StateId(FooState::class)]
+    public int $id;
+
+    // etc.
+
+    public function handle()
+    {
+        Foo::create(
+            snowflake: $this->id
+        );
+    }
+}
+```
 
 That said: if you ever find yourself storing complex, nested, multi-faceted data in arrays, collections, or objects on your state, you __probably__ need another state. Particularly if the data in those collections, arrays, or objects is ever going to change.
 

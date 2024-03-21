@@ -104,15 +104,13 @@ During a [replay](#content-replaying-events), the system isn't "firing" the even
 
 ## Replaying Events
 
-<!-- @todo -->
-
-### What is Replaying?
+Replaying events will rebuild your application from scratch by running through all recorded events in chronological order. Replaying can be used to restore the state after a failure, to update read models, or to apply changes in business logic retroactively.
 
 ### When to Replay?
 
-### Why would you Replay?
+- After changing your system or architecture, replaying would populate the new system with the correct historical data.
 
-<!-- @todo -->
+- For debugging, auditing, or any such situation where you want to restore your app to a point in time, Replaying events can reconstruct the state of the system at any point in time.
 
 ### Executing a Replay
 
@@ -122,7 +120,11 @@ To replay your events, use the built-in artisan command:
 php artisan verbs:replay
 ```
 
-### Warning!
+You may also use `Verbs::replay()` in files.
+
+<!-- @todo syntax for replaying "up to a particular point" ? -->
+
+#### Warning!
 
 Verbs does not reset any model data that might be created in your event handlers.
 Be sure to either reset that data before replaying, or confirm that all `handle()` calls are idempotent.
@@ -130,13 +132,25 @@ Replaying events without thinking thru the consequences can have VERY negative s
 
 Because of this, upon executing the `verbs:replay` command we will make you confirm your choice, and confirm _again_ if you're in production.
 
-### Preparing your app for a replay
+#### Preparing for a replay
 
-If you're replaying events, you probably want to truncate all the data that is created by your event handlers. If you don't, you may end up with lots of duplicate data.
+Backup any important data--anything that's been populated or modified by events.
 
-<!-- @todo more on how to know its ok to replay -->
+Truncate all the data that is created by your event handlers. If you don't, you may end up with lots of duplicate data.
 
-<!-- @todo reference/document Verbs::unlessReplaying & Once attribute -->
+#### One-time effects
+
+You'll want to tell verbs when effects should NOT trigger on replay (like sending a welcome email).
+
+You may use `unlessReplaying`:
+
+```php
+Verbs::unlessReplaying(function () {
+    // one-time effect
+});
+```
+
+Or the `#[Once]` [attribute](/docs/technical/attributes#content-once).
 
 ### Wormholes
 

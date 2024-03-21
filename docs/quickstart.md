@@ -132,7 +132,6 @@ Say you have a subscription eloquent model with database columns `customer_id` a
 public function handle()
 {
     Subscription::create([
-
         'customer_id' => $this->customer_id,
         'expires_at' => now()->addDays(30),
     ]);
