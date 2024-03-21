@@ -1,6 +1,8 @@
 Let's start with an example of a Subscription service, where a customer begins a free trial.
 
-<!-- @todo daniel to review; I put some time into this--this is simpler I think, should be easier to follow along-->
+<!-- @todo daniel to review
+
+I put some time into this--I think it's good and simple, supports state-first development, and should be easier to follow along-->
 
 ## Requirements
 

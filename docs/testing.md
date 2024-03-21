@@ -123,7 +123,11 @@ UserState::factory()->create([ /* state data */ ]);
 
 The state function is mostly useful for custom factories.
 
-<!-- @todo figure out how custom factories work -->
+<!-- @todo custom factories: I don't think we can do this yet. It seems like you can have a custom factory inside your state file, but you can't have a custom state factory in its own file, which would be ideal.
+
+You can see an example of the current limitation in FactoryTest.php
+
+The plus side is, we could just withdraw the custom factory material for the time being and bring them back when its implemented-->
 
 Something like:
 
@@ -135,6 +139,8 @@ class ExampleStateFactory extends StateFactory
     return $this->state(['confirmed' => true]);
   }
 }
+
+<!-- @todo custom factories: I can't seem to replicate this syntax -->
 
 // Lets you do:
 ExampleState::factory()->confirmed()->create(); // ->confirmed will be true

@@ -1,3 +1,5 @@
+<!-- @todo this is all very technical, might use rewording -->
+
 <!--notes-->
 
 <!--hydration
@@ -34,8 +36,6 @@ When you `load()` a State (or retrieve a `singleton()` state)
 ## Dehydration
 
 When `Verbs::commit()` is called, the event queue is processed and all affected state values are serialized and written to the `VerbSnapshot` table in the database.
-
-<!-- @todo this is all very technical, might use rewording -->
 
 ## Serialization
 
