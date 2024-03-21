@@ -74,7 +74,8 @@ You can call `MyEvent::commit()` as well (instead of `fire()`), which will both 
 
 ## `Handle()`
 
-Use the `handle()` method included in your event to update your chosen database / models / UI data.
+Use the `handle()` method included in your event to update your database / models / UI data.
+You can do most of your complex business logic by using your [state](/docs/techniques/state-first-development), which allows you to optimize your eloquent models to handle your front-facing data.
 
 ```php
 class CustomerRenewedSubscription extends Event
@@ -103,7 +104,15 @@ During a [replay](#content-replaying-events), the system isn't "firing" the even
 
 ## Replaying Events
 
-<!-- @todo description -->
+<!-- @todo -->
+
+### What is Replaying?
+
+### When to Replay?
+
+### Why would you Replay?
+
+<!-- @todo -->
 
 ### Executing a Replay
 
@@ -126,6 +135,7 @@ Because of this, upon executing the `verbs:replay` command we will make you conf
 If you're replaying events, you probably want to truncate all the data that is created by your event handlers. If you don't, you may end up with lots of duplicate data.
 
 <!-- @todo more on how to know its ok to replay -->
+
 <!-- @todo reference/document Verbs::unlessReplaying & Once attribute -->
 
 ### Wormholes

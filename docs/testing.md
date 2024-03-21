@@ -146,8 +146,6 @@ If you'd like to chain behavior after your Factory `create()` do so in your `con
 
 The configure method in your custom factory allows you to set `afterMaking` and `afterCreating` effects (see [laravel docs](https://laravel.com/docs/11.x/eloquent-factories#factory-callbacks)).
 
-<!-- @todo does configure do anything else? -->
-
 ##### `afterMaking()` & `afterCreating()`
 
 ```php

@@ -135,7 +135,7 @@ This event uses `AppliesToSingletonState` to tell Verbs that it should always be
 
 All state instances are singletons, scoped to an [id](/docs/technical/ids). i.e. say we had a Card Game app--if we apply a `CardDiscarded` event, we make sure only the `CardState` state with its globablly unique `card_id` is affected.
 
-We find it a helpful rule of thumb to pair your states to your models. States are there to manage event data in memory, which frees up your models to better serve your frontfacing UI needs.
+We find it a helpful rule of thumb to pair your states to your models. States are there to manage event data in memory, which frees up your models to better serve your frontfacing UI needs. Once you've converted to GUIDs, you can have your model instance id correspond directly to a state instance.
 
 That said: if you ever find yourself storing complex, nested, multi-faceted data in arrays, collections, or objects on your state, you __probably__ need another state. Particularly if the data in those collections, arrays, or objects is ever going to change.
 
