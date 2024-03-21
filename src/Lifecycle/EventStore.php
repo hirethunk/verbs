@@ -142,6 +142,8 @@ class EventStore implements StoresEvents
                 'event_id' => Id::from($event->id),
                 'state_id' => Id::from($state->id),
                 'state_type' => $state::class,
+                'created_at' => now(),
+                'updated_at' => now(),
             ]))
             ->all();
     }

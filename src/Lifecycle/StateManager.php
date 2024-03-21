@@ -46,7 +46,7 @@ class StateManager
             return $state;
         }
 
-        if ($state = $this->snapshots->load($id)) {
+        if ($state = $this->snapshots->load($id, $type)) {
             if (! $state instanceof $type) {
                 throw new UnexpectedValueException(sprintf('Expected State <%d> to be of type "%s" but got "%s"', $id, class_basename($type), class_basename($state)));
             }

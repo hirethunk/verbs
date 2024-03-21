@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::create('verb_events', function (Blueprint $table) {
+        Schema::create($this->tableName(), function (Blueprint $table) {
             $table->snowflakeId();
 
             $table->string('type')->index();
@@ -21,6 +21,11 @@ return new class extends Migration
 
     public function down()
     {
-        Schema::dropIfExists('verb_events');
+        Schema::dropIfExists($this->tableName());
+    }
+
+    protected function tableName(): string
+    {
+        return config('verbs.tables.events', 'verb_events');
     }
 };

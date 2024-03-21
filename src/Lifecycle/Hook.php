@@ -100,19 +100,19 @@ class Hook
         }
     }
 
-    public function handle(Container $container, Event $event, ?State $state = null): mixed
+    public function handle(Container $container, Event $event, StateCollection $states): mixed
     {
         if ($this->runsInPhase(Phase::Handle)) {
-            return $container->call($this->callback, $this->guessParameters($event, $state));
+            return $container->call($this->callback, $this->guessParameters($event, states: $states));
         }
 
         return null;
     }
 
-    public function replay(Container $container, Event $event, ?State $state): void
+    public function replay(Container $container, Event $event, StateCollection $states): void
     {
         if ($this->runsInPhase(Phase::Replay)) {
-            app(Wormhole::class)->replay($event, fn () => $container->call($this->callback, $this->guessParameters($event, $state)));
+            app(Wormhole::class)->replay($event, fn () => $container->call($this->callback, $this->guessParameters($event, states: $states)));
         }
     }
 

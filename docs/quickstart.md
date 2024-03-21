@@ -113,6 +113,7 @@ class CustomerBeganTrial extends Event
     }
 }
 ```
+
 (You can read more about `apply`, `validate`, and other event hooks, in [event lifecycle](docs/technical/event-lifecycle)).
 
 So when we execute `CustomerBeganTrial::fire(customer_id: 1);` _now_, it will allow the customer to start our free trial. But, if we were to execute it again (in less than a year), it won't fire at all.
@@ -131,6 +132,7 @@ Say you have a subscription eloquent model with database columns `customer_id` a
 public function handle()
 {
     Subscription::create([
+
         'customer_id' => $this->customer_id,
         'expires_at' => now()->addDays(30),
     ]);

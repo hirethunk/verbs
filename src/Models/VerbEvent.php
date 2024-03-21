@@ -12,8 +12,6 @@ use Thunk\Verbs\Support\Serializer;
 
 class VerbEvent extends Model
 {
-    public $table = 'verb_events';
-
     public $guarded = [];
 
     protected $casts = [
@@ -29,6 +27,11 @@ class VerbEvent extends Model
     protected ?Event $event = null;
 
     protected ?Metadata $meta = null;
+
+    public function getTable()
+    {
+        return $this->table ?? config('verbs.tables.events', 'verb_events');
+    }
 
     public function event(): Event
     {

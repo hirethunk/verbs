@@ -47,6 +47,7 @@ it('can replay events', function () {
     $GLOBALS['replay_test_counts'] = [];
     $GLOBALS['handle_count'] = 1337;
 
+    config(['app.env' => 'testing']);
     $this->artisan(ReplayCommand::class);
 
     expect(app(StateManager::class)->load($state1_id, ReplayCommandTestState::class)->count)
