@@ -136,3 +136,7 @@ public function handle()
     ]);
 }
 ```
+
+You'll also need to run `Verbs::commit()` to persist this update to the database.
+
+Read more about committing [here](/docs/reference/events#content-committing).
