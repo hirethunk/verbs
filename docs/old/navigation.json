@@ -1,23 +1,5 @@
 [
     {
-        "title": "Rewrite",
-        "slug": "rewrite",
-        "items": [
-            {
-                "title": "One",
-                "slug": "one",
-                "icon": "adjustments-horizontal",
-                "url": "/rewrite/one"
-            },
-            {
-                "title": "Two",
-                "slug": "two",
-                "icon": "banknotes",
-                "url": "/rewrite/two"
-            }
-        ]
-    },
-    {
         "title": "Getting Started",
         "slug": "getting-started",
         "items": [
