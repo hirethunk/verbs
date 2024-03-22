@@ -211,7 +211,7 @@ $activeStates = $stateCollection->filter(function ($state) {
 
 ## What should be a State?
 
-We find it a helpful rule of thumb to pair your states to your models. States are there to manage event data in memory, which frees up your models to better serve your frontfacing UI needs. Once you've converted to GUIDs, you can use your state instance's id to correspond directly to a model instance.
+We find it a helpful rule of thumb to pair your states to your models. States are there to manage event data in memory, which frees up your models to better serve your frontfacing UI needs. Once you've converted to Unique IDs, you can use your state instance's id to correspond directly to a model instance.
 
 ```php
 class FooCreated class

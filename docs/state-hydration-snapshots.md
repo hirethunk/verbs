@@ -44,7 +44,7 @@ Verbs serializes and deserializes data in order to easily store and retrieve it.
 <!-- verbatim from config -->
 Verbs uses the [Symfony Serializer component](https://symfony.com/components/Serializer) to serialize your PHP Event objects to JSON.
 
-The default normalizers should handle most stock Laravel applications, but you may need to add your own normalizers for certain object types, which you can do in `vendor/hirethunk/verbs/config/verbs.php`.
+The default normalizers should handle most stock Laravel applications, but you may need to add your own normalizers for certain object types, which you can do in `config/verbs.php`.
 <!-- // -->
 
 You can also use our interface `SerializedByVerbs` in tandem with trait `NormalizeToPropertiesAndClassName` on classes to support custom types.

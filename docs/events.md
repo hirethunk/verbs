@@ -176,6 +176,7 @@ During a [replay](#content-replaying-events), the system isn't "firing" the even
 
 ### Wormholes
 
-When replaying events, Verbs will set the "now" timestamp for `Carbon` and `CarbonImmutable` instances to the moment the original event was stored in the database. This allows you to use the `now()` helper in your event handlers easily. You can disable this feature if you'd like in `vendor/hirethunk/verbs/config/verbs.php`.
+When replaying events, Verbs will set the "now" timestamp for `Carbon` and `CarbonImmutable` instances to the moment the original event was stored in the database. This allows you to use the `now()` helper in your event handlers easily. You can disable this feature if you'd like in `config/verbs.php`.
+
 
 See also: Event [Metadata](technical/metadata)

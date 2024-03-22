@@ -53,7 +53,7 @@ You can now fire this event anywhere in your code using:
 CustomerBeganTrial::fire(customer_id: 1);
 ```
 
-(For this example we'll use a normal integer for our `customer_id`, but Event Sourcing across your app requires [GUIDs](/docs/technical/ids)).
+(For this example we'll use a normal integer for our `customer_id`, but Event Sourcing across your app requires [Unique IDs](/docs/technical/ids)).
 
 ## Utilizing States
 
