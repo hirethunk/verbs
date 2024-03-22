@@ -36,7 +36,7 @@ class RolledDice extends Event
 
 Use the `AppliesToSingletonState` on an event class to tell Verbs that it should always be applied to a single state (`CountState`) across the entire application (as opposed to having different counts for different states).
 
-Because we're using a singleton state, there is no need for the event to have a `$count_id`.
+Because we're using a [singleton state](/docs/reference/states#content-singleton-states), there is no need for the event to have a `$count_id`.
 
 ```php
 #[AppliesToSingletonState(CountState::class)]

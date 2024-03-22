@@ -72,6 +72,25 @@ In [tests](testing), you'll need to call `Verbs::commit()` manually.
 
 You can call `MyEvent::commit()` as well (instead of `fire()`), which will both fire AND commit an event, which is useful when you need to return the result of an event, such as a store method on a controller.
 
+```php
+// CustomerBeganTrial event
+public function handle()
+{
+    return Subscription::create([
+        'customer_id' => $this->customer_id,
+        'expires_at' => now()->addDays(30),
+    ]);
+}
+
+// TrialController
+{
+    public function store(TrialRequest $request) {
+        $subscription = CustomerBeganTrial::commit(customer_id: Auth::id());
+        return to_route('subscriptions.show', $subscription);
+    }
+}
+```
+
 ## `Handle()`
 
 Use the `handle()` method included in your event to update your database / models / UI data.

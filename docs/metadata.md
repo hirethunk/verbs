@@ -8,7 +8,7 @@ Verbs::createMetadataUsing(function (Metadata $metadata, Event $event) {
 });
 ```
 
-You can call this method as many times as you would like. This is particularly useful for [third-party packages](/docs/techniques/extending-verbs), allowing them to add metadata automatically.
+You can call this method as many times as you would like. This is particularly useful for third-party packages, allowing them to add metadata automatically.
 
 It's also possible to simply return an array (or Collection), and Verbs will merge that in for you:
 
@@ -18,7 +18,7 @@ Verbs::createMetadataUsing(fn () => ['team_id' => current_team_id()]);
 
 This is particularly useful for events where accompanying data is moreso about the events, and doesn't necessarily need to be a param in the event.
 
-- You can use the `Event::metadata()` method to get the metadata from the event.
+- You can use the `$event->metadata()` method to get the metadata from the event.
 
 ## Toggling Metadata
 
