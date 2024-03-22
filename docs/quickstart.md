@@ -119,7 +119,7 @@ class CustomerBeganTrial extends Event
 }
 ```
 
-(You can read more about `apply`, `validate`, and other event hooks, in [event lifecycle](docs/technical/event-lifecycle)).
+(You can read more about `apply`, `validate`, and other event hooks, in [event lifecycle](/docs/technical/event-lifecycle)).
 
 Firing `CustomerBeganTrial` _now_ will allow the customer to start our free trial. Firing it again will cause it to fail validation and not execute.
 
@@ -145,6 +145,5 @@ public function handle()
     ]);
 }
 ```
-
 
 Now, when the fired event is [committed](/docs/reference/events#content-committing) at the end of the request, a Subscription model will be created.

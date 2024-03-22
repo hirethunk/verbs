@@ -118,9 +118,9 @@ For more on this topic, see [State Hydration / Snapshots](/docs/technical/state-
 
 ## Singleton States
 
-You may want a state that only needs one iteration across the entire application. This is a singleton state; singleton states require no id, since there is no need to differentiate among state instances.
+You may want a state that only needs one iteration across the entire application--this is called a singleton state. Singleton states require no id, since there is no need to differentiate among state instances.
 
-In our events that apply to a singleton state, we simply need to use the [`AppliesToSingletonState`](/docs/technical/attributes#content-appliestosingletonstate) attribute.
+In our events that apply to a singleton state, we simply need to use the `AppliesToSingletonState` [attribute](/docs/technical/attributes#content-appliestosingletonstate).
 
 ```php
 #[AppliesToSingletonState(CountState::class)]
@@ -219,7 +219,7 @@ class FooCreated class
     #[StateId(FooState::class)]
     public int $id;
 
-    // etc.
+    // etc
 
     public function handle()
     {

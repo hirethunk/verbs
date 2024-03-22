@@ -1,4 +1,4 @@
-It's incredibly helpful to understand that events influence states first, and models last. Events affect states in memory, so they are available before they are persisted to the DB.
+It's incredibly helpful to understand that events influence states first, and models last.
 
 ## Events -> States -> Models
 
@@ -9,6 +9,8 @@ Our [event lifecycle](/docs/technical/event-lifecycle) was built to emphasize th
 Though it's not required, we find it's good practice to order our event functions in the order they're executed in the event lifecycle.
 
 ## Leveraging the State
+
+Events affect states in memory, so they are available before they are persisted to the DB.
 
 States allow you to complete your complex calculations and business logic away from you models, radically reducing database query overhead.
 

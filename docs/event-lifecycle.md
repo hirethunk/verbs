@@ -30,10 +30,10 @@ but before it's handled. This is typically used for firing additional events.
 
 ## After Fired
 
-Once the event has been fired and stored to the database, it's now safe to trigger
+Once the event has been fired and stored to the database ([committed](/docs/reference/events#content-committing)), it's now safe to trigger
 side-effects.
 
 ### Handle
 
 Use the `handle` hook to perform actions based on your event. This is often
-writing to the database (sometimes called a "projection").
+writing to the database (sometimes called a "[projection](/docs/technical/combating-jargon)").

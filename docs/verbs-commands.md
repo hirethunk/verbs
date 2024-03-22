@@ -1,3 +1,3 @@
-A Simple Livewire Command Palette for Verbs Apps
+A Simple [Livewire](https://livewire.laravel.com/) Command Palette for Verbs Apps
 
 ## Coming Soon!
