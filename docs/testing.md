@@ -113,6 +113,8 @@ Default data (will be overridden by `create`).
 UserState::factory()->state([ /* state data */ ])->create();
 ```
 
+The state function is mostly useful for [custom factories](#content-custom-factories).
+
 #### `create(Id|null $id = null))`
 
 Explicit state data. Returns a `State` or `StateCollection`.
@@ -121,32 +123,46 @@ Explicit state data. Returns a `State` or `StateCollection`.
 UserState::factory()->create([ /* state data */ ]);
 ```
 
-The state function is mostly useful for custom factories.
+## Custom Factories
 
-<!-- @todo custom factories: I don't think we can do this yet. It seems like you can have a custom factory inside your state file, but you can't have a custom state factory in its own file, which would be ideal.
+Verbs makes it possible to create your own custom factories for your states.
 
-You can see an example of the current limitation in FactoryTest.php
-
-The plus side is, we could just withdraw the custom factory material for the time being and bring them back when its implemented-->
-
-Something like:
+Create an `ExampleStateFactory` class in a new `App/States/Factory` folder.
 
 ```php
+namespace App\States\Factories;
+
+use Thunk\Verbs\StateFactory;
+
 class ExampleStateFactory extends StateFactory
 {
-  public function confirmed(): static
-  {
-    return $this->state(['confirmed' => true]);
-  }
+    public function confirmed(): static
+    {
+        return $this->state(['confirmed' => true]);
+    }
 }
+```
 
-<!-- @todo custom factories: I can't seem to replicate this syntax -->
+Now in your `ExampleState`, link our new custom factory:
 
-// Lets you do:
+```php
+public bool $confirmed = false;
+
+public int $example_count = 0;
+
+public static function newFactory(): ExampleStateFactory
+{
+    return ExampleStateFactory::new(static::class);
+}
+```
+
+This lets you do:
+
+```php
 ExampleState::factory()->confirmed()->create(); // ->confirmed will be true
 ```
 
-If you'd like to chain behavior after your Factory `create()` do so in your `configure()` method:
+If you'd like to chain behavior after your Factory `create()` executes, do so in your `configure()` method:
 
 #### `configure()`
 
@@ -155,22 +171,25 @@ The configure method in your custom factory allows you to set `afterMaking` and 
 ##### `afterMaking()` & `afterCreating()`
 
 ```php
-class UserStateFactory extends StateFactory
+public function configure(): void
 {
-    protected Team $team;
-
-    public function configure(): void
-    {
-        $this->afterCreating(function (UserState $state) {
-            UserJoinedTeam::fire(
-                user_id: $state->id,
-                team_id: $this->team->id,
-            );
-        });
-    }
+    $this->afterCreating(function (ExampleState $state) {
+        ExampleEvent::fire(
+            id: $state->id,
+        );
+    });
 }
 ```
 
 #### `definition()`
 
 Returns an array of default property values for your custom state factory whenever you `create()`.
+
+```php
+    public function definition(): array
+    {
+        return [
+            'example_count' => 4,
+        ];
+    }
+```
