@@ -1,6 +1,6 @@
 ## Event Sourcing Defined
 
-<!-- @todo Daniel to revize -->
+<!-- @todo Daniel to revise -->
 
 Instead of knowing just the current state of your app, every change (event) that leads to the current state is stored. This allows for a more granular understanding of how the system arrived at its current state and offers the flexibility to reconstruct or analyze the state at any point in time.
 

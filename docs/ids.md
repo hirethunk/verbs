@@ -2,11 +2,11 @@ By default, Verbs uses 64-bit integer IDs called "Snowflakes."
 
 ## Globally Unique Ids
 
-We do this because an event-sourcing system needs non-sequential, globablly-unique ids (GUIDs) to run well. Replaying events is a massively powerful feature, but does not pair well with standard auto-incrementing ids.
-GUIDs help us both minimize collisions, so that each event is executed with fidelity, and maximize interoperability.
+We do this because an event-sourcing system needs non-sequential, globablly-unique IDs to run well. Replaying events is a massively powerful feature, but does not pair well with standard auto-incrementing IDs.
+Unique IDs help us both minimize collisions, so that each event is executed with fidelity, and maximize interoperability.
 
-We recommend Snowflakes because they are sortable, include timestamp, and integers.
-You may also use ULIDs or UUIDs instead; this can be configured in `vendor/hirethunk/verbs/config/verbs.php`. However, they each introduce some complexity in that both are strings, and UUIDs are not sortable.
+We recommend Snowflakes because they are sortable, time-based, and are integers.
+You may also use ULIDs or UUIDs instead; this can be configured in `config/verbs.php`. However, they each introduce some complexity. Both are strings, and UUIDs are not sortable.
 
 ## Snowflakes in Verbs
 

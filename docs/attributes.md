@@ -62,8 +62,8 @@ Use the `AppliesToChildState` on an event class to tell Verbs both the event's s
 class SubscriptionCancelled extends Event
 ```
 
-<!-- @todo we can maybe not feature this one? Need to remember what it does -->
-### `#[Listen]`
+<!-- @!todo we can maybe not feature this one? Need to remember what it does -->
+<!-- ### `#[Listen]`
 
 Place the `Listen` attribute above any function you want to execute whenever the specified event class fires.
 
@@ -75,7 +75,7 @@ public function cancel()
         order_id: $this->id,
     )
 }
-```
+``` -->
 
 ### `#[Once]`
 

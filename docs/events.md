@@ -1,13 +1,5 @@
 In Verbs, Events are the source of your data changes. Before we fire an event, we give it all the data we need it to track, and we describe in the event exactly what it should do with that data once its been fired.
 
-## Naming Events
-
-Describe **what** (verb) happened to **who** (noun), in the format of `WhoWhat`
-
-`OrderCancelled`, `CarLocked`, `HolyGrailFound`
-
-Importantly, events _happened_, so they should be past tense.
-
 ## Generating an Event
 
 To generate an event, use the built-in artisan command:
@@ -94,13 +86,19 @@ class CustomerRenewedSubscription extends Event
 }
 ```
 
+
 ## Firing additional Events
 
 Sometimes you'll want your event to trigger subsequent events. The `fired()` hook executes in memory after the event fires but before its stored in the database. This allows your [state](states) to take care of any changes from your first event, and allows you to use the updated state in your next event.
 
-### Firing during Replays
 
-During a [replay](#content-replaying-events), the system isn't "firing" the event in the original sense (i.e., it's not going through the initial logic that might include checks, validations, or triggering of additional side effects like sending one-time-notifications). Instead, it directly applies the changes recorded in the event store.
+## Naming Events
+
+Describe **what** (verb) happened to **who** (noun), in the format of `WhoWhat`
+
+`OrderCancelled`, `CarLocked`, `HolyGrailFound`
+
+Importantly, events _happened_, so they should be past tense.
 
 ## Replaying Events
 
@@ -122,7 +120,7 @@ php artisan verbs:replay
 
 You may also use `Verbs::replay()` in files.
 
-<!-- @todo syntax for replaying "up to a particular point" ? -->
+<!-- @!todo syntax for replaying "up to a particular point" ? -->
 
 #### Warning!
 
@@ -151,6 +149,11 @@ Verbs::unlessReplaying(function () {
 ```
 
 Or the `#[Once]` [attribute](/docs/technical/attributes#content-once).
+
+### Firing during Replays
+
+During a [replay](#content-replaying-events), the system isn't "firing" the event in the original sense (i.e., it's not going through the initial logic that might include checks, validations, or triggering of additional side effects like sending one-time-notifications). Instead, it directly applies the changes recorded in the event store.
+
 
 ### Wormholes
 

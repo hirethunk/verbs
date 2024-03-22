@@ -74,7 +74,7 @@ We'll customize it to add a timestamp.
 ```php
 class CustomerState extends State
 {
-	public Carbon|null $latest_trial_started_at = null;
+	public Carbon|null $trial_started_at = null;
 }
 ```
 
@@ -105,28 +105,34 @@ class CustomerBeganTrial extends Event
 
     public function validate(CustomerState $state)
 	{
-		return $state->latest_trial_started_at === null
-			|| $state->last_trial_started_at->diffInDays() > 365
+        $this->assert(
+            $state->trial_started_at === null
+            || $state->trial_started_at->diffInDays() > 365,
+            'This user has started a trial within the last year.'
+        );
 	}
 
     public function apply(CustomerState $state)
     {
-        $state->latest_trial_started_at = now();
+        $state->trial_started_at = now();
     }
 }
 ```
 
 (You can read more about `apply`, `validate`, and other event hooks, in [event lifecycle](docs/technical/event-lifecycle)).
 
-So when we execute `CustomerBeganTrial::fire(customer_id: 1);` _now_, it will allow the customer to start our free trial. But, if we were to execute it again (in less than a year), it won't fire at all.
+Firing `CustomerBeganTrial` _now_ will allow the customer to start our free trial. Firing it again will cause it to fail validation and not execute.
 
-Let's break down why: the first time you fire `CustomerBeganTrial`, `validate()` will check `CustomerState` to see that `latest_trial_started_at === null`, which allows the event to fire. Then, it will `apply()` the `now()` timestamp to that property on the state. This means that the second time you fire it (in less than a year), `validate()` will check the state, and see that `$latest_trial_started_at` is no longer null, which will break validation.
+Let's break down why:
+1. The first time you fire `CustomerBeganTrial`, `validate()` will check `CustomerState` to see that `trial_started_at === null`, which allows the event to fire.
+2. Then, it will `apply()` the `now()` timestamp to that property on the state.
+3. This means that the next time you fire it (in less than a year), `validate()` will check the state, and see that `$trial_started_at` is no longer null, which will break validation.
 
 ## Updating the Database
 
-We recommend using [state-first development](/docs/techniques/state-first-development) to smartly harness the power of events and states, like we did above. This allows you to query the database less, retrieve data faster, and frees up your eloquent models to shape your database data the way you want it to be.
+We recommend starting with [state-first development](/docs/techniques/state-first-development) to smartly harness the power of events and states, like we did above. Eventually, however, you'll want to create some Eloquent models.
 
-Say you have a subscription eloquent model with database columns `customer_id` and `expires_at`; you can add a `handle()` method to the end of your event to update your table:
+Say you have a Subscription model with database columns `customer_id` and `expires_at`; you can add a `handle()` method to the end of your event to update your table:
 
 ```php
 // after apply()
@@ -140,6 +146,5 @@ public function handle()
 }
 ```
 
-You'll also need to run `Verbs::commit()` to persist this update to the database.
 
-Read more about committing [here](/docs/reference/events#content-committing).
+Now, when the fired event is [committed](/docs/reference/events#content-committing) at the end of the request, a Subscription model will be created.
