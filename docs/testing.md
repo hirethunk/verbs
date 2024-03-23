@@ -1,6 +1,6 @@
 We enjoy improving Verbs by providing easy, readable testing affordances.
 
-## `Verbs::Commit()`
+## `Verbs::commit()`
 
 When testing verbs events, you'll need to call [commit](/docs/reference/events#content-committing) manually.
 
