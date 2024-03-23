@@ -217,7 +217,7 @@ We find it a helpful rule of thumb to pair your states to your models. States ar
 class FooCreated class
 {
     #[StateId(FooState::class)]
-    public int $id;
+    public int $foo_id;
 
     // etc
 
