@@ -11,6 +11,6 @@ Here are some of the advantages of event-sourcing:
     - Every event, with all its data, is stored in your events tables--enhancing
     debugging, decision-making, and analytics.
 - The ability for your events to be [replayed](/docs/reference/events#content-replayingevents):
-    - Perhaps the biggest feature, this allows you to update and change your app's architecture while keeping the data you need
+    - A powerful feature, this allows you to update and change your app's architecture while keeping the data you need.
 
 If you're already familiar with Event Sourcing, see [Combating Jargon](/docs/technical/combating-jargon) for how Verbs has updated event-sourcing terminology.

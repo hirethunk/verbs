@@ -19,6 +19,8 @@ You may also implement the `CommitsImmediately` interface directly on an Event.
 
 The following Test `assert()` methods are available to thoroughly check your committing granularly.
 
+Before using these methods, add `Verbs::fake()` to your test so Verbs can set up a fake event store to isolate the testing environment.
+
 ```php
 Verbs::assertNothingCommitted();
 Verbs::assertCommitted(...);
@@ -29,7 +31,7 @@ Verbs::assertNotCommitted(...);
 
 In tests, you may find yourself needing to fire and commit several events in order to bring your State to the point where it actually needs testing.
 
-The `State::factory()` method allows you to bypass manually building up the State, functioning similarly to `Model::factory()`
+The `State::factory()` method allows you to bypass manually building up the State, functioning similarly to `Model::factory()`.
 
 This allows you to call:
 
@@ -62,7 +64,7 @@ Next, we'll get into how these factories work, and continue after with some [Ver
 
 Under the hood, these methods will fire (and immediately commit) a new `VerbsStateInitialized` event, which will fire onto the given state, identified by the id argument (if id is null, we assume it is a singleton) and return a copy of that state.
 
-This is primarily designed for booting up states for testing, but it may also be useful in migrating non event-sourced codebases to Verbs, when there is a need to initiate a state for legacy data.
+This is primarily designed for booting up states for testing. If you are migrating non-event-sourced codebases to Verbs, when there is a need to initiate a state for legacy data, it's better to create a custom `MigratedFromLegacy` event.
 
 You may also change the initial event fired from the StateFactory from `VerbsStateInitialized` to an event class of your choosing by setting an `$intial_event` property on your State Factory.
 
@@ -115,7 +117,7 @@ UserState::factory()->state([ /* state data */ ])->create();
 
 The state function is mostly useful for [custom factories](#content-custom-factories).
 
-#### `create(Id|null $id = null))`
+#### `create(array $data, Id|null $id = null)`
 
 Explicit state data. Returns a `State` or `StateCollection`.
 

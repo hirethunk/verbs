@@ -30,7 +30,7 @@ In Verbs, we use state snapshots to conveniently hydrate states in memory.
 
 When you `load()` a State (or retrieve a `singleton()` state)
 - If a snapshot exists, the state is hydrated by loading and deserializing the snapshot data.
-    - If not, it initiates event replay to rebuild the state based on currently stored events.
+    - If not, the system reconstructs the state by applying the relevant events stored in the event store.
 - Once hydrated, the state object is kept in memory within the application. Subsequent access to this state does not require fetching the snapshot from the database again unless the state is deleted from memory or the application restarts.
 
 ## Dehydration

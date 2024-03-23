@@ -62,7 +62,7 @@ Here's when a `commit()` occurs:
 
 In [tests](testing), you'll need to call `Verbs::commit()` manually.
 
-You can call `MyEvent::commit()` as well (instead of `fire()`), which will both fire AND commit an event, which is useful when you need to return the result of an event, such as a store method on a controller.
+You can call `MyEvent::commit()` as well (instead of `fire()`), which will both fire AND commit an event (and all events in the queue), which is useful when you need to return the result of an event, such as a store method on a controller.
 
 ```php
 // CustomerBeganTrial event
@@ -83,7 +83,7 @@ public function handle()
 }
 ```
 
-## `Handle()`
+## `handle()`
 
 Use the `handle()` method included in your event to update your database / models / UI data.
 You can do most of your complex business logic by using your [state](/docs/techniques/state-first-development), which allows you to optimize your eloquent models to handle your front-facing data.
@@ -121,7 +121,7 @@ Importantly, events _happened_, so they should be past tense.
 
 ## Replaying Events
 
-Replaying events will rebuild your application from scratch by running through all recorded events in chronological order. Replaying can be used to restore the state after a failure, to update read models, or to apply changes in business logic retroactively.
+Replaying events will rebuild your application from scratch by running through all recorded events in chronological order. Replaying can be used to restore the state after a failure, to update models, or to apply changes in business logic retroactively.
 
 ### When to Replay?
 
