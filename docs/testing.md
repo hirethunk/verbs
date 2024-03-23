@@ -29,7 +29,7 @@ Verbs::assertNotCommitted(...);
 
 In tests, you may find yourself needing to fire and commit several events in order to bring your State to the point where it actually needs testing.
 
-The `ExampleState::factory()` method allows you to bypass manually building up the State, functioning similarly to `EloquentModel::factory()->state(['data'=>'data'])->create()`
+The `State::factory()` method allows you to bypass manually building up the State, functioning similarly to `Model::factory()`
 
 This allows you to call:
 
