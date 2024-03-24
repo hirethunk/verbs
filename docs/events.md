@@ -105,7 +105,33 @@ class CustomerRenewedSubscription extends Event
 
 ## Firing additional Events
 
-Sometimes you'll want your event to trigger subsequent events. The `fired()` hook executes in memory after the event fires but before its stored in the database. This allows your [state](states) to take care of any changes from your first event, and allows you to use the updated state in your next event.
+If you want your event to trigger subsequent events, use the `fired()` hook.
+
+We'll start with an easy example, then a more complex one. In both, we'll be [applying event data to your state](/docs/reference/states#content-applying-event-data-to-your-state) only. In application, you may still use any of Verbs' event hooks in your subsequent events.
+
+### `fired()`
+
+```php
+CountIncrementedTwice::fire(count_id: $id);
+
+// CountIncrementedTwice event
+public function fired()
+{
+    CountIncremented::fire(count_id: $this->count_id);
+    CountIncremented::fire(count_id: $this->count_id);
+}
+
+// CountIncremented event
+public function apply(CountState $state)
+{
+    $state->count++;
+}
+
+// test or other file
+CountState::load($id)->count; // 2
+```
+
+The `fired()` hook executes in memory after the event fires, but before it's stored in the database. This allows your [state](/docs/reference/states) to take care of any changes from your first event, and allows you to use the updated state in your next event. In our next example, we'll illustrate this.
 
 Let's say we have a game where a level 4 Player levels up and receives a reward.
 
