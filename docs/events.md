@@ -33,15 +33,13 @@ When you fire the event, any of the [event hooks](/docs/technical/event-lifecycl
 When firing events, include named parameters that correspond to its properties, and vice versa.
 
 ```php
-// On the Game Model Class
-
+// Game model
 PlayerAddedToGame::fire(
     game_id: $this->id,
     player_id: $player->id,
 );
 
-// On the PlayerAddedToGame Event Class
-
+// PlayerAddedToGame event
 #[StateId(GameState::class)]
 public string $game_id;
 
@@ -86,7 +84,7 @@ public function handle()
 ## `handle()`
 
 Use the `handle()` method included in your event to update your database / models / UI data.
-You can do most of your complex business logic by using your [state](/docs/techniques/state-first-development), which allows you to optimize your eloquent models to handle your front-facing data.
+You can do most of your complex business logic by [utilizing your state](/docs/techniques/state-first-development), which allows you to optimize your eloquent models to handle your front-facing data.
 
 ```php
 class CustomerRenewedSubscription extends Event
@@ -105,11 +103,37 @@ class CustomerRenewedSubscription extends Event
 }
 ```
 
-
 ## Firing additional Events
 
 Sometimes you'll want your event to trigger subsequent events. The `fired()` hook executes in memory after the event fires but before its stored in the database. This allows your [state](states) to take care of any changes from your first event, and allows you to use the updated state in your next event.
 
+Let's say we have a game where a level 4 Player levels up and receives a reward.
+
+```php
+PlayerLeveledUp::fire(player_id: $id);
+
+// PlayerLeveledUp event
+public function apply(PlayerState $state)
+{
+    $state->level++;
+}
+
+public function fired()
+{
+    PlayerRewarded::fire(player_id: $this->player_id);
+}
+
+// PlayerRewarded event
+public function apply(PlayerState $state)
+{
+    if ($state->level === 5) {
+        $state->max_inventory = 100;
+    }
+}
+
+// test or other file
+PlayerState::load($id)->max_inventory; // 100;
+```
 
 ## Naming Events
 

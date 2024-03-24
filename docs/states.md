@@ -48,8 +48,8 @@ Like our examples suggest, we use states for tracking changes across our events.
 Use the `apply()` [event hook](/docs/technical/event-lifecycle) with your state to update any data you'd like the state to track:
 
 ```php
-// ** in the event **
-class IncrementCount class extends Event
+// CountIncremented.php
+class CountIncremented class extends Event
 {
     #[StateId(CountState::class)]
     public int $example_id;
@@ -60,16 +60,16 @@ class IncrementCount class extends Event
     }
 }
 
-// ** in the State **
+// CountState.php
 class CountState extends State
 {
     public $event_count = 0;
 }
 
-// ** in a file or test **
+// test or other file
 $id = snowflake_id();
 
-IncrementCount::fire(example_id: $id);
+CountIncremented::fire(example_id: $id);
 Verbs::commit();
 CountState::load($id)->event_count // = 1
 ```
