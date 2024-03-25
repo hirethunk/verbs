@@ -1,0 +1,94 @@
+[
+    {
+        "title": "Getting Started",
+        "slug": "getting-started",
+        "items": [
+            {
+                "title": "Quickstart",
+                "slug": "quickstart",
+                "icon": "arrow-right"
+            },
+            {
+                "title": "Building Blocks",
+                "slug": "building-blocks",
+                "icon": "cube"
+            },
+            {
+                "title": "Don't Read This",
+                "slug": "verbs-opinions",
+                "icon": "exclamation-triangle"
+            },
+            {
+                "title": "Common Gotchas",
+                "slug": "gotchas",
+                "icon": "information-circle"
+            },
+            {
+                "title": "Event Lifecycle",
+                "slug": "lifecycle",
+                "icon": "queue-list"
+            },
+            {
+                "title": "Event Metadata",
+                "slug": "metadata",
+                "icon": "cube-transparent"
+            }
+        ]
+    },
+    {
+        "title": "Examples",
+        "slug": "examples",
+        "items": [
+            {
+                "title": "Simple Counter",
+                "slug": "counter",
+                "icon": "adjustments-horizontal",
+                "url": "/examples/counter"
+            },
+            {
+                "title": "Banking",
+                "slug": "banking",
+                "icon": "banknotes",
+                "url": "/examples/bank"
+            },
+            {
+                "title": "Subscriptions",
+                "slug": "subscriptions",
+                "icon": "cursor-arrow-rays",
+                "url": "/examples/subscriptions"
+            },
+            {
+                "title": "Board Game",
+                "slug": "monopoly",
+                "icon": "puzzle-piece",
+                "url": "/examples/monopoly"
+            }
+        ]
+    },
+    {
+        "title": "Event Sourcing Crash Course",
+        "slug": "crash-course",
+        "items": [
+            {
+                "title": "Combating Jargon",
+                "slug": "verbs-verbiage",
+                "icon": "scale"
+            },
+            {
+                "title": "ID as in Identity",
+                "slug": "ids",
+                "icon": "identification"
+            },
+            {
+                "title": "State vs. Model",
+                "slug": "state-vs-model",
+                "icon": "circle-stack"
+            },
+            {
+                "title": "One-Time Side Effects",
+                "slug": "one-time-handlers",
+                "icon": "hand-raised"
+            }
+        ]
+    }
+]

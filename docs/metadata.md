@@ -1,7 +1,5 @@
-It can often be useful to include information associated with your application on each
-event. For example, the current `team_id` of the user, or the ip address of the request.
+If you find yourself wanting to include some additional data on every event, Verbs makes it _very easy_ to automatically include metadata.
 
-Verbs makes it _very easy_ to automatically include additional metadata on your event.
 In a `ServiceProvider` or `Middleware` call the following method:
 
 ```php
@@ -10,12 +8,49 @@ Verbs::createMetadataUsing(function (Metadata $metadata, Event $event) {
 });
 ```
 
-You can call this method as many times as you would like. This is particularly useful
-for third-party packages, allowing them to add metadata automatically.
+You can call this method as many times as you would like. This is particularly useful for third-party packages, allowing them to add metadata automatically.
 
-It's also possible to simply return an array (or Collection), and Verbs will merge 
-that in for you:
+It's also possible to simply return an array (or Collection), and Verbs will merge that in for you:
 
 ```php
 Verbs::createMetadataUsing(fn () => ['team_id' => current_team_id()]);
+```
+
+This is particularly useful for events where accompanying data is moreso about the events, and doesn't necessarily need to be a param in the event.
+
+- You can use the `$event->metadata()` method to get the metadata from the event.
+
+## Toggling Metadata
+
+Maybe you don't want _every_ event to have metadata. Verbs makes it easy to opt out when you need to.
+
+Here's an example of a user who prefers no promotional notifications:
+
+```php
+public function sendPromotionalNotification($user)
+{
+    $user_preferences = $this->getUserPreferences($user->id);
+
+    Verbs::createMetadataUsing(fn (Metadata $metadata) => [
+        'suppress_notifications' => !$userPreferences->acceptsPromotionalNotifications,
+    ]);
+
+    PromotionalEvent::fire(details: $user->location->promoDetails());
+
+    // resets Metadata bool for the next user
+    Verbs::createMetadataUsing(fn (Metadata $metadata) => ['suppress_notifications' => false]);
+}
+```
+
+Then, where you handle your promotional event messages:
+
+```php
+public function handlePromotionalEvent(PromotionalEvent $event)
+{
+    if ($event->metadata('suppress_notifications', false)) {
+        return;
+    }
+
+    $this->sendNotification($event->details);
+}
 ```
