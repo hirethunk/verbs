@@ -112,9 +112,9 @@ To retrieve the State, simply call load:
 CardState::load($card_id);
 ```
 
-You can call `load()` multiple times without worrying about the performance hit of multiple database queries. The state is loaded once and then kept in memory. Even as you `apply()` events, it's the same, in-memory copy that's being updated, which allows for real-time updates to the state without additional database overhead.
+The state is loaded once and then kept in memory. Even as you `apply()` events, it's the same, in-memory copy that's being updated, which allows for real-time updates to the state without additional database overhead.
 
-For more on this topic, see [State Hydration / Snapshots](/docs/technical/state-hydration-snapshots).
+<!-- For more on this topic, see [State Hydration / Snapshots](/docs/technical/state-hydration-snapshots). -->
 
 ## Singleton States
 

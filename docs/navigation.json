@@ -79,11 +79,6 @@
                 "icon": "arrow-path"
             },
             {
-                "title": "State Hydration / Snapshots",
-                "slug": "state-hydration-snapshots",
-                "icon": "photo"
-            },
-            {
                 "title": "Combating Jargon",
                 "slug": "combating-jargon",
                 "icon": "chat-bubble-bottom-center-text"
