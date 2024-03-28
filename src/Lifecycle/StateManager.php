@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Contracts\StoresEvents;
+use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\State;
@@ -21,7 +22,7 @@ class StateManager
 
     public function __construct(
         protected Dispatcher $dispatcher,
-        protected SnapshotStore $snapshots,
+        protected StoresSnapshots $snapshots,
         protected StoresEvents $events,
     ) {
         $this->states = new Collection();

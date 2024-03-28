@@ -7,6 +7,7 @@ use InvalidArgumentException;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Contracts\StoresEvents;
+use Thunk\Verbs\Exceptions\StateNotFoundException;
 use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\Support\Serializer;
 
@@ -18,6 +19,11 @@ abstract class State
 
     // TODO: This should move to state metadata eventually
     public bool $__verbs_initialized = false;
+
+    public function __construct()
+    {
+        app(StateManager::class)->register($this);
+    }
 
     public static function make(...$args): static
     {
@@ -36,7 +42,8 @@ abstract class State
     public static function factory(
         array|callable|int|null $count = null,
         array|callable|null $data = null
-    ): StateFactory {
+    ): StateFactory
+    {
         if (is_array($count) || is_callable($count)) {
             throw_if($data !== null, new InvalidArgumentException('You cannot pass data to both factory arguments.'));
             [$data, $count] = [$count, null];
@@ -52,23 +59,32 @@ abstract class State
         return StateFactory::new(static::class);
     }
 
-    public function __construct()
+    public static function loadOrFail($from): static
     {
-        app(StateManager::class)->register($this);
+        $result = static::load($from);
+
+        if ($result->last_event_id === null) {
+            throw StateNotFoundException::forState(static::class, static::normalizeKey($from));
+        }
+
+        return $result;
     }
 
     public static function load($from): static
     {
-        $key = is_object($from) && method_exists($from, 'getVerbsStateKey')
-            ? $from->getVerbsStateKey()
-            : $from;
-
-        return static::loadByKey($key);
+        return static::loadByKey(static::normalizeKey($from));
     }
 
     public static function loadByKey($from): static
     {
         return app(StateManager::class)->load($from, static::class);
+    }
+
+    protected static function normalizeKey(mixed $from)
+    {
+        return is_object($from) && method_exists($from, 'getVerbsStateKey')
+            ? $from->getVerbsStateKey()
+            : $from;
     }
 
     public static function singleton(): static

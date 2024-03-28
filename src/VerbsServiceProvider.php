@@ -22,6 +22,7 @@ use Thunk\Verbs\Commands\MakeVerbStateCommand;
 use Thunk\Verbs\Commands\ReplayCommand;
 use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Contracts\StoresEvents;
+use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Lifecycle\Broker;
 use Thunk\Verbs\Lifecycle\Dispatcher;
 use Thunk\Verbs\Lifecycle\EventStore;
@@ -112,6 +113,7 @@ class VerbsServiceProvider extends PackageServiceProvider
 
         $this->app->alias(Broker::class, BrokersEvents::class);
         $this->app->alias(EventStore::class, StoresEvents::class);
+        $this->app->alias(SnapshotStore::class, StoresSnapshots::class);
     }
 
     public function boot()
