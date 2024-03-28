@@ -154,7 +154,7 @@ class Hook
 
                 // FIXME: We need to throw an ambiguous state exception if a method wants a state that we have 2+ of
                 //        But right now, we'll just null them out
-                if (isset($parameters[$state::class])) {
+                if (array_key_exists($state::class, $parameters)) {
                     $state = null;
                 }
 
@@ -162,9 +162,12 @@ class Hook
                     $parameters[$key] = $state;
                 }
             }
+
+            foreach ($states->aliasNames() as $alias) {
+                $parameters[$alias] = $states->get($alias);
+            }
         }
 
-        // We're going to null out any parameters that may be ambiguous, so we need to filter them here
-        return array_filter($parameters);
+        return $parameters;
     }
 }

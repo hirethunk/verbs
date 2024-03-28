@@ -4,6 +4,7 @@ namespace Thunk\Verbs;
 
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Container\Container;
+use Illuminate\Database\Events\TransactionCommitting;
 use Illuminate\Events\Dispatcher as LaravelDispatcher;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Support\DateFactory;
@@ -70,7 +71,6 @@ class VerbsServiceProvider extends PackageServiceProvider
         $this->app->singleton(StateManager::class);
         $this->app->singleton(EventStateRegistry::class);
         $this->app->singleton(MetadataManager::class);
-        $this->app->singleton(Serializer::class);
 
         $this->app->singleton(IdManager::class, function (Container $app) {
             return new IdManager(
@@ -85,6 +85,13 @@ class VerbsServiceProvider extends PackageServiceProvider
                 $app->make(MetadataManager::class),
                 $app->make(DateFactory::class),
                 $config->get('verbs.wormhole', true),
+            );
+        });
+
+        $this->app->singleton(Serializer::class, function (Container $app) {
+            return new Serializer(
+                serializer: $app->make(SymfonySerializer::class),
+                context: $app->make(Repository::class)->get('verbs.serializer_context', []),
             );
         });
 
@@ -146,8 +153,8 @@ class VerbsServiceProvider extends PackageServiceProvider
             $this->app->make(BrokersEvents::class)->fire($event);
         }
 
-        // Auto-commit after each job on the queue is processed
-        if ($event instanceof JobProcessed) {
+        // Auto-commit after each job on the queue is processed, and before any DB transactions commit
+        if ($event instanceof JobProcessed || $event instanceof TransactionCommitting) {
             app(BrokersEvents::class)->commit();
         }
     }

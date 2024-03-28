@@ -3,9 +3,11 @@
 use Carbon\CarbonInterface;
 use Glhd\Bits\Snowflake;
 use Illuminate\Support\Str;
+use Symfony\Component\Serializer\Normalizer\PropertyNormalizer;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\SerializedByVerbs;
 use Thunk\Verbs\Support\Normalization\NormalizeToPropertiesAndClassName;
+use Thunk\Verbs\Support\Serializer;
 
 it('supports instantiation via an associative array', function () {
     $snowflake = Snowflake::make();
@@ -64,9 +66,54 @@ it('triggers an error when using positional arguments with an event that does no
 it('allows us to store a serializable class as a property', function () {
     expect(function () {
         EventWithDto::fire(
-            dto: new DTO
+            dto: new DTO()
         );
     })->not->toThrow(TypeError::class);
+});
+
+it('honors configured context', function () {
+    $target = new class()
+    {
+        public $is_public = 'public';
+
+        protected $is_protected = 'protected';
+
+        private $is_private = 'private';
+    };
+
+    config()->set('verbs.serializer_context', [
+        PropertyNormalizer::NORMALIZE_VISIBILITY => PropertyNormalizer::NORMALIZE_PUBLIC,
+    ]);
+
+    expect(app(Serializer::class)->serialize($target))
+        ->toBe('{"is_public":"public"}');
+
+    app()->forgetInstance(Serializer::class);
+
+    config()->set('verbs.serializer_context', [
+        PropertyNormalizer::NORMALIZE_VISIBILITY => PropertyNormalizer::NORMALIZE_PROTECTED,
+    ]);
+
+    expect(app(Serializer::class)->serialize($target))
+        ->toBe('{"is_protected":"protected"}');
+
+    app()->forgetInstance(Serializer::class);
+
+    config()->set('verbs.serializer_context', [
+        PropertyNormalizer::NORMALIZE_VISIBILITY => PropertyNormalizer::NORMALIZE_PRIVATE,
+    ]);
+
+    expect(app(Serializer::class)->serialize($target))
+        ->toBe('{"is_private":"private"}');
+
+    app()->forgetInstance(Serializer::class);
+
+    config()->set('verbs.serializer_context', [
+        PropertyNormalizer::NORMALIZE_VISIBILITY => PropertyNormalizer::NORMALIZE_PUBLIC | PropertyNormalizer::NORMALIZE_PROTECTED | PropertyNormalizer::NORMALIZE_PRIVATE,
+    ]);
+
+    expect(app(Serializer::class)->serialize($target))
+        ->toBe('{"is_public":"public","is_protected":"protected","is_private":"private"}');
 });
 
 class EventWithConstructorPromotion extends Event

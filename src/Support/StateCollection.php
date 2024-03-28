@@ -28,6 +28,11 @@ class StateCollection extends Collection
         return $this;
     }
 
+    public function aliasNames(): array
+    {
+        return array_keys($this->aliases);
+    }
+
     public function get($key, $default = null)
     {
         if (! $this->has($key) && isset($this->aliases[$key])) {

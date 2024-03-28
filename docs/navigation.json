@@ -82,6 +82,11 @@
                 "title": "Combating Jargon",
                 "slug": "combating-jargon",
                 "icon": "chat-bubble-bottom-center-text"
+            },
+            {
+                "title": "Serialization",
+                "slug": "serialization",
+                "icon": "server-stack"
             }
         ]
     },
