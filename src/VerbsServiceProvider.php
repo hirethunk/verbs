@@ -4,6 +4,7 @@ namespace Thunk\Verbs;
 
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Container\Container;
+use Illuminate\Database\Events\TransactionCommitting;
 use Illuminate\Events\Dispatcher as LaravelDispatcher;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Support\DateFactory;
@@ -150,8 +151,8 @@ class VerbsServiceProvider extends PackageServiceProvider
             $this->app->make(BrokersEvents::class)->fire($event);
         }
 
-        // Auto-commit after each job on the queue is processed
-        if ($event instanceof JobProcessed) {
+        // Auto-commit after each job on the queue is processed, and before any DB transactions commit
+        if ($event instanceof JobProcessed || $event instanceof TransactionCommitting) {
             app(BrokersEvents::class)->commit();
         }
     }

@@ -10,7 +10,7 @@ php artisan verbs:event CustomerBeganTrial
 
 When you create your first event, it will generate in a fresh `app/Events` directory.
 
-A brand new event file will look like this:
+A brand-new event file will look like this:
 
 ```php
 class MyEvent extends Event
@@ -49,18 +49,25 @@ public string $player_id;
 
 ### Committing
 
-After you call `fire()`, Verbs will then call `Verbs::commit()` _for you_, persisting the event.
+When you `fire()` an event, it gets pushed to an in-memory queue to be saved with all other Verbs events
+that you fire. Think of this kind-of like staging changes in git. Events are eventually “committed” in a
+single database `insert`. You can usually let Verbs handle this for you, but may also manually commit
+your events by calling `Verbs::commit()`.
 
-Events are queued as PendingEvents until the `commit()` happens, where they all get committed in a single database request.
+`Verbs::commit()` is automatically called:
 
-Here's when a `commit()` occurs:
-- at the end of every request (after returning a response)
+- at the end of every request (before returning a response)
 - at the end of every console command
 - at the end of every queued job
+- immediately before a database transaction is committed
 
-In [tests](testing), you'll need to call `Verbs::commit()` manually.
+In [tests](testing), you'll often need to call `Verbs::commit()` manually unless your test triggers
+one of the above.
 
-You can call `MyEvent::commit()` as well (instead of `fire()`), which will both fire AND commit an event (and all events in the queue), which is useful when you need to return the result of an event, such as a store method on a controller.
+You can also call `Event::commit()` (instead of `fire()`), which will both fire AND commit the event 
+(and all events in the queue). `Event::commit()` also returns whatever your event’s `handle()` method
+returns, which is useful when you need to immediately use the result of an event, such as a store 
+method on a controller.
 
 ```php
 // CustomerBeganTrial event

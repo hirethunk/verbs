@@ -9,11 +9,23 @@ it('auto-commits after a job is processed', function () {
     Verbs::assertNothingCommitted();
 
     dispatch(function () {
-        AutoCommitTestEvent::fire(message: 'auto-commit test');
+        AutoCommitTestEvent::fire(message: 'auto-commit job test');
     });
 
     Verbs::assertCommitted(function (AutoCommitTestEvent $event) {
-        return $event->message === 'auto-commit test';
+        return $event->message === 'auto-commit job test';
+    });
+});
+
+it('auto-commits before a DB transaction commits', function () {
+    Verbs::fake();
+
+    Verbs::assertNothingCommitted();
+
+    DB::transaction(fn () => AutoCommitTestEvent::fire(message: 'auto-commit db test'));
+
+    Verbs::assertCommitted(function (AutoCommitTestEvent $event) {
+        return $event->message === 'auto-commit db test';
     });
 });
 
