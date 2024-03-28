@@ -20,11 +20,6 @@ abstract class State
     // TODO: This should move to state metadata eventually
     public bool $__verbs_initialized = false;
 
-    public function __construct()
-    {
-        app(StateManager::class)->register($this);
-    }
-
     public static function make(...$args): static
     {
         if ((count($args) === 1 && isset($args[0]) && is_array($args[0]))) {
