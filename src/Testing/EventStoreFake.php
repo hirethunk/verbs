@@ -42,7 +42,7 @@ class EventStoreFake implements StoresEvents
             ->when($state, function (LazyCollection $events, State $state) use ($singleton) {
                 return $singleton
                     ? $events->filter(fn (Event $event) => $event->state($state::class) !== null)
-                    : $events->filter(fn (Event $event) => $event->state($state::class)->id === $state->id);
+                    : $events->filter(fn (Event $event) => $event->state($state::class)?->id === $state->id);
             })
             ->values();
     }

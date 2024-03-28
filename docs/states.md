@@ -118,6 +118,17 @@ You can also use `loadOrFail()` to trigger a `StateNotFoundException` that will 
 
 <!-- For more on this topic, see [State Hydration / Snapshots](/docs/technical/state-hydration-snapshots). -->
 
+## Using States in Routes
+
+States implement Laravel’s `UrlRoutable` interface, which means you can route to them in the exact same 
+way you would do [route-model binding](https://laravel.com/docs/11.x/routing#route-model-binding):
+
+```php
+Route::get('/users/{user_state}', function(UserState $user_state) {
+  // $user_state is automatically loaded for you!
+});
+```
+
 ## Singleton States
 
 You may want a state that only needs one iteration across the entire application--this is called a singleton state. Singleton states require no id, since there is no need to differentiate among state instances.
