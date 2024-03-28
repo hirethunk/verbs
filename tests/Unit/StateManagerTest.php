@@ -26,5 +26,4 @@ test('load does not trigger an exception if state does not exist', function () {
 
 class StateManagerTestState extends State
 {
-
 }

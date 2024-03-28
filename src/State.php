@@ -42,8 +42,7 @@ abstract class State
     public static function factory(
         array|callable|int|null $count = null,
         array|callable|null $data = null
-    ): StateFactory
-    {
+    ): StateFactory {
         if (is_array($count) || is_callable($count)) {
             throw_if($data !== null, new InvalidArgumentException('You cannot pass data to both factory arguments.'));
             [$data, $count] = [$count, null];
