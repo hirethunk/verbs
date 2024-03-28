@@ -53,6 +53,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Serializer Context
+    |--------------------------------------------------------------------------
+    |
+    | The Symfony Serializer can be configured using "Context" (https://symfony.com/doc/current/serializer.html#serializer-context)
+    | which modifies the default behavior of normalizers. YOu can use this to change
+    | things like the default date format, or whether private and protected
+    | properties should be serialized.
+    |
+    */
+    'serializer_context' => [
+        PropertyNormalizer::NORMALIZE_VISIBILITY => PropertyNormalizer::NORMALIZE_PUBLIC | PropertyNormalizer::NORMALIZE_PROTECTED | PropertyNormalizer::NORMALIZE_PRIVATE,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Table Names
     |--------------------------------------------------------------------------
     |

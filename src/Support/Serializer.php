@@ -12,6 +12,7 @@ class Serializer
 
     public function __construct(
         public SymfonySerializer $serializer,
+        protected array $context = [],
     ) {
     }
 
@@ -24,7 +25,7 @@ class Serializer
         try {
             $this->active_normalization_target = $class;
 
-            return $this->serializer->serialize($class, 'json');
+            return $this->serializer->serialize($class, 'json', $this->context);
         } finally {
             $this->active_normalization_target = null;
         }
@@ -35,7 +36,7 @@ class Serializer
         string|array $data
     ) {
         $type = $target;
-        $context = [];
+        $context = [...$this->context];
 
         if (is_object($target)) {
             $type = $target::class;
