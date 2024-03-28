@@ -3,15 +3,17 @@
 namespace Thunk\Verbs;
 
 use Glhd\Bits\Bits;
+use Illuminate\Contracts\Routing\UrlRoutable;
 use InvalidArgumentException;
 use Ramsey\Uuid\UuidInterface;
+use RuntimeException;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Exceptions\StateNotFoundException;
 use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\Support\Serializer;
 
-abstract class State
+abstract class State implements UrlRoutable
 {
     public Bits|UuidInterface|AbstractUid|int|string|null $id = null;
 
@@ -101,5 +103,29 @@ abstract class State
     public function fresh(): static
     {
         return app(StateManager::class)->load($this->id, static::class);
+    }
+
+    public function getRouteKey()
+    {
+        return $this->id;
+    }
+
+    public function getRouteKeyName()
+    {
+        return 'id';
+    }
+
+    public function resolveRouteBinding($value, $field = null)
+    {
+        if ($field !== null && $field !== 'id') {
+            throw new InvalidArgumentException('States routing must use the ID field.');
+        }
+
+        return static::loadOrFail($value);
+    }
+
+    public function resolveChildRouteBinding($childType, $value, $field)
+    {
+        throw new RuntimeException('Resolving child state via routing is not supported.');
     }
 }
