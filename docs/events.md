@@ -92,6 +92,7 @@ public function handle()
 
 Use the `handle()` method included in your event to update your database / models / UI data.
 You can do most of your complex business logic by [utilizing your state](/docs/techniques/state-first-development), which allows you to optimize your eloquent models to handle your front-facing data.
+Any [States](/docs/reference/states) that you type-hint as parameters to your `handle()` method will be automatically injected for you.
 
 ```php
 class CustomerRenewedSubscription extends Event
@@ -99,9 +100,9 @@ class CustomerRenewedSubscription extends Event
     #[StateId(CustomerState::class)]
     public int $customer_id;
 
-    public function handle()
+    public function handle(CustomerState $customer)
     {
-        Subscription::find($this->customer_id)
+        Subscription::find($customer->active_subscription_id)
             ->update([
                 'renewed_at' => now(),
                 'expires_at' => now()->addYear(),

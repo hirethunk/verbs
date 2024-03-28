@@ -5,13 +5,14 @@ namespace Thunk\Verbs\Lifecycle;
 use Glhd\Bits\Bits;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
+use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Exceptions\StateIsNotSingletonException;
 use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Models\VerbSnapshot;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\Serializer;
 
-class SnapshotStore
+class SnapshotStore implements StoresSnapshots
 {
     public function load(Bits|UuidInterface|AbstractUid|int|string $id, string $type): ?State
     {
