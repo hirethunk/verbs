@@ -76,9 +76,12 @@ it('honors configured context', function () {
         PropertyNormalizer::NORMALIZE_VISIBILITY => PropertyNormalizer::NORMALIZE_PUBLIC,
     ]);
 
-    $target = new class () {
+    $target = new class()
+    {
         public $is_public = 'public';
+
         protected $is_protected = 'protected';
+
         private $is_private = 'private';
     };
 
@@ -110,8 +113,7 @@ class EventWithConstructorPromotion extends Event
         public Snowflake $snowflake,
         public CarbonInterface $timestamp,
         public string $string,
-    )
-    {
+    ) {
     }
 }
 
