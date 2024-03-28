@@ -72,10 +72,6 @@ it('allows us to store a serializable class as a property', function () {
 });
 
 it('honors configured context', function () {
-    config()->set('verbs.serializer_context', [
-        PropertyNormalizer::NORMALIZE_VISIBILITY => PropertyNormalizer::NORMALIZE_PUBLIC,
-    ]);
-
     $target = new class()
     {
         public $is_public = 'public';
@@ -84,6 +80,10 @@ it('honors configured context', function () {
 
         private $is_private = 'private';
     };
+
+    config()->set('verbs.serializer_context', [
+        PropertyNormalizer::NORMALIZE_VISIBILITY => PropertyNormalizer::NORMALIZE_PUBLIC,
+    ]);
 
     expect(app(Serializer::class)->serialize($target))
         ->toBe('{"is_public":"public"}');
@@ -105,6 +105,15 @@ it('honors configured context', function () {
 
     expect(app(Serializer::class)->serialize($target))
         ->toBe('{"is_private":"private"}');
+
+    app()->forgetInstance(Serializer::class);
+
+    config()->set('verbs.serializer_context', [
+        PropertyNormalizer::NORMALIZE_VISIBILITY => PropertyNormalizer::NORMALIZE_PUBLIC | PropertyNormalizer::NORMALIZE_PROTECTED | PropertyNormalizer::NORMALIZE_PRIVATE,
+    ]);
+
+    expect(app(Serializer::class)->serialize($target))
+        ->toBe('{"is_public":"public","is_protected":"protected","is_private":"private"}');
 });
 
 class EventWithConstructorPromotion extends Event
