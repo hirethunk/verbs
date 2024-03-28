@@ -70,7 +70,6 @@ class VerbsServiceProvider extends PackageServiceProvider
         $this->app->singleton(StateManager::class);
         $this->app->singleton(EventStateRegistry::class);
         $this->app->singleton(MetadataManager::class);
-        $this->app->singleton(Serializer::class);
 
         $this->app->singleton(IdManager::class, function (Container $app) {
             return new IdManager(
@@ -85,6 +84,13 @@ class VerbsServiceProvider extends PackageServiceProvider
                 $app->make(MetadataManager::class),
                 $app->make(DateFactory::class),
                 $config->get('verbs.wormhole', true),
+            );
+        });
+
+        $this->app->singleton(Serializer::class, function (Container $app) {
+            return new Serializer(
+                serializer: $app->make(SymfonySerializer::class),
+                context: $app->make(Repository::class)->get('verbs.serializer_context', []),
             );
         });
 
