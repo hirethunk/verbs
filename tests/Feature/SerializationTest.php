@@ -76,7 +76,8 @@ it('allows us to store a serializable class as a property', function () {
 });
 
 it('honors configured context', function () {
-    $target = new class() {
+    $target = new class()
+    {
         public $is_public = 'public';
 
         protected $is_protected = 'protected';
@@ -120,7 +121,8 @@ it('honors configured context', function () {
 });
 
 it('does not include the event ID in its payload', function () {
-    $result = app(Serializer::class)->serialize(new class extends Event {
+    $result = app(Serializer::class)->serialize(new class extends Event
+    {
         public string $name = 'Demo';
 
         public function __construct()
@@ -133,10 +135,14 @@ it('does not include the event ID in its payload', function () {
 });
 
 it('does not include the state ID or last_event_id in its payload', function () {
-    $result = app(Serializer::class)->serialize(new class extends State {
+    $result = app(Serializer::class)->serialize(new class extends State
+    {
         public Bits|UuidInterface|AbstractUid|int|string|null $id = 123;
+
         public Bits|UuidInterface|AbstractUid|int|string|null $last_event_id = 123;
+
         public bool $__verbs_initialized = false;
+
         public string $name = 'Demo';
     });
 
@@ -149,8 +155,7 @@ class EventWithConstructorPromotion extends Event
         public Snowflake $snowflake,
         public CarbonInterface $timestamp,
         public string $string,
-    )
-    {
+    ) {
     }
 }
 
