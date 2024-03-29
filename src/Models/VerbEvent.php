@@ -36,6 +36,7 @@ class VerbEvent extends Model
     public function event(): Event
     {
         $this->event ??= app(Serializer::class)->deserialize($this->type, $this->data);
+        $this->event->id = $this->id;
 
         app(MetadataManager::class)->setEphemeral($this->event, 'created_at', $this->created_at);
 

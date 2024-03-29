@@ -1,11 +1,15 @@
 <?php
 
 use Carbon\CarbonInterface;
+use Glhd\Bits\Bits;
 use Glhd\Bits\Snowflake;
 use Illuminate\Support\Str;
+use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Normalizer\PropertyNormalizer;
+use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\SerializedByVerbs;
+use Thunk\Verbs\State;
 use Thunk\Verbs\Support\Normalization\NormalizeToPropertiesAndClassName;
 use Thunk\Verbs\Support\Serializer;
 
@@ -72,8 +76,7 @@ it('allows us to store a serializable class as a property', function () {
 });
 
 it('honors configured context', function () {
-    $target = new class()
-    {
+    $target = new class() {
         public $is_public = 'public';
 
         protected $is_protected = 'protected';
@@ -116,13 +119,38 @@ it('honors configured context', function () {
         ->toBe('{"is_public":"public","is_protected":"protected","is_private":"private"}');
 });
 
+it('does not include the event ID in its payload', function () {
+    $result = app(Serializer::class)->serialize(new class extends Event {
+        public string $name = 'Demo';
+
+        public function __construct()
+        {
+            $this->id = snowflake_id();
+        }
+    });
+
+    expect($result)->toBe('{"name":"Demo"}');
+});
+
+it('does not include the state ID or last_event_id in its payload', function () {
+    $result = app(Serializer::class)->serialize(new class extends State {
+        public Bits|UuidInterface|AbstractUid|int|string|null $id = 123;
+        public Bits|UuidInterface|AbstractUid|int|string|null $last_event_id = 123;
+        public bool $__verbs_initialized = false;
+        public string $name = 'Demo';
+    });
+
+    expect($result)->toBe('{"__verbs_initialized":false,"name":"Demo"}');
+});
+
 class EventWithConstructorPromotion extends Event
 {
     public function __construct(
         public Snowflake $snowflake,
         public CarbonInterface $timestamp,
         public string $string,
-    ) {
+    )
+    {
     }
 }
 

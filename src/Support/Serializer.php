@@ -5,6 +5,8 @@ namespace Thunk\Verbs\Support;
 use BackedEnum;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\Serializer as SymfonySerializer;
+use Thunk\Verbs\Event;
+use Thunk\Verbs\State;
 
 class Serializer
 {
@@ -25,7 +27,7 @@ class Serializer
         try {
             $this->active_normalization_target = $class;
 
-            return $this->serializer->serialize($class, 'json', $this->context);
+            return $this->serializer->serialize($class, 'json', $this->serializationContext($class));
         } finally {
             $this->active_normalization_target = null;
         }
@@ -36,7 +38,7 @@ class Serializer
         string|array $data
     ) {
         $type = $target;
-        $context = [...$this->context];
+        $context = $this->context;
 
         if (is_object($target)) {
             $type = $target::class;
@@ -60,5 +62,20 @@ class Serializer
             format: 'json',
             context: $context,
         );
+    }
+
+    protected function serializationContext(object $target): array
+    {
+        $context = [...$this->context];
+
+        if ($target instanceof Event) {
+            $context[AbstractNormalizer::IGNORED_ATTRIBUTES] = ['id'];
+        }
+
+        if ($target instanceof State) {
+            $context[AbstractNormalizer::IGNORED_ATTRIBUTES] = ['id', 'last_event_id'];
+        }
+
+        return $context;
     }
 }
