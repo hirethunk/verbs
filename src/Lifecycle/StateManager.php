@@ -81,7 +81,12 @@ class StateManager
 
     public function writeSnapshots(): bool
     {
-        return $this->snapshots->write($this->states->values()->all());
+        return $this->snapshots->write(
+            $this->states
+                ->reject(fn(State $state) => $state->last_event_id === null)
+                ->values()
+                ->all()
+        );
     }
 
     public function setReplaying(bool $replaying): static
