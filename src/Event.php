@@ -3,8 +3,10 @@
 namespace Thunk\Verbs;
 
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use LogicException;
+use RuntimeException;
 use Throwable;
 use Thunk\Verbs\Exceptions\EventNotAuthorized;
 use Thunk\Verbs\Exceptions\EventNotValid;
@@ -37,6 +39,20 @@ abstract class Event
     public function metadata(?string $key = null, mixed $default = null): mixed
     {
         return app(MetadataManager::class)->get($this, $key, $default);
+    }
+
+    public function lastResults(): Collection
+    {
+        return app(MetadataManager::class)->getLastResults($this);
+    }
+
+    public function lastResult(): mixed
+    {
+        $results = $this->lastResults();
+
+        throw_if($results->count() > 1, 'More than one handler returned a result.');
+
+        return $results->first();
     }
 
     public function states(): StateCollection
