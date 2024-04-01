@@ -6,7 +6,6 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use LogicException;
-use RuntimeException;
 use Throwable;
 use Thunk\Verbs\Exceptions\EventNotAuthorized;
 use Thunk\Verbs\Exceptions\EventNotValid;
