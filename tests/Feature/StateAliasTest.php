@@ -15,7 +15,7 @@ class TestEvent extends Event
     public int $bar;
 }
 
-it('stateid attribute allows setting an alias for a state collection with a single state', function () {
+test('stateid attribute allows setting an alias for a state collection with a single state', function () {
     $event = TestEvent::fire(bar: 1);
 
     Verbs::commit();
