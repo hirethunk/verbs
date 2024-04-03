@@ -1,11 +1,13 @@
 <?php
 
-use Thunk\Verbs\Event;
-use Thunk\Verbs\State;
-use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Attributes\Autodiscovery\StateId;
+use Thunk\Verbs\Event;
+use Thunk\Verbs\Facades\Verbs;
+use Thunk\Verbs\State;
 
-class TestState extends State {}
+class TestState extends State
+{
+}
 
 class TestEvent extends Event
 {
