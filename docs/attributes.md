@@ -8,10 +8,12 @@ class YourEvent extends Event
     #[StateId(GameState::class)]
     public int $game_id;
 
-    #[StateID(PlayerState::class)]
+    #[StateId(PlayerState::class)]
     public int $player_id;
 }
 ```
+
+The `StateId` attribute takes a `state_type`, an optional [`alias`](https://verbs.thunk.dev/docs/reference/states#content-aliasstring-alias-state-state) string, and by default can [automatically generate](/docs/technical/ids#content-automatically-generating-ids)(`autofill`) a `snowflake_id` for you.
 
 ### `#[AppliesToState]`
 
@@ -32,9 +34,28 @@ class RolledDice extends Event
 }
 ```
 
+`AppliesToState` has the same params as `StateId`, with an additional optional `id` param (after `state_type`) if you want to specify which prop belongs to which state.
+
+```php
+#[AppliesToState(state_type: GameState::class, id: foo_id)]
+#[AppliesToState(state_type: PlayerState::class, id: bar_id)]
+class RolledDice extends Event
+{
+    use PlayerAction;
+
+    public function __construct(
+        public int $foo_id,
+        public int $bar_id,
+        public array $dice,
+    )
+}
+```
+
+Otherwise, with `AppliesToState`, Verbs will find the `id` for you based on your State's prefix (i.e. `ExampleState` would be `example`, meaning `example_id` or `example_ids` would be associated automatically).
+
 ### `#[AppliesToSingletonState]`
 
-Use the `AppliesToSingletonState` on an event class to tell Verbs that it should always be applied to a single state (e.g. `CountState`) across the entire application (as opposed to having different counts for different states).
+Use the `AppliesToSingletonState` attribute on an event class to tell Verbs that it should always be applied to a single state (e.g. `CountState`) across the entire application (as opposed to having different counts for different states).
 
 Because we're using a [singleton state](/docs/reference/states#content-singleton-states), there is no need for the event to have a `$count_id`.
 
@@ -49,18 +70,73 @@ class IncrementCount extends Event
 }
 ```
 
+In addition to your `state_type` param, you may also set an optional `alias` string.
+
 ### `#[AppliesToChildState]`
 
-Use the `AppliesToChildState` on an event class to tell Verbs both the event's state and it's state's parent, useful in cases where multiple states rely on the same event.
+Use the `AppliesToChildState` attribute on an event class to allow Verbs to access a nested state.
+
+For our example, let's make sure our `ParentState` has a `child_id` property pointing to a `ChildState` by firing a `ChildAddedToParent` event:
 
 ```php
-#[AppliesToChildState(
-    state_type: PlanReportState::class,
-    parent_type: SubscriptionState::class,
-    id: 'plan_id'
-)]
-class SubscriptionCancelled extends Event
+ChildAddedToParent::fire(parent_id: 1, child_id: 2);
+
+// ChildAddedToParent.php
+#[AppliesToState(state_type: ParentState::class, id: 'parent_id')]
+#[AppliesToState(state_type: ChildState::class, id: 'child_id')]
+class ChildAddedToParent extends Event
+{
+    public int $parent_id;
+
+    public int $child_id;
+
+    public function applyToParentState(ParentState $state)
+    {
+        $state->child_id = $this->child_id;
+    }
+}
 ```
+
+```php
+class ParentState extends State
+{
+    public int $child_id;
+}
+```
+```php
+class ChildState extends State
+{
+    public int $count = 0;
+}
+```
+
+Now that `ParentState` has a record of our `ChildState`, we can load the child *through* the parent with `AppliesToChildState`.
+
+Let's show this by firing a `ChildActionedThroughParent` event with our new attribute:
+
+```php
+ChildActionedThroughParent::fire(parent_id: 1);
+
+// ChildActionedThroughParent.php
+#[AppliesToChildState(
+    state_type: ChildState::class,
+    parent_type: ParentState::class,
+    id: 'child_id'
+)]
+class ChildActionedThroughParent extends Event
+{
+    #[StateId(ParentState::class)]
+    public int $parent_id;
+
+    public function apply(ChildState $state)
+    {
+        $state->count++; // 1
+    }
+}
+```
+`AppliesToChildState` takes a `state_type` (your child state), `parent_type`, `id` (your child state id), and an optional `alias` string.
+
+When you use `AppliesToChildState`, don't forget to also use `StateId` or [`AppliesToState`](/docs/technical/attributes#content-appliestostate) to identify the `parent_id`.
 
 <!-- @!todo we can maybe not feature this one? Need to remember what it does -->
 <!-- ### `#[Listen]`

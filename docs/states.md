@@ -120,8 +120,7 @@ You can also use `loadOrFail()` to trigger a `StateNotFoundException` that will 
 
 ## Using States in Routes
 
-States implement Laravel’s `UrlRoutable` interface, which means you can route to them in the exact same 
-way you would do [route-model binding](https://laravel.com/docs/11.x/routing#route-model-binding):
+States implement Laravel’s `UrlRoutable` interface, which means you can route to them in the exact same way you would do [route-model binding](https://laravel.com/docs/11.x/routing#route-model-binding):
 
 ```php
 Route::get('/users/{user_state}', function(UserState $user_state) {
@@ -237,7 +236,7 @@ class FooCreated class
     public function handle()
     {
         Foo::create(
-            snowflake: $this->id
+            snowflake: $this->foo_id
         );
     }
 }
