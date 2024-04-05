@@ -30,14 +30,14 @@ a `cancelled_at` timestamp to the `Account` model.
 Reactors are similar to projectors, but they're meant for one-time side effects like sending
 mail or making external API requests (things that you wouldn't want to happen again if you
 ever replay your events). In Verbs, there is no formal concept of Reactors. Instead, you can
-just wrap code that you only want to run once inside of a `Verbs::unlessReplaying()` check.
+just wrap code that you only want to run once inside of a [`Verbs::unlessReplaying()`](/docs/reference/events/) check.
 
 ## Write Models and Read Models + CQRS
 
 CQRS stands for "Command Query Responsibility Segregation" and is a pattern where writes (commands)
-and reads (queries) are kept separate. Improved scalability and performance are often cited as 
+and reads (queries) are kept separate. Improved scalability and performance are often cited as
 reasons to introduce CQRS, but the real benefit for even small applications is the flexibility
 that it allows. Developers often have to make concessions in their data models to account for both
 read and write concerns. With event sourcing and separate read and write models, you can build
-Eloquent (read) models that are 100% custom-tailored to your application UI and access patterns, 
+Eloquent (read) models that are 100% custom-tailored to your application UI and access patterns,
 and create new data through events (writes) that map exactly to _what happened_ in your application.
