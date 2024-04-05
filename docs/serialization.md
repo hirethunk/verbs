@@ -5,6 +5,6 @@ This takes all the **public** properties on your objects and converts them to JS
 
 Verbs ships with a number of default normalizers that should be perfect for the typical Laravel
 application. If you need to store more complex data, you may need to add your own normalizers,
-which you can do in the Verbs config file. You can change the
+which you can do in `config/verbs.php` file. You may also change the
 [default serializer context](https://symfony.com/doc/current/components/serializer.html#context)
-in the Verbs config file as well.
+there as well.

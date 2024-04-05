@@ -32,7 +32,7 @@ By setting your event's `state_id` property to null--
 class CustomerBeganTrial extends Event
 {
     #[StateId(CustomerState::class)]
-    public ?int $customer_id =  null;
+    public ?int $customer_id = null;
 }
 ```
 
