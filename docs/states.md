@@ -82,6 +82,8 @@ public function applyToGameState(GameState $state) {}
 public function applyToPlayerState(PlayerState $state) {}
 ```
 
+On [`fire()`](/docs/reference/events#content-firing-events), Verbs will find and call all relevant state and event methods prefixed with "apply".
+
 ### Validating Event data using your State
 
 It's possible to use your state to determine whether or not you want to fire your event in the first place.
