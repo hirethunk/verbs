@@ -59,6 +59,13 @@ class StateManager
         return $this->reconstitute($state)->remember($state);
     }
 
+    public function loadEphemeral(Bits|UuidInterface|AbstractUid|int|string $id, string $type): State
+    {
+        $state = $this->load($id, $type);
+
+        return $this->reconstituteEphemeral($state)->remember($state);
+    }
+
     /** @param  class-string<State>  $type */
     public function singleton(string $type): State
     {
@@ -112,6 +119,14 @@ class StateManager
                 ->read(state: $state, after_id: $state->last_event_id, singleton: $singleton)
                 ->each(fn (Event $event) => $this->dispatcher->apply($event, $state));
         }
+
+        return $this;
+    }
+
+    protected function reconstituteEphemeral(State $state): static
+    {
+        Collection::wrap(app(EphemeralEventQueue::class)->getEvents())
+            ->each(fn (Event $event) => $this->dispatcher->apply($event, $state));
 
         return $this;
     }

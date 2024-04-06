@@ -81,6 +81,11 @@ abstract class State implements UrlRoutable
         return app(StateManager::class)->load($from, static::class);
     }
 
+    public static function loadEphemeral($from): static
+    {
+        return app(StateManager::class)->loadEphemeral(static::normalizeKey($from), static::class);
+    }
+
     protected static function normalizeKey(mixed $from)
     {
         return is_object($from) && method_exists($from, 'getVerbsStateKey')
