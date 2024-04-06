@@ -112,18 +112,18 @@ class ChildState extends State
 
 Now that `ParentState` has a record of our `ChildState`, we can load the child *through* the parent with `AppliesToChildState`.
 
-Let's show this by firing a `ChildActionedThroughParent` event with our new attribute:
+Let's show this by firing a `NestedStateAccessed` event with our new attribute:
 
 ```php
-ChildActionedThroughParent::fire(parent_id: 1);
+NestedStateAccessed::fire(parent_id: 1);
 
-// ChildActionedThroughParent.php
+// NestedStateAccessed.php
 #[AppliesToChildState(
     state_type: ChildState::class,
     parent_type: ParentState::class,
     id: 'child_id'
 )]
-class ChildActionedThroughParent extends Event
+class NestedStateAccessed extends Event
 {
     #[StateId(ParentState::class)]
     public int $parent_id;
