@@ -2,16 +2,19 @@
 
 namespace Thunk\Verbs\Livewire;
 
+use function Livewire\on;
 use Livewire\ComponentHook;
+use Livewire\Livewire;
+
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Lifecycle\EphemeralEventQueue;
-
-use function Livewire\on;
+use Thunk\Verbs\Livewire\PendingEventSynth;
 
 class SupportVerbs extends ComponentHook
 {
     public static function provide()
     {
+        Livewire::propertySynthesizer(PendingEventSynth::class);
         on('request', static::request(...));
         on('response', static::response(...));
     }
