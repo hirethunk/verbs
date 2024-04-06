@@ -36,7 +36,8 @@ class EventStore implements StoresEvents
             ->map(fn (VerbEvent $model) => $model->event());
     }
 
-    public function readEphemeral(array $events): Collection {
+    public function readEphemeral(array $events): Collection
+    {
         return Collection::wrap($events)
             ->map(fn ($event) => VerbEvent::make($event))
             ->each(fn (VerbEvent $model) => $this->metadata->set($model->event(), $model->metadata()))

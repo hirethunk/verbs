@@ -2,13 +2,12 @@
 
 namespace Thunk\Verbs\Livewire;
 
-use function Livewire\on;
 use Livewire\ComponentHook;
 use Livewire\Livewire;
-
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Lifecycle\EphemeralEventQueue;
-use Thunk\Verbs\Livewire\PendingEventSynth;
+
+use function Livewire\on;
 
 class SupportVerbs extends ComponentHook
 {
@@ -28,7 +27,9 @@ class SupportVerbs extends ComponentHook
     {
         $verbs = $request->get('verbs');
 
-        if (! $verbs) return;
+        if (! $verbs) {
+            return;
+        }
 
         app(EphemeralEventQueue::class)->hydrate($verbs['events'] ?? []);
     }

@@ -8,12 +8,12 @@ use Thunk\Verbs\State;
 class StateSynth extends Synth
 {
     public static $key = 'VrbSt';
- 
+
     public static function match($target)
     {
         return $target instanceof State;
     }
- 
+
     public function dehydrate($target)
     {
         return [null, [
@@ -21,13 +21,13 @@ class StateSynth extends Synth
             'type' => get_class($target),
         ]];
     }
- 
+
     public function hydrate($data, $meta)
     {
         return $meta['type']::load($meta['id']);
     }
 
-    public function get(&$target, $key) 
+    public function get(&$target, $key)
     {
         throw new \Exception('Cannot get state properties directly.');
     }
