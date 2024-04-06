@@ -20,6 +20,23 @@ class Broker implements BrokersEvents
     ) {
     }
 
+    public function ephemeral(Event $event): ?Event
+    {
+        $states = $event->states();
+
+        $states->each(fn ($state) => Guards::for($event, $state)->check());
+
+        Guards::for($event, null)->check();
+
+        $states->each(fn ($state) => $this->dispatcher->apply($event, $state));
+
+        $this->dispatcher->fired($event, $states);
+
+        app(EphemeralEventQueue::class)->queue($event);
+
+        return $event;
+    }
+
     public function fire(Event $event): ?Event
     {
         if ($this->is_replaying) {

@@ -100,6 +100,19 @@ class PendingEvent
         return $this;
     }
 
+    public function ephemeral(...$args): ?Event
+    {
+        if (! empty($args) || is_string($this->event)) {
+            $this->hydrate(static::normalizeArgs($args));
+        }
+
+        try {
+            return app(BrokersEvents::class)->ephemeral($this->event);
+        } catch (Throwable $e) {
+            throw $this->prepareException($e);
+        }
+    }
+
     /** @return null|TEventType */
     public function fire(...$args): ?Event
     {

@@ -26,6 +26,7 @@ use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Lifecycle\Broker;
 use Thunk\Verbs\Lifecycle\Dispatcher;
+use Thunk\Verbs\Lifecycle\EphemeralEventQueue;
 use Thunk\Verbs\Lifecycle\EventStore;
 use Thunk\Verbs\Lifecycle\MetadataManager;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
@@ -68,6 +69,7 @@ class VerbsServiceProvider extends PackageServiceProvider
         $this->app->singleton(EventStore::class);
         $this->app->singleton(SnapshotStore::class);
         $this->app->singleton(EventQueue::class);
+        $this->app->singleton(EphemeralEventQueue::class);
         $this->app->singleton(StateManager::class);
         $this->app->singleton(EventStateRegistry::class);
         $this->app->singleton(MetadataManager::class);

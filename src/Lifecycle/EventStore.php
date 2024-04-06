@@ -36,6 +36,13 @@ class EventStore implements StoresEvents
             ->map(fn (VerbEvent $model) => $model->event());
     }
 
+    public function readEphemeral(array $events): Collection {
+        return Collection::wrap($events)
+            ->map(fn ($event) => VerbEvent::make($event))
+            ->each(fn (VerbEvent $model) => $this->metadata->set($model->event(), $model->metadata()))
+            ->map(fn (VerbEvent $model) => $model->event());
+    }
+
     public function write(array $events): bool
     {
         if (empty($events)) {
@@ -46,6 +53,11 @@ class EventStore implements StoresEvents
 
         return VerbEvent::insert($this->formatForWrite($events))
             && VerbStateEvent::insert($this->formatRelationshipsForWrite($events));
+    }
+
+    public function writeEphemeral(array $events): array
+    {
+        return $this->formatForWrite($events);
     }
 
     protected function readEvents(
