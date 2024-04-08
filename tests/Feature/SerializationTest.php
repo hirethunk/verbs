@@ -120,6 +120,13 @@ it('honors configured context', function () {
         ->toBe('{"is_public":"public","is_protected":"protected","is_private":"private"}');
 });
 
+test('serializer does not call constructor when deserializing', function () {
+    $event = app(Serializer::class)
+        ->deserialize(EventWithConstructor::class, []);
+
+    expect($event->constructed)->toBe(false);
+});
+
 it('does not include the event ID in its payload', function () {
     $result = app(Serializer::class)->serialize(new class extends Event
     {
@@ -178,4 +185,14 @@ class DTO implements SerializedByVerbs
 class EventWithDto extends Event
 {
     public DTO $dto;
+}
+
+class EventWithConstructor extends Event
+{
+    public bool $constructed = false;
+
+    public function __construct()
+    {
+        $this->constructed = true;
+    }
 }
