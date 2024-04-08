@@ -3,6 +3,7 @@
 namespace Thunk\Verbs\Support;
 
 use BackedEnum;
+use ReflectionClass;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\Serializer as SymfonySerializer;
 
@@ -33,13 +34,20 @@ class Serializer
 
     public function deserialize(
         object|string $target,
-        string|array $data
+        string|array $data,
+        bool $call_constructor = false,
     ) {
         $type = $target;
         $context = [...$this->context];
 
         if (is_object($target)) {
             $type = $target::class;
+            $context[AbstractNormalizer::OBJECT_TO_POPULATE] = $target;
+        }
+
+        if (! $call_constructor && ! is_object($target)) {
+            $reflect = new ReflectionClass($target);
+            $target = $reflect->newInstanceWithoutConstructor();
             $context[AbstractNormalizer::OBJECT_TO_POPULATE] = $target;
         }
 
