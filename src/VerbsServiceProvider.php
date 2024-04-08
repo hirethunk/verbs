@@ -4,6 +4,7 @@ namespace Thunk\Verbs;
 
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Container\Container;
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Database\Events\TransactionCommitting;
 use Illuminate\Events\Dispatcher as LaravelDispatcher;
 use Illuminate\Queue\Events\JobProcessed;
@@ -18,12 +19,14 @@ use Symfony\Component\Serializer\Mapping\Loader\AnnotationLoader;
 use Symfony\Component\Serializer\Mapping\Loader\AttributeLoader;
 use Symfony\Component\Serializer\Normalizer\PropertyNormalizer;
 use Symfony\Component\Serializer\Serializer as SymfonySerializer;
+use Throwable;
 use Thunk\Verbs\Commands\MakeVerbEventCommand;
 use Thunk\Verbs\Commands\MakeVerbStateCommand;
 use Thunk\Verbs\Commands\ReplayCommand;
 use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Contracts\StoresSnapshots;
+use Thunk\Verbs\Lifecycle\AutoCommitManager;
 use Thunk\Verbs\Lifecycle\Broker;
 use Thunk\Verbs\Lifecycle\Dispatcher;
 use Thunk\Verbs\Lifecycle\EventStore;
@@ -118,6 +121,13 @@ class VerbsServiceProvider extends PackageServiceProvider
             );
         });
 
+        $this->app->singleton(AutoCommitManager::class, function (Container $app) {
+            return new AutoCommitManager(
+                broker: $app->make(BrokersEvents::class),
+                enabled: $app->make(Repository::class)->get('verbs.autocommit', true),
+            );
+        });
+
         $this->app->alias(Broker::class, BrokersEvents::class);
         $this->app->alias(EventStore::class, StoresEvents::class);
         $this->app->alias(SnapshotStore::class, StoresSnapshots::class);
@@ -137,7 +147,7 @@ class VerbsServiceProvider extends PackageServiceProvider
         }
 
         $this->app->terminating(function () {
-            app(BrokersEvents::class)->commit();
+            app(AutoCommitManager::class)->commitIfAutoCommitting();
         });
 
         // Hook into Laravel event dispatcher
@@ -155,7 +165,7 @@ class VerbsServiceProvider extends PackageServiceProvider
 
         // Auto-commit after each job on the queue is processed, and before any DB transactions commit
         if ($event instanceof JobProcessed || $event instanceof TransactionCommitting) {
-            app(BrokersEvents::class)->commit();
+            app(AutoCommitManager::class)->commitIfAutoCommitting();
         }
     }
 }
