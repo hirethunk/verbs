@@ -116,7 +116,7 @@ it('honors configured context', function () {
         ->toBe('{"is_public":"public","is_protected":"protected","is_private":"private"}');
 });
 
-test('serializer does not call constructor when deserializing', function() {
+test('serializer does not call constructor when deserializing', function () {
     $event = app(Serializer::class)
         ->deserialize(EventWithConstructor::class, []);
 
