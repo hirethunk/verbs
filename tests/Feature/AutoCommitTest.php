@@ -33,7 +33,8 @@ it('auto-commits before a DB transaction commits', function () {
 it('does not auto-commit if an event throws an exception', function () {
     Verbs::fake();
 
-    $event = new class extends Event {
+    $event = new class extends Event
+    {
         public function handle()
         {
             throw new RuntimeException();

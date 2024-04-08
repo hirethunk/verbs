@@ -4,7 +4,6 @@ namespace Thunk\Verbs;
 
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Container\Container;
-use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Database\Events\TransactionCommitting;
 use Illuminate\Events\Dispatcher as LaravelDispatcher;
 use Illuminate\Queue\Events\JobProcessed;
@@ -19,7 +18,6 @@ use Symfony\Component\Serializer\Mapping\Loader\AnnotationLoader;
 use Symfony\Component\Serializer\Mapping\Loader\AttributeLoader;
 use Symfony\Component\Serializer\Normalizer\PropertyNormalizer;
 use Symfony\Component\Serializer\Serializer as SymfonySerializer;
-use Throwable;
 use Thunk\Verbs\Commands\MakeVerbEventCommand;
 use Thunk\Verbs\Commands\MakeVerbStateCommand;
 use Thunk\Verbs\Commands\ReplayCommand;
