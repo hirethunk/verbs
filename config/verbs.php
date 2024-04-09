@@ -93,4 +93,19 @@ return [
     |
     */
     'wormhole' => true,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Auto-Commit
+    |--------------------------------------------------------------------------
+    |
+    | By default, Verbs will auto-commit events to the event store for you:
+    |
+    |   - at the end of every request (before returning a response)
+    |   - at the end of every console command
+    |   - at the end of every queued job
+    |
+    | If you want to always manually commit, you can disable auto-commit.
+    */
+    'autocommit' => true,
 ];

@@ -4,6 +4,7 @@ namespace Thunk\Verbs\Testing;
 
 use Closure;
 use Illuminate\Contracts\Container\Container;
+use PHPUnit\Framework\Assert;
 use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
@@ -13,6 +14,8 @@ use Thunk\Verbs\Lifecycle\BrokerConvenienceMethods;
 class BrokerFake implements BrokersEvents
 {
     use BrokerConvenienceMethods;
+
+    protected int $commit_call_count = 0;
 
     public function __construct(
         Container $container,
@@ -46,6 +49,17 @@ class BrokerFake implements BrokersEvents
         return $this->store->assertNothingCommitted();
     }
 
+    public function assertCommitCalledTimes(int $times): EventStoreFake
+    {
+        Assert::assertEquals(
+            expected: $times,
+            actual: $this->commit_call_count,
+            message: "Expected commit to be called {$times} time(s), but was called {$this->commit_call_count} time(s)."
+        );
+
+        return $this->store;
+    }
+
     public function fire(Event $event): ?Event
     {
         return $this->broker->fire($event);
@@ -53,6 +67,8 @@ class BrokerFake implements BrokersEvents
 
     public function commit(): bool
     {
+        $this->commit_call_count++;
+
         return $this->broker->commit();
     }
 

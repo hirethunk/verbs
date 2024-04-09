@@ -4,6 +4,7 @@ namespace Thunk\Verbs\Lifecycle;
 
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Exceptions\UnableToStoreEventsException;
 
 class Queue
 {
@@ -21,7 +22,7 @@ class Queue
         // TODO: Concurrency check
 
         if (! app(StoresEvents::class)->write($events)) {
-            throw new \Exception('Failed to write events to store.');
+            throw new UnableToStoreEventsException($events);
         }
 
         $this->event_queue = [];
