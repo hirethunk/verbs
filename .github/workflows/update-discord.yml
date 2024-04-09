@@ -1,4 +1,4 @@
-name: "Update Discord"
+name: "Notify Discord"
 
 on:
   release:
