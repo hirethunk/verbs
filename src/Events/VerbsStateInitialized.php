@@ -29,7 +29,7 @@ class VerbsStateInitialized extends Event implements CommitsImmediately
     public function validate()
     {
         $this->assert(
-            ! $this->state()->__verbs_initialized,
+            $this->state()->last_event_id === null,
             'State has already been initialized',
         );
     }
@@ -41,7 +41,5 @@ class VerbsStateInitialized extends Event implements CommitsImmediately
         foreach ($this->state_data as $key => $value) {
             $state->$key = $value;
         }
-
-        $state->__verbs_initialized = true;
     }
 }

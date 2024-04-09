@@ -11,7 +11,7 @@ use Thunk\Verbs\Support\Serializer;
 
 class StateNormalizer implements DenormalizerInterface, NormalizerInterface
 {
-    public function supportsDenormalization(mixed $data, string $type, ?string $format = null): bool
+    public function supportsDenormalization(mixed $data, string $type, ?string $format = null, array $context = []): bool
     {
         return is_a($type, State::class, true) && is_numeric($data);
     }
@@ -22,7 +22,7 @@ class StateNormalizer implements DenormalizerInterface, NormalizerInterface
         return app(StateManager::class)->load((int) $data, $type);
     }
 
-    public function supportsNormalization(mixed $data, ?string $format = null): bool
+    public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool
     {
         return $data instanceof State
             && $data !== app(Serializer::class)->active_normalization_target;

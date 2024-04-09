@@ -11,7 +11,7 @@ trait AcceptsNormalizerAndDenormalizer
 {
     protected NormalizerInterface|DenormalizerInterface $serializer;
 
-    public function setSerializer(SerializerInterface $serializer)
+    public function setSerializer(SerializerInterface $serializer): void
     {
         if ($serializer instanceof NormalizerInterface && $serializer instanceof DenormalizerInterface) {
             $this->serializer = $serializer;

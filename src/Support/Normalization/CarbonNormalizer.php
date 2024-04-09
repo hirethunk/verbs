@@ -10,7 +10,7 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
 class CarbonNormalizer implements DenormalizerInterface, NormalizerInterface
 {
-    public function supportsDenormalization(mixed $data, string $type, ?string $format = null): bool
+    public function supportsDenormalization(mixed $data, string $type, ?string $format = null, array $context = []): bool
     {
         return is_a($type, CarbonInterface::class, true);
     }
@@ -23,7 +23,7 @@ class CarbonNormalizer implements DenormalizerInterface, NormalizerInterface
             : $type::parse($data);
     }
 
-    public function supportsNormalization(mixed $data, ?string $format = null): bool
+    public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool
     {
         return $data instanceof CarbonInterface;
     }
