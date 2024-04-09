@@ -1,6 +1,7 @@
 <?php
 
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Exceptions\UnableToStoreEventsException;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Lifecycle\AutoCommitManager;
 
@@ -18,14 +19,14 @@ it('auto-commits after a job is processed', function () {
     });
 });
 
-it('does not auto-commit if an event throws an exception', function () {
+it('does not auto-commit if an UnableToStoreEventsException exception is thrown', function () {
     Verbs::fake();
 
     $event = new class extends Event
     {
         public function handle()
         {
-            throw new RuntimeException();
+            throw new UnableToStoreEventsException([]);
         }
     };
 
@@ -34,7 +35,7 @@ it('does not auto-commit if an event throws an exception', function () {
     try {
         verb($event);
         Verbs::commit();
-    } catch (Throwable) {
+    } catch (UnableToStoreEventsException) {
         $thrown = true;
     }
 
