@@ -19,9 +19,6 @@ abstract class State implements UrlRoutable
 
     public Bits|UuidInterface|AbstractUid|int|string|null $last_event_id = null;
 
-    // TODO: This should move to state metadata eventually
-    public bool $__verbs_initialized = false;
-
     public function __construct()
     {
         app(StateManager::class)->register($this);
