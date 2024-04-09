@@ -22,7 +22,7 @@ class ModelNormalizer implements DenormalizerInterface, NormalizerInterface
         static::$allow_normalization = $allow_normalization;
     }
 
-    public function supportsDenormalization(mixed $data, string $type, ?string $format = null): bool
+    public function supportsDenormalization(mixed $data, string $type, ?string $format = null, array $context = []): bool
     {
         return $this->typeSupportsModelIdentifiers($type) && $this->isDenormalizedModelIdentifier($data);
     }
@@ -43,7 +43,7 @@ class ModelNormalizer implements DenormalizerInterface, NormalizerInterface
         return $this->getRestoredPropertyValue($identifier);
     }
 
-    public function supportsNormalization(mixed $data, ?string $format = null): bool
+    public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool
     {
         return $data instanceof QueueableEntity
             || $data instanceof QueueableCollection;

@@ -52,13 +52,13 @@ class Broker implements BrokersEvents
     {
         $events = app(EventQueue::class)->flush();
 
-        // FIXME: Only write changes + handle aggregate versioning
-
-        app(StateManager::class)->writeSnapshots();
-
         if (empty($events)) {
             return true;
         }
+
+        // FIXME: Only write changes + handle aggregate versioning
+
+        app(StateManager::class)->writeSnapshots();
 
         foreach ($events as $event) {
             $this->metadata->setLastResults($event, $this->dispatcher->handle($event, $event->states()));

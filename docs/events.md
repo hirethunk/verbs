@@ -59,12 +59,31 @@ your events by calling `Verbs::commit()`.
 - at the end of every request (before returning a response)
 - at the end of every console command
 - at the end of every queued job
-- immediately before a database transaction is committed
 
 In [tests](testing), you'll often need to call `Verbs::commit()` manually unless your test triggers
 one of the above.
 
-You can also call `Event::commit()` (instead of `fire()`), which will both fire AND commit the event
+#### Committing during database transactions
+
+If you fire events during a database transaction, you probably want to call `Verbs::commit()` before
+the transaction commits so that your Verbs events are included in the transaction. For example:
+
+```php
+DB::transaction(function() {
+    // Some non-Verbs Eloquent calls
+    
+    CustomerRegistered::fire(...);
+    CustomerBeganTrial::fire(...);
+    
+    // …some more non-Verbs Eloquent calls
+    
+    Verbs::commit();
+});
+```
+
+#### Committing & immediately accessing results
+
+You can also call `Event::commit()` (instead of `fire()`), which will both fire AND commit the event 
 (and all events in the queue). `Event::commit()` also returns whatever your event’s `handle()` method
 returns, which is useful when you need to immediately use the result of an event, such as a store
 method on a controller.

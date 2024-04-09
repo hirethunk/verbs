@@ -38,7 +38,7 @@ class AppliesToState extends StateDiscoveryAttribute
         // TODO: Check type of data
 
         if (! is_array($id)) {
-            $this->alias = $this->inferAliasFromVariableName($property);
+            $this->alias ??= $this->inferAliasFromVariableName($property);
         }
 
         return collect(Arr::wrap($id))

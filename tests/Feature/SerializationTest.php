@@ -1,11 +1,15 @@
 <?php
 
 use Carbon\CarbonInterface;
+use Glhd\Bits\Bits;
 use Glhd\Bits\Snowflake;
 use Illuminate\Support\Str;
+use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Normalizer\PropertyNormalizer;
+use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\SerializedByVerbs;
+use Thunk\Verbs\State;
 use Thunk\Verbs\Support\Normalization\NormalizeToPropertiesAndClassName;
 use Thunk\Verbs\Support\Serializer;
 
@@ -116,6 +120,42 @@ it('honors configured context', function () {
         ->toBe('{"is_public":"public","is_protected":"protected","is_private":"private"}');
 });
 
+test('serializer does not call constructor when deserializing', function () {
+    $event = app(Serializer::class)
+        ->deserialize(EventWithConstructor::class, []);
+
+    expect($event->constructed)->toBe(false);
+});
+
+it('does not include the event ID in its payload', function () {
+    $result = app(Serializer::class)->serialize(new class extends Event
+    {
+        public string $name = 'Demo';
+
+        public function __construct()
+        {
+            $this->id = snowflake_id();
+        }
+    });
+
+    expect($result)->toBe('{"name":"Demo"}');
+});
+
+it('does not include the state ID or last_event_id in its payload', function () {
+    $result = app(Serializer::class)->serialize(new class extends State
+    {
+        public Bits|UuidInterface|AbstractUid|int|string|null $id = 123;
+
+        public Bits|UuidInterface|AbstractUid|int|string|null $last_event_id = 123;
+
+        public bool $__verbs_initialized = false;
+
+        public string $name = 'Demo';
+    });
+
+    expect($result)->toBe('{"__verbs_initialized":false,"name":"Demo"}');
+});
+
 class EventWithConstructorPromotion extends Event
 {
     public function __construct(
@@ -145,4 +185,14 @@ class DTO implements SerializedByVerbs
 class EventWithDto extends Event
 {
     public DTO $dto;
+}
+
+class EventWithConstructor extends Event
+{
+    public bool $constructed = false;
+
+    public function __construct()
+    {
+        $this->constructed = true;
+    }
 }
