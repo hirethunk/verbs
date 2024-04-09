@@ -60,7 +60,6 @@ class Broker implements BrokersEvents
 
         app(StateManager::class)->writeSnapshots();
 
-
         foreach ($events as $event) {
             $this->metadata->setLastResults($event, $this->dispatcher->handle($event, $event->states()));
         }
