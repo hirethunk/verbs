@@ -32,6 +32,18 @@ test('snapshots are not stored for states that have no events', function () {
     app(StoresSnapshots::class)->assertNothingWritten();
 });
 
+test('it calls the state constructor on make', function () {
+    $state = StateManagerTestState::make();
+    expect($state->constructed)->toBeTrue();
+});
+
 class StateManagerTestState extends State
 {
+    public bool $constructed = false;
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->constructed = true;
+    }
 }
