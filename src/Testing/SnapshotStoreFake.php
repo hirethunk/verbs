@@ -21,6 +21,11 @@ class SnapshotStoreFake implements StoresSnapshots
     /** @var Collection<int, Collection<int, State>> */
     protected Collection $states;
 
+    public function __construct()
+    {
+        $this->states = new Collection();
+    }
+
     public function write(array $states): bool
     {
         foreach ($states as $state) {
