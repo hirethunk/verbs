@@ -5,9 +5,9 @@ on:
     types: [ released ]
 
 jobs:
-  notify:
-    runs-on: ubuntu-latest
-
+  run_main:
+    runs-on: ubuntu-18.04
+    name: Send release notification to Discord
     steps:
       - name: Send notification
         uses: nhevia/discord-styled-releases@v1.2.3
