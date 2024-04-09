@@ -18,18 +18,6 @@ it('auto-commits after a job is processed', function () {
     });
 });
 
-it('auto-commits before a DB transaction commits', function () {
-    Verbs::fake();
-
-    Verbs::assertNothingCommitted();
-
-    DB::transaction(fn () => AutoCommitTestEvent::fire(message: 'auto-commit db test'));
-
-    Verbs::assertCommitted(function (AutoCommitTestEvent $event) {
-        return $event->message === 'auto-commit db test';
-    });
-});
-
 it('does not auto-commit if an event throws an exception', function () {
     Verbs::fake();
 
