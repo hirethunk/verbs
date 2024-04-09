@@ -2,7 +2,6 @@
 
 namespace Thunk\Verbs\Lifecycle;
 
-use Throwable;
 use Thunk\Verbs\CommitsImmediately;
 use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Contracts\StoresEvents;
@@ -59,15 +58,10 @@ class Broker implements BrokersEvents
 
         // FIXME: Only write changes + handle aggregate versioning
 
-        try {
-            app(StateManager::class)->writeSnapshots();
+        app(StateManager::class)->writeSnapshots();
 
-            foreach ($events as $event) {
-                $this->metadata->setLastResults($event, $this->dispatcher->handle($event, $event->states()));
-            }
-        } catch (Throwable $exception) {
-            app(AutoCommitManager::class)->skipNextAutocommit();
-            throw $exception;
+        foreach ($events as $event) {
+            $this->metadata->setLastResults($event, $this->dispatcher->handle($event, $event->states()));
         }
 
         return $this->commit();

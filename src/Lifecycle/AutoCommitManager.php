@@ -27,9 +27,9 @@ class AutoCommitManager
         return $committed;
     }
 
-    public function skipNextAutocommit(): void
+    public function skipNextAutocommit(bool $skip = true): void
     {
-        $this->skip_next_autocommit = true;
+        $this->skip_next_autocommit = $skip;
     }
 
     protected function shouldAutoCommit(): bool
