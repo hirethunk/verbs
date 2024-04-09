@@ -2,7 +2,6 @@
 
 namespace Thunk\Verbs\Lifecycle;
 
-use Throwable;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\UnableToStoreEventsException;
