@@ -4,7 +4,6 @@ namespace Thunk\Verbs;
 
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Contracts\Container\Container;
-use Illuminate\Database\Events\TransactionCommitting;
 use Illuminate\Events\Dispatcher as LaravelDispatcher;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Support\DateFactory;
