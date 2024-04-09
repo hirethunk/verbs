@@ -34,7 +34,7 @@ class StateId extends StateDiscoveryAttribute
         }
 
         if (! is_array($id)) {
-            $this->alias = $this->inferAliasFromVariableName($this->property->getName());
+            $this->alias ??= $this->inferAliasFromVariableName($this->property->getName());
         }
 
         return collect(Arr::wrap($id))
