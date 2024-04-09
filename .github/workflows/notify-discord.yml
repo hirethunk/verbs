@@ -3,7 +3,8 @@ name: "Notify Discord"
 on:
   release:
     types:
-      - created
+      - edited
+      - released
 
 jobs:
   notify:
