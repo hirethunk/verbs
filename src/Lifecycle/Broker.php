@@ -53,11 +53,11 @@ class Broker implements BrokersEvents
     {
         $events = app(EventQueue::class)->flush();
 
-        // FIXME: Only write changes + handle aggregate versioning
-
         if (empty($events)) {
             return true;
         }
+
+        // FIXME: Only write changes + handle aggregate versioning
 
         try {
             app(StateManager::class)->writeSnapshots();
