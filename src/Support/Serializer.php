@@ -6,6 +6,8 @@ use BackedEnum;
 use ReflectionClass;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\Serializer as SymfonySerializer;
+use Thunk\Verbs\Event;
+use Thunk\Verbs\State;
 
 class Serializer
 {
@@ -19,6 +21,9 @@ class Serializer
 
     public function serialize(object $class): string
     {
+        // Build the context before __sleep, so we still have the original object
+        $context = $this->serializationContext($class);
+
         if (method_exists($class, '__sleep')) {
             $class = $class->__sleep();
         }
@@ -26,7 +31,7 @@ class Serializer
         try {
             $this->active_normalization_target = $class;
 
-            return $this->serializer->serialize($class, 'json', $this->context);
+            return $this->serializer->serialize($class, 'json', $context);
         } finally {
             $this->active_normalization_target = null;
         }
@@ -38,7 +43,7 @@ class Serializer
         bool $call_constructor = false,
     ) {
         $type = $target;
-        $context = [...$this->context];
+        $context = $this->context;
 
         if (is_object($target)) {
             $type = $target::class;
@@ -68,5 +73,20 @@ class Serializer
             format: 'json',
             context: $context,
         );
+    }
+
+    protected function serializationContext(object $target): array
+    {
+        $context = [...$this->context];
+
+        if ($target instanceof Event) {
+            $context[AbstractNormalizer::IGNORED_ATTRIBUTES] = ['id'];
+        }
+
+        if ($target instanceof State) {
+            $context[AbstractNormalizer::IGNORED_ATTRIBUTES] = ['id', 'last_event_id'];
+        }
+
+        return $context;
     }
 }

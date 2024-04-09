@@ -24,7 +24,7 @@ it('creates metadata for events', function () {
 
     $model = VerbEvent::sole();
 
-    expect($model->data)->toMatchArray(['name' => 'Verbs', 'id' => 1])
+    expect($model->data)->toMatchArray(['name' => 'Verbs'])
         ->and($model->metadata)->toMatchArray(['request_id' => 'abc', 'initiator_id' => 888888])
         ->and($model->metadata())->toBeInstanceOf(Metadata::class)
         ->and($model->event()->metadata())->toBeInstanceOf(Metadata::class)
