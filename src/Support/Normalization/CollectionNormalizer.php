@@ -14,7 +14,7 @@ class CollectionNormalizer implements DenormalizerInterface, NormalizerInterface
 {
     use AcceptsNormalizerAndDenormalizer;
 
-    public function supportsDenormalization(mixed $data, string $type, ?string $format = null): bool
+    public function supportsDenormalization(mixed $data, string $type, ?string $format = null, array $context = []): bool
     {
         return is_a($type, Collection::class, true);
     }
@@ -40,7 +40,7 @@ class CollectionNormalizer implements DenormalizerInterface, NormalizerInterface
             ->map(fn ($value) => $this->serializer->denormalize($value, $subtype, $format, $context));
     }
 
-    public function supportsNormalization(mixed $data, ?string $format = null): bool
+    public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool
     {
         return $data instanceof Collection;
     }
