@@ -72,4 +72,24 @@ class StateCollection extends Collection
 
         return $result;
     }
+
+    public static function load(array $ids = [], string $state_type = State::class): static
+    {
+        return new static(
+            array_map(
+                fn ($id) => $state_type::load($id),
+                $ids
+            )
+        );
+    }
+
+    public static function loadEphemeral(array $ids = [], string $state_type = State::class): static
+    {
+        return new static(
+            array_map(
+                fn ($id) => $state_type::loadEphemeral($id),
+                $ids
+            )
+        );
+    }
 }

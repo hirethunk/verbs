@@ -61,6 +61,16 @@ class StateManager
 
     public function loadEphemeral(Bits|UuidInterface|AbstractUid|int|string $id, string $type): State
     {
+        $id = Id::from($id);
+        $key = $this->key($id, $type);
+
+        // FIXME: If the state we're loading has a last_event_id that's ahead of the registry's last_event_id, we need to re-build the state
+
+        if ($state = $this->states->get($key)) {
+            ray('statefound');
+            return $state;
+        }
+
         $state = $this->load($id, $type);
 
         return $this->reconstituteEphemeral($state)->remember($state);
@@ -125,6 +135,7 @@ class StateManager
 
     protected function reconstituteEphemeral(State $state): static
     {
+        ray('reconstituteEphemeral', Collection::wrap(app(EphemeralEventQueue::class)->getEvents()));
         Collection::wrap(app(EphemeralEventQueue::class)->getEvents())
             ->each(fn (Event $event) => $this->dispatcher->apply($event, $state));
 
