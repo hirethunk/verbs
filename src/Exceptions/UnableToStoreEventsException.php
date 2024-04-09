@@ -4,7 +4,6 @@ namespace Thunk\Verbs\Exceptions;
 
 use RuntimeException;
 use Throwable;
-use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Lifecycle\AutoCommitManager;
 
 class UnableToStoreEventsException extends RuntimeException
