@@ -12,7 +12,7 @@ class SelfSerializingNormalizer implements DenormalizerInterface, NormalizerInte
 {
     use AcceptsNormalizerAndDenormalizer;
 
-    public function supportsDenormalization(mixed $data, string $type, ?string $format = null): bool
+    public function supportsDenormalization(mixed $data, string $type, ?string $format = null, array $context = []): bool
     {
         return is_a($type, SerializedByVerbs::class, true);
     }
@@ -31,7 +31,7 @@ class SelfSerializingNormalizer implements DenormalizerInterface, NormalizerInte
         return $type::deserializeForVerbs($data, $this->serializer);
     }
 
-    public function supportsNormalization(mixed $data, ?string $format = null): bool
+    public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool
     {
         return $data instanceof SerializedByVerbs;
     }
