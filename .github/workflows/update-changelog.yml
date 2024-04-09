@@ -17,12 +17,6 @@ jobs:
         with:
           ref: main
 
-      - name: Send notification
-        uses: nhevia/discord-styled-releases@main
-        with:
-          webhook_id: ${{ secrets.DISCORD_WEBHOOK_ID }}
-          webhook_token: ${{ secrets.DISCORD_WEBHOOK_TOKEN }}
-
       - name: Update Changelog
         uses: stefanzweifel/changelog-updater-action@v1
         with:
