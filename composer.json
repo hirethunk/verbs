@@ -23,8 +23,8 @@
         "internachi/modular": "^2.0",
         "laravel/prompts": "^0.1.15",
         "spatie/laravel-package-tools": "^1.14.0",
-        "symfony/property-access": "^7.0",
-        "symfony/serializer": "^7.0"
+        "symfony/property-access": "^6.2|^7.0",
+        "symfony/serializer": "^6.3|^7.0"
     },
     "require-dev": {
         "brick/money": "^0.8.1",
