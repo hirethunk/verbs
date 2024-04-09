@@ -9,7 +9,7 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
 class BitsNormalizer implements DenormalizerInterface, NormalizerInterface
 {
-    public function supportsDenormalization(mixed $data, string $type, ?string $format = null): bool
+    public function supportsDenormalization(mixed $data, string $type, ?string $format = null, array $context = []): bool
     {
         return is_a($type, Bits::class, true);
     }
@@ -20,7 +20,7 @@ class BitsNormalizer implements DenormalizerInterface, NormalizerInterface
         return $type::coerce($data);
     }
 
-    public function supportsNormalization(mixed $data, ?string $format = null): bool
+    public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool
     {
         return $data instanceof Bits;
     }

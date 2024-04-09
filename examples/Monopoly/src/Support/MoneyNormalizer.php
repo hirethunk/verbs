@@ -9,7 +9,7 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
 class MoneyNormalizer implements DenormalizerInterface, NormalizerInterface
 {
-    public function supportsDenormalization(mixed $data, string $type, ?string $format = null): bool
+    public function supportsDenormalization(mixed $data, string $type, ?string $format = null, array $context = []): bool
     {
         return is_a($type, Money::class, true);
     }
@@ -20,7 +20,7 @@ class MoneyNormalizer implements DenormalizerInterface, NormalizerInterface
         return Money::ofMinor($data['amount'], $data['currency']);
     }
 
-    public function supportsNormalization(mixed $data, ?string $format = null): bool
+    public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool
     {
         return $data instanceof Money;
     }
