@@ -2,16 +2,14 @@ name: "Notify Discord"
 
 on:
   release:
-    types:
-      - edited
-      - released
+    types: [ released ]
 
 jobs:
   notify:
     runs-on: ubuntu-latest
-    name: Send notification to Discord
+
     steps:
-      - name: Sending notification
+      - name: Send notification
         uses: nhevia/discord-styled-releases@main
         with:
           webhook_id: ${{ secrets.DISCORD_WEBHOOK_ID }}
