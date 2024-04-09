@@ -21,6 +21,9 @@ class Serializer
 
     public function serialize(object $class): string
     {
+        // Build the context before __sleep, so we still have the original object
+        $context = $this->serializationContext($class);
+
         if (method_exists($class, '__sleep')) {
             $class = $class->__sleep();
         }
@@ -28,7 +31,7 @@ class Serializer
         try {
             $this->active_normalization_target = $class;
 
-            return $this->serializer->serialize($class, 'json', $this->serializationContext($class));
+            return $this->serializer->serialize($class, 'json', $context);
         } finally {
             $this->active_normalization_target = null;
         }
