@@ -161,8 +161,8 @@ class VerbsServiceProvider extends PackageServiceProvider
             $this->app->make(BrokersEvents::class)->fire($event);
         }
 
-        // Auto-commit after each job on the queue is processed, and before any DB transactions commit
-        if ($event instanceof JobProcessed || $event instanceof TransactionCommitting) {
+        // Auto-commit after each job on the queue is processed
+        if ($event instanceof JobProcessed) {
             app(AutoCommitManager::class)->commitIfAutoCommitting();
         }
     }

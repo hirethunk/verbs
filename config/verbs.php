@@ -104,7 +104,6 @@ return [
     |   - at the end of every request (before returning a response)
     |   - at the end of every console command
     |   - at the end of every queued job
-    |   - immediately before a database transaction is committed
     |
     | If you want to always manually commit, you can disable auto-commit.
     */
