@@ -82,6 +82,8 @@ public function applyToGameState(GameState $state) {}
 public function applyToPlayerState(PlayerState $state) {}
 ```
 
+On [`fire()`](/docs/reference/events#content-firing-events), Verbs will find and call all relevant state and event methods prefixed with "apply".
+
 ### Validating Event data using your State
 
 It's possible to use your state to determine whether or not you want to fire your event in the first place.
@@ -120,8 +122,7 @@ You can also use `loadOrFail()` to trigger a `StateNotFoundException` that will 
 
 ## Using States in Routes
 
-States implement Laravel’s `UrlRoutable` interface, which means you can route to them in the exact same 
-way you would do [route-model binding](https://laravel.com/docs/11.x/routing#route-model-binding):
+States implement Laravel’s `UrlRoutable` interface, which means you can route to them in the exact same way you would do [route-model binding](https://laravel.com/docs/11.x/routing#route-model-binding):
 
 ```php
 Route::get('/users/{user_state}', function(UserState $user_state) {
@@ -237,7 +238,7 @@ class FooCreated class
     public function handle()
     {
         Foo::create(
-            snowflake: $this->id
+            snowflake: $this->foo_id
         );
     }
 }

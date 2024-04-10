@@ -85,7 +85,7 @@ DB::transaction(function() {
 
 You can also call `Event::commit()` (instead of `fire()`), which will both fire AND commit the event 
 (and all events in the queue). `Event::commit()` also returns whatever your event’s `handle()` method
-returns, which is useful when you need to immediately use the result of an event, such as a store 
+returns, which is useful when you need to immediately use the result of an event, such as a store
 method on a controller.
 
 ```php
@@ -158,7 +158,7 @@ public function apply(CountState $state)
 CountState::load($id)->count; // 2
 ```
 
-The `fired()` hook executes in memory after the event fires, but before it's stored in the database. This allows your [state](/docs/reference/states) to take care of any changes from your first event, and allows you to use the updated state in your next event. In our next example, we'll illustrate this.
+The `fired()` hook executes in memory after the event fires, but before it's stored in the database. This allows your state to take care of any changes from your first event, and allows you to use the updated state in your next event. In our next example, we'll illustrate this.
 
 Let's say we have a game where a level 4 Player levels up and receives a reward.
 
@@ -234,9 +234,9 @@ Truncate all the data that is created by your event handlers. If you don't, you 
 
 #### One-time effects
 
-You'll want to tell verbs when effects should NOT trigger on replay (like sending a welcome email).
+You'll want to tell verbs when effects should NOT trigger on replay (like sending a welcome email). You may use:
 
-You may use `unlessReplaying`:
+##### `Verbs::unlessReplaying()`
 
 ```php
 Verbs::unlessReplaying(function () {
@@ -248,7 +248,7 @@ Or the `#[Once]` [attribute](/docs/technical/attributes#content-once).
 
 ### Firing during Replays
 
-During a [replay](#content-replaying-events), the system isn't "firing" the event in the original sense (i.e., it's not going through the initial logic that might include checks, validations, or triggering of additional side effects like sending one-time-notifications). Instead, it directly applies the changes recorded in the event store.
+During a [replay](#content-replaying-events), the system isn't "firing" the event in the original sense (i.e., it's not going through the initial logic that might include checks, validations, or triggering of additional side effects like sending one-time notifications). Instead, it directly applies the changes recorded in the event store.
 
 
 ### Wormholes
