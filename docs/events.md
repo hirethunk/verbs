@@ -218,13 +218,12 @@ You may also use `Verbs::replay()` in files.
 
 <!-- @!todo syntax for replaying "up to a particular point" ? -->
 
-#### Warning!
-
-Verbs does not reset any model data that might be created in your event handlers.
-Be sure to either reset that data before replaying, or confirm that all `handle()` calls are idempotent.
-Replaying events without thinking thru the consequences can have VERY negative side-effects.
-
-Because of this, upon executing the `verbs:replay` command we will make you confirm your choice, and confirm _again_ if you're in production.
+> [!warning]
+> Verbs does not reset any model data that might be created in your event handlers.
+> Be sure to either reset that data before replaying, or confirm that all `handle()` calls are idempotent.
+> Replaying events without thinking thru the consequences can have VERY negative side effects.
+> Because of this, upon executing the `verbs:replay` command we will make you confirm your choice, and 
+> confirm _again_ if you're in production.
 
 #### Preparing for a replay
 
