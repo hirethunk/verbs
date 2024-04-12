@@ -11,7 +11,8 @@ class On implements HookAttribute
 {
     public function __construct(
         public Phase $phase
-    ) { }
+    ) {
+    }
 
     public function applyToHook(Hook $hook): void
     {
