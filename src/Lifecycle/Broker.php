@@ -37,9 +37,9 @@ class Broker implements BrokersEvents
 
         $states->each(fn ($state) => $this->dispatcher->apply($event, $state));
 
-        $this->dispatcher->fired($event, $states);
-
         app(Queue::class)->queue($event);
+
+        $this->dispatcher->fired($event, $states);
 
         if ($this->commit_immediately || $event instanceof CommitsImmediately) {
             $this->commit();
