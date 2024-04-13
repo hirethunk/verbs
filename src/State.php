@@ -22,6 +22,7 @@ abstract class State implements UrlRoutable
 
     // TODO: This should move to state metadata eventually
     public bool $__verbs_initialized = false;
+
     public bool $__verbs_ephemeral = false;
 
     public function __construct()
@@ -139,6 +140,7 @@ abstract class State implements UrlRoutable
     public function __get($name)
     {
         $name = Str::camel($name);
+
         return $this->$name();
     }
 }
