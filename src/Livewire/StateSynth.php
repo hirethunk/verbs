@@ -2,12 +2,17 @@
 
 namespace Thunk\Verbs\Livewire;
 
+use Livewire\Drawer\Utils;
 use Livewire\Mechanisms\HandleComponents\Synthesizers\Synth;
 use Thunk\Verbs\State;
 
 class StateSynth extends Synth
 {
     public static $key = 'VrbSt';
+
+    protected array $hidden_properties = [
+        '__verbs_initialized',
+    ];
 
     public static function match($target)
     {
@@ -16,15 +21,22 @@ class StateSynth extends Synth
 
     public function dehydrate($target)
     {
-        return [null, [
+        ray('dehydrate');
+        $data = Utils::getPublicProperties($target, function (\ReflectionProperty $property) {
+            return ! in_array($property->getName(), $this->hidden_properties);
+        });
+
+        $meta = [
             'id' => $target->id,
             'type' => get_class($target),
-        ]];
+        ];
+
+        return [$data, $meta];
     }
 
     public function hydrate($data, $meta)
     {
-        return $meta['type']::load($meta['id']);
+        return $meta['type']::loadEphemeral($meta['id']);
     }
 
     public function get(&$target, $key)

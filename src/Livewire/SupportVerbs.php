@@ -13,14 +13,17 @@ class SupportVerbs extends ComponentHook
 {
     public static function provide()
     {
-        Livewire::propertySynthesizer(PendingEventSynth::class);
+        Livewire::propertySynthesizer([
+            PendingEventSynth::class,
+            StateSynth::class,
+        ]);
         on('request', static::request(...));
         on('response', static::response(...));
     }
 
     public function render()
     {
-        Verbs::commit();
+        // Verbs::commit();
     }
 
     public static function request(\Illuminate\Http\Request $request)
