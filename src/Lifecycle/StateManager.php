@@ -41,8 +41,6 @@ class StateManager
         $id = Id::from($id);
         $key = $this->key($id, $type);
 
-        ray('load', $id, $type, $key);
-
         // FIXME: If the state we're loading has a last_event_id that's ahead of the registry's last_event_id, we need to re-build the state
 
         if ($state = $this->states->get($key)) {
@@ -58,8 +56,6 @@ class StateManager
             $state->id = $id;
         }
 
-        ray('loadedState', $state);
-
         return $this->reconstitute($state)->remember($state);
     }
 
@@ -70,19 +66,15 @@ class StateManager
 
         // FIXME: If the state we're loading has a last_event_id that's ahead of the registry's last_event_id, we need to re-build the state
 
-        ray('states', $key, $this->states);
         if (($state = $this->states->get($key)) && $state->__verbs_ephemeral === true) {
-            ray('statefound', $key);
             return $state;
         }
 
         $state = $this->load($id, $type);
 
-        ray('loadEphemeral', $state);
-
         $state->__verbs_ephemeral = true;
 
-        return ray()->pass($this->reconstituteEphemeral($state))->remember($state);
+        return $this->reconstituteEphemeral($state)->remember($state);
     }
 
     /** @param  class-string<State>  $type */
@@ -146,7 +138,6 @@ class StateManager
     {
         Collection::wrap(app(EphemeralEventQueue::class)->getEvents())
             ->each(function (Event $event) use ($state) {
-                ray('reconstituteEphemeral', $state->id, $event->states()->pluck('id')->toArray(), $event->states()->contains($state));
                 if ($event->states()->contains($state)) {
                     $this->dispatcher->apply($event, $state);
                 }
