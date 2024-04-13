@@ -41,6 +41,8 @@ class StateManager
         $id = Id::from($id);
         $key = $this->key($id, $type);
 
+        ray('load', $id, $type, $key);
+
         // FIXME: If the state we're loading has a last_event_id that's ahead of the registry's last_event_id, we need to re-build the state
 
         if ($state = $this->states->get($key)) {
@@ -52,9 +54,11 @@ class StateManager
                 throw new UnexpectedValueException(sprintf('Expected State <%d> to be of type "%s" but got "%s"', $id, class_basename($type), class_basename($state)));
             }
         } else {
-            $state = $type::make();
+            $state = $type::make(['id' => $id]);
             $state->id = $id;
         }
+
+        ray('loadedState', $state);
 
         return $this->reconstitute($state)->remember($state);
     }
@@ -66,16 +70,19 @@ class StateManager
 
         // FIXME: If the state we're loading has a last_event_id that's ahead of the registry's last_event_id, we need to re-build the state
 
-        if ($state = $this->states->get($key)) {
-            ray('statefound');
+        ray('states', $key, $this->states);
+        if (($state = $this->states->get($key)) && $state->__verbs_ephemeral === true) {
+            ray('statefound', $key);
             return $state;
         }
 
         $state = $this->load($id, $type);
 
+        ray('loadEphemeral', $state);
+
         $state->__verbs_ephemeral = true;
 
-        return $this->reconstituteEphemeral($state)->remember($state);
+        return ray()->pass($this->reconstituteEphemeral($state))->remember($state);
     }
 
     /** @param  class-string<State>  $type */
@@ -137,9 +144,13 @@ class StateManager
 
     protected function reconstituteEphemeral(State $state): static
     {
-        ray('reconstituteEphemeral', Collection::wrap(app(EphemeralEventQueue::class)->getEvents()));
         Collection::wrap(app(EphemeralEventQueue::class)->getEvents())
-            ->each(fn (Event $event) => $this->dispatcher->apply($event, $state));
+            ->each(function (Event $event) use ($state) {
+                ray('reconstituteEphemeral', $state->id, $event->states()->pluck('id')->toArray(), $event->states()->contains($state));
+                if ($event->states()->contains($state)) {
+                    $this->dispatcher->apply($event, $state);
+                }
+            });
 
         return $this;
     }
