@@ -23,7 +23,7 @@ class SupportVerbs extends ComponentHook
 
     public function render()
     {
-        // Verbs::commit();
+        Verbs::commit();
     }
 
     public static function request(\Illuminate\Http\Request $request)

@@ -73,6 +73,8 @@ class StateManager
 
         $state = $this->load($id, $type);
 
+        $state->__verbs_ephemeral = true;
+
         return $this->reconstituteEphemeral($state)->remember($state);
     }
 

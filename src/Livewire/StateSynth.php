@@ -21,7 +21,6 @@ class StateSynth extends Synth
 
     public function dehydrate($target)
     {
-        ray('dehydrate');
         $data = Utils::getPublicProperties($target, function (\ReflectionProperty $property) {
             return ! in_array($property->getName(), $this->hidden_properties);
         });

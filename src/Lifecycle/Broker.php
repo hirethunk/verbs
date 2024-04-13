@@ -28,7 +28,10 @@ class Broker implements BrokersEvents
 
         Guards::for($event, null)->check();
 
-        $states->each(fn ($state) => $this->dispatcher->apply($event, $state));
+        $states->each(function ($state) use ($event) {
+            $this->dispatcher->apply($event, $state);
+            $state->__verbs_ephemeral = true;
+        });
 
         $this->dispatcher->fired($event, $states);
 
@@ -68,8 +71,6 @@ class Broker implements BrokersEvents
     public function commit(): bool
     {
         $events = app(EventQueue::class)->flush();
-
-        ray('commit', $events);
 
         // FIXME: Only write changes + handle aggregate versioning
 

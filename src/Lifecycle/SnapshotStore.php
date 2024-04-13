@@ -3,6 +3,7 @@
 namespace Thunk\Verbs\Lifecycle;
 
 use Glhd\Bits\Bits;
+use Illuminate\Support\Arr;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Contracts\StoresSnapshots;
@@ -42,7 +43,9 @@ class SnapshotStore implements StoresSnapshots
         }
 
         $values = collect(static::formatForWrite($states))
+            ->filter(fn ($state) => $state['__verbs_ephemeral'] === false)
             ->unique('id')
+            ->map(fn ($state) => Arr::except($state, ['__verbs_ephemeral']))
             ->all();
 
         return VerbSnapshot::upsert($values, 'id', ['data', 'last_event_id', 'updated_at']);
@@ -64,6 +67,7 @@ class SnapshotStore implements StoresSnapshots
             'last_event_id' => Id::tryFrom($state->last_event_id),
             'created_at' => now(),
             'updated_at' => now(),
+            '__verbs_ephemeral' => $state->__verbs_ephemeral,
         ], $states);
     }
 }
