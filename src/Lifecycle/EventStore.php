@@ -53,18 +53,20 @@ class EventStore implements StoresEvents
         Bits|UuidInterface|AbstractUid|int|string|null $after_id,
         bool $singleton,
     ): LazyCollection {
-        if ($state) {
-            return VerbStateEvent::query()
-                ->with('event')
-                ->unless($singleton, fn (Builder $query) => $query->where('state_id', $state->id))
-                ->where('state_type', $state::class)
-                ->when($after_id, fn (Builder $query) => $query->whereRelation('event', 'id', '>', Id::from($after_id)))
-                ->lazyById()
-                ->map(fn (VerbStateEvent $pivot) => $pivot->event);
-        }
-
+        $tableName = (new VerbEvent())->getTable();
         return VerbEvent::query()
+            ->select("{$tableName}.*")
             ->when($after_id, fn (Builder $query) => $query->where('id', '>', Id::from($after_id)))
+            ->when($state, function (Builder $query) use ($tableName, $state, $singleton) {
+                $query->joinSub(
+                    VerbStateEvent::query()
+                        ->select('event_id')
+                        ->where('state_type', $state::class)
+                        ->unless($singleton, fn (Builder $query) => $query->where('state_id', $state->id)),
+                    'state_events',
+                    fn ($join) => $join->on($tableName . '.id', '=', 'state_events.event_id')
+                );
+            })
             ->lazyById();
     }
 
