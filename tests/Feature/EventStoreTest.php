@@ -9,7 +9,6 @@ use Thunk\Verbs\Lifecycle\MetadataManager;
 use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\State;
 
-
 it('reads and writes stateless events normally', function () {
     $store = new EventStore(app(MetadataManager::class));
 
@@ -59,7 +58,7 @@ it('reads and writes stateful events normally', function () {
         ->toBe([202, 203]);
 });
 
-it('reads and writes singleton state events normally', function (){
+it('reads and writes singleton state events normally', function () {
     app()->instance(StoresEvents::class, $store = new EventStore(app(MetadataManager::class)));
 
     $state = app(StateManager::class)->load(

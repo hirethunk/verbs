@@ -54,6 +54,7 @@ class EventStore implements StoresEvents
         bool $singleton,
     ): LazyCollection {
         $tableName = (new VerbEvent())->getTable();
+
         return VerbEvent::query()
             ->select("{$tableName}.*")
             ->when($after_id, fn (Builder $query) => $query->where('id', '>', Id::from($after_id)))
@@ -64,7 +65,7 @@ class EventStore implements StoresEvents
                         ->where('state_type', $state::class)
                         ->unless($singleton, fn (Builder $query) => $query->where('state_id', $state->id)),
                     'state_events',
-                    fn ($join) => $join->on($tableName . '.id', '=', 'state_events.event_id')
+                    fn ($join) => $join->on($tableName.'.id', '=', 'state_events.event_id')
                 );
             })
             ->lazyById();
