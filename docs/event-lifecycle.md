@@ -74,7 +74,7 @@ class UserJoinedTeam
         $user->team_id = $this->team_id;
     }
     
-    public function validateTeam(TeamState $team)
+    public function applyToTeam(TeamState $team)
     {
         $team->team_seats--;
     }
