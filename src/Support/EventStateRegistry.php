@@ -55,7 +55,7 @@ class EventStateRegistry
 
         $discovered->push(...$states);
 
-        if ($alias = $attribute->getAlias()) {
+        if (count($states) > 0 && $alias = $attribute->getAlias()) {
             if (count($states) > 1) {
                 throw new InvalidArgumentException('You cannot provide an alias for an array of states.');
             }
