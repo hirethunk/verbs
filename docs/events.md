@@ -250,6 +250,9 @@ Or the `#[Once]` [attribute](/docs/technical/attributes#content-once).
 During a [replay](#content-replaying-events), the system isn't "firing" the event in the original sense (i.e., it's not going through the initial logic that might include checks, validations, or triggering of additional side effects like sending one-time notifications). Instead, it directly applies the changes recorded in the event store.
 
 
+See also: [Event Lifecycle](/docs/technical/event-lifecycle)
+
+
 ### Wormholes
 
 When replaying events, Verbs will set the "now" timestamp for `Carbon` and `CarbonImmutable` instances to the moment the original event was stored in the database. This allows you to use the `now()` helper in your event handlers easily. You can disable this feature if you'd like in `config/verbs.php`.
