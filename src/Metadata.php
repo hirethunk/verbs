@@ -47,7 +47,8 @@ class Metadata implements ArrayAccess
 
     public function __sleep(): array
     {
-        return $this->extra->toArray();
+        // @todo: This is a hack due to deserialization issues, needs to be fixed
+        return isset($this->extra) ? $this->extra->toArray() : [];
     }
 
     public function offsetExists($offset): bool
