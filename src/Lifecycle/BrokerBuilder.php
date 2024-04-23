@@ -2,22 +2,25 @@
 
 namespace Thunk\Verbs\Lifecycle;
 
-use InvalidArgumentException;
-use Thunk\Verbs\Testing\BrokerFake;
-use Thunk\Verbs\Contracts\StoresEvents;
-use Thunk\Verbs\Lifecycle\StateManager;
-use Thunk\Verbs\Testing\EventStoreFake;
 use Thunk\Verbs\Contracts\BrokersEvents;
+use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
+use Thunk\Verbs\Testing\BrokerFake;
+use Thunk\Verbs\Testing\EventStoreFake;
 
 class BrokerBuilder
 {
     public string $broker_type = Broker::class;
+
     public string $event_store = EventStore::class;
+
     public string $event_queue = EventQueue::class;
+
     public string $snapshot_store = SnapshotStore::class;
+
     public string $state_manager = StateManager::class;
+
     public string $metadata_manager = MetadataManager::class;
 
     public static function primary(): BrokersEvents
@@ -91,13 +94,12 @@ class BrokerBuilder
         $event_queue = new $this->event_queue;
 
         $snapshot_store = new $this->snapshot_store;
-        
+
         $state_manager = new $this->state_manager(
             dispatcher: $dispatcher,
             snapshots: $snapshot_store,
             events: $event_store,
         );
-
 
         return new $this->broker_type(
             dispatcher: app(Dispatcher::class),

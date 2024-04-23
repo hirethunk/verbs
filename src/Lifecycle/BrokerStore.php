@@ -8,6 +8,7 @@ use Thunk\Verbs\Contracts\BrokersEvents;
 class BrokerStore
 {
     protected array $brokers = [];
+
     protected string $current_broker = 'default';
 
     public function __construct(

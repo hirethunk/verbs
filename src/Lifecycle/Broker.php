@@ -2,11 +2,11 @@
 
 namespace Thunk\Verbs\Lifecycle;
 
-use Thunk\Verbs\Event;
 use Thunk\Verbs\CommitsImmediately;
-use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Contracts\BrokersEvents;
+use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Contracts\StoresSnapshots;
+use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 
 class Broker implements BrokersEvents
