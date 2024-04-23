@@ -41,10 +41,7 @@ class SupportVerbs extends ComponentHook
 
         app(BrokerStore::class)->get('standalone')->event_store->hydrate(
             data: json_decode(
-                htmlspecialchars_decode(
-                    data_get($verbs, 'eventsEncoded', '[]'),
-                    ENT_QUOTES | ENT_SUBSTITUTE
-                ),
+                data_get($verbs, 'eventsEncoded', '[]'),
                 true
             ),
         );
@@ -53,9 +50,13 @@ class SupportVerbs extends ComponentHook
     public static function response()
     {
         return function (&$response) {
+            $eventData = app(BrokerStore::class)->get('standalone')->event_store->dehydrate();
+
+            $eventData['eventsEncoded'] = json_encode($eventData);
+
             $response['verbs'] = array_merge(
                 $response['verbs'] ?? [],
-                app(BrokerStore::class)->get('standalone')->event_store->dehydrate(),
+                $eventData,
             );
         };
     }
