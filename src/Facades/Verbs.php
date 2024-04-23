@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Facade;
 use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\BrokerStore;
-use Thunk\Verbs\Testing\BrokerFake;
 use Thunk\Verbs\Testing\EventStoreFake;
 
 /**
