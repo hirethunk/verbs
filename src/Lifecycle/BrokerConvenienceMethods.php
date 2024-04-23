@@ -76,6 +76,6 @@ trait BrokerConvenienceMethods
 
     public function realNow(): CarbonInterface
     {
-        return app(Wormhole::class)->realNow();
+        return app(BrokerStore::class)->current()->wormhole->realNow();
     }
 }

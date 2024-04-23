@@ -4,7 +4,7 @@ namespace Thunk\Verbs\Exceptions;
 
 use RuntimeException;
 use Throwable;
-use Thunk\Verbs\Lifecycle\AutoCommitManager;
+use Thunk\Verbs\Lifecycle\BrokerStore;
 
 class UnableToStoreEventsException extends RuntimeException
 {
@@ -14,11 +14,11 @@ class UnableToStoreEventsException extends RuntimeException
     ) {
         parent::__construct('Failed to write events to store.', previous: $previous);
 
-        app(AutoCommitManager::class)->skipNextAutocommit();
+        app(BrokerStore::class)->current()->auto_commit_manager->skipNextAutocommit();
     }
 
     public function markAsHandled(): void
     {
-        app(AutoCommitManager::class)->skipNextAutocommit(false);
+        app(BrokerStore::class)->current()->auto_commit_manager->skipNextAutocommit(false);
     }
 }

@@ -30,7 +30,7 @@ it('immediately commits, and returns the results of handle when you call Event::
 
     expect($result)->toBeInstanceOf(stdClass::class)
         ->and($result->name)->toBe('Chris')
-        ->and(app(Queue::class)->event_queue)->toHaveCount(0);
+        ->and(app(BrokerStore::class)->current()->event_queue->event_queue)->toHaveCount(0);
 });
 
 class UserRegistered extends Event

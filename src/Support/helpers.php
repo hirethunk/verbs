@@ -1,7 +1,7 @@
 <?php
 
-use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Lifecycle\BrokerStore;
 use Thunk\Verbs\Support\PendingEvent;
 
 if (! function_exists('verb')) {
@@ -16,7 +16,7 @@ if (! function_exists('verb')) {
         $event = (new PendingEvent($event))->fire();
 
         if ($commit) {
-            app(BrokersEvents::class)->commit();
+            app(BrokerStore::class)->current()->commit();
         }
 
         return $event;

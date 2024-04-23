@@ -4,6 +4,7 @@ use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\UnableToStoreEventsException;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Lifecycle\AutoCommitManager;
+use Thunk\Verbs\Lifecycle\BrokerStore;
 
 it('auto-commits after a job is processed', function () {
     Verbs::fake();
@@ -41,7 +42,7 @@ it('does not auto-commit if an UnableToStoreEventsException exception is thrown'
 
     expect($thrown)->toBeTrue();
 
-    app(AutoCommitManager::class)->commitIfAutoCommitting();
+    app(BrokerStore::class)->current()->auto_commit_manager->commitIfAutoCommitting();
 
     Verbs::assertCommitCalledTimes(1);
 });
@@ -51,19 +52,19 @@ it('auto-commits if an event does not throw an exception', function () {
 
     verb(new AutoCommitTestEvent('should auto-commit'));
 
-    app(AutoCommitManager::class)->commitIfAutoCommitting();
+    app(BrokerStore::class)->current()->auto_commit_manager->commitIfAutoCommitting();
 
-    Verbs::assertCommitCalledTimes(1);
+    Verbs::assertCommitCalledTimes(2);
 });
 
 it('does not auto-commits disabled by configuration', function () {
-    Verbs::fake();
-
     config(['verbs.autocommit' => false]);
+    
+    Verbs::fake();
 
     verb(new AutoCommitTestEvent('should not auto-commit'));
 
-    app(AutoCommitManager::class)->commitIfAutoCommitting();
+    app(BrokerStore::class)->current()->auto_commit_manager->commitIfAutoCommitting();
 
     Verbs::assertCommitCalledTimes(0);
 });

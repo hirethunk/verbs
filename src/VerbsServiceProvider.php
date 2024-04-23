@@ -87,15 +87,15 @@ class VerbsServiceProvider extends PackageServiceProvider
             );
         });
 
-        $this->app->singleton(Wormhole::class, function (Container $app) {
-            $config = $app->make(Repository::class);
+        // $this->app->singleton(Wormhole::class, function (Container $app) {
+        //     $config = $app->make(Repository::class);
 
-            return new Wormhole(
-                $app->make(MetadataManager::class),
-                $app->make(DateFactory::class),
-                $config->get('verbs.wormhole', true),
-            );
-        });
+        //     return new Wormhole(
+        //         $app->make(MetadataManager::class),
+        //         $app->make(DateFactory::class),
+        //         $config->get('verbs.wormhole', true),
+        //     );
+        // });
 
         $this->app->singleton(Serializer::class, function (Container $app) {
             return new Serializer(
@@ -127,16 +127,16 @@ class VerbsServiceProvider extends PackageServiceProvider
             );
         });
 
-        $this->app->singleton(AutoCommitManager::class, function (Container $app) {
-            return new AutoCommitManager(
-                broker: $app->make(BrokersEvents::class),
-                enabled: $app->make(Repository::class)->get('verbs.autocommit', true),
-            );
-        });
+        // $this->app->singleton(AutoCommitManager::class, function (Container $app) {
+        //     return new AutoCommitManager(
+        //         broker: $app->make(BrokersEvents::class),
+        //         enabled: $app->make(Repository::class)->get('verbs.autocommit', true),
+        //     );
+        // });
 
-        $this->app->alias(Broker::class, BrokersEvents::class);
-        $this->app->alias(EventStore::class, StoresEvents::class);
-        $this->app->alias(SnapshotStore::class, StoresSnapshots::class);
+        // $this->app->alias(Broker::class, BrokersEvents::class);
+        // $this->app->alias(EventStore::class, StoresEvents::class);
+        // $this->app->alias(SnapshotStore::class, StoresSnapshots::class);
     }
 
     public function boot()
@@ -153,7 +153,7 @@ class VerbsServiceProvider extends PackageServiceProvider
         }
 
         $this->app->terminating(function () {
-            app(AutoCommitManager::class)->commitIfAutoCommitting();
+            app(BrokerStore::class)->current()->auto_commit_manager->commitIfAutoCommitting();
         });
 
         // Hook into Laravel event dispatcher
@@ -171,7 +171,7 @@ class VerbsServiceProvider extends PackageServiceProvider
 
         // Auto-commit after each job on the queue is processed
         if ($event instanceof JobProcessed) {
-            app(AutoCommitManager::class)->commitIfAutoCommitting();
+            app(BrokerStore::class)->current()->auto_commit_manager->commitIfAutoCommitting();
         }
     }
 }

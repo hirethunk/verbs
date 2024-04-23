@@ -9,6 +9,7 @@ use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 use Thunk\Verbs\Support\EventStateRegistry;
+use Thunk\Verbs\Support\Wormhole;
 
 class Broker implements BrokersEvents
 {
@@ -16,9 +17,12 @@ class Broker implements BrokersEvents
 
     public bool $commit_immediately = false;
 
+    public AutoCommitManager $auto_commit_manager;
+
     public function __construct(
         public Dispatcher $dispatcher,
         public MetadataManager $metadata,
+        public Wormhole $wormhole,
         public EventStateRegistry $event_state_registry,
         public ?StoresEvents $event_store,
         public ?EventQueue $event_queue,

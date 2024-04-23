@@ -77,12 +77,12 @@ it('reads and writes stateless events normally', function () {
 it('reads and writes stateful events normally', function () {
     app()->instance(StoresEvents::class, $store = new EventStoreFake(app(BrokerStore::class)->current()->metadata));
 
-    $state1 = app(StateManager::class)->load(
+    $state1 = app(BrokerStore::class)->current()->state_manager->load(
         1001,
         type: EventStoreFakeTestState::class,
     );
 
-    $state2 = app(StateManager::class)->load(
+    $state2 = app(BrokerStore::class)->current()->state_manager->load(
         1002,
         type: EventStoreFakeTestState::class,
     );

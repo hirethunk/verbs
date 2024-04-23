@@ -6,6 +6,7 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\App;
 use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Lifecycle\BrokerStore;
 use Thunk\Verbs\Models\VerbEvent;
 
 use function Laravel\Prompts\alert;
@@ -19,8 +20,10 @@ class ReplayCommand extends Command
 
     protected $description = 'Replay all Verbs events.';
 
-    public function handle(BrokersEvents $broker): int
+    public function handle(BrokerStore $brokerStore): int
     {
+        $broker = $brokerStore->current();
+
         if (! $this->confirmed() || ! $this->confirmedAgainIfProduction()) {
             return 1;
         }

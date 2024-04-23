@@ -2,6 +2,7 @@
 
 use Thunk\Verbs\Examples\Counter\Events\IncrementCount;
 use Thunk\Verbs\Facades\Verbs;
+use Thunk\Verbs\Lifecycle\BrokerStore;
 use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\Models\VerbEvent;
 use Thunk\Verbs\Models\VerbSnapshot;
@@ -31,7 +32,7 @@ it('supports rehydrating a state from events', function () {
 
     expect(VerbEvent::query()->count())->toBe(1);
 
-    app(StateManager::class)->reset(include_storage: true);
+    app(BrokerStore::class)->current()->state_manager->reset(include_storage: true);
 
     $state = IncrementCount::fire()->state();
 

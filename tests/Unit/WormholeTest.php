@@ -15,11 +15,11 @@ test('a callback can be run for a past timestamp', function () {
     {
     };
     app(BrokerStore::class)->current()->metadata->setEphemeral($event, 'created_at', Date::parse('2023-01-02 00:00:00'));
-    app(Wormhole::class)->replay($event, function () use ($now) {
+    app(BrokerStore::class)->current()->wormhole->replay($event, function () use ($now) {
         expect(Carbon::now()->format('Y-m-d'))->toBe('2023-01-02')
             ->and(CarbonImmutable::now()->format('Y-m-d'))->toBe('2023-01-02')
             ->and(now()->format('Y-m-d'))->toBe('2023-01-02')
-            ->and(app(Wormhole::class)->realNow()->format('Y-m-d'))->toBe($now->format('Y-m-d'))
+            ->and(app(BrokerStore::class)->current()->wormhole->realNow()->format('Y-m-d'))->toBe($now->format('Y-m-d'))
             ->and(Verbs::realNow()->format('Y-m-d'))->toBe($now->format('Y-m-d'));
     });
 });
@@ -30,11 +30,11 @@ test('a callback can be run for a past timestamp with "test now" set', function 
     {
     };
     app(BrokerStore::class)->current()->metadata->setEphemeral($event, 'created_at', Date::parse('2023-01-02 00:00:00'));
-    app(Wormhole::class)->replay($event, function () {
+    app(BrokerStore::class)->current()->wormhole->replay($event, function () {
         expect(Carbon::now()->format('Y-m-d'))->toBe('2023-01-02')
             ->and(CarbonImmutable::now()->format('Y-m-d'))->toBe('2023-01-02')
             ->and(now()->format('Y-m-d'))->toBe('2023-01-02')
-            ->and(app(Wormhole::class)->realNow()->format('Y-m-d'))->toBe('2023-06-02')
+            ->and(app(BrokerStore::class)->current()->wormhole->realNow()->format('Y-m-d'))->toBe('2023-06-02')
             ->and(Verbs::realNow()->format('Y-m-d'))->toBe('2023-06-02');
     });
 });

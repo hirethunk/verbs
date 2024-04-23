@@ -2,13 +2,16 @@
 
 namespace Thunk\Verbs\Lifecycle;
 
+use Illuminate\Support\DateFactory;
 use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 use Thunk\Verbs\Support\EventStateRegistry;
+use Thunk\Verbs\Support\Wormhole;
 use Thunk\Verbs\Testing\BrokerFake;
 use Thunk\Verbs\Testing\EventStoreFake;
+use Thunk\Verbs\Testing\SnapshotStoreFake;
 
 class BrokerBuilder
 {
@@ -25,6 +28,10 @@ class BrokerBuilder
     public string $metadata = MetadataManager::class;
 
     public string $event_state_registry = EventStateRegistry::class;
+
+    public string $auto_commit_manager = AutoCommitManager::class;
+
+    public string $wormhole = Wormhole::class;
 
     public static function primary(): BrokersEvents
     {
@@ -45,6 +52,7 @@ class BrokerBuilder
         return (new static)
             ->ofType(BrokerFake::class)
             ->withEventStore(EventStoreFake::class)
+            ->withSnapshotStore(SnapshotStoreFake::class)
             ->build();
     }
 
@@ -83,12 +91,46 @@ class BrokerBuilder
         return $this;
     }
 
+    public function withMetadata(string $metadata): static
+    {
+        $this->metadata = ensure_type($metadata, MetadataManager::class);
+
+        return $this;
+    }
+
+    public function withEventStateRegistry(string $event_state_registry): static
+    {
+        $this->event_state_registry = ensure_type($event_state_registry, EventStateRegistry::class);
+
+        return $this;
+    }
+
+    public function withAutoCommitManager(string $auto_commit_manager): static
+    {
+        $this->auto_commit_manager = ensure_type($auto_commit_manager, AutoCommitManager::class);
+
+        return $this;
+    }
+
+    public function withWormhole(string $wormhole): static
+    {
+        $this->wormhole = ensure_type($wormhole, Wormhole::class);
+
+        return $this;
+    }
+
     public function build(): BrokersEvents
     {
         // @todo - is this bad?
         $dispatcher = app(Dispatcher::class);
 
         $metadata = new MetadataManager();
+
+        $wormhole = new $this->wormhole(
+            metadata: $metadata,
+            factory: app(DateFactory::class),
+            enabled: config('verbs.wormhole', true),
+        );
 
         $event_store = new $this->event_store(
             metadata: $metadata
@@ -108,14 +150,24 @@ class BrokerBuilder
 
         $event_state_registry = new $this->event_state_registry($state_manager);
 
-        return new $this->broker_type(
+        $broker = new $this->broker_type(
             dispatcher: $dispatcher,
             metadata: $metadata,
+            wormhole: $wormhole,
             event_state_registry: $event_state_registry,
             event_store: $event_store,
             event_queue: $event_queue,
             snapshot_store: $snapshot_store,
             state_manager: $state_manager,
         );
+
+        $auto_commit_manager = new $this->auto_commit_manager(
+            broker: $broker,
+            enabled: config('verbs.autocommit', true),
+        );
+
+        $broker->auto_commit_manager = $auto_commit_manager;
+
+        return $broker;
     }
 }
