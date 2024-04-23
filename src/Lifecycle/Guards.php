@@ -11,12 +11,13 @@ use Thunk\Verbs\State;
 
 class Guards
 {
-    public static function for(Event $event, ?State $state = null): static
+    public static function for(Dispatcher $dispatcher, Event $event, ?State $state = null, ): static
     {
-        return new static($event, $state);
+        return new static($dispatcher, $event, $state);
     }
 
     public function __construct(
+        public Dispatcher $dispatcher,
         public Event $event,
         public ?State $state = null,
     ) {
@@ -80,7 +81,7 @@ class Guards
 
     protected function passesValidation(): bool
     {
-        return app(Dispatcher::class)
+        return $this->dispatcher
             ->validate($this->event, $this->state);
     }
 }

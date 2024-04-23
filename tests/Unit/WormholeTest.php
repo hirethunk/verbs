@@ -5,6 +5,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Verbs;
+use Thunk\Verbs\Lifecycle\BrokerStore;
 use Thunk\Verbs\Lifecycle\MetadataManager;
 use Thunk\Verbs\Support\Wormhole;
 
@@ -13,7 +14,7 @@ test('a callback can be run for a past timestamp', function () {
     $event = new class extends Event
     {
     };
-    app(MetadataManager::class)->setEphemeral($event, 'created_at', Date::parse('2023-01-02 00:00:00'));
+    app(BrokerStore::class)->current()->metadata->setEphemeral($event, 'created_at', Date::parse('2023-01-02 00:00:00'));
     app(Wormhole::class)->replay($event, function () use ($now) {
         expect(Carbon::now()->format('Y-m-d'))->toBe('2023-01-02')
             ->and(CarbonImmutable::now()->format('Y-m-d'))->toBe('2023-01-02')
@@ -28,7 +29,7 @@ test('a callback can be run for a past timestamp with "test now" set', function 
     $event = new class extends Event
     {
     };
-    app(MetadataManager::class)->setEphemeral($event, 'created_at', Date::parse('2023-01-02 00:00:00'));
+    app(BrokerStore::class)->current()->metadata->setEphemeral($event, 'created_at', Date::parse('2023-01-02 00:00:00'));
     app(Wormhole::class)->replay($event, function () {
         expect(Carbon::now()->format('Y-m-d'))->toBe('2023-01-02')
             ->and(CarbonImmutable::now()->format('Y-m-d'))->toBe('2023-01-02')

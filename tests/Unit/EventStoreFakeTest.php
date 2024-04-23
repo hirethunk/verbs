@@ -3,13 +3,15 @@
 use Thunk\Verbs\Attributes\Autodiscovery\AppliesToState;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Lifecycle\BrokerStore;
 use Thunk\Verbs\Lifecycle\MetadataManager;
 use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Testing\EventStoreFake;
 
+// @todo: Fix these tests
 it('performs assertions', function () {
-    $store = new EventStoreFake(app(MetadataManager::class));
+    $store = new EventStoreFake(app(BrokerStore::class)->current()->metadata);
 
     // assertNothingCommitted
     $store->assertNothingCommitted();
@@ -56,7 +58,7 @@ it('performs assertions', function () {
 });
 
 it('reads and writes stateless events normally', function () {
-    $store = new EventStoreFake(app(MetadataManager::class));
+    $store = new EventStoreFake(app(BrokerStore::class)->current()->metadata);
 
     $store->write([
         new EventStoreFakeTestEvent(1),
@@ -73,7 +75,7 @@ it('reads and writes stateless events normally', function () {
 });
 
 it('reads and writes stateful events normally', function () {
-    app()->instance(StoresEvents::class, $store = new EventStoreFake(app(MetadataManager::class)));
+    app()->instance(StoresEvents::class, $store = new EventStoreFake(app(BrokerStore::class)->current()->metadata));
 
     $state1 = app(StateManager::class)->load(
         1001,

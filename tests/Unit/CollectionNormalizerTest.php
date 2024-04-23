@@ -7,6 +7,7 @@ use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Normalizer\PropertyNormalizer;
 use Symfony\Component\Serializer\Serializer as SymfonySerializer;
+use Thunk\Verbs\Lifecycle\BrokerStore;
 use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\SerializedByVerbs;
 use Thunk\Verbs\State;
@@ -130,7 +131,7 @@ it('can normalize a collection with keys and restore key order', function () {
 });
 
 it('can normalize a collection all of states', function () {
-    $manager = app(StateManager::class);
+    $manager = app(BrokerStore::class)->current()->state_manager;
 
     $serializer = new SymfonySerializer(
         normalizers: [

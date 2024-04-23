@@ -3,6 +3,7 @@
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Verbs;
+use Thunk\Verbs\Lifecycle\BrokerStore;
 
 it('performs event store assertions', function () {
     Verbs::fake();
@@ -10,7 +11,7 @@ it('performs event store assertions', function () {
     // assertNothingCommitted
     Verbs::assertNothingCommitted();
 
-    app(StoresEvents::class)->write([
+    app(BrokerStore::class)->current()->event_store->write([
         $event1 = new VerbFakesTestEvent(),
         $event2 = new VerbFakesTestEvent(),
         $event3 = new VerbFakesTestEvent(),

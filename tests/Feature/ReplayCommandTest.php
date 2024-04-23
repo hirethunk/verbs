@@ -5,6 +5,7 @@ use Thunk\Verbs\Commands\ReplayCommand;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Facades\Verbs;
+use Thunk\Verbs\Lifecycle\BrokerStore;
 use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\State;
 
@@ -33,11 +34,11 @@ it('can replay events', function () {
 
     Verbs::commit();
 
-    expect(app(StateManager::class)->load($state1_id, ReplayCommandTestState::class)->count)
+    expect(app(BrokerStore::class)->current()->state_manager->load($state1_id, ReplayCommandTestState::class)->count)
         ->toBe(2)
         ->and($GLOBALS['replay_test_counts'][$state1_id])
         ->toBe(2)
-        ->and(app(StateManager::class)->load($state2_id, ReplayCommandTestState::class)->count)
+        ->and(app(BrokerStore::class)->current()->state_manager->load($state2_id, ReplayCommandTestState::class)->count)
         ->toBe(4)
         ->and($GLOBALS['replay_test_counts'][$state2_id])
         ->toBe(4)
@@ -50,11 +51,11 @@ it('can replay events', function () {
     config(['app.env' => 'testing']);
     $this->artisan(ReplayCommand::class);
 
-    expect(app(StateManager::class)->load($state1_id, ReplayCommandTestState::class)->count)
+    expect(app(BrokerStore::class)->current()->state_manager->load($state1_id, ReplayCommandTestState::class)->count)
         ->toBe(2)
         ->and($GLOBALS['replay_test_counts'][$state1_id])
         ->toBe(2)
-        ->and(app(StateManager::class)->load($state2_id, ReplayCommandTestState::class)->count)
+        ->and(app(BrokerStore::class)->current()->state_manager->load($state2_id, ReplayCommandTestState::class)->count)
         ->toBe(4)
         ->and($GLOBALS['replay_test_counts'][$state2_id])
         ->toBe(4)

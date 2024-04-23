@@ -26,7 +26,7 @@ if (! function_exists('verb')) {
 if (! function_exists('ensure_type')) {
     function ensure_type(string $class, string $interface): string
     {
-        if (! is_a($class, $interface)) {
+        if (! is_a($class, $interface, true)) {
             throw new InvalidArgumentException("Class [{$class}] must implement [{$interface}]");
         }
 

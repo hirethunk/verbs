@@ -5,6 +5,7 @@ namespace Thunk\Verbs\Support\Normalization;
 use InvalidArgumentException;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
+use Thunk\Verbs\Lifecycle\BrokerStore;
 use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\Serializer;
@@ -19,7 +20,7 @@ class StateNormalizer implements DenormalizerInterface, NormalizerInterface
     /** @param  class-string<State>  $type */
     public function denormalize(mixed $data, string $type, ?string $format = null, array $context = []): State
     {
-        return app(StateManager::class)->load((int) $data, $type);
+        return app(BrokerStore::class)->current()->state_manager->load((int) $data, $type);
     }
 
     public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool

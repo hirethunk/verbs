@@ -6,6 +6,7 @@ use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
+use Thunk\Verbs\Support\EventStateRegistry;
 use Thunk\Verbs\Testing\BrokerFake;
 use Thunk\Verbs\Testing\EventStoreFake;
 
@@ -21,7 +22,9 @@ class BrokerBuilder
 
     public string $state_manager = StateManager::class;
 
-    public string $metadata_manager = MetadataManager::class;
+    public string $metadata = MetadataManager::class;
+
+    public string $event_state_registry = EventStateRegistry::class;
 
     public static function primary(): BrokersEvents
     {
@@ -91,7 +94,9 @@ class BrokerBuilder
             metadata: $metadata
         );
 
-        $event_queue = new $this->event_queue;
+        $event_queue = new $this->event_queue(
+            event_store: $event_store
+        );
 
         $snapshot_store = new $this->snapshot_store;
 
@@ -101,9 +106,12 @@ class BrokerBuilder
             events: $event_store,
         );
 
+        $event_state_registry = new $this->event_state_registry($state_manager);
+
         return new $this->broker_type(
-            dispatcher: app(Dispatcher::class),
+            dispatcher: $dispatcher,
             metadata: $metadata,
+            event_state_registry: $event_state_registry,
             event_store: $event_store,
             event_queue: $event_queue,
             snapshot_store: $snapshot_store,

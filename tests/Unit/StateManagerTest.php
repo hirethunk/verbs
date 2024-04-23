@@ -9,6 +9,7 @@ use Thunk\Verbs\State;
 use Thunk\Verbs\Testing\EventStoreFake;
 use Thunk\Verbs\Testing\SnapshotStoreFake;
 
+// @todo: Fix these tests
 beforeEach(function () {
     app()->instance(StoresSnapshots::class, new SnapshotStoreFake());
     app()->instance(StoresEvents::class, new EventStoreFake(app(MetadataManager::class)));

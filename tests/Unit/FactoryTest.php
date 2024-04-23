@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Collection;
+use Thunk\Verbs\Lifecycle\BrokerStore;
 use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\State;
 use Thunk\Verbs\StateFactory;
@@ -60,7 +61,7 @@ test('it can create a singleton state', function () {
 
     expect($singleton_state->id)->not->toBeNull();
 
-    $retreived_state = app(StateManager::class)->singleton(FactoryTestState::class);
+    $retreived_state = app(BrokerStore::class)->current()->state_manager->singleton(FactoryTestState::class);
 
     expect($retreived_state)->toBe($singleton_state);
 });

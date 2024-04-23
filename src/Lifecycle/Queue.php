@@ -10,6 +10,10 @@ class Queue
 {
     public array $event_queue = [];
 
+    public function __construct(
+        public StoresEvents $event_store,
+    ){}
+
     public function queue(Event $event)
     {
         $this->event_queue[] = $event;
@@ -21,7 +25,7 @@ class Queue
 
         // TODO: Concurrency check
 
-        if (! app(StoresEvents::class)->write($events)) {
+        if (! $this->event_store->write($events)) {
             throw new UnableToStoreEventsException($events);
         }
 

@@ -8,6 +8,7 @@ use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
+use Thunk\Verbs\Support\EventStateRegistry;
 
 class Broker implements BrokersEvents
 {
@@ -16,14 +17,14 @@ class Broker implements BrokersEvents
     public bool $commit_immediately = false;
 
     public function __construct(
-        protected Dispatcher $dispatcher,
-        protected MetadataManager $metadata,
+        public Dispatcher $dispatcher,
+        public MetadataManager $metadata,
+        public EventStateRegistry $event_state_registry,
         public ?StoresEvents $event_store,
         public ?EventQueue $event_queue,
         public ?StoresSnapshots $snapshot_store,
         public ?StateManager $state_manager,
-    ) {
-    }
+    ) {}
 
     public function fire(Event $event): ?Event
     {
@@ -36,13 +37,13 @@ class Broker implements BrokersEvents
 
         $states = $event->states();
 
-        $states->each(fn ($state) => Guards::for($event, $state)->check());
+        $states->each(fn ($state) => Guards::for($this->dispatcher, $event, $state)->check());
 
-        Guards::for($event, null)->check();
+        Guards::for($this->dispatcher, $event, null)->check();
 
         $states->each(fn ($state) => $this->dispatcher->apply($event, $state));
 
-        app(Queue::class)->queue($event);
+        $this->event_queue->queue($event);
 
         $this->dispatcher->fired($event, $states);
 
@@ -55,7 +56,7 @@ class Broker implements BrokersEvents
 
     public function commit(): bool
     {
-        $events = app(EventQueue::class)->flush();
+        $events = $this->event_queue->flush();
 
         if (empty($events)) {
             return true;
@@ -63,7 +64,7 @@ class Broker implements BrokersEvents
 
         // FIXME: Only write changes + handle aggregate versioning
 
-        app(StateManager::class)->writeSnapshots();
+        $this->state_manager->writeSnapshots();
 
         foreach ($events as $event) {
             $this->metadata->setLastResults($event, $this->dispatcher->handle($event, $event->states()));
@@ -77,11 +78,11 @@ class Broker implements BrokersEvents
         $this->is_replaying = true;
 
         try {
-            app(StateManager::class)->reset(include_storage: true);
+            $this->state_manager->reset(include_storage: true);
 
-            app(StoresEvents::class)->read()
+            $this->event_store->read()
                 ->each(function (Event $event) use ($beforeEach, $afterEach) {
-                    app(StateManager::class)->setReplaying(true);
+                    $this->state_manager->setReplaying(true);
 
                     if ($beforeEach) {
                         $beforeEach($event);
@@ -97,7 +98,7 @@ class Broker implements BrokersEvents
                     return $event;
                 });
         } finally {
-            app(StateManager::class)->setReplaying(false);
+            $this->state_manager->setReplaying(false);
             $this->is_replaying = false;
         }
     }

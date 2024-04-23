@@ -10,6 +10,7 @@ use RuntimeException;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Exceptions\StateNotFoundException;
+use Thunk\Verbs\Lifecycle\BrokerStore;
 use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\Support\Serializer;
 
@@ -21,7 +22,7 @@ abstract class State implements UrlRoutable
 
     public function __construct()
     {
-        app(StateManager::class)->register($this);
+        app(BrokerStore::class)->current()->state_manager->register($this);
     }
 
     public static function make(...$args): static
@@ -32,7 +33,7 @@ abstract class State implements UrlRoutable
 
         $state = app(Serializer::class)->deserialize(static::class, $args, call_constructor: true);
 
-        app(StateManager::class)->register($state);
+        app(BrokerStore::class)->current()->state_manager->register($state);
 
         return $state;
     }
@@ -75,7 +76,7 @@ abstract class State implements UrlRoutable
 
     public static function loadByKey($from): static
     {
-        return app(StateManager::class)->load($from, static::class);
+        return app(BrokerStore::class)->current()->state_manager->load($from, static::class);
     }
 
     protected static function normalizeKey(mixed $from)
@@ -87,19 +88,19 @@ abstract class State implements UrlRoutable
 
     public static function singleton(): static
     {
-        return app(StateManager::class)->singleton(static::class);
+        return app(BrokerStore::class)->current()->state_manager->singleton(static::class);
     }
 
     public function storedEvents()
     {
-        return app(StoresEvents::class)
+        return app(BrokerStore::class)->current()->event_store
             ->read(state: $this)
             ->collect();
     }
 
     public function fresh(): static
     {
-        return app(StateManager::class)->load($this->id, static::class);
+        return app(BrokerStore::class)->current()->state_manager->load($this->id, static::class);
     }
 
     public function getRouteKey()

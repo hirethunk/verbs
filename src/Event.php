@@ -9,6 +9,7 @@ use Throwable;
 use Thunk\Verbs\Exceptions\EventNotAuthorized;
 use Thunk\Verbs\Exceptions\EventNotValid;
 use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
+use Thunk\Verbs\Lifecycle\BrokerStore;
 use Thunk\Verbs\Lifecycle\MetadataManager;
 use Thunk\Verbs\Support\EventStateRegistry;
 use Thunk\Verbs\Support\PendingEvent;
@@ -36,7 +37,7 @@ abstract class Event
 
     public function metadata(?string $key = null, mixed $default = null): mixed
     {
-        return app(MetadataManager::class)->get($this, $key, $default);
+        return app(BrokerStore::class)->current()->metadata->get($this, $key, $default);
     }
 
     public function states(): StateCollection
@@ -45,7 +46,7 @@ abstract class Event
 
         static $map = new WeakMap();
 
-        return $map[$this] ??= app(EventStateRegistry::class)->getStates($this);
+        return $map[$this] ??= app(BrokerStore::class)->current()->event_state_registry->getStates($this);
     }
 
     /**

@@ -2,13 +2,14 @@
 
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\ConcurrencyException;
+use Thunk\Verbs\Lifecycle\BrokerStore;
 use Thunk\Verbs\Lifecycle\EventStore;
 use Thunk\Verbs\Models\VerbEvent;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\StateCollection;
 
 it('does not throw on sequential events', function () {
-    $store = app(EventStore::class);
+    $store = app(BrokerStore::class)->current()->event_store;
 
     $event = new ConcurrencyTestEvent();
     $event->id = 1;
@@ -26,7 +27,7 @@ it('does not throw on sequential events', function () {
 });
 
 it('throws on non-sequential events', function () {
-    $store = app(EventStore::class);
+    $store = app(BrokerStore::class)->current()->event_store;
 
     $event = new ConcurrencyTestEvent();
     $event->id = 2;
