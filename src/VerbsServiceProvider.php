@@ -2,40 +2,42 @@
 
 namespace Thunk\Verbs;
 
-use Illuminate\Contracts\Config\Repository;
-use Illuminate\Contracts\Container\Container;
-use Illuminate\Events\Dispatcher as LaravelDispatcher;
-use Illuminate\Queue\Events\JobProcessed;
-use Illuminate\Support\DateFactory;
-use Spatie\LaravelPackageTools\Package;
-use Spatie\LaravelPackageTools\PackageServiceProvider;
-use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
-use Symfony\Component\Serializer\Encoder\JsonEncoder;
-use Symfony\Component\Serializer\Mapping\ClassDiscriminatorFromClassMetadata;
-use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
-use Symfony\Component\Serializer\Mapping\Loader\AnnotationLoader;
-use Symfony\Component\Serializer\Mapping\Loader\AttributeLoader;
-use Symfony\Component\Serializer\Normalizer\PropertyNormalizer;
-use Symfony\Component\Serializer\Serializer as SymfonySerializer;
-use Thunk\Verbs\Commands\MakeVerbEventCommand;
-use Thunk\Verbs\Commands\MakeVerbStateCommand;
-use Thunk\Verbs\Commands\ReplayCommand;
-use Thunk\Verbs\Contracts\BrokersEvents;
-use Thunk\Verbs\Contracts\StoresEvents;
-use Thunk\Verbs\Contracts\StoresSnapshots;
-use Thunk\Verbs\Lifecycle\AutoCommitManager;
 use Thunk\Verbs\Lifecycle\Broker;
+use Thunk\Verbs\Support\Wormhole;
+use Thunk\Verbs\Support\IdManager;
+use Illuminate\Support\DateFactory;
+use Thunk\Verbs\Support\Serializer;
 use Thunk\Verbs\Lifecycle\Dispatcher;
 use Thunk\Verbs\Lifecycle\EventStore;
-use Thunk\Verbs\Lifecycle\MetadataManager;
-use Thunk\Verbs\Lifecycle\Queue as EventQueue;
-use Thunk\Verbs\Lifecycle\SnapshotStore;
-use Thunk\Verbs\Lifecycle\StateManager;
+use Thunk\Verbs\Lifecycle\BrokerStore;
 use Thunk\Verbs\Livewire\SupportVerbs;
+use Spatie\LaravelPackageTools\Package;
+use Thunk\Verbs\Commands\ReplayCommand;
+use Thunk\Verbs\Contracts\StoresEvents;
+use Thunk\Verbs\Lifecycle\StateManager;
+use Thunk\Verbs\Contracts\BrokersEvents;
+use Thunk\Verbs\Lifecycle\SnapshotStore;
+use Illuminate\Queue\Events\JobProcessed;
+use Thunk\Verbs\Contracts\StoresSnapshots;
+use Thunk\Verbs\Lifecycle\MetadataManager;
+use Illuminate\Contracts\Config\Repository;
 use Thunk\Verbs\Support\EventStateRegistry;
-use Thunk\Verbs\Support\IdManager;
-use Thunk\Verbs\Support\Serializer;
-use Thunk\Verbs\Support\Wormhole;
+use Thunk\Verbs\Lifecycle\AutoCommitManager;
+use Illuminate\Contracts\Container\Container;
+use Thunk\Verbs\Commands\MakeVerbEventCommand;
+use Thunk\Verbs\Commands\MakeVerbStateCommand;
+use Thunk\Verbs\Lifecycle\Queue as EventQueue;
+use Symfony\Component\Serializer\Encoder\JsonEncoder;
+use Illuminate\Events\Dispatcher as LaravelDispatcher;
+use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Symfony\Component\Serializer\Normalizer\PropertyNormalizer;
+use Symfony\Component\Serializer\Mapping\Loader\AttributeLoader;
+use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
+use Symfony\Component\Serializer\Mapping\Loader\AnnotationLoader;
+use Symfony\Component\Serializer\Serializer as SymfonySerializer;
+use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
+use Symfony\Component\Serializer\Mapping\ClassDiscriminatorFromClassMetadata;
+use Thunk\Verbs\Lifecycle\BrokerBuilder;
 
 class VerbsServiceProvider extends PackageServiceProvider
 {
@@ -63,14 +65,21 @@ class VerbsServiceProvider extends PackageServiceProvider
 
     public function packageRegistered()
     {
-        $this->app->singleton(Broker::class);
-        $this->app->singleton(Dispatcher::class);
-        $this->app->singleton(EventStore::class);
-        $this->app->singleton(SnapshotStore::class);
-        $this->app->singleton(EventQueue::class);
-        $this->app->singleton(StateManager::class);
-        $this->app->singleton(EventStateRegistry::class);
-        $this->app->singleton(MetadataManager::class);
+        $this->app->bind(BrokerBuilder::class);
+
+        $this->app->singleton(BrokerStore::class, function (Container $app) {
+            return new BrokerStore(
+                BrokerBuilder::primary(),
+            );
+        });
+
+        // $this->app->singleton(Dispatcher::class);
+        // $this->app->singleton(EventStore::class);
+        // $this->app->singleton(SnapshotStore::class);
+        // $this->app->singleton(EventQueue::class);
+        // $this->app->singleton(StateManager::class);
+        // $this->app->singleton(EventStateRegistry::class);
+        // $this->app->singleton(MetadataManager::class);
 
         $this->app->singleton(IdManager::class, function (Container $app) {
             return new IdManager(

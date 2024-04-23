@@ -22,3 +22,14 @@ if (! function_exists('verb')) {
         return $event;
     }
 }
+
+if (! function_exists('ensure_type')) {
+    function ensure_type(string $class, string $interface): string
+    {
+        if (! is_a($class, $interface)) {
+            throw new InvalidArgumentException("Class [{$class}] must implement [{$interface}]");
+        }
+
+        return $class;
+    }
+}

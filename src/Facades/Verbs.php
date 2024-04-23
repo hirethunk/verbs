@@ -7,6 +7,7 @@ use Closure;
 use Illuminate\Support\Facades\Facade;
 use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Lifecycle\BrokerStore;
 use Thunk\Verbs\Testing\BrokerFake;
 use Thunk\Verbs\Testing\EventStoreFake;
 
@@ -26,24 +27,22 @@ class Verbs extends Facade
 {
     public static function fake()
     {
-        $real_broker = static::isFake()
-            ? static::getFacadeRoot()->broker
-            : static::getFacadeRoot();
+        return app(BrokerStore::class)->use('fake')->current();
+    }
 
-        $fake_broker = new BrokerFake(
-            static::getFacadeApplication(),
-            static::getFacadeApplication()->make(EventStoreFake::class),
-            $real_broker
-        );
+    public static function standalone()
+    {
+        return app(BrokerStore::class)->use('standalone')->current();
+    }
 
-        static::swap($fake_broker);
-
-        return $fake_broker;
+    public static function broker()
+    {
+        return static::getFacadeRoot();
     }
 
     public static function getFacadeRoot(): BrokersEvents
     {
-        return parent::getFacadeRoot();
+        return app(BrokerStore::class)->current();
     }
 
     protected static function getFacadeAccessor()

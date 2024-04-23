@@ -2,10 +2,11 @@
 
 namespace Thunk\Verbs\Lifecycle;
 
-use Thunk\Verbs\CommitsImmediately;
-use Thunk\Verbs\Contracts\BrokersEvents;
-use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\CommitsImmediately;
+use Thunk\Verbs\Contracts\StoresEvents;
+use Thunk\Verbs\Contracts\BrokersEvents;
+use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 
 class Broker implements BrokersEvents
@@ -17,6 +18,10 @@ class Broker implements BrokersEvents
     public function __construct(
         protected Dispatcher $dispatcher,
         protected MetadataManager $metadata,
+        public ?StoresEvents $event_store,
+        public ?EventQueue $event_queue,
+        public ?StoresSnapshots $snapshot_store,
+        public ?StateManager $state_manager,
     ) {
     }
 
