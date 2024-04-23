@@ -4,6 +4,7 @@ namespace Thunk\Verbs;
 
 use Glhd\Bits\Bits;
 use Illuminate\Contracts\Routing\UrlRoutable;
+use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Ramsey\Uuid\UuidInterface;
 use RuntimeException;
@@ -125,5 +126,12 @@ abstract class State implements UrlRoutable
     public function resolveChildRouteBinding($childType, $value, $field)
     {
         throw new RuntimeException('Resolving child state via routing is not supported.');
+    }
+
+    public function __get($name)
+    {
+        $name = Str::camel($name);
+
+        return $this->$name();
     }
 }

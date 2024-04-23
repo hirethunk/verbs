@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Lifecycle\Standalone;
+namespace Thunk\Verbs\Lifecycle\Standalone;
 
 use Glhd\Bits\Bits;
 use Ramsey\Uuid\UuidInterface;

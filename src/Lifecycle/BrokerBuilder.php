@@ -2,14 +2,14 @@
 
 namespace Thunk\Verbs\Lifecycle;
 
-use App\Lifecycle\Standalone\StandaloneBroker;
-use App\Lifecycle\Standalone\StandaloneEventStore;
-use App\Lifecycle\Standalone\StandaloneSnapshotStore;
 use Illuminate\Support\DateFactory;
 use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
+use Thunk\Verbs\Lifecycle\Standalone\StandaloneBroker;
+use Thunk\Verbs\Lifecycle\Standalone\StandaloneEventStore;
+use Thunk\Verbs\Lifecycle\Standalone\StandaloneSnapshotStore;
 use Thunk\Verbs\Support\EventStateRegistry;
 use Thunk\Verbs\Support\Wormhole;
 use Thunk\Verbs\Testing\BrokerFake;
