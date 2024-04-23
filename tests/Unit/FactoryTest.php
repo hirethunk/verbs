@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Collection;
 use Thunk\Verbs\Lifecycle\BrokerStore;
-use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\State;
 use Thunk\Verbs\StateFactory;
 

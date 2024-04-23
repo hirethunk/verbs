@@ -11,7 +11,7 @@ use Thunk\Verbs\State;
 
 class Guards
 {
-    public static function for(Dispatcher $dispatcher, Event $event, ?State $state = null, ): static
+    public static function for(Dispatcher $dispatcher, Event $event, ?State $state = null): static
     {
         return new static($dispatcher, $event, $state);
     }

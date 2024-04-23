@@ -47,7 +47,7 @@ class BrokerStore
         if ($name === 'current') {
             return $this->current();
         }
-        
+
         // @todo: This should throw an error if the driver does not exist
         return $this->brokers[$name];
     }

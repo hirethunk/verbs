@@ -9,10 +9,8 @@ use InvalidArgumentException;
 use Ramsey\Uuid\UuidInterface;
 use RuntimeException;
 use Symfony\Component\Uid\AbstractUid;
-use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Exceptions\StateNotFoundException;
 use Thunk\Verbs\Lifecycle\BrokerStore;
-use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\Support\Serializer;
 
 abstract class State implements UrlRoutable

@@ -6,7 +6,6 @@ use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Lifecycle\BrokerStore;
-use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\State;
 
 beforeEach(function () {

@@ -4,7 +4,6 @@ namespace Thunk\Verbs\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\App;
-use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\BrokerStore;
 use Thunk\Verbs\Models\VerbEvent;

@@ -28,7 +28,8 @@ class Broker implements BrokersEvents
         public ?EventQueue $event_queue,
         public ?StoresSnapshots $snapshot_store,
         public ?StateManager $state_manager,
-    ) {}
+    ) {
+    }
 
     public function fire(Event $event): ?Event
     {

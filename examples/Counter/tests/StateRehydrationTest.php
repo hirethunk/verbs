@@ -3,7 +3,6 @@
 use Thunk\Verbs\Examples\Counter\Events\IncrementCount;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Lifecycle\BrokerStore;
-use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\Models\VerbEvent;
 use Thunk\Verbs\Models\VerbSnapshot;
 

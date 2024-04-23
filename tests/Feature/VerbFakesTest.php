@@ -1,6 +1,5 @@
 <?php
 
-use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Lifecycle\BrokerStore;

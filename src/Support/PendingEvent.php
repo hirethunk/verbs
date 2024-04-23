@@ -12,10 +12,8 @@ use ReflectionMethod;
 use ReflectionParameter;
 use RuntimeException;
 use Throwable;
-use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\BrokerStore;
-use Thunk\Verbs\Lifecycle\MetadataManager;
 
 /**
  * @template TEventType of Event

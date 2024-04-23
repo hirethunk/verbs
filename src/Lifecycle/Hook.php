@@ -13,7 +13,6 @@ use Thunk\Verbs\Metadata;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\Reflector;
 use Thunk\Verbs\Support\StateCollection;
-use Thunk\Verbs\Support\Wormhole;
 
 class Hook
 {

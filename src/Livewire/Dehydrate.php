@@ -9,7 +9,8 @@ class Dehydrate
 
     public function __construct(
         public ?string $alias = null,
-    ) {}
+    ) {
+    }
 
     public function getAlias(): string
     {

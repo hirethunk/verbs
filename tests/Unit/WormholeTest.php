@@ -6,8 +6,6 @@ use Illuminate\Support\Facades\Date;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Lifecycle\BrokerStore;
-use Thunk\Verbs\Lifecycle\MetadataManager;
-use Thunk\Verbs\Support\Wormhole;
 
 test('a callback can be run for a past timestamp', function () {
     $now = now();

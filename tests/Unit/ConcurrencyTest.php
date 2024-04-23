@@ -3,7 +3,6 @@
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\ConcurrencyException;
 use Thunk\Verbs\Lifecycle\BrokerStore;
-use Thunk\Verbs\Lifecycle\EventStore;
 use Thunk\Verbs\Models\VerbEvent;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\StateCollection;

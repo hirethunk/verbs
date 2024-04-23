@@ -6,7 +6,6 @@ use InvalidArgumentException;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Thunk\Verbs\Lifecycle\BrokerStore;
-use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\Serializer;
 

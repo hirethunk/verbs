@@ -12,7 +12,6 @@ use Thunk\Verbs\Exceptions\EventNotAuthorized;
 use Thunk\Verbs\Exceptions\EventNotValid;
 use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Support\IdManager;
-use Thunk\Verbs\Support\Wormhole;
 
 trait BrokerConvenienceMethods
 {

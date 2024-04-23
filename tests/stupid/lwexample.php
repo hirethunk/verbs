@@ -5,7 +5,7 @@ use Thunk\Verbs\Facades\Verbs;
 class LivewireComponent
 {
     public $verbs;
-    
+
     public function mount()
     {
         $this->verbs = Verbs::broker()->standalone();
@@ -19,16 +19,16 @@ class LivewireComponent
         Verbs::standalone('abc');
         Verbs::standalone('ade');
 
-        Verbs::withDriver('abs', function() {
+        Verbs::withDriver('abs', function () {
             // do stuff
             // do stuff
         });
 
-        function withDriver() {
-            try {
+        // function withDriver() {
+        //     try {
 
-            }
-        }
+        //     }
+        // }
 
         Verbs::driver('standalone')->fire(
             Event::make(foo: 'bar')
@@ -43,7 +43,5 @@ class LivewireComponent
         );
 
         Verbs::normal();
-
-        Fireasdlksajdlks
     }
 }

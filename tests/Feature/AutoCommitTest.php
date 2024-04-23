@@ -3,7 +3,6 @@
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\UnableToStoreEventsException;
 use Thunk\Verbs\Facades\Verbs;
-use Thunk\Verbs\Lifecycle\AutoCommitManager;
 use Thunk\Verbs\Lifecycle\BrokerStore;
 
 it('auto-commits after a job is processed', function () {
@@ -59,7 +58,7 @@ it('auto-commits if an event does not throw an exception', function () {
 
 it('does not auto-commits disabled by configuration', function () {
     config(['verbs.autocommit' => false]);
-    
+
     Verbs::fake();
 
     verb(new AutoCommitTestEvent('should not auto-commit'));
@@ -71,5 +70,7 @@ it('does not auto-commits disabled by configuration', function () {
 
 class AutoCommitTestEvent extends Event
 {
-    public function __construct(public string $message) {}
+    public function __construct(public string $message)
+    {
+    }
 }

@@ -17,11 +17,13 @@ use Thunk\Verbs\Support\Serializer;
 class StandaloneEventStore implements StoresEvents
 {
     public array $events = [];
+
     public array $stateEvents = [];
 
     public function __construct(
         protected MetadataManager $metadata,
-    ) {}
+    ) {
+    }
 
     public function read(
         ?State $state = null,

@@ -10,8 +10,6 @@ use Thunk\Verbs\Exceptions\EventNotAuthorized;
 use Thunk\Verbs\Exceptions\EventNotValid;
 use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
 use Thunk\Verbs\Lifecycle\BrokerStore;
-use Thunk\Verbs\Lifecycle\MetadataManager;
-use Thunk\Verbs\Support\EventStateRegistry;
 use Thunk\Verbs\Support\PendingEvent;
 use Thunk\Verbs\Support\StateCollection;
 use WeakMap;

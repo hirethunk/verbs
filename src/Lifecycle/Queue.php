@@ -12,7 +12,8 @@ class Queue
 
     public function __construct(
         public StoresEvents $event_store,
-    ){}
+    ) {
+    }
 
     public function queue(Event $event)
     {

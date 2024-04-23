@@ -2,7 +2,6 @@
 
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\BrokerStore;
-use Thunk\Verbs\Lifecycle\Queue;
 use Thunk\Verbs\Support\PendingEvent;
 
 it('returns a pending event when you call Event::make', function () {

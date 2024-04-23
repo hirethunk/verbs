@@ -12,7 +12,6 @@ use Thunk\Verbs\Examples\Bank\Models\User;
 use Thunk\Verbs\Examples\Bank\States\AccountState;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Lifecycle\BrokerStore;
-use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\Models\VerbEvent;
 
 test('a bank account can be opened and interacted with', function () {

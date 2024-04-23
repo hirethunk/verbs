@@ -5,7 +5,6 @@ namespace Thunk\Verbs\Testing;
 use Closure;
 use Illuminate\Contracts\Container\Container;
 use PHPUnit\Framework\Assert;
-use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\Broker;
