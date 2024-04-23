@@ -2,6 +2,9 @@
 
 namespace Thunk\Verbs\Lifecycle;
 
+use App\Lifecycle\Standalone\StandaloneBroker;
+use App\Lifecycle\Standalone\StandaloneEventStore;
+use App\Lifecycle\Standalone\StandaloneSnapshotStore;
 use Illuminate\Support\DateFactory;
 use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Contracts\StoresEvents;
@@ -42,8 +45,8 @@ class BrokerBuilder
     {
         return (new static)
             ->ofType(StandaloneBroker::class)
-            ->withEventStore(EventCollection::class)
-            ->withSnapshotStore(SnapshotCollection::class)
+            ->withEventStore(StandaloneEventStore::class)
+            ->withSnapshotStore(StandaloneSnapshotStore::class)
             ->build();
     }
 
