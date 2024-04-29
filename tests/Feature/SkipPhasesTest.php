@@ -1,10 +1,10 @@
 <?php
 
-use Thunk\Verbs\Event;
-use Thunk\Verbs\State;
-use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Attributes\Autodiscovery\StateId;
+use Thunk\Verbs\Event;
+use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Lifecycle\Phase;
+use Thunk\Verbs\State;
 
 $snowflake = 170622032481976320;
 
@@ -99,8 +99,11 @@ it('skips all hooks when set to', function () use ($snowflake) {
 class HooksState extends State
 {
     public $validate = false;
+
     public $fired = false;
+
     public $apply = false;
+
     public $handle = false;
 }
 

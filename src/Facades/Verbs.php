@@ -2,14 +2,14 @@
 
 namespace Thunk\Verbs\Facades;
 
-use Closure;
-use Thunk\Verbs\Event;
 use Carbon\CarbonInterface;
+use Closure;
+use Illuminate\Support\Facades\Facade;
+use Thunk\Verbs\Contracts\BrokersEvents;
+use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\Phase;
 use Thunk\Verbs\Testing\BrokerFake;
-use Illuminate\Support\Facades\Facade;
 use Thunk\Verbs\Testing\EventStoreFake;
-use Thunk\Verbs\Contracts\BrokersEvents;
 
 /**
  * @method static bool commit()
