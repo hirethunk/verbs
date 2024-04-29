@@ -111,4 +111,9 @@ class Broker implements BrokersEvents
     {
         $this->commit_immediately = $commit_immediately;
     }
+
+    public function skipPhases(Phase ...$phases): void
+    {
+        $this->dispatcher->skipPhases(...$phases);
+    }
 }

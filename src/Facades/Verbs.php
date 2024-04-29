@@ -7,6 +7,7 @@ use Closure;
 use Illuminate\Support\Facades\Facade;
 use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Lifecycle\Phase;
 use Thunk\Verbs\Testing\BrokerFake;
 use Thunk\Verbs\Testing\EventStoreFake;
 
@@ -21,6 +22,7 @@ use Thunk\Verbs\Testing\EventStoreFake;
  * @method static EventStoreFake assertNotCommitted(string|Closure $event, ?Closure $callback = null)
  * @method static EventStoreFake assertNothingCommitted()
  * @method static CarbonInterface realNow()
+ * @method static void skipPhases(Phase ...$phases)
  */
 class Verbs extends Facade
 {
