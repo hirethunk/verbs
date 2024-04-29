@@ -1,4 +1,4 @@
-In Verbs, Events are the source of your data changes. Before we fire an event, we give it all the data we need it to track, and we describe in the event exactly what it should do with that data once its been fired.
+In Verbs, Events are the source of your data changes. Before we fire an event, we give it all the data we need it to track, and we describe in the event exactly what it should do with that data once it's been fired.
 
 ## Generating an Event
 

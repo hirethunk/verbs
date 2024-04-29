@@ -7,6 +7,7 @@ use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Exceptions\EventNotValid;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 use Thunk\Verbs\Support\EventStateRegistry;
 use Thunk\Verbs\Support\Wormhole;
@@ -29,6 +30,15 @@ class Broker implements BrokersEvents
         public ?StoresSnapshots $snapshot_store,
         public ?StateManager $state_manager,
     ) {
+    }
+
+    public function fireIfValid(Event $event): ?Event
+    {
+        try {
+            return $this->fire($event);
+        } catch (EventNotValid) {
+            return null;
+        }
     }
 
     public function fire(Event $event): ?Event
@@ -111,5 +121,10 @@ class Broker implements BrokersEvents
     public function commitImmediately(bool $commit_immediately = true): void
     {
         $this->commit_immediately = $commit_immediately;
+    }
+
+    public function skipPhases(Phase ...$phases): void
+    {
+        $this->dispatcher->skipPhases(...$phases);
     }
 }

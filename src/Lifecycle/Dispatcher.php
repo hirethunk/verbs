@@ -16,6 +16,8 @@ class Dispatcher
 {
     protected array $hooks = [];
 
+    protected array $skipped_phases = [];
+
     public function __construct(
         protected Container $container
     ) {
@@ -33,8 +35,17 @@ class Dispatcher
         }
     }
 
+    public function skipPhases(Phase ...$phases): void
+    {
+        $this->skipped_phases = $phases;
+    }
+
     public function validate(Event $event, ?State $state = null): bool
     {
+        if (in_array(Phase::Validate, $this->skipped_phases)) {
+            return true;
+        }
+
         foreach ($this->getValidationHooks($event, $state) as $hook) {
             if (! $hook->validate($this->container, $event, $state)) {
                 throw new EventNotValidForCurrentState("Validation failed in '{$hook->name}'");
@@ -46,22 +57,38 @@ class Dispatcher
 
     public function apply(Event $event, State $state): void
     {
+        if (in_array(Phase::Apply, $this->skipped_phases)) {
+            return;
+        }
+
         $this->getApplyHooks($event, $state)->each(fn (Hook $hook) => $hook->apply($this->container, $event, $state));
     }
 
     public function fired(Event $event, StateCollection $states): void
     {
+        if (in_array(Phase::Fired, $this->skipped_phases)) {
+            return;
+        }
+
         $this->getFiredHooks($event)->each(fn (Hook $hook) => $hook->fired($this->container, $event, $states));
     }
 
     public function handle(Event $event, StateCollection $states): Collection
     {
+        if (in_array(Phase::Handle, $this->skipped_phases)) {
+            return collect();
+        }
+
         return $this->getHandleHooks($event)
             ->map(fn (Hook $hook) => $hook->handle($this->container, $event, $states));
     }
 
     public function replay(Event $event, StateCollection $states): void
     {
+        if (in_array(Phase::Replay, $this->skipped_phases)) {
+            return;
+        }
+
         $this->getReplayHooks($event)->each(fn (Hook $hook) => $hook->replay($this->container, $event, $states));
     }
 

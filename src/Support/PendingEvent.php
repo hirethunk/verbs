@@ -13,6 +13,7 @@ use ReflectionParameter;
 use RuntimeException;
 use Throwable;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Exceptions\EventNotValid;
 use Thunk\Verbs\Lifecycle\BrokerStore;
 
 /**
@@ -111,6 +112,16 @@ class PendingEvent
             return app(BrokerStore::class)->get($this->driver)->fire($this->event);
         } catch (Throwable $e) {
             throw $this->prepareException($e);
+        }
+    }
+
+    /** @return null|TEventType */
+    public function fireIfValid(...$args): ?Event
+    {
+        try {
+            return $this->fire(...$args);
+        } catch (EventNotValid) {
+            return null;
         }
     }
 
