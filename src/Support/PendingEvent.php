@@ -14,6 +14,7 @@ use RuntimeException;
 use Throwable;
 use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Exceptions\EventNotValid;
 use Thunk\Verbs\Lifecycle\MetadataManager;
 
 /**
@@ -111,6 +112,16 @@ class PendingEvent
             return app(BrokersEvents::class)->fire($this->event);
         } catch (Throwable $e) {
             throw $this->prepareException($e);
+        }
+    }
+
+    /** @return null|TEventType */
+    public function fireIfValid(...$args): ?Event
+    {
+        try {
+            return $this->fire(...$args);
+        } catch (EventNotValid) {
+            return null;
         }
     }
 

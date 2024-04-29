@@ -6,6 +6,7 @@ use Thunk\Verbs\CommitsImmediately;
 use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Exceptions\EventNotValid;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 
 class Broker implements BrokersEvents
@@ -18,6 +19,15 @@ class Broker implements BrokersEvents
         protected Dispatcher $dispatcher,
         protected MetadataManager $metadata,
     ) {
+    }
+
+    public function fireIfValid(Event $event): ?Event
+    {
+        try {
+            return $this->fire($event);
+        } catch (EventNotValid) {
+            return null;
+        }
     }
 
     public function fire(Event $event): ?Event

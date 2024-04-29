@@ -2,6 +2,7 @@
 
 use Thunk\Verbs\Attributes\Autodiscovery\StateId;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Exceptions\EventNotValid;
 use Thunk\Verbs\State;
 
 it('can test authorization on a pending event', function () {
@@ -72,6 +73,33 @@ it('can test validation on a pending event', function () {
     ]);
 
     $this->assertFalse($event->isValid());
+});
+
+it('can not throw an exception if the event is fired using fireIfValid', function () {
+    SpecialState::factory()->id(1)->create([
+        'name' => 'daniel',
+    ]);
+
+    // this is invalid and will cause validation to fail
+    OtherState::factory()->id(3)->create([
+        'name' => 'john',
+    ]);
+
+    expect(
+        fn () => EventWithMultipleStates::fireIfValid([
+            'special_id' => 1,
+            'other_id' => 3,
+            'allowed' => true,
+        ])
+    )->not->toThrow(EventNotValid::class);
+
+    expect(
+        fn () => EventWithMultipleStates::fire([
+            'special_id' => 1,
+            'other_id' => 3,
+            'allowed' => true,
+        ])
+    )->toThrow(EventNotValid::class);
 });
 
 class EventWithBooleanAuth extends Event
