@@ -101,7 +101,6 @@ it('can reset skipped phases', function () use ($snowflake) {
 
     $state = HooksState::load($snowflake);
 
-
     Verbs::skipPhases();
 
     EventHitHooks::fire(state_id: $snowflake);
