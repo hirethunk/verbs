@@ -2,7 +2,10 @@
 
 namespace Thunk\Verbs\Livewire;
 
+use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Route;
 use Livewire\ComponentHook;
+use Livewire\Drawer\Utils;
 use Livewire\Livewire;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Lifecycle\BrokerBuilder;
@@ -18,8 +21,42 @@ class SupportVerbs extends ComponentHook
             PendingEventSynth::class,
             StateSynth::class,
         ]);
+
         on('request', static::request(...));
         on('response', static::response(...));
+
+        Route::get('/verbs/verbs-livewire.js', [static::class, 'returnJavaScriptAsFile']);
+
+        Blade::directive('verbsScripts', [static::class, 'verbsScripts']);
+    }
+
+    public static function verbsScripts($expression)
+    {
+        $class = static::class;
+
+        return "{!! {$class}::scripts({$expression}) !!}";
+    }
+
+    public static function scripts()
+    {
+        $url = '/verbs/verbs-livewire.js';
+
+        $event_store = app(\Thunk\Verbs\Lifecycle\BrokerStore::class)->current()->event_store;
+
+        $events_string = \Livewire\Drawer\Utils::escapeStringForHtml(
+            $event_store->dehydrate()
+        );
+
+        return <<<HTML
+        <script src="{$url}" verbs:events="{$events_string}"></script>
+        HTML;
+    }
+
+    public function returnJavaScriptAsFile()
+    {
+        return Utils::pretendResponseIsFile(
+            __DIR__.'/verbs-livewire.js'
+        );
     }
 
     public function render()
