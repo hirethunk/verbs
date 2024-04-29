@@ -41,10 +41,10 @@ class SupportVerbs extends ComponentHook
     {
         $url = '/verbs/verbs-livewire.js';
 
-        $event_store = app(\Thunk\Verbs\Lifecycle\BrokerStore::class)->current()->event_store;
+        $broker = app(BrokerStore::class)->get('standalone');
 
         $events_string = \Livewire\Drawer\Utils::escapeStringForHtml(
-            $event_store->dehydrate()
+            $broker->event_store->dehydrate()
         );
 
         return <<<HTML

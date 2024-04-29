@@ -61,6 +61,72 @@ document.addEventListener("livewire:init", () => {
             },
         })
     })
+
+    Livewire.directive("verbs-get", ({ el, directive, component, cleanup }) => {
+        let { expression, modifiers } = directive
+
+        if (!expression) {
+            console.error("The `wire:verbs-get` directive requires an expression.")
+        }
+
+        let getValue = expression.trim()
+
+        let setValue = el.getAttribute('wire:verbs-set')?.trim()
+
+        console.log('Verbs set value', getValue)
+
+        console.log("Verbs Get", getValue, el._x_model, el)
+
+        Alpine.bind(el, {
+            ["x-model"]() {
+                return {
+                    get() {
+                        if (getValue) {
+                            return dataGet(component.$wire, getValue)
+                        }
+                    },
+                    set(value) {
+                        if (setValue) {
+                            dataSet(component.$wire, setValue, value)
+                        }
+                    },
+                }
+            },
+        })
+    })
+
+    Livewire.directive("verbs-set", ({ el, directive, component, cleanup }) => {
+        let { expression, modifiers } = directive
+
+        if (!expression) {
+            console.error("The `wire:verbs-set` directive requires an expression.")
+        }
+
+        let setValue = expression.trim()
+
+        let getValue = el.getAttribute('wire:verbs-get')?.trim()
+
+        console.log('Verbs get value', getValue)
+
+        console.log("Verbs Set", setValue, el._x_model)
+        
+        Alpine.bind(el, {
+            ["x-model"]() {
+                return {
+                    get() {
+                        if (getValue) {
+                            return dataGet(component.$wire, getValue)
+                        }
+                    },
+                    set(value) {
+                        if (setValue) {
+                            dataSet(component.$wire, setValue, value)
+                        }
+                    },
+                }
+            },
+        })
+    })
 })
 
 // Copied from vendor/livewire/livewire/js/utils.js
