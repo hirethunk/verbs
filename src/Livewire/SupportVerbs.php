@@ -89,7 +89,9 @@ class SupportVerbs extends ComponentHook
         return function (&$response) {
             $broker = app(BrokerStore::class)->get('standalone');
 
-            if (! $broker) return;
+            if (! $broker) {
+                return;
+            }
 
             $eventData = $broker->event_store->dehydrate();
 

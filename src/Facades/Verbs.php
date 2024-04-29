@@ -7,9 +7,9 @@ use Closure;
 use Illuminate\Support\Facades\Facade;
 use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Lifecycle\Phase;
 use Thunk\Verbs\Lifecycle\BrokerBuilder;
 use Thunk\Verbs\Lifecycle\BrokerStore;
+use Thunk\Verbs\Lifecycle\Phase;
 use Thunk\Verbs\Testing\EventStoreFake;
 
 /**

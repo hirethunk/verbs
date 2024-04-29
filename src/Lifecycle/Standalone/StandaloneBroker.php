@@ -19,6 +19,6 @@ class StandaloneBroker extends Broker implements BrokersEvents
 
     public function commitToDefault()
     {
-        
+
     }
 }
