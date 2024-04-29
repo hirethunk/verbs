@@ -96,6 +96,24 @@ it('skips all hooks when set to', function () use ($snowflake) {
     expect($state->handle)->toBeFalse();
 });
 
+it('can reset skipped phases', function () use ($snowflake) {
+    Verbs::skipPhases(Phase::Validate, Phase::Apply, Phase::Handle, Phase::Fired);
+
+    $state = HooksState::load($snowflake);
+
+
+    Verbs::skipPhases();
+
+    EventHitHooks::fire(state_id: $snowflake);
+
+    Verbs::commit();
+
+    expect($state->validate)->toBeTrue();
+    expect($state->fired)->toBeTrue();
+    expect($state->apply)->toBeTrue();
+    expect($state->handle)->toBeTrue();
+});
+
 class HooksState extends State
 {
     public $validate = false;
