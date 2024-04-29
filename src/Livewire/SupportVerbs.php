@@ -27,9 +27,9 @@ class SupportVerbs extends ComponentHook
         Verbs::commit();
     }
 
-    public static function request(\Illuminate\Http\Request $request)
+    public static function request()
     {
-        $verbs = $request->get('verbs');
+        $verbs = request()->get('verbs');
 
         if (! $verbs) {
             return;
