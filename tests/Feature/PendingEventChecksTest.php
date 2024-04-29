@@ -86,7 +86,7 @@ it('can not throw an exception if the event is fired using fireIfValid', functio
     ]);
 
     expect(
-        fn() => EventWithMultipleStates::fireIfValid([
+        fn () => EventWithMultipleStates::fireIfValid([
             'special_id' => 1,
             'other_id' => 3,
             'allowed' => true,
@@ -94,7 +94,7 @@ it('can not throw an exception if the event is fired using fireIfValid', functio
     )->not->toThrow(EventNotValid::class);
 
     expect(
-        fn() => EventWithMultipleStates::fire([
+        fn () => EventWithMultipleStates::fire([
             'special_id' => 1,
             'other_id' => 3,
             'allowed' => true,

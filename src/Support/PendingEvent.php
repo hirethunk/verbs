@@ -3,19 +3,19 @@
 namespace Thunk\Verbs\Support;
 
 use Closure;
-use Throwable;
-use ReflectionMethod;
-use RuntimeException;
-use Thunk\Verbs\Event;
-use ReflectionParameter;
 use Illuminate\Support\Arr;
-use InvalidArgumentException;
+use Illuminate\Support\Traits\Conditionable;
 use Illuminate\Support\Traits\Macroable;
+use Illuminate\Validation\ValidationException;
+use InvalidArgumentException;
+use ReflectionMethod;
+use ReflectionParameter;
+use RuntimeException;
+use Throwable;
 use Thunk\Verbs\Contracts\BrokersEvents;
+use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\EventNotValid;
 use Thunk\Verbs\Lifecycle\MetadataManager;
-use Illuminate\Support\Traits\Conditionable;
-use Illuminate\Validation\ValidationException;
 
 /**
  * @template TEventType of Event
