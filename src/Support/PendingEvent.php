@@ -3,18 +3,19 @@
 namespace Thunk\Verbs\Support;
 
 use Closure;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Traits\Conditionable;
-use Illuminate\Support\Traits\Macroable;
-use Illuminate\Validation\ValidationException;
-use InvalidArgumentException;
-use ReflectionMethod;
-use ReflectionParameter;
-use RuntimeException;
 use Throwable;
-use Thunk\Verbs\Contracts\BrokersEvents;
+use ReflectionMethod;
+use RuntimeException;
 use Thunk\Verbs\Event;
+use ReflectionParameter;
+use Illuminate\Support\Arr;
+use InvalidArgumentException;
+use Illuminate\Support\Traits\Macroable;
+use Thunk\Verbs\Contracts\BrokersEvents;
+use Thunk\Verbs\Exceptions\EventNotValid;
 use Thunk\Verbs\Lifecycle\MetadataManager;
+use Illuminate\Support\Traits\Conditionable;
+use Illuminate\Validation\ValidationException;
 
 /**
  * @template TEventType of Event
@@ -111,6 +112,16 @@ class PendingEvent
             return app(BrokersEvents::class)->fire($this->event);
         } catch (Throwable $e) {
             throw $this->prepareException($e);
+        }
+    }
+
+    /** @return null|TEventType */
+    public function fireIfValid(...$args): ?Event
+    {
+        try {
+            return $this->fire(...$args);
+        } catch (EventNotValid) {
+            return null;
         }
     }
 
