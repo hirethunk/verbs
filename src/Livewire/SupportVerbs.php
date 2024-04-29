@@ -87,7 +87,11 @@ class SupportVerbs extends ComponentHook
     public static function response()
     {
         return function (&$response) {
-            $eventData = app(BrokerStore::class)->get('standalone')->event_store->dehydrate();
+            $broker = app(BrokerStore::class)->get('standalone');
+
+            if (! $broker) return;
+
+            $eventData = $broker->event_store->dehydrate();
 
             $eventData['eventsEncoded'] = json_encode($eventData);
 

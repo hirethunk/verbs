@@ -42,14 +42,14 @@ class BrokerStore
         return isset($this->brokers[$name]);
     }
 
-    public function get(string $name): BrokersEvents
+    public function get(string $name): ?BrokersEvents
     {
         if ($name === 'current') {
             return $this->current();
         }
 
         // @todo: This should throw an error if the driver does not exist
-        return $this->brokers[$name];
+        return $this->brokers[$name] ?? null;
     }
 
     public function current(): BrokersEvents
