@@ -89,7 +89,6 @@ class Hook
     {
         if ($this->runsInPhase(Phase::Apply)) {
             $container->call($this->callback, $this->guessParameters($event, $state));
-            $state->last_event_id = $event->id;
         }
     }
 
