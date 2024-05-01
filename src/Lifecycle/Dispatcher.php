@@ -42,7 +42,7 @@ class Dispatcher
 
     public function validate(Event $event, ?State $state = null): bool
     {
-        if (in_array(Phase::Validate, $this->skipped_phases)) {
+        if (! $this->shouldDispatchPhase(Phase::Validate)) {
             return true;
         }
 
@@ -57,25 +57,23 @@ class Dispatcher
 
     public function apply(Event $event, State $state): void
     {
-        if (in_array(Phase::Apply, $this->skipped_phases)) {
-            return;
+        if ($this->shouldDispatchPhase(Phase::Apply)) {
+            $this->getApplyHooks($event, $state)->each(fn (Hook $hook) => $hook->apply($this->container, $event, $state));
         }
 
-        $this->getApplyHooks($event, $state)->each(fn (Hook $hook) => $hook->apply($this->container, $event, $state));
+        $state->last_event_id = $event->id;
     }
 
     public function fired(Event $event, StateCollection $states): void
     {
-        if (in_array(Phase::Fired, $this->skipped_phases)) {
-            return;
+        if ($this->shouldDispatchPhase(Phase::Fired)) {
+            $this->getFiredHooks($event)->each(fn (Hook $hook) => $hook->fired($this->container, $event, $states));
         }
-
-        $this->getFiredHooks($event)->each(fn (Hook $hook) => $hook->fired($this->container, $event, $states));
     }
 
     public function handle(Event $event, StateCollection $states): Collection
     {
-        if (in_array(Phase::Handle, $this->skipped_phases)) {
+        if (! $this->shouldDispatchPhase(Phase::Handle)) {
             return collect();
         }
 
@@ -85,11 +83,9 @@ class Dispatcher
 
     public function replay(Event $event, StateCollection $states): void
     {
-        if (in_array(Phase::Replay, $this->skipped_phases)) {
-            return;
+        if ($this->shouldDispatchPhase(Phase::Replay)) {
+            $this->getReplayHooks($event)->each(fn (Hook $hook) => $hook->replay($this->container, $event, $states));
         }
-
-        $this->getReplayHooks($event)->each(fn (Hook $hook) => $hook->replay($this->container, $event, $states));
     }
 
     /** @return Collection<int, Hook> */
@@ -169,5 +165,10 @@ class Dispatcher
             ->merge($event_apply_methods)
             ->merge($states_apply_methods)
             ->filter(fn (Hook $hook) => $hook->runsInPhase(Phase::Apply));
+    }
+
+    protected function shouldDispatchPhase(Phase $phase): bool
+    {
+        return ! in_array($phase, $this->skipped_phases);
     }
 }
