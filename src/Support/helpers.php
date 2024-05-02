@@ -13,7 +13,7 @@ if (! function_exists('verb')) {
      */
     function verb(Event $event, bool $commit = false): Event
     {
-        $event = (new PendingEvent($event))->fire();
+        (new PendingEvent($event))->fire();
 
         if ($commit) {
             app(BrokersEvents::class)->commit();
