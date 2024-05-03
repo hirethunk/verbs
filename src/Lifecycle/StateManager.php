@@ -3,7 +3,6 @@
 namespace Thunk\Verbs\Lifecycle;
 
 use Glhd\Bits\Bits;
-use Illuminate\Database\Eloquent\Collection;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Contracts\StoresEvents;
