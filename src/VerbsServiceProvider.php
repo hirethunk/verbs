@@ -34,6 +34,7 @@ use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\Livewire\SupportVerbs;
 use Thunk\Verbs\Support\EventStateRegistry;
 use Thunk\Verbs\Support\IdManager;
+use Thunk\Verbs\Support\LeastRecentlyUsedCache;
 use Thunk\Verbs\Support\Serializer;
 use Thunk\Verbs\Support\Wormhole;
 
@@ -68,9 +69,19 @@ class VerbsServiceProvider extends PackageServiceProvider
         $this->app->singleton(EventStore::class);
         $this->app->singleton(SnapshotStore::class);
         $this->app->singleton(EventQueue::class);
-        $this->app->singleton(StateManager::class);
         $this->app->singleton(EventStateRegistry::class);
         $this->app->singleton(MetadataManager::class);
+
+        $this->app->singleton(StateManager::class, function (Container $app) {
+            return new StateManager(
+                dispatcher: $app->make(Dispatcher::class),
+                snapshots: $app->make(StoresSnapshots::class),
+                events: $app->make(StoresEvents::class),
+                states: new LeastRecentlyUsedCache(
+                    capacity: $app->make(Repository::class)->get('verbs.state_cache_size', 100)
+                ),
+            );
+        });
 
         $this->app->singleton(IdManager::class, function (Container $app) {
             return new IdManager(
