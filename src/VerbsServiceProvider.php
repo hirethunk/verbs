@@ -156,6 +156,7 @@ class VerbsServiceProvider extends PackageServiceProvider
 
         $this->app->terminating(function () {
             app(AutoCommitManager::class)->commitIfAutoCommitting();
+            app(StateManager::class)->reset(include_storage: false);
         });
 
         // Hook into Laravel event dispatcher
@@ -174,6 +175,7 @@ class VerbsServiceProvider extends PackageServiceProvider
         // Auto-commit after each job on the queue is processed
         if ($event instanceof JobProcessed) {
             app(AutoCommitManager::class)->commitIfAutoCommitting();
+            app(StateManager::class)->reset(include_storage: false);
         }
     }
 }

@@ -8,6 +8,7 @@ use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Exceptions\StateCacheSizeTooLow;
 use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\LeastRecentlyUsedCache;
@@ -23,8 +24,7 @@ class StateManager
         protected StoresEvents $events,
         protected LeastRecentlyUsedCache $states,
     ) {
-        // If a state gets ejected from the cache, we need to write the snapshot first
-        $this->states->onDiscard(fn (State $discarded) => $this->snapshots->write([$discarded]));
+        $this->states->onDiscard(fn () => throw_unless($this->is_replaying, StateCacheSizeTooLow::class));
     }
 
     public function register(State $state): State
