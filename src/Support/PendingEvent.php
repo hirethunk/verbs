@@ -12,10 +12,9 @@ use ReflectionMethod;
 use ReflectionParameter;
 use RuntimeException;
 use Throwable;
-use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\EventNotValid;
-use Thunk\Verbs\Lifecycle\MetadataManager;
+use Thunk\Verbs\Lifecycle\BrokerStore;
 
 /**
  * @template TEventType of Event
@@ -78,6 +77,7 @@ class PendingEvent
     /** @param  TEventType|class-string<TEventType>  $event */
     public function __construct(
         public Event|string $event,
+        public string $driver = 'current',
     ) {
         $this->conditionallySetId();
         $this->setDefaultExceptionMapper();
@@ -94,7 +94,7 @@ class PendingEvent
     {
         $this->event = app(Serializer::class)->deserialize($this->event, $data, call_constructor: true);
 
-        app(MetadataManager::class)->initialize($this->event);
+        app(BrokerStore::class)->get($this->driver)->metadata->initialize($this->event);
 
         $this->conditionallySetId();
 
@@ -109,7 +109,7 @@ class PendingEvent
         }
 
         try {
-            return app(BrokersEvents::class)->fire($this->event);
+            return app(BrokerStore::class)->get($this->driver)->fire($this->event);
         } catch (Throwable $e) {
             throw $this->prepareException($e);
         }
@@ -130,21 +130,21 @@ class PendingEvent
     {
         $event = $this->fire(...$args);
 
-        app(BrokersEvents::class)->commit();
+        app(BrokerStore::class)->get($this->driver)->commit();
 
-        $results = app(MetadataManager::class)->getLastResults($event);
+        $results = app(BrokerStore::class)->get($this->driver)->metadata->getLastResults($event);
 
         return $results->count() > 1 ? $results : $results->first();
     }
 
     public function isAuthorized(): bool
     {
-        return app(BrokersEvents::class)->isAuthorized($this->event);
+        return app(BrokerStore::class)->get($this->driver)->isAuthorized($this->event);
     }
 
     public function isValid(): bool
     {
-        return app(BrokersEvents::class)->isValid($this->event);
+        return app(BrokerStore::class)->get($this->driver)->isValid($this->event);
     }
 
     /** @param  callable(Throwable): Throwable  $handler */

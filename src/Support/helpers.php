@@ -1,7 +1,7 @@
 <?php
 
-use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Lifecycle\BrokerStore;
 use Thunk\Verbs\Support\PendingEvent;
 
 if (! function_exists('verb')) {
@@ -16,9 +16,20 @@ if (! function_exists('verb')) {
         (new PendingEvent($event))->fire();
 
         if ($commit) {
-            app(BrokersEvents::class)->commit();
+            app(BrokerStore::class)->current()->commit();
         }
 
         return $event;
+    }
+}
+
+if (! function_exists('ensure_type')) {
+    function ensure_type(string $class, string $interface): string
+    {
+        if (! is_a($class, $interface, true)) {
+            throw new InvalidArgumentException("Class [{$class}] must implement [{$interface}]");
+        }
+
+        return $class;
     }
 }

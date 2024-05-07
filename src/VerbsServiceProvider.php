@@ -25,13 +25,14 @@ use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Lifecycle\AutoCommitManager;
 use Thunk\Verbs\Lifecycle\Broker;
+use Thunk\Verbs\Lifecycle\BrokerBuilder;
+use Thunk\Verbs\Lifecycle\BrokerStore;
 use Thunk\Verbs\Lifecycle\Dispatcher;
 use Thunk\Verbs\Lifecycle\EventStore;
 use Thunk\Verbs\Lifecycle\MetadataManager;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 use Thunk\Verbs\Lifecycle\SnapshotStore;
 use Thunk\Verbs\Lifecycle\StateManager;
-use Thunk\Verbs\Livewire\SupportVerbs;
 use Thunk\Verbs\Support\EventStateRegistry;
 use Thunk\Verbs\Support\IdManager;
 use Thunk\Verbs\Support\Serializer;
@@ -63,14 +64,21 @@ class VerbsServiceProvider extends PackageServiceProvider
 
     public function packageRegistered()
     {
-        $this->app->singleton(Broker::class);
-        $this->app->singleton(Dispatcher::class);
-        $this->app->singleton(EventStore::class);
-        $this->app->singleton(SnapshotStore::class);
-        $this->app->singleton(EventQueue::class);
-        $this->app->singleton(StateManager::class);
-        $this->app->singleton(EventStateRegistry::class);
-        $this->app->singleton(MetadataManager::class);
+        $this->app->bind(BrokerBuilder::class);
+
+        $this->app->singleton(BrokerStore::class, function (Container $app) {
+            return new BrokerStore(
+                BrokerBuilder::primary(),
+            );
+        });
+
+        // $this->app->singleton(Dispatcher::class);
+        // $this->app->singleton(EventStore::class);
+        // $this->app->singleton(SnapshotStore::class);
+        // $this->app->singleton(EventQueue::class);
+        // $this->app->singleton(StateManager::class);
+        // $this->app->singleton(EventStateRegistry::class);
+        // $this->app->singleton(MetadataManager::class);
 
         $this->app->singleton(IdManager::class, function (Container $app) {
             return new IdManager(
@@ -78,15 +86,15 @@ class VerbsServiceProvider extends PackageServiceProvider
             );
         });
 
-        $this->app->singleton(Wormhole::class, function (Container $app) {
-            $config = $app->make(Repository::class);
+        // $this->app->singleton(Wormhole::class, function (Container $app) {
+        //     $config = $app->make(Repository::class);
 
-            return new Wormhole(
-                $app->make(MetadataManager::class),
-                $app->make(DateFactory::class),
-                $config->get('verbs.wormhole', true),
-            );
-        });
+        //     return new Wormhole(
+        //         $app->make(MetadataManager::class),
+        //         $app->make(DateFactory::class),
+        //         $config->get('verbs.wormhole', true),
+        //     );
+        // });
 
         $this->app->singleton(Serializer::class, function (Container $app) {
             return new Serializer(
@@ -118,33 +126,24 @@ class VerbsServiceProvider extends PackageServiceProvider
             );
         });
 
-        $this->app->singleton(AutoCommitManager::class, function (Container $app) {
-            return new AutoCommitManager(
-                broker: $app->make(BrokersEvents::class),
-                enabled: $app->make(Repository::class)->get('verbs.autocommit', true),
-            );
-        });
+        // $this->app->singleton(AutoCommitManager::class, function (Container $app) {
+        //     return new AutoCommitManager(
+        //         broker: $app->make(BrokersEvents::class),
+        //         enabled: $app->make(Repository::class)->get('verbs.autocommit', true),
+        //     );
+        // });
 
-        $this->app->alias(Broker::class, BrokersEvents::class);
-        $this->app->alias(EventStore::class, StoresEvents::class);
-        $this->app->alias(SnapshotStore::class, StoresSnapshots::class);
+        // $this->app->alias(Broker::class, BrokersEvents::class);
+        // $this->app->alias(EventStore::class, StoresEvents::class);
+        // $this->app->alias(SnapshotStore::class, StoresSnapshots::class);
     }
 
     public function boot()
     {
         parent::boot();
 
-        if ($this->app->has('livewire')) {
-            $manager = $this->app->make('livewire');
-
-            // Component hooks only exist in v3, so we need to check before registering our hook
-            if (method_exists($manager, 'componentHook')) {
-                $manager->componentHook(SupportVerbs::class);
-            }
-        }
-
         $this->app->terminating(function () {
-            app(AutoCommitManager::class)->commitIfAutoCommitting();
+            app(BrokerStore::class)->current()->auto_commit_manager->commitIfAutoCommitting();
         });
 
         // Hook into Laravel event dispatcher
@@ -162,7 +161,7 @@ class VerbsServiceProvider extends PackageServiceProvider
 
         // Auto-commit after each job on the queue is processed
         if ($event instanceof JobProcessed) {
-            app(AutoCommitManager::class)->commitIfAutoCommitting();
+            app(BrokerStore::class)->current()->auto_commit_manager->commitIfAutoCommitting();
         }
     }
 }

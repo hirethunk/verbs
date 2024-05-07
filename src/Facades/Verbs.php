@@ -7,8 +7,9 @@ use Closure;
 use Illuminate\Support\Facades\Facade;
 use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Lifecycle\BrokerBuilder;
+use Thunk\Verbs\Lifecycle\BrokerStore;
 use Thunk\Verbs\Lifecycle\Phase;
-use Thunk\Verbs\Testing\BrokerFake;
 use Thunk\Verbs\Testing\EventStoreFake;
 
 /**
@@ -28,24 +29,30 @@ class Verbs extends Facade
 {
     public static function fake()
     {
-        $real_broker = static::isFake()
-            ? static::getFacadeRoot()->broker
-            : static::getFacadeRoot();
+        if (! app(BrokerStore::class)->has('fake')) {
+            app(BrokerStore::class)->register('fake', BrokerBuilder::fake());
+        }
 
-        $fake_broker = new BrokerFake(
-            static::getFacadeApplication(),
-            static::getFacadeApplication()->make(EventStoreFake::class),
-            $real_broker
-        );
+        return app(BrokerStore::class)->swap('fake')->current();
+    }
 
-        static::swap($fake_broker);
+    public static function use(string $alias)
+    {
+        if (! app(BrokerStore::class)->has($alias)) {
+            throw new \InvalidArgumentException("Broker alias [{$alias}] is not registered.");
+        }
 
-        return $fake_broker;
+        return app(BrokerStore::class)->swap($alias)->current();
+    }
+
+    public static function broker()
+    {
+        return static::getFacadeRoot();
     }
 
     public static function getFacadeRoot(): BrokersEvents
     {
-        return parent::getFacadeRoot();
+        return app(BrokerStore::class)->current();
     }
 
     protected static function getFacadeAccessor()

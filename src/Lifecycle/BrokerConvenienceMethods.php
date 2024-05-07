@@ -12,7 +12,6 @@ use Thunk\Verbs\Exceptions\EventNotAuthorized;
 use Thunk\Verbs\Exceptions\EventNotValid;
 use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Support\IdManager;
-use Thunk\Verbs\Support\Wormhole;
 
 trait BrokerConvenienceMethods
 {
@@ -35,14 +34,14 @@ trait BrokerConvenienceMethods
 
     public function createMetadataUsing(?callable $callback = null): void
     {
-        app(MetadataManager::class)->createMetadataUsing($callback);
+        $this->metadata->createMetadataUsing($callback);
     }
 
     public function isAuthorized(Event $event): bool
     {
         try {
-            Guards::for($event)->authorize();
-            $event->states()->each(fn ($state) => Guards::for($event, $state)->authorize());
+            Guards::for($this->dispatcher, $event)->authorize();
+            $event->states()->each(fn ($state) => Guards::for($this->dispatcher, $event, $state)->authorize());
 
             return true;
         } catch (AuthorizationException) {
@@ -53,8 +52,8 @@ trait BrokerConvenienceMethods
     public function isValid(Event $event): bool
     {
         try {
-            Guards::for($event)->validate();
-            $event->states()->each(fn ($state) => Guards::for($event, $state)->validate());
+            Guards::for($this->dispatcher, $event)->validate();
+            $event->states()->each(fn ($state) => Guards::for($this->dispatcher, $event, $state)->validate());
 
             return true;
         } catch (EventNotValid|EventNotAuthorized) {
@@ -76,6 +75,6 @@ trait BrokerConvenienceMethods
 
     public function realNow(): CarbonInterface
     {
-        return app(Wormhole::class)->realNow();
+        return app(BrokerStore::class)->current()->wormhole->realNow();
     }
 }

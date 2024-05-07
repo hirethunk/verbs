@@ -1,7 +1,7 @@
 <?php
 
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Lifecycle\Queue;
+use Thunk\Verbs\Lifecycle\BrokerStore;
 use Thunk\Verbs\Support\PendingEvent;
 
 it('returns a pending event when you call Event::make', function () {
@@ -18,7 +18,7 @@ it('returns a pending event when you call Event::make', function () {
 it('calls fire on the broker when you call Event::fire', function () {
     $user_registered = UserRegistered::fire();
 
-    $event_queue = app(Queue::class)->event_queue;
+    $event_queue = app(BrokerStore::class)->current()->event_queue->event_queue;
 
     expect($event_queue)->toHaveCount(1)
         ->and($event_queue[0])->toBe($user_registered);
@@ -29,7 +29,7 @@ it('immediately commits, and returns the results of handle when you call Event::
 
     expect($result)->toBeInstanceOf(stdClass::class)
         ->and($result->name)->toBe('Chris')
-        ->and(app(Queue::class)->event_queue)->toHaveCount(0);
+        ->and(app(BrokerStore::class)->current()->event_queue->event_queue)->toHaveCount(0);
 });
 
 class UserRegistered extends Event
