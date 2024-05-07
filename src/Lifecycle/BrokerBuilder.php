@@ -7,9 +7,6 @@ use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
-use Thunk\Verbs\Lifecycle\Standalone\StandaloneBroker;
-use Thunk\Verbs\Lifecycle\Standalone\StandaloneEventStore;
-use Thunk\Verbs\Lifecycle\Standalone\StandaloneSnapshotStore;
 use Thunk\Verbs\Support\EventStateRegistry;
 use Thunk\Verbs\Support\Wormhole;
 use Thunk\Verbs\Testing\BrokerFake;
@@ -39,15 +36,6 @@ class BrokerBuilder
     public static function primary(): BrokersEvents
     {
         return (new static)->build();
-    }
-
-    public static function standalone(): BrokersEvents
-    {
-        return (new static)
-            ->ofType(StandaloneBroker::class)
-            ->withEventStore(StandaloneEventStore::class)
-            ->withSnapshotStore(StandaloneSnapshotStore::class)
-            ->build();
     }
 
     public static function fake(): BrokersEvents

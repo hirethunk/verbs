@@ -33,7 +33,6 @@ use Thunk\Verbs\Lifecycle\MetadataManager;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 use Thunk\Verbs\Lifecycle\SnapshotStore;
 use Thunk\Verbs\Lifecycle\StateManager;
-use Thunk\Verbs\Livewire\SupportVerbs;
 use Thunk\Verbs\Support\EventStateRegistry;
 use Thunk\Verbs\Support\IdManager;
 use Thunk\Verbs\Support\Serializer;
@@ -142,15 +141,6 @@ class VerbsServiceProvider extends PackageServiceProvider
     public function boot()
     {
         parent::boot();
-
-        if ($this->app->has('livewire')) {
-            $manager = $this->app->make('livewire');
-
-            // Component hooks only exist in v3, so we need to check before registering our hook
-            if (method_exists($manager, 'componentHook')) {
-                $manager->componentHook(SupportVerbs::class);
-            }
-        }
 
         $this->app->terminating(function () {
             app(BrokerStore::class)->current()->auto_commit_manager->commitIfAutoCommitting();

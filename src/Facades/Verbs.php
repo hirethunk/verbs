@@ -36,13 +36,13 @@ class Verbs extends Facade
         return app(BrokerStore::class)->swap('fake')->current();
     }
 
-    public static function standalone()
+    public static function use(string $alias)
     {
-        if (! app(BrokerStore::class)->has('standalone')) {
-            app(BrokerStore::class)->register('standalone', BrokerBuilder::standalone());
+        if (! app(BrokerStore::class)->has($alias)) {
+            throw new \InvalidArgumentException("Broker alias [{$alias}] is not registered.");
         }
 
-        return app(BrokerStore::class)->swap('standalone')->current();
+        return app(BrokerStore::class)->swap($alias)->current();
     }
 
     public static function broker()
