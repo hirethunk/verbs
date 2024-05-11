@@ -88,7 +88,7 @@ class Hook
     public function apply(Container $container, Event $event, State $state): void
     {
         if ($this->runsInPhase(Phase::Apply)) {
-            $container->call($this->callback, $this->guessParameters($event, $state));
+            app(Wormhole::class)->process($event, fn () => $container->call($this->callback, $this->guessParameters($event, $state)));
         }
     }
 
