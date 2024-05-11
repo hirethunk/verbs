@@ -121,7 +121,8 @@ class ReplayCommandTestWormholeEvent extends Event
 {
     public function __construct(
         #[StateId(ReplayCommandTestWormholeState::class)] public ?int $state_id = null
-    ){}
+    ) {
+    }
 
     public function apply(ReplayCommandTestWormholeState $state): void
     {
