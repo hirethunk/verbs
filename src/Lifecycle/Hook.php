@@ -111,7 +111,7 @@ class Hook
     public function replay(Container $container, Event $event, StateCollection $states): void
     {
         if ($this->runsInPhase(Phase::Replay)) {
-            app(Wormhole::class)->replay($event, fn () => $container->call($this->callback, $this->guessParameters($event, states: $states)));
+            app(Wormhole::class)->process($event, fn () => $container->call($this->callback, $this->guessParameters($event, states: $states)));
         }
     }
 
