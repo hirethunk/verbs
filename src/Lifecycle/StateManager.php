@@ -3,29 +3,28 @@
 namespace Thunk\Verbs\Lifecycle;
 
 use Glhd\Bits\Bits;
-use Illuminate\Database\Eloquent\Collection;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Exceptions\StateCacheSizeTooLow;
 use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\State;
+use Thunk\Verbs\Support\LeastRecentlyUsedCache;
 use UnexpectedValueException;
 
 class StateManager
 {
-    /** @var Collection<string, State> */
-    protected Collection $states;
-
     protected bool $is_replaying = false;
 
     public function __construct(
         protected Dispatcher $dispatcher,
         protected StoresSnapshots $snapshots,
         protected StoresEvents $events,
+        protected LeastRecentlyUsedCache $states,
     ) {
-        $this->states = new Collection();
+        $this->states->onDiscard(fn () => throw_unless($this->is_replaying, StateCacheSizeTooLow::class));
     }
 
     public function register(State $state): State
@@ -81,7 +80,7 @@ class StateManager
 
     public function writeSnapshots(): bool
     {
-        return $this->snapshots->write($this->states->values()->all());
+        return $this->snapshots->write($this->states->values());
     }
 
     public function setReplaying(bool $replaying): static
@@ -93,7 +92,7 @@ class StateManager
 
     public function reset(bool $include_storage = false): static
     {
-        $this->states = new Collection();
+        $this->states->reset();
         $this->is_replaying = false;
 
         if ($include_storage) {
