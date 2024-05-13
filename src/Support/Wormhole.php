@@ -42,7 +42,7 @@ class Wormhole
         return $this->immutable_now ?? CarbonImmutable::instance(new DateTime());
     }
 
-    public function process(Event $event, Closure $callback)
+    public function warp(Event $event, Closure $callback)
     {
         if ($this->wormholeIsDisabled($event)) {
             return $callback();

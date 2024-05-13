@@ -88,7 +88,7 @@ class Hook
     public function apply(Container $container, Event $event, State $state): void
     {
         if ($this->runsInPhase(Phase::Apply)) {
-            app(Wormhole::class)->process($event, fn () => $container->call($this->callback, $this->guessParameters($event, $state)));
+            app(Wormhole::class)->warp($event, fn () => $container->call($this->callback, $this->guessParameters($event, $state)));
         }
     }
 
@@ -111,7 +111,7 @@ class Hook
     public function replay(Container $container, Event $event, StateCollection $states): void
     {
         if ($this->runsInPhase(Phase::Replay)) {
-            app(Wormhole::class)->process($event, fn () => $container->call($this->callback, $this->guessParameters($event, states: $states)));
+            app(Wormhole::class)->warp($event, fn () => $container->call($this->callback, $this->guessParameters($event, states: $states)));
         }
     }
 
