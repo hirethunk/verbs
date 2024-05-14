@@ -12,8 +12,7 @@ use Thunk\Verbs\Testing\SnapshotStoreFake;
 beforeEach(function () {
     app()->instance(StoresSnapshots::class, new SnapshotStoreFake());
     app()->instance(StoresEvents::class, new EventStoreFake(app(MetadataManager::class)));
-}
-);
+});
 
 test('loadOrFail triggers an exception if state does not exist', function () {
     StateManagerTestState::loadOrFail(1);

@@ -247,3 +247,9 @@ class FooCreated class
 That said: if you ever find yourself storing complex, nested, multi-faceted data in arrays, collections, or objects on your state, you __probably__ need another state. Particularly if the data in those collections, arrays, or objects is ever going to change.
 
 Read more about the role states play in [State-first development](/docs/techniques/state-first-development).
+
+## State Cache
+
+By default, Verbs keeps up to 100 State objects in memory at one time. Most applications will never need more than a 
+handful of States for any given request, but if your application needs to operate on hundreds of States during a single
+request/command/job, you’ll need to increase the `state_cache_size` configuration value.
