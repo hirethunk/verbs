@@ -54,7 +54,12 @@ trait NormalizeToPropertiesAndClassName
             $property = $reflect->getProperty($key);
 
             if ($property->hasType() && ! $property->getType()->isBuiltin()) {
-                $value = $denormalizer->denormalize($value, $property->getType()->getName());
+                $is_nullable_with_null_value = $property->getType()->allowsNull()
+                    && $value === null;
+
+                $value = $is_nullable_with_null_value
+                    ? null
+                    : $denormalizer->denormalize($value, $property->getType()->getName());
             }
 
             $property->setValue($instance, $value);
