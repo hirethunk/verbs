@@ -2,7 +2,6 @@
 
 namespace Thunk\Verbs\Support;
 
-use BackedEnum;
 use ReflectionClass;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\Serializer as SymfonySerializer;
@@ -54,13 +53,6 @@ class Serializer
             $reflect = new ReflectionClass($target);
             $target = $reflect->newInstanceWithoutConstructor();
             $context[AbstractNormalizer::OBJECT_TO_POPULATE] = $target;
-        }
-
-        // FIXME: Symfony's serializer is a little wonky. May need to re-think things.
-        if (is_array($data)) {
-            $data = array_map(fn ($value) => $value instanceof BackedEnum
-                ? $value->value
-                : $value, $data);
         }
 
         $callback = is_array($data)
