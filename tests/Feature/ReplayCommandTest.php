@@ -1,5 +1,6 @@
 <?php
 
+use Carbon\CarbonImmutable;
 use Thunk\Verbs\Attributes\Autodiscovery\StateId;
 use Thunk\Verbs\Commands\ReplayCommand;
 use Thunk\Verbs\Event;
@@ -11,6 +12,7 @@ use Thunk\Verbs\State;
 beforeEach(function () {
     $GLOBALS['replay_test_counts'] = [];
     $GLOBALS['handle_count'] = 0;
+    $GLOBALS['times'] = [];
 });
 
 it('can replay events', function () {
@@ -61,6 +63,30 @@ it('can replay events', function () {
         ->and($GLOBALS['handle_count'])->toBe(1337);
 });
 
+it('uses the original event times when replaying', function () {
+    \Illuminate\Support\Facades\Date::setTestNow('2024-04-01 12:00:00');
+    $state_id = Id::make();
+    ReplayCommandTestWormholeEvent::fire(state_id: $state_id);
+
+    Verbs::commit();
+
+    expect(app(StateManager::class)->load($state_id, ReplayCommandTestWormholeState::class)->time->unix())
+        ->toBe(CarbonImmutable::parse('2024-04-01 12:00:00')->unix())
+        ->and($GLOBALS['time'][$state_id]->unix())
+        ->toBe(CarbonImmutable::parse('2024-04-01 12:00:00')->unix());
+
+    $GLOBALS['time'] = [];
+    \Illuminate\Support\Facades\Date::setTestNow('2024-05-15 18:00:00');
+
+    config(['app.env' => 'testing']);
+    $this->artisan(ReplayCommand::class);
+
+    expect(app(StateManager::class)->load($state_id, ReplayCommandTestWormholeState::class)->time->unix())
+        ->toBe(CarbonImmutable::parse('2024-04-01 12:00:00')->unix())
+        ->and($GLOBALS['time'][$state_id]->unix())
+        ->toBe(CarbonImmutable::parse('2024-04-01 12:00:00')->unix());
+});
+
 class ReplayCommandTestEvent extends Event
 {
     public function __construct(
@@ -89,4 +115,27 @@ class ReplayCommandTestEvent extends Event
 class ReplayCommandTestState extends State
 {
     public int $count = 0;
+}
+
+class ReplayCommandTestWormholeEvent extends Event
+{
+    public function __construct(
+        #[StateId(ReplayCommandTestWormholeState::class)] public ?int $state_id = null
+    ) {
+    }
+
+    public function apply(ReplayCommandTestWormholeState $state): void
+    {
+        $state->time = CarbonImmutable::now();
+    }
+
+    public function handle(): void
+    {
+        $GLOBALS['time'][$this->state_id] = $this->state(ReplayCommandTestWormholeState::class)->time;
+    }
+}
+
+class ReplayCommandTestWormholeState extends State
+{
+    public CarbonImmutable $time;
 }
