@@ -34,8 +34,8 @@ use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\Livewire\SupportVerbs;
 use Thunk\Verbs\Support\EventStateRegistry;
 use Thunk\Verbs\Support\IdManager;
-use Thunk\Verbs\Support\StateInstanceCache;
 use Thunk\Verbs\Support\Serializer;
+use Thunk\Verbs\Support\StateInstanceCache;
 use Thunk\Verbs\Support\Wormhole;
 
 class VerbsServiceProvider extends PackageServiceProvider
