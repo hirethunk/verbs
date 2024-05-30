@@ -26,7 +26,7 @@ trait NormalizeToPropertiesAndClassName
     {
         $required = self::requiredDataForVerbsDeserialization();
 
-        if (! Arr::has($data, $required)) {
+        if (! empty($required) && ! Arr::has($data, $required)) {
             throw new InvalidArgumentException(sprintf(
                 'The following data is required to deserialize to "%s": %s.',
                 class_basename(static::class),
