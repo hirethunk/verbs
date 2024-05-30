@@ -72,6 +72,7 @@ trait NormalizeToPropertiesAndClassName
     {
         $properties = Collection::make((new ReflectionClass($this))->getProperties())
             ->reject(fn (ReflectionProperty $property) => $property->isStatic())
+            ->filter(fn (ReflectionProperty $property) => $property->isInitialized($this))
             ->mapWithKeys(fn (ReflectionProperty $property) => [$property->getName() => $property->getValue($this)]);
 
         if ($properties->has('fqcn')) {
