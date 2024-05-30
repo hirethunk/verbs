@@ -13,16 +13,17 @@ return new class extends Migration
             $table->snowflakeId();
 
             // The 'state_id' column needs to be set up differently depending on if you're using Snowflakes vs. ULIDs/etc.
-            $idColumn = Id::createColumnDefinition($table, 'state_id');
+            Id::createColumnDefinition($table, 'state_id');
 
             $table->string('type')->index();
             $table->json('data');
 
             $table->snowflake('last_event_id')->nullable();
 
+            $table->timestamp('expires_at')->nullable()->index();
             $table->timestamps();
 
-            $table->unique([$idColumn->get('name', 'state_id'), 'type']);
+            $table->unique(['state_id', 'type']);
         });
     }
 
