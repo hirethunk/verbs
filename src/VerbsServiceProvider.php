@@ -34,8 +34,8 @@ use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\Livewire\SupportVerbs;
 use Thunk\Verbs\Support\EventStateRegistry;
 use Thunk\Verbs\Support\IdManager;
-use Thunk\Verbs\Support\LeastRecentlyUsedCache;
 use Thunk\Verbs\Support\Serializer;
+use Thunk\Verbs\Support\StateInstanceCache;
 use Thunk\Verbs\Support\Wormhole;
 
 class VerbsServiceProvider extends PackageServiceProvider
@@ -77,7 +77,7 @@ class VerbsServiceProvider extends PackageServiceProvider
                 dispatcher: $app->make(Dispatcher::class),
                 snapshots: $app->make(StoresSnapshots::class),
                 events: $app->make(StoresEvents::class),
-                states: new LeastRecentlyUsedCache(
+                states: new StateInstanceCache(
                     capacity: $app->make(Repository::class)->get('verbs.state_cache_size', 100)
                 ),
             );
@@ -156,7 +156,6 @@ class VerbsServiceProvider extends PackageServiceProvider
 
         $this->app->terminating(function () {
             app(AutoCommitManager::class)->commitIfAutoCommitting();
-            app(StateManager::class)->reset(include_storage: false);
         });
 
         // Hook into Laravel event dispatcher
@@ -175,7 +174,6 @@ class VerbsServiceProvider extends PackageServiceProvider
         // Auto-commit after each job on the queue is processed
         if ($event instanceof JobProcessed) {
             app(AutoCommitManager::class)->commitIfAutoCommitting();
-            app(StateManager::class)->reset(include_storage: false);
         }
     }
 }

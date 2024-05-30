@@ -81,12 +81,14 @@ class Broker implements BrokersEvents
     {
         $this->is_replaying = true;
 
+        $state_manager = app(StateManager::class);
+
         try {
-            app(StateManager::class)->reset(include_storage: true);
+            $state_manager->reset(include_storage: true);
 
             app(StoresEvents::class)->read()
-                ->each(function (Event $event) use ($beforeEach, $afterEach) {
-                    app(StateManager::class)->setReplaying(true);
+                ->each(function (Event $event) use ($state_manager, $beforeEach, $afterEach) {
+                    $state_manager->setReplaying(true);
 
                     if ($beforeEach) {
                         $beforeEach($event);
@@ -99,10 +101,12 @@ class Broker implements BrokersEvents
                         $afterEach($event);
                     }
 
+                    $state_manager->prune();
+
                     return $event;
                 });
         } finally {
-            app(StateManager::class)->setReplaying(false);
+            $state_manager->setReplaying(false);
             $this->is_replaying = false;
         }
     }
