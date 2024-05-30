@@ -53,13 +53,8 @@ trait NormalizeToPropertiesAndClassName
         foreach (Arr::except($data, ['fqcn']) as $key => $value) {
             $property = $reflect->getProperty($key);
 
-            if ($property->hasType() && ! $property->getType()->isBuiltin()) {
-                $is_nullable_with_null_value = $property->getType()->allowsNull()
-                    && $value === null;
-
-                $value = $is_nullable_with_null_value
-                    ? null
-                    : $denormalizer->denormalize($value, $property->getType()->getName());
+            if ($property->hasType() && ! $property->getType()->isBuiltin() && $value !== null) {
+                $value = $denormalizer->denormalize($value, $property->getType()->getName());
             }
 
             $property->setValue($instance, $value);
@@ -72,6 +67,7 @@ trait NormalizeToPropertiesAndClassName
     {
         $properties = Collection::make((new ReflectionClass($this))->getProperties())
             ->reject(fn (ReflectionProperty $property) => $property->isStatic())
+            ->filter(fn (ReflectionProperty $property) => $property->isInitialized($this))
             ->mapWithKeys(fn (ReflectionProperty $property) => [$property->getName() => $property->getValue($this)]);
 
         if ($properties->has('fqcn')) {
