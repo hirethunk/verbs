@@ -53,7 +53,7 @@ trait NormalizeToPropertiesAndClassName
         foreach (Arr::except($data, ['fqcn']) as $key => $value) {
             $property = $reflect->getProperty($key);
 
-            if ($property->hasType() && ! $property->getType()->isBuiltin()) {
+            if ($property->hasType() && ! $property->getType()->isBuiltin() && $value !== null) {
                 $value = $denormalizer->denormalize($value, $property->getType()->getName());
             }
 
