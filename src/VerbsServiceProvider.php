@@ -49,11 +49,6 @@ class VerbsServiceProvider extends PackageServiceProvider
                 MakeVerbEventCommand::class,
                 MakeVerbStateCommand::class,
                 ReplayCommand::class,
-            )
-            ->hasMigrations(
-                'create_verb_events_table',
-                'create_verb_snapshots_table',
-                'create_verb_state_events_table',
             );
     }
 
