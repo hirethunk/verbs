@@ -4,7 +4,7 @@ namespace Thunk\Verbs\Support;
 
 use Closure;
 
-class LeastRecentlyUsedCache
+class StateInstanceCache
 {
     public function __construct(
         protected int $capacity = 100,
@@ -43,11 +43,6 @@ class LeastRecentlyUsedCache
 
         $this->cache[$key] = $value;
 
-        if (count($this->cache) > $this->capacity) {
-            reset($this->cache);
-            $this->forget(key($this->cache));
-        }
-
         return $this;
     }
 
@@ -63,6 +58,13 @@ class LeastRecentlyUsedCache
         }
 
         unset($this->cache[$key]);
+
+        return $this;
+    }
+
+    public function prune(): static
+    {
+        $this->cache = array_slice($this->cache, -1 * $this->capacity, null, true);
 
         return $this;
     }
