@@ -17,7 +17,8 @@ class SnapshotStore implements StoresSnapshots
     public function __construct(
         protected MetadataManager $metadata,
         protected Serializer $serializer,
-    ) { }
+    ) {
+    }
 
     public function load(Bits|UuidInterface|AbstractUid|int|string $id, string $type): ?State
     {

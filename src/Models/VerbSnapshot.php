@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 use Thunk\Verbs\Lifecycle\MetadataManager;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\Serializer;
-use UnexpectedValueException;
 
 /**
  * @property int $id
