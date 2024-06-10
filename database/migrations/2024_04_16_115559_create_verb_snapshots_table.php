@@ -9,6 +9,11 @@ return new class extends Migration
 {
     public function up()
     {
+        // If they've already migrated under the previous migration name, just skip
+        if (Schema::hasTable($this->tableName())) {
+            return;
+        }
+
         Schema::create($this->tableName(), function (Blueprint $table) {
             $table->snowflakeId();
 
