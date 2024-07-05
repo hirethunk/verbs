@@ -50,11 +50,11 @@ class SnapshotStore implements StoresSnapshots
             return true;
         }
 
-        $values = collect($this->formatForWrite($states))
-            ->unique('id')
-            ->all();
-
-        return VerbSnapshot::upsert($values, 'id', ['data', 'last_event_id', 'updated_at']);
+        return VerbSnapshot::upsert(
+            values: collect($states)->unique()->map($this->formatForWrite(...))->all(),
+            uniqueBy: ['id'],
+            update: ['data', 'last_event_id', 'updated_at']
+        );
     }
 
     public function reset(): bool
@@ -64,9 +64,9 @@ class SnapshotStore implements StoresSnapshots
         return true;
     }
 
-    protected function formatForWrite(array $states): array
+    protected function formatForWrite(State $state): array
     {
-        return array_map(fn (State $state) => [
+        return [
             'id' => $this->metadata->getEphemeral($state, 'id', snowflake_id()),
             'state_id' => Id::from($state->id),
             'type' => $state::class,
@@ -74,6 +74,6 @@ class SnapshotStore implements StoresSnapshots
             'last_event_id' => Id::tryFrom($state->last_event_id),
             'created_at' => now(),
             'updated_at' => now(),
-        ], $states);
+        ];
     }
 }

@@ -32,6 +32,7 @@ class VerbSnapshot extends Model
         $this->state ??= app(Serializer::class)->deserialize($this->type, $this->data);
         $this->state->id = $this->state_id;
         $this->state->last_event_id = $this->last_event_id;
+
         app(MetadataManager::class)->setEphemeral($this->state, 'id', $this->id);
 
         return $this->state;

@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Thunk\Verbs\Facades\Id;
 
@@ -11,13 +12,16 @@ return new class extends Migration
     {
         // If they've already migrated under the previous migration name, just skip
         if (Schema::hasTable($this->tableName())) {
+            Log::warning("The structure of {$this->tableName()} has changed. You will need to manually update indexes.");
+
             return;
         }
 
         Schema::create($this->tableName(), function (Blueprint $table) {
             $table->snowflakeId();
 
-            // The 'state_id' column needs to be set up differently depending on if you're using Snowflakes vs. ULIDs/etc.
+            // The 'state_id' column needs to be set up differently depending on
+            // if you're using Snowflakes vs. ULIDs/etc.
             Id::createColumnDefinition($table, 'state_id');
 
             $table->string('type')->index();
@@ -28,7 +32,7 @@ return new class extends Migration
             $table->timestamp('expires_at')->nullable()->index();
             $table->timestamps();
 
-            $table->unique(['state_id', 'type']);
+            $table->index(['state_id', 'type']);
         });
     }
 
