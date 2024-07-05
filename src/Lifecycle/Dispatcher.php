@@ -23,9 +23,18 @@ class Dispatcher
     ) {
     }
 
-    public function register(object $target): void
+    public function register(string|object $target): void
     {
         foreach (Reflector::getHooks($target) as $hook) {
+            // TODO: there's clearly a better place for this to live
+            $infer_phases = $hook->phases->count() === 0;
+
+            if ($infer_phases && count($hook->events)) {
+                $hook->forcePhases(Phase::Handle);
+            } elseif ($infer_phases && count($hook->states)) {
+                $hook->forcePhases(Phase::Apply);
+            }
+
             foreach ($hook->events as $event_type) {
                 $this->hooks[$event_type][] = $hook;
             }

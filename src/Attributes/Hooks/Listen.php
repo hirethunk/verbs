@@ -7,7 +7,7 @@ use InvalidArgumentException;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\Hook;
 
-#[Attribute(Attribute::TARGET_METHOD)]
+#[Attribute(Attribute::TARGET_METHOD | Attribute::IS_REPEATABLE)]
 class Listen implements HookAttribute
 {
     public function __construct(

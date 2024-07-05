@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Reflector as BaseReflector;
+use InvalidArgumentException;
 use ReflectionClass;
 use ReflectionFunction;
 use ReflectionFunctionAbstract;
@@ -19,8 +20,12 @@ use Thunk\Verbs\State;
 class Reflector extends BaseReflector
 {
     /** @return Collection<int, Hook> */
-    public static function getHooks(object $target): Collection
+    public static function getHooks(string|object $target): Collection
     {
+        if (is_string($target) && ! class_exists($target)) {
+            throw new InvalidArgumentException('Hooks can only be registered for objects or classes.');
+        }
+
         if ($target instanceof Closure) {
             return collect([Hook::fromClosure($target)]);
         }
