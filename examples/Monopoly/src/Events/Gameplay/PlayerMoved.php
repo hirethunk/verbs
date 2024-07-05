@@ -19,8 +19,7 @@ class PlayerMoved extends Event
         public int $game_id,
         public int $player_id,
         public Space $to,
-    ) {
-    }
+    ) {}
 
     public function validateGame(GameState $game)
     {

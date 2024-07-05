@@ -37,9 +37,7 @@ it('can store and replay events that have no state', function () {
 
 class StatelessEventOne extends Event
 {
-    public function __construct(public string $label)
-    {
-    }
+    public function __construct(public string $label) {}
 
     public function handle()
     {
@@ -49,9 +47,7 @@ class StatelessEventOne extends Event
 
 class StatelessEventTwo extends Event
 {
-    public function __construct(public string $label)
-    {
-    }
+    public function __construct(public string $label) {}
 
     public function handle()
     {

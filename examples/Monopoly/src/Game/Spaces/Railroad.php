@@ -2,6 +2,4 @@
 
 namespace Thunk\Verbs\Examples\Monopoly\Game\Spaces;
 
-abstract class Railroad extends Space
-{
-}
+abstract class Railroad extends Space {}

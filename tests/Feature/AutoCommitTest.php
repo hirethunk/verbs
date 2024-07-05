@@ -70,7 +70,5 @@ it('does not auto-commits disabled by configuration', function () {
 
 class AutoCommitTestEvent extends Event
 {
-    public function __construct(public string $message)
-    {
-    }
+    public function __construct(public string $message) {}
 }

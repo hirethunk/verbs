@@ -73,16 +73,12 @@ class OutsideListenersTestState extends State
 #[AppliesToState(OutsideListenersTestState::class, 'state_id')]
 class OutsideListenersTestEvent1 extends Event
 {
-    public function __construct(public string $message, public ?int $state_id = null)
-    {
-    }
+    public function __construct(public string $message, public ?int $state_id = null) {}
 }
 
 class OutsideListenersTestEvent2 extends Event
 {
-    public function __construct(public string $message)
-    {
-    }
+    public function __construct(public string $message) {}
 }
 
 class OutsideListenersTestListener
