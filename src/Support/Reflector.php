@@ -3,7 +3,6 @@
 namespace Thunk\Verbs\Support;
 
 use Closure;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Reflector as BaseReflector;
 use InvalidArgumentException;
@@ -80,9 +79,8 @@ class Reflector extends BaseReflector
 
         return collect($parameters)
             ->map(fn (ReflectionParameter $parameter) => static::getParameterClassNames($parameter))
-            ->map(fn (array $names) => array_filter($names, fn ($name) => is_a($name, $type, true)))
-            ->reject(fn (array $names) => empty($names))
-            ->map(fn (array $names) => Arr::first($names));
+            ->flatten()
+            ->filter(fn ($class_name) => is_a($class_name, $type, true));
     }
 
     protected static function reflectFunction(ReflectionFunctionAbstract|Closure $function): ReflectionFunctionAbstract

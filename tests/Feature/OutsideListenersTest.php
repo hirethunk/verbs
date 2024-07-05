@@ -25,6 +25,7 @@ it('can trigger listeners outside the event object', function () {
     expect($GLOBALS['outside_listener_log'])->toBe([
         // Event 1: 'test 1' — pre-commit
         '[multi listener with explicit validate phase] with OutsideListenersTestEvent1 "test 1"',
+        '[multi listener with explicit validate phase] with OutsideListenersTestEvent1 "test 1"', // second validation is run against no state
         '[multi listener with explicit apply phase] with OutsideListenersTestEvent1 "test 1"',
         '[multi listener with explicit fired phase] with OutsideListenersTestEvent1 "test 1"',
 
@@ -36,6 +37,7 @@ it('can trigger listeners outside the event object', function () {
 
         // Event 3: 'test 1b' — pre-commit
         '[multi listener with explicit validate phase] with OutsideListenersTestEvent1 "test 1b"',
+        '[multi listener with explicit validate phase] with OutsideListenersTestEvent1 "test 1b"', // second validation is run against no state
         '[multi listener with explicit apply phase] with OutsideListenersTestEvent1 "test 1b"',
         '[multi listener with explicit fired phase] with OutsideListenersTestEvent1 "test 1b"',
 
