@@ -84,17 +84,11 @@ class ModelNormalizerTestModel extends Model
                 return $this;
             }
 
-            public function getQueueableId()
-            {
-            }
+            public function getQueueableId() {}
 
-            public function getQueueableRelations()
-            {
-            }
+            public function getQueueableRelations() {}
 
-            public function getQueueableConnection()
-            {
-            }
+            public function getQueueableConnection() {}
         };
     }
 }

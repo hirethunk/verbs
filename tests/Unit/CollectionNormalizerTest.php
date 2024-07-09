@@ -217,8 +217,7 @@ class CollectionNormalizerTestDataObject implements SerializedByVerbs
         public int $int,
         public CarbonImmutable $carbon,
         public array $array,
-    ) {
-    }
+    ) {}
 }
 
 class CollectionNormalizerTestChildDataObject extends CollectionNormalizerTestDataObject

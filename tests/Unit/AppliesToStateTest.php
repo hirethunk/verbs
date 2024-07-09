@@ -26,8 +26,7 @@ class ContactRequestAcknowledged extends Event
 {
     public function __construct(
         public int $contact_request_id
-    ) {
-    }
+    ) {}
 
     public function apply(ContactRequestState $state)
     {

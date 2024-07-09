@@ -46,8 +46,7 @@ class StateFactory
         protected ?Generator $faker = null,
         protected Collection $makeCallbacks = new Collection(),
         protected Collection $createCallbacks = new Collection(),
-    ) {
-    }
+    ) {}
 
     public function definition(): array
     {

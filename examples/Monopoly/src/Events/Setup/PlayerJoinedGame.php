@@ -19,8 +19,7 @@ class PlayerJoinedGame extends Event
         public int $game_id,
         public int $player_id,
         public Token $token,
-    ) {
-    }
+    ) {}
 
     public function validateGame(GameState $game)
     {
