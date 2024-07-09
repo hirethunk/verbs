@@ -49,6 +49,4 @@ class ConcurrencyTestEvent extends Event
     }
 }
 
-class ConcurrencyTestState extends State
-{
-}
+class ConcurrencyTestState extends State {}

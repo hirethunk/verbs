@@ -22,8 +22,7 @@ class Wormhole
         protected MetadataManager $metadata,
         protected DateFactory $factory,
         protected bool $enabled = true,
-    ) {
-    }
+    ) {}
 
     public function realNow(): CarbonInterface
     {

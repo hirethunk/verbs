@@ -4,6 +4,4 @@ namespace Thunk\Verbs\Exceptions;
 
 use RuntimeException;
 
-class ConcurrencyException extends RuntimeException
-{
-}
+class ConcurrencyException extends RuntimeException {}

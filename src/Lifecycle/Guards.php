@@ -19,8 +19,7 @@ class Guards
     public function __construct(
         public Event $event,
         public ?State $state = null,
-    ) {
-    }
+    ) {}
 
     public function check(): static
     {

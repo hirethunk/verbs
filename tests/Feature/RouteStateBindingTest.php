@@ -32,10 +32,6 @@ it('state can be loaded via router', function () {
     $this->get('/5/6')->assertContent(json_encode([RouteStateBindingTestState1::class, 5, RouteStateBindingTestState2::class, 6]));
 });
 
-class RouteStateBindingTestState1 extends State
-{
-}
+class RouteStateBindingTestState1 extends State {}
 
-class RouteStateBindingTestState2 extends State
-{
-}
+class RouteStateBindingTestState2 extends State {}

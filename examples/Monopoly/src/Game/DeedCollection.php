@@ -2,6 +2,4 @@
 
 namespace Thunk\Verbs\Examples\Monopoly\Game;
 
-class DeedCollection extends SpaceCollection
-{
-}
+class DeedCollection extends SpaceCollection {}

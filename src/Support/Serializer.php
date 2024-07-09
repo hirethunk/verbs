@@ -16,8 +16,7 @@ class Serializer
     public function __construct(
         public SymfonySerializer $serializer,
         protected array $context = [],
-    ) {
-    }
+    ) {}
 
     public function serialize(object $class): string
     {

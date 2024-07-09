@@ -2,6 +2,4 @@
 
 namespace Thunk\Verbs;
 
-interface NoWormhole
-{
-}
+interface NoWormhole {}
