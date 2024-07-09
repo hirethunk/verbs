@@ -12,8 +12,7 @@ class WelcomeEmail extends Mailable
 
     public function __construct(
         public int $user_id
-    ) {
-    }
+    ) {}
 
     public function build()
     {

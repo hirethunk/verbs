@@ -17,8 +17,7 @@ class FlippedTable extends Event
     public function __construct(
         public int $game_id,
         public int $player_id,
-    ) {
-    }
+    ) {}
 
     public function validateGame(GameState $game)
     {

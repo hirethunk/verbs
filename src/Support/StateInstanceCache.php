@@ -10,8 +10,7 @@ class StateInstanceCache
         protected int $capacity = 100,
         protected array $cache = [],
         protected ?Closure $discard_callback = null,
-    ) {
-    }
+    ) {}
 
     public function remember(string|int $key, Closure $callback): mixed
     {
