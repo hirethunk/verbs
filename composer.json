@@ -31,7 +31,7 @@
         "laravel/pint": "^1.13",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^7.10|^8.1",
-        "orchestra/testbench": "^8.14|^9.0",
+        "orchestra/testbench": "^8.14|^9.1.4",
         "pestphp/pest": "^2.24",
         "pestphp/pest-plugin-arch": "^2.4",
         "pestphp/pest-plugin-laravel": "^2.2",
@@ -48,23 +48,18 @@
     "autoload-dev": {
         "psr-4": {
             "Thunk\\Verbs\\Tests\\": "tests/",
-
             "Thunk\\Verbs\\Examples\\Counter\\": "examples/Counter/src/",
             "Thunk\\Verbs\\Examples\\Counter\\Tests\\": "examples/Counter/tests/",
             "Thunk\\Verbs\\Examples\\Counter\\Database\\Factories\\": "examples/Counter/database/factories/",
-
             "Thunk\\Verbs\\Examples\\Bank\\": "examples/Bank/src/",
             "Thunk\\Verbs\\Examples\\Bank\\Tests\\": "examples/Bank/tests/",
             "Thunk\\Verbs\\Examples\\Bank\\Database\\Factories\\": "examples/Bank/database/factories/",
-
             "Thunk\\Verbs\\Examples\\Subscriptions\\": "examples/Subscriptions/src/",
             "Thunk\\Verbs\\Examples\\Subscriptions\\Tests\\": "examples/Subscriptions/tests/",
             "Thunk\\Verbs\\Examples\\Subscriptions\\Database\\Factories\\": "examples/Subscriptions/database/factories/",
-
             "Thunk\\Verbs\\Examples\\Monopoly\\": "examples/Monopoly/src/",
             "Thunk\\Verbs\\Examples\\Monopoly\\Tests\\": "examples/Monopoly/tests/",
             "Thunk\\Verbs\\Examples\\Monopoly\\Database\\Factories\\": "examples/Monopoly/database/factories/",
-
             "Workbench\\App\\": "workbench/app/",
             "Workbench\\Database\\Factories\\": "workbench/database/factories/",
             "Workbench\\Database\\Seeders\\": "workbench/database/seeders/"
