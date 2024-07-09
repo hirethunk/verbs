@@ -64,15 +64,15 @@ class VerbsServiceProvider extends PackageServiceProvider
 
     public function packageRegistered()
     {
-        $this->app->singleton(Broker::class);
-        $this->app->singleton(Dispatcher::class);
-        $this->app->singleton(EventStore::class);
+        $this->app->scoped(Broker::class);
+        $this->app->scoped(Dispatcher::class);
+        $this->app->scoped(EventStore::class);
         $this->app->singleton(SnapshotStore::class);
-        $this->app->singleton(EventQueue::class);
-        $this->app->singleton(EventStateRegistry::class);
+        $this->app->scoped(EventQueue::class);
+        $this->app->scoped(EventStateRegistry::class);
         $this->app->singleton(MetadataManager::class);
 
-        $this->app->singleton(StateManager::class, function (Container $app) {
+        $this->app->scoped(StateManager::class, function (Container $app) {
             return new StateManager(
                 dispatcher: $app->make(Dispatcher::class),
                 snapshots: $app->make(StoresSnapshots::class),
@@ -129,7 +129,7 @@ class VerbsServiceProvider extends PackageServiceProvider
             );
         });
 
-        $this->app->singleton(AutoCommitManager::class, function (Container $app) {
+        $this->app->scoped(AutoCommitManager::class, function (Container $app) {
             return new AutoCommitManager(
                 broker: $app->make(BrokersEvents::class),
                 enabled: $app->make(Repository::class)->get('verbs.autocommit', true),
