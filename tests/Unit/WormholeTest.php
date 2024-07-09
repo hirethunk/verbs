@@ -10,9 +10,7 @@ use Thunk\Verbs\Support\Wormhole;
 
 test('a callback can be run for a past timestamp', function () {
     $now = now();
-    $event = new class extends Event
-    {
-    };
+    $event = new class extends Event {};
     app(MetadataManager::class)->setEphemeral($event, 'created_at', Date::parse('2023-01-02 00:00:00'));
     app(Wormhole::class)->warp($event, function () use ($now) {
         expect(Carbon::now()->format('Y-m-d'))->toBe('2023-01-02')
@@ -25,9 +23,7 @@ test('a callback can be run for a past timestamp', function () {
 
 test('a callback can be run for a past timestamp with "test now" set', function () {
     Date::setTestNow('2023-06-02 00:00:00');
-    $event = new class extends Event
-    {
-    };
+    $event = new class extends Event {};
     app(MetadataManager::class)->setEphemeral($event, 'created_at', Date::parse('2023-01-02 00:00:00'));
     app(Wormhole::class)->warp($event, function () {
         expect(Carbon::now()->format('Y-m-d'))->toBe('2023-01-02')

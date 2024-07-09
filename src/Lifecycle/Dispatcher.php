@@ -20,8 +20,7 @@ class Dispatcher
 
     public function __construct(
         protected Container $container
-    ) {
-    }
+    ) {}
 
     public function register(object $target): void
     {

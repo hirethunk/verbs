@@ -19,8 +19,7 @@ class PaidRent extends Event
         public int $game_id,
         public int $player_id,
         public Property $property,
-    ) {
-    }
+    ) {}
 
     public function validatePlayer(PlayerState $player)
     {

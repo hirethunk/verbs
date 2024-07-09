@@ -50,8 +50,7 @@ class Hook
         public array $states = [],
         public SplObjectStorage $phases = new SplObjectStorage(),
         public ?string $name = null,
-    ) {
-    }
+    ) {}
 
     public function forcePhases(Phase ...$phases): static
     {

@@ -31,8 +31,7 @@ class DependencyInjectionTestEvent extends Event
     public function __construct(
         #[StateId(DependencyInjectionTestState::class)] public ?int $test1_id,
         #[StateId(DependencyInjectionTestSecondState::class)] public ?int $test2_id,
-    ) {
-    }
+    ) {}
 
     public function validate1(DependencyInjectionTestState $state)
     {
@@ -66,8 +65,7 @@ class DependencyInjectionTestMultiHandleEvent extends Event
     public function __construct(
         #[StateId(DependencyInjectionTestState::class)] public ?int $test1_id,
         #[StateId(DependencyInjectionTestState::class)] public ?int $test2_id,
-    ) {
-    }
+    ) {}
 
     public function apply(DependencyInjectionTestState $state)
     {
