@@ -2,6 +2,4 @@
 
 namespace Thunk\Verbs\Exceptions;
 
-class EventNotValidForCurrentState extends EventNotValid
-{
-}
+class EventNotValidForCurrentState extends EventNotValid {}

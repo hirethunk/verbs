@@ -19,9 +19,7 @@ test('stateid attribute allows setting an alias for a state collection with a si
         ->and($state_collection->aliasNames())->toContain('hello');
 });
 
-class StateAliasTestState extends State
-{
-}
+class StateAliasTestState extends State {}
 
 #[AppliesToState(StateAliasTestState::class, id: 'baz', alias: 'hello')]
 class StateAliasTestEvent extends Event
@@ -30,6 +28,5 @@ class StateAliasTestEvent extends Event
         #[StateId(StateAliasTestState::class, 'foo')]
         public int $bar,
         public int $baz,
-    ) {
-    }
+    ) {}
 }

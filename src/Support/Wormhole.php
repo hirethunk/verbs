@@ -22,8 +22,7 @@ class Wormhole
         protected MetadataManager $metadata,
         protected DateFactory $factory,
         protected bool $enabled = true,
-    ) {
-    }
+    ) {}
 
     public function realNow(): CarbonInterface
     {
@@ -50,8 +49,17 @@ class Wormhole
 
         $created_at = $this->metadata->getEphemeral($event, 'created_at', $this->factory->now());
 
-        $this->immutable_now = CarbonImmutable::now();
-        $this->mutable_now = Carbon::now();
+        // We need to store the true "test now" values so that we can restore them after time travel.
+        // This ensures that if the user-land code is calling Carbon::setTestNow(), that will be restored
+        // after our wormhole closure executes.
+        $immutable_reset = CarbonImmutable::getTestNow();
+        $mutable_reset = Carbon::getTestNow();
+
+        // If a "test now" is set, we also need to get the current value of Carbon::now() to use
+        // when Wormhole::realNow() is called (this ensures that any user-land Carbon::setTestNow()
+        // is honored when accessing the "real" now -- inception-level nonsense here).
+        $this->immutable_now = CarbonImmutable::hasTestNow() ? CarbonImmutable::now() : null;
+        $this->mutable_now = Carbon::hasTestNow() ? Carbon::now() : null;
 
         try {
             CarbonImmutable::setTestNow($created_at);
@@ -59,8 +67,8 @@ class Wormhole
 
             return $callback();
         } finally {
-            CarbonImmutable::setTestNow($this->immutable_now);
-            Carbon::setTestNow($this->mutable_now);
+            CarbonImmutable::setTestNow($immutable_reset);
+            Carbon::setTestNow($mutable_reset);
 
             $this->immutable_now = null;
             $this->mutable_now = null;

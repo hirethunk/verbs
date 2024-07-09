@@ -13,8 +13,7 @@ class GameStarted extends Event
 {
     public function __construct(
         public ?int $game_id = null,
-    ) {
-    }
+    ) {}
 
     public function validate(GameState $game)
     {

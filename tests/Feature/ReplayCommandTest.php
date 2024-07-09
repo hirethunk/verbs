@@ -93,8 +93,7 @@ class ReplayCommandTestEvent extends Event
         public int $add = 0,
         public int $subtract = 0,
         #[StateId(ReplayCommandTestState::class)] public ?int $state_id = null,
-    ) {
-    }
+    ) {}
 
     public function apply(ReplayCommandTestState $state)
     {
@@ -121,8 +120,7 @@ class ReplayCommandTestWormholeEvent extends Event
 {
     public function __construct(
         #[StateId(ReplayCommandTestWormholeState::class)] public ?int $state_id = null
-    ) {
-    }
+    ) {}
 
     public function apply(ReplayCommandTestWormholeState $state): void
     {

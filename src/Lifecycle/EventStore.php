@@ -23,8 +23,7 @@ class EventStore implements StoresEvents
 {
     public function __construct(
         protected MetadataManager $metadata,
-    ) {
-    }
+    ) {}
 
     public function read(
         ?State $state = null,
