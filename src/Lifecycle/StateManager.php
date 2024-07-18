@@ -114,6 +114,8 @@ class StateManager
         // When we're replaying, the Broker is in charge of applying the correct events
         // to the State, so we only need to do it *outside* of replays.
         if (! $this->is_replaying) {
+            app(StateManager::class)->register($state);
+
             $this->events
                 ->read(state: $state, after_id: $state->last_event_id, singleton: $singleton)
                 ->each(fn (Event $event) => $this->dispatcher->apply($event, $state));
