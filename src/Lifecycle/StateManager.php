@@ -81,7 +81,6 @@ class StateManager
         // We'll store a reference to it by the type for future singleton access
         $this->states->put($type, $state);
 
-
         return $state;
     }
 
@@ -119,7 +118,7 @@ class StateManager
     protected function reconstitute(State $state, bool $singleton = false): static
     {
         $this->register($state);
-        
+
         if (! $this->is_replaying) {
             $this->events
                 ->read(state: $state, after_id: $state->last_event_id, singleton: $singleton)

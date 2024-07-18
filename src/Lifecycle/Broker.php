@@ -2,7 +2,6 @@
 
 namespace Thunk\Verbs\Lifecycle;
 
-use Illuminate\Contracts\Auth\Guard;
 use Thunk\Verbs\CommitsImmediately;
 use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Contracts\StoresEvents;
@@ -19,8 +18,7 @@ class Broker implements BrokersEvents
     public function __construct(
         protected Dispatcher $dispatcher,
         protected MetadataManager $metadata,
-    ) {
-    }
+    ) {}
 
     public function fireIfValid(Event $event): ?Event
     {
