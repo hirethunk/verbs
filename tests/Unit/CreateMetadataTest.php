@@ -39,8 +39,7 @@ class MetadataTestEvent extends Event
 {
     public function __construct(
         public string $name
-    ) {
-    }
+    ) {}
 
     public function handle(Metadata $metadata)
     {

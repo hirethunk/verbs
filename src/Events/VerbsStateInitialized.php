@@ -15,8 +15,7 @@ class VerbsStateInitialized extends Event implements CommitsImmediately
         public string $state_class,
         public array $state_data,
         public bool $singleton = false,
-    ) {
-    }
+    ) {}
 
     /** @return StateCollection<int, TStateType> */
     public function states(): StateCollection

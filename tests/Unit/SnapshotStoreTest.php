@@ -28,8 +28,7 @@ class SnapshotStoreTestStateOne extends State
     public function __construct(
         public Bits|UuidInterface|AbstractUid|int|string|null $id,
         public string $name,
-    ) {
-    }
+    ) {}
 }
 
 class SnapshotStoreTestStateTwo extends State
@@ -37,6 +36,5 @@ class SnapshotStoreTestStateTwo extends State
     public function __construct(
         public Bits|UuidInterface|AbstractUid|int|string|null $id,
         public string $name,
-    ) {
-    }
+    ) {}
 }

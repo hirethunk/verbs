@@ -19,8 +19,7 @@ class EventStateRegistry
 
     public function __construct(
         protected StateManager $manager
-    ) {
-    }
+    ) {}
 
     public function getStates(Event $event): StateCollection
     {

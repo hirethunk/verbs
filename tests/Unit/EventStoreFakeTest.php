@@ -120,9 +120,7 @@ class UncommittedEventStoreFakeTestEvent extends Event
     }
 }
 
-class EventStoreFakeTestState extends State
-{
-}
+class EventStoreFakeTestState extends State {}
 
 #[AppliesToState(EventStoreFakeTestState::class, 'state_id')]
 class EventStoreFakeTestStatefulEvent extends Event

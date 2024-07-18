@@ -11,8 +11,7 @@ class AutoCommitManager
     public function __construct(
         public BrokersEvents $broker,
         public bool $enabled,
-    ) {
-    }
+    ) {}
 
     public function commitIfAutoCommitting(): bool
     {

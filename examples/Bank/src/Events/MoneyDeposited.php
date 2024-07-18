@@ -15,8 +15,7 @@ class MoneyDeposited extends Event
     public function __construct(
         #[StateId(AccountState::class)] public int $account_id,
         public int $cents = 0,
-    ) {
-    }
+    ) {}
 
     public function apply(AccountState $state)
     {
