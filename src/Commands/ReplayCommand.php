@@ -15,7 +15,7 @@ use function Laravel\Prompts\warning;
 
 class ReplayCommand extends Command
 {
-    protected $signature = 'verbs:replay {--force}';
+    protected $signature = 'verbs:replay {--force} {--skip-invalid}';
 
     protected $description = 'Replay all Verbs events.';
 
@@ -32,6 +32,7 @@ class ReplayCommand extends Command
         $broker->replay(
             beforeEach: fn (Event $event) => $progress->label(sprintf('%s (%d)', $event::class, $event->id)),
             afterEach: fn () => $progress->advance(),
+            skipInvalid: $this->option('skip-invalid'),
         );
 
         $progress->finish();

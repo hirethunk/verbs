@@ -5,6 +5,7 @@ namespace Thunk\Verbs\Lifecycle;
 use Glhd\Bits\Bits;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
+use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Event;
@@ -55,8 +56,8 @@ class StateManager
             $state->id = $id;
         }
 
-        $this->remember($state);
         $this->reconstitute($state);
+        $this->remember($state);
 
         return $state;
     }
@@ -73,11 +74,13 @@ class StateManager
         $state = $this->snapshots->loadSingleton($type) ?? $type::make();
         $state->id ??= snowflake_id();
 
-        // We'll store a reference to it by the type for future singleton access
-        $this->states->put($type, $state);
+        $this->reconstitute($state, singleton: true);
+
         $this->remember($state);
 
-        $this->reconstitute($state, singleton: true);
+        // We'll store a reference to it by the type for future singleton access
+        $this->states->put($type, $state);
+
 
         return $state;
     }
@@ -115,11 +118,12 @@ class StateManager
 
     protected function reconstitute(State $state, bool $singleton = false): static
     {
-        // When we're replaying, the Broker is in charge of applying the correct events
-        // to the State, so we only need to do it *outside* of replays.
+        $this->register($state);
+        
         if (! $this->is_replaying) {
             $this->events
                 ->read(state: $state, after_id: $state->last_event_id, singleton: $singleton)
+                ->filter(fn (Event $event) => app(BrokersEvents::class)->isValid($event))
                 ->each(fn (Event $event) => $this->dispatcher->apply($event, $state));
         }
 

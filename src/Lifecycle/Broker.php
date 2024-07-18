@@ -2,6 +2,7 @@
 
 namespace Thunk\Verbs\Lifecycle;
 
+use Illuminate\Contracts\Auth\Guard;
 use Thunk\Verbs\CommitsImmediately;
 use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Contracts\StoresEvents;
@@ -18,7 +19,8 @@ class Broker implements BrokersEvents
     public function __construct(
         protected Dispatcher $dispatcher,
         protected MetadataManager $metadata,
-    ) {}
+    ) {
+    }
 
     public function fireIfValid(Event $event): ?Event
     {
@@ -76,7 +78,7 @@ class Broker implements BrokersEvents
         return $this->commit();
     }
 
-    public function replay(?callable $beforeEach = null, ?callable $afterEach = null)
+    public function replay(?callable $beforeEach = null, ?callable $afterEach = null, bool $skipInvalid = false): void
     {
         $this->is_replaying = true;
 
@@ -86,11 +88,15 @@ class Broker implements BrokersEvents
             $state_manager->reset(include_storage: true);
 
             app(StoresEvents::class)->read()
-                ->each(function (Event $event) use ($state_manager, $beforeEach, $afterEach) {
+                ->each(function (Event $event) use ($state_manager, $beforeEach, $afterEach, $skipInvalid) {
                     $state_manager->setReplaying(true);
 
                     if ($beforeEach) {
                         $beforeEach($event);
+                    }
+
+                    if ($skipInvalid && ! $this->isValid($event)) {
+                        return;
                     }
 
                     $event->states()->each(fn ($state) => $this->dispatcher->apply($event, $state));

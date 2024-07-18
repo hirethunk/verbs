@@ -5,12 +5,14 @@ namespace Thunk\Verbs\Lifecycle;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Collection;
 use ReflectionMethod;
+use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\MethodFinder;
 use Thunk\Verbs\Support\Reflector;
 use Thunk\Verbs\Support\StateCollection;
+use Thunk\VerbsHistory\Broker;
 
 class Dispatcher
 {
@@ -20,7 +22,8 @@ class Dispatcher
 
     public function __construct(
         protected Container $container
-    ) {}
+    ) {
+    }
 
     public function register(object $target): void
     {
