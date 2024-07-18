@@ -40,8 +40,7 @@ class DatabaseSnapshotTestEvent extends Event
     public function __construct(
         public string $message,
         #[StateId(DatabaseSnapshotTestState::class)] public ?int $sid,
-    ) {
-    }
+    ) {}
 
     public function apply(DatabaseSnapshotTestState $state)
     {
