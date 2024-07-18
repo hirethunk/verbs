@@ -2,7 +2,6 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Thunk\Verbs\Facades\Id;
 
@@ -12,7 +11,7 @@ return new class extends Migration
     {
         // If they've already migrated under the previous migration name, just skip
         if (Schema::hasTable($this->tableName())) {
-            Log::warning("The structure of {$this->tableName()} has changed. You will need to manually update indexes.");
+            throw new RuntimeException('The create_verbs_* migrations have been renamed. See <https://verbs.thunk.dev/docs/reference/upgrading>');
 
             return;
         }
