@@ -49,11 +49,6 @@ class VerbsServiceProvider extends PackageServiceProvider
                 MakeVerbEventCommand::class,
                 MakeVerbStateCommand::class,
                 ReplayCommand::class,
-            )
-            ->hasMigrations(
-                'create_verb_events_table',
-                'create_verb_snapshots_table',
-                'create_verb_state_events_table',
             );
     }
 
@@ -141,9 +136,13 @@ class VerbsServiceProvider extends PackageServiceProvider
         $this->app->alias(SnapshotStore::class, StoresSnapshots::class);
     }
 
-    public function boot()
+    public function packageBooted()
     {
-        parent::boot();
+        $this->publishes([
+            __DIR__.'/../database/migrations/' => database_path('migrations'),
+        ], "{$this->package->shortName()}-migrations");
+
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
 
         if ($this->app->has('livewire')) {
             $manager = $this->app->make('livewire');

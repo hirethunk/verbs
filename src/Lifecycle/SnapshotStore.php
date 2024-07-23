@@ -14,9 +14,17 @@ use Thunk\Verbs\Support\Serializer;
 
 class SnapshotStore implements StoresSnapshots
 {
+    public function __construct(
+        protected MetadataManager $metadata,
+        protected Serializer $serializer,
+    ) {}
+
     public function load(Bits|UuidInterface|AbstractUid|int|string $id, string $type): ?State
     {
-        $snapshot = VerbSnapshot::whereKey(Id::from($id))->whereType($type)->first();
+        $snapshot = VerbSnapshot::firstWhere([
+            'state_id' => Id::from($id),
+            'type' => $type,
+        ]);
 
         return $snapshot?->state();
     }
@@ -41,11 +49,11 @@ class SnapshotStore implements StoresSnapshots
             return true;
         }
 
-        $values = collect(static::formatForWrite($states))
-            ->unique('id')
-            ->all();
-
-        return VerbSnapshot::upsert($values, 'id', ['data', 'last_event_id', 'updated_at']);
+        return VerbSnapshot::upsert(
+            values: collect($states)->unique()->map($this->formatForWrite(...))->all(),
+            uniqueBy: ['id'],
+            update: ['data', 'last_event_id', 'updated_at']
+        );
     }
 
     public function reset(): bool
@@ -55,15 +63,16 @@ class SnapshotStore implements StoresSnapshots
         return true;
     }
 
-    protected static function formatForWrite(array $states): array
+    protected function formatForWrite(State $state): array
     {
-        return array_map(fn (State $state) => [
-            'id' => Id::from($state->id),
+        return [
+            'id' => $this->metadata->getEphemeral($state, 'id', snowflake_id()),
+            'state_id' => Id::from($state->id),
             'type' => $state::class,
-            'data' => app(Serializer::class)->serialize($state),
+            'data' => $this->serializer->serialize($state),
             'last_event_id' => Id::tryFrom($state->last_event_id),
             'created_at' => now(),
             'updated_at' => now(),
-        ], $states);
+        ];
     }
 }
