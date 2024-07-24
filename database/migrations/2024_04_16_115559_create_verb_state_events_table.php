@@ -11,7 +11,7 @@ return new class extends Migration
     {
         // If they've already migrated under the previous migration name, just skip
         if (Schema::hasTable($this->tableName())) {
-            throw new RuntimeException('The create_verbs_* migrations have been renamed. See <https://verbs.thunk.dev/docs/reference/upgrading>');
+            return;
         }
 
         Schema::create($this->tableName(), function (Blueprint $table) {
