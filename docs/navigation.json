@@ -7,6 +7,11 @@
                 "title": "Quickstart",
                 "slug": "quickstart",
                 "icon": "arrow-right"
+            },
+            {
+                "title": "Upgrading",
+                "slug": "upgrading",
+                "icon": "map"
             }
         ]
     },
