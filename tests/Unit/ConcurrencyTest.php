@@ -10,13 +10,13 @@ use Thunk\Verbs\Support\StateCollection;
 it('does not throw on sequential events', function () {
     $store = app(EventStore::class);
 
-    $event = new ConcurrencyTestEvent();
+    $event = new ConcurrencyTestEvent;
     $event->id = 1;
     ConcurrencyTestState::singleton()->last_event_id = 1;
 
     $store->write([$event]);
 
-    $event2 = new ConcurrencyTestEvent();
+    $event2 = new ConcurrencyTestEvent;
     $event2->id = 2;
     ConcurrencyTestState::singleton()->last_event_id = 2;
 
@@ -28,13 +28,13 @@ it('does not throw on sequential events', function () {
 it('throws on non-sequential events', function () {
     $store = app(EventStore::class);
 
-    $event = new ConcurrencyTestEvent();
+    $event = new ConcurrencyTestEvent;
     $event->id = 2;
     ConcurrencyTestState::singleton()->last_event_id = 2;
 
     $store->write([$event]);
 
-    $event2 = new ConcurrencyTestEvent();
+    $event2 = new ConcurrencyTestEvent;
     $event2->id = 1;
     ConcurrencyTestState::singleton()->last_event_id = 1;
 

@@ -70,7 +70,7 @@ class EventStore implements StoresEvents
     /** @param  Event[]  $events */
     protected function guardAgainstConcurrentWrites(array $events): void
     {
-        $max_event_ids = new Collection();
+        $max_event_ids = new Collection;
 
         $query = VerbStateEvent::query()->toBase();
 

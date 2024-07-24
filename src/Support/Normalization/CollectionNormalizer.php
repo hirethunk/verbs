@@ -27,7 +27,7 @@ class CollectionNormalizer implements DenormalizerInterface, NormalizerInterface
         $isAssoc = data_get($data, 'associative', false);
 
         if ($items === []) {
-            return new $fqcn();
+            return new $fqcn;
         }
 
         $subtype = data_get($data, 'type');
@@ -100,7 +100,7 @@ class CollectionNormalizer implements DenormalizerInterface, NormalizerInterface
     protected function getCollectionMetadata(Collection $collection): array
     {
         $only_objects = true;
-        $types = new Collection();
+        $types = new Collection;
 
         foreach ($collection as $value) {
             $only_objects = $only_objects && is_object($value);
@@ -121,6 +121,6 @@ class CollectionNormalizer implements DenormalizerInterface, NormalizerInterface
                 ->unique();
 
             return $common->isEmpty() ? $parents : $parents->intersect($common);
-        }, new Collection());
+        }, new Collection);
     }
 }

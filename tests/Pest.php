@@ -60,7 +60,7 @@ uses(TestCase::class)
             version_compare(App::version(), '10.38.0', '<')
             && $db->getQueryGrammar() instanceof SQLiteGrammar
         ) {
-            $db->setQueryGrammar(new PatchedSQLiteGrammar());
+            $db->setQueryGrammar(new PatchedSQLiteGrammar);
         }
     })
     ->in(__DIR__, ...$examples);

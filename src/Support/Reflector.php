@@ -70,7 +70,7 @@ class Reflector extends BaseReflector
         $method = static::reflectFunction($method);
 
         if (empty($parameters = $method->getParameters())) {
-            return new Collection();
+            return new Collection;
         }
 
         return collect($parameters)

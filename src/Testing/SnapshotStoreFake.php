@@ -23,13 +23,13 @@ class SnapshotStoreFake implements StoresSnapshots
 
     public function __construct()
     {
-        $this->states = new Collection();
+        $this->states = new Collection;
     }
 
     public function write(array $states): bool
     {
         foreach ($states as $state) {
-            $this->states[$state::class] ??= new Collection();
+            $this->states[$state::class] ??= new Collection;
             $this->states[$state::class]->put(Id::from($state->id), $state);
         }
 
@@ -48,7 +48,7 @@ class SnapshotStoreFake implements StoresSnapshots
 
     public function reset(): bool
     {
-        $this->states = new Collection();
+        $this->states = new Collection;
 
         return true;
     }
@@ -88,7 +88,7 @@ class SnapshotStoreFake implements StoresSnapshots
     public function written(string $class_name, ?Closure $filter = null): Collection
     {
         if (! $this->hasWritten($class_name)) {
-            return new Collection();
+            return new Collection;
         }
 
         return $this->states[$class_name]

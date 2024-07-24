@@ -18,7 +18,7 @@ abstract class Space implements SerializedByVerbs
 
     public static function instance(): static
     {
-        return self::$instances[static::class] ?? new static();
+        return self::$instances[static::class] ?? new static;
     }
 
     public function __construct()
