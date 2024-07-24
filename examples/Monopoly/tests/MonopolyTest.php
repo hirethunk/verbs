@@ -32,7 +32,7 @@ it('can play a game of Monopoly', function () {
     $player1_id = snowflake_id();
     $player2_id = snowflake_id();
 
-    $game_state = verb(new GameStarted())->state(GameState::class);
+    $game_state = verb(new GameStarted)->state(GameState::class);
 
     expect($game_state->started)->toBeTrue()
         ->and($game_state->board->spaces->count())->toBe(40)

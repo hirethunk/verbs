@@ -23,8 +23,8 @@ class EventStateRegistry
 
     public function getStates(Event $event): StateCollection
     {
-        $discovered = new StateCollection();
-        $deferred = new StateCollection();
+        $discovered = new StateCollection;
+        $deferred = new StateCollection;
 
         foreach ($this->getAttributes($event) as $attribute) {
             // If there are state dependencies that the attribute relies on that we haven't already

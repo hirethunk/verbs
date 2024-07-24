@@ -78,9 +78,9 @@ class TestCase extends Orchestra
 
     protected function watchDatabaseQueries(): self
     {
-        $formatter = new OutputFormatter();
+        $formatter = new OutputFormatter;
         $output = new ConsoleOutput(ConsoleOutput::VERBOSITY_NORMAL, null, $formatter);
-        $style = new SymfonyStyle(new ArgvInput(), $output);
+        $style = new SymfonyStyle(new ArgvInput, $output);
 
         DB::listen(function (QueryExecuted $event) use ($style) {
             $when = now()->toTimeString();

@@ -18,11 +18,11 @@ use Thunk\Verbs\Support\Normalization\StateNormalizer;
 
 it('can normalize an empty collection', function () {
     $serializer = new SymfonySerializer(
-        normalizers: [$normalizer = new CollectionNormalizer()],
-        encoders: [new JsonEncoder()],
+        normalizers: [$normalizer = new CollectionNormalizer],
+        encoders: [new JsonEncoder],
     );
 
-    $collection = new Collection();
+    $collection = new Collection;
 
     expect($normalizer->supportsNormalization($collection))->toBeTrue();
 
@@ -42,11 +42,11 @@ it('can normalize an empty collection', function () {
 
 it('can normalize an empty Eloquent collection', function () {
     $serializer = new SymfonySerializer(
-        normalizers: [$normalizer = new CollectionNormalizer()],
-        encoders: [new JsonEncoder()],
+        normalizers: [$normalizer = new CollectionNormalizer],
+        encoders: [new JsonEncoder],
     );
 
-    $collection = new EloquentCollection();
+    $collection = new EloquentCollection;
 
     expect($normalizer->supportsNormalization($collection))->toBeTrue();
 
@@ -73,8 +73,8 @@ it('can normalize a collection all of scalars', function () {
     ];
 
     $serializer = new SymfonySerializer(
-        normalizers: [$normalizer = new CollectionNormalizer()],
-        encoders: [new JsonEncoder()],
+        normalizers: [$normalizer = new CollectionNormalizer],
+        encoders: [new JsonEncoder],
     );
 
     foreach ($collections as $iteration) {
@@ -108,8 +108,8 @@ it('can normalize a collection with keys and restore key order', function () {
     $expected_json = '{"type":"int","items":[[2,2],[1,1],[3,3]],"associative":true}';
 
     $serializer = new SymfonySerializer(
-        normalizers: [$normalizer = new CollectionNormalizer()],
-        encoders: [new JsonEncoder()],
+        normalizers: [$normalizer = new CollectionNormalizer],
+        encoders: [new JsonEncoder],
     );
 
     // We should be able to normalize
@@ -134,12 +134,12 @@ it('can normalize a collection all of states', function () {
 
     $serializer = new SymfonySerializer(
         normalizers: [
-            $normalizer = new CollectionNormalizer(),
-            new StateNormalizer(),
-            new PropertyNormalizer(propertyTypeExtractor: new ReflectionExtractor()),
+            $normalizer = new CollectionNormalizer,
+            new StateNormalizer,
+            new PropertyNormalizer(propertyTypeExtractor: new ReflectionExtractor),
         ],
         encoders: [
-            new JsonEncoder(),
+            new JsonEncoder,
         ],
     );
 
@@ -166,13 +166,13 @@ it('can normalize a collection all of states', function () {
 it('can normalize collections of objects that implement SerializedByVerbs', function () {
     $serializer = new SymfonySerializer(
         normalizers: [
-            $normalizer = new CollectionNormalizer(),
-            new CarbonNormalizer(),
-            new SelfSerializingNormalizer(),
-            new PropertyNormalizer(propertyTypeExtractor: new ReflectionExtractor()),
+            $normalizer = new CollectionNormalizer,
+            new CarbonNormalizer,
+            new SelfSerializingNormalizer,
+            new PropertyNormalizer(propertyTypeExtractor: new ReflectionExtractor),
         ],
         encoders: [
-            new JsonEncoder(),
+            new JsonEncoder,
         ],
     );
 

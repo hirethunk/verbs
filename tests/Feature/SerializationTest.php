@@ -70,13 +70,13 @@ it('triggers an error when using positional arguments with an event that does no
 it('allows us to store a serializable class as a property', function () {
     expect(function () {
         EventWithDto::fire(
-            dto: new DTO()
+            dto: new DTO
         );
     })->not->toThrow(TypeError::class);
 });
 
 it('honors configured context', function () {
-    $target = new class()
+    $target = new class
     {
         public $is_public = 'public';
 

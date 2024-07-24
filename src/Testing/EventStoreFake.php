@@ -26,7 +26,7 @@ class EventStoreFake implements StoresEvents
     public function __construct(
         protected MetadataManager $metadata,
     ) {
-        $this->events = new Collection();
+        $this->events = new Collection;
     }
 
     public function read(
@@ -50,7 +50,7 @@ class EventStoreFake implements StoresEvents
     public function write(array $events): bool
     {
         foreach ($events as $event) {
-            $this->events[$event::class] ??= new Collection();
+            $this->events[$event::class] ??= new Collection;
             $this->events[$event::class]->push($event);
         }
 
@@ -61,7 +61,7 @@ class EventStoreFake implements StoresEvents
     public function committed(string $class_name, ?Closure $filter = null): Collection
     {
         if (! $this->hasCommitted($class_name)) {
-            return new Collection();
+            return new Collection;
         }
 
         return $this->events[$class_name]

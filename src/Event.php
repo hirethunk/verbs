@@ -43,7 +43,7 @@ abstract class Event
     {
         // TODO: This is a bit hacky, but is probably OK right now
 
-        static $map = new WeakMap();
+        static $map = new WeakMap;
 
         return $map[$this] ??= app(EventStateRegistry::class)->getStates($this);
     }
