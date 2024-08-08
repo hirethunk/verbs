@@ -31,8 +31,11 @@ class EventStore implements StoresEvents
         bool $singleton = false,
     ): LazyCollection {
         return $this->readEvents($state, $after_id, $singleton)
-            ->each(fn (VerbEvent $model) => $this->metadata->set($model->event(), $model->metadata()))
-            ->map(fn (VerbEvent $model) => $model->event());
+            ->map(function (VerbEvent $model) {
+                $this->metadata->set($model->event(), $model->metadata());
+
+                return $model->event();
+            });
     }
 
     public function write(array $events): bool
