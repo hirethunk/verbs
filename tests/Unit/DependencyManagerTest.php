@@ -22,6 +22,20 @@ it('can resolve parameter types correctly', function () {
     $this->assertSame(['foo', 1337, $one, $two, $bits], $resolver());
 });
 
+it('can resolve a dependency with multiple names', function () {
+    $callback = function (State $dep, State $two) {};
+
+    $one = new class extends State {};
+    $two = new class extends State {};
+
+    $resolver = DependencyResolver::for($callback)
+        ->add($one, 'dep')
+        ->add($one, 'one')
+        ->add($two, 'two');
+
+    $this->assertSame([$one, $two], $resolver());
+});
+
 it('throws an exception if dependencies are ambiguous', function () {
     $callback = function (State $a, State $b) {};
 

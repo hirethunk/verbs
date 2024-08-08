@@ -3,7 +3,7 @@
 namespace Thunk\Verbs\Support;
 
 use Closure;
-use Illuminate\Container\Container;
+use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Collection;
 use ReflectionFunction;
 use ReflectionParameter;
@@ -15,7 +15,7 @@ class DependencyResolver
     public static function for(Closure $callback, ?Collection $candidates = null, ?Container $container = null): static
     {
         return new static(
-            container: $container ?? Container::getInstance(),
+            container: $container ?? \Illuminate\Container\Container::getInstance(),
             callback: $callback,
             candidates: $candidates ?? new Collection(),
         );
