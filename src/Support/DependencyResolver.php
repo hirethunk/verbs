@@ -27,7 +27,7 @@ class DependencyResolver
         protected Collection $candidates,
     ) {}
 
-    public function with(mixed $candidate, ?string $name = null): static
+    public function add(mixed $candidate, ?string $name = null): static
     {
         if ($name) {
             $candidate = new NamedDependency($name, $candidate);
@@ -38,12 +38,12 @@ class DependencyResolver
         return $this;
     }
 
-    public function __invoke()
+    public function __invoke(): array
     {
-        $reflect = new ReflectionFunction($this->callback);
-
-        return collect($reflect->getParameters())
-            ->map($this->resolveParameter(...));
+        return array_map(
+            $this->resolveParameter(...),
+            (new ReflectionFunction($this->callback))->getParameters()
+        );
     }
 
     protected function resolveParameter(ReflectionParameter $reflection): mixed

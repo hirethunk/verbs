@@ -11,6 +11,7 @@ use SplObjectStorage;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Metadata;
 use Thunk\Verbs\State;
+use Thunk\Verbs\Support\DependencyResolver;
 use Thunk\Verbs\Support\Reflector;
 use Thunk\Verbs\Support\StateCollection;
 use Thunk\Verbs\Support\Wormhole;
@@ -87,6 +88,7 @@ class Hook
     public function apply(Container $container, Event $event, State $state): void
     {
         if ($this->runsInPhase(Phase::Apply)) {
+            $this->call($container, $event); // FIXME
             app(Wormhole::class)->warp($event, fn () => $container->call($this->callback, $this->guessParameters($event, $state)));
         }
     }
@@ -112,6 +114,26 @@ class Hook
         if ($this->runsInPhase(Phase::Replay)) {
             app(Wormhole::class)->warp($event, fn () => $container->call($this->callback, $this->guessParameters($event, states: $states)));
         }
+    }
+
+    protected function call(Container $container, Event $event)
+    {
+        $resolver = DependencyResolver::for($this->callback, container: $container);
+
+        $states = $event->states();
+
+        // Add states by alias for named resolution
+        foreach ($states->aliasNames() as $name) {
+            $resolver->add($states->get($name), $name);
+        }
+
+        // Then add ALL states regardless of whether they're aliased or not
+        foreach ($states as $state) {
+            $resolver->add($state);
+        }
+
+        $dependencies = $resolver();
+        dump($dependencies);
     }
 
     protected function guessParameters(Event $event, ?State $state = null, ?StateCollection $states = null): array
