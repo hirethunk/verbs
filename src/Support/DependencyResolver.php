@@ -34,7 +34,7 @@ class DependencyResolver
         protected Container $container,
         protected Closure $callback,
     ) {
-        $this->candidates = new Collection();
+        $this->candidates = new Collection;
     }
 
     public function add(mixed $candidate, ?string $name = null): static
@@ -60,7 +60,7 @@ class DependencyResolver
 
     public function addStates(StateCollection $states): static
     {
-        $added = new WeakMap();
+        $added = new WeakMap;
 
         // Add states by alias for named resolution
         foreach ($states->aliasNames() as $name) {
