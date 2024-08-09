@@ -7,25 +7,35 @@ use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Collection;
 use ReflectionFunction;
 use ReflectionParameter;
+use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\AmbiguousDependencyException;
 use Thunk\Verbs\Support\Reflection\Parameter;
+use WeakMap;
 
 class DependencyResolver
 {
-    public static function for(Closure $callback, ?Collection $candidates = null, ?Container $container = null): static
+    protected Collection $candidates;
+
+    public static function for(callable $callback, ?Container $container = null, ?Event $event = null): static
     {
-        return new static(
+        $resolver = new static(
             container: $container ?? \Illuminate\Container\Container::getInstance(),
-            callback: $callback,
-            candidates: $candidates ?? new Collection(),
+            callback: $callback(...),
         );
+
+        if ($event) {
+            $resolver->addEvent($event);
+        }
+
+        return $resolver;
     }
 
     public function __construct(
         protected Container $container,
         protected Closure $callback,
-        protected Collection $candidates,
-    ) {}
+    ) {
+        $this->candidates = new Collection();
+    }
 
     public function add(mixed $candidate, ?string $name = null): static
     {
@@ -34,6 +44,37 @@ class DependencyResolver
         }
 
         $this->candidates->push($candidate);
+
+        return $this;
+    }
+
+    public function addEvent(Event $event): static
+    {
+        $this->add($event);
+        $this->add($event->metadata());
+
+        $this->addStates($event->states());
+
+        return $this;
+    }
+
+    public function addStates(StateCollection $states): static
+    {
+        $added = new WeakMap();
+
+        // Add states by alias for named resolution
+        foreach ($states->aliasNames() as $name) {
+            $state = $states->get($name);
+            $added[$state] = true;
+            $this->add($state, $name);
+        }
+
+        // Then add any other states that do not have aliases
+        foreach ($states as $state) {
+            if (! isset($added[$state])) {
+                $this->add($state);
+            }
+        }
 
         return $this;
     }

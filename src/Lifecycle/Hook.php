@@ -8,12 +8,9 @@ use ReflectionMethod;
 use RuntimeException;
 use SplObjectStorage;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\State;
 use Thunk\Verbs\Support\DependencyResolver;
 use Thunk\Verbs\Support\Reflector;
-use Thunk\Verbs\Support\StateCollection;
 use Thunk\Verbs\Support\Wormhole;
-use WeakMap;
 
 class Hook
 {
@@ -75,74 +72,49 @@ class Hook
         return isset($this->phases[$phase]) && $this->phases[$phase] === true;
     }
 
-    public function validate(Container $container, Event $event, ?State $state = null): bool
+    public function validate(Container $container, Event $event): bool
     {
         if ($this->runsInPhase(Phase::Validate)) {
-            return $this->call($container, $event) ?? true;
+            return $this->execute($container, $event) ?? true;
         }
 
         throw new RuntimeException('Hook::validate called on a non-validation hook.');
     }
 
-    public function apply(Container $container, Event $event, State $state): void
+    public function apply(Container $container, Event $event): void
     {
         if ($this->runsInPhase(Phase::Apply)) {
-            app(Wormhole::class)->warp($event, fn () => $this->call($container, $event));
+            app(Wormhole::class)->warp($event, fn () => $this->execute($container, $event));
         }
     }
 
-    public function fired(Container $container, Event $event, StateCollection $states): void
+    public function fired(Container $container, Event $event): void
     {
         if ($this->runsInPhase(Phase::Fired)) {
-            $this->call($container, $event);
+            $this->execute($container, $event);
         }
     }
 
-    public function handle(Container $container, Event $event, StateCollection $states): mixed
+    public function handle(Container $container, Event $event): mixed
     {
         if ($this->runsInPhase(Phase::Handle)) {
-            $this->call($container, $event);
+            $this->execute($container, $event);
         }
 
         return null;
     }
 
-    public function replay(Container $container, Event $event, StateCollection $states): void
+    public function replay(Container $container, Event $event): void
     {
         if ($this->runsInPhase(Phase::Replay)) {
-            app(Wormhole::class)->warp($event, fn () => $this->call($container, $event));
+            app(Wormhole::class)->warp($event, fn () => $this->execute($container, $event));
         }
     }
 
-    protected function call(Container $container, Event $event)
+    protected function execute(Container $container, Event $event): mixed
     {
-        $resolver = DependencyResolver::for($this->callback, container: $container)
-            ->add($event->metadata())
-            ->add($event);
-
-        $this->addStatesToResolver($resolver, $event->states());
+        $resolver = DependencyResolver::for($this->callback, container: $container, event: $event);
 
         return call_user_func_array($this->callback, $resolver());
-    }
-
-    protected function addStatesToResolver(DependencyResolver $resolver, StateCollection $states): DependencyResolver
-    {
-        $added = new WeakMap();
-
-        // Add states by alias for named resolution
-        foreach ($states->aliasNames() as $name) {
-            $state = $states->get($name);
-            $added[$state] = true;
-            $resolver->add($state, $name);
-        }
-
-        // Then add any other states that do not have aliases
-        foreach ($states as $state) {
-            if (! isset($added[$state])) {
-                $resolver->add($state);
-            }
-        }
-
-        return $resolver;
     }
 }

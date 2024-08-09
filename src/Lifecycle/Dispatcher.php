@@ -39,14 +39,14 @@ class Dispatcher
         $this->skipped_phases = $phases;
     }
 
-    public function validate(Event $event, ?State $state = null): bool
+    public function validate(Event $event): bool
     {
         if (! $this->shouldDispatchPhase(Phase::Validate)) {
             return true;
         }
 
-        foreach ($this->getValidationHooks($event, $state) as $hook) {
-            if (! $hook->validate($this->container, $event, $state)) {
+        foreach ($this->getValidationHooks($event) as $hook) {
+            if (! $hook->validate($this->container, $event)) {
                 throw new EventNotValidForCurrentState("Validation failed in '{$hook->name}'");
             }
         }
@@ -90,80 +90,73 @@ class Dispatcher
     /** @return Collection<int, Hook> */
     protected function getFiredHooks(Event $event): Collection
     {
-        $hooks = collect($this->hooks[$event::class] ?? []);
+        $hooks = $this->hooksFor($event, Phase::Fired);
 
         if (method_exists($event, 'fired')) {
             $hooks->prepend(Hook::fromClassMethod($event, 'fired')->forcePhases(Phase::Fired));
         }
 
-        return $hooks->filter(fn (Hook $hook) => $hook->runsInPhase(Phase::Fired));
+        return $hooks;
     }
 
     /** @return Collection<int, Hook> */
     protected function getHandleHooks(Event $event): Collection
     {
-        // FIXME: We need to handle interfaces, too
-
-        $hooks = collect($this->hooks[$event::class] ?? []);
-
-        // TODO: We may want a special hook that only runs during handle but not replay. We've talked about
-        // using "once" or "stored" or "committed" or "react" but can't quite agree. Just leaving it out for now.
+        $hooks = $this->hooksFor($event, Phase::Handle);
 
         if (method_exists($event, 'handle')) {
             $hooks->prepend(Hook::fromClassMethod($event, 'handle')->forcePhases(Phase::Handle, Phase::Replay));
         }
 
-        return $hooks->filter(fn (Hook $hook) => $hook->runsInPhase(Phase::Handle));
+        return $hooks;
     }
 
     /** @return Collection<int, Hook> */
     protected function getReplayHooks(Event $event): Collection
     {
-        $hooks = collect($this->hooks[$event::class] ?? []);
+        $hooks = $this->hooksFor($event, Phase::Replay);
 
         if (method_exists($event, 'handle')) {
             $hooks->prepend(Hook::fromClassMethod($event, 'handle')->forcePhases(Phase::Handle, Phase::Replay));
         }
 
-        return $hooks->filter(fn (Hook $hook) => $hook->runsInPhase(Phase::Replay));
+        return $hooks;
     }
 
     /** @return Collection<int, Hook> */
-    protected function getValidationHooks(Event $event, ?State $state = null): Collection
+    protected function getAuthorizeHooks(Event $event): Collection
     {
-        $hooks = collect($this->hooks[$event::class] ?? []);
+        return $this->hooksFor($event, Phase::Authorize)
+            ->merge($this->hooksWithPrefix($event, Phase::Authorize, 'authorize'));
+    }
 
-        $validation_hooks = $state === null
-            ? MethodFinder::for($event)
-                ->prefixed('validate')
-                ->map(fn (ReflectionMethod $name) => Hook::fromClassMethod($event, $name)->forcePhases(Phase::Validate))
-            : MethodFinder::for($event)
-                ->prefixed('validate')
-                ->expecting($state::class)
-                ->map(fn (ReflectionMethod $name) => Hook::fromClassMethod($event, $name)->forcePhases(Phase::Validate));
-
-        return $hooks
-            ->merge($validation_hooks)
-            ->filter(fn (Hook $hook) => $hook->runsInPhase(Phase::Validate));
+    /** @return Collection<int, Hook> */
+    protected function getValidationHooks(Event $event): Collection
+    {
+        return $this->hooksFor($event, Phase::Validate)
+            ->merge($this->hooksWithPrefix($event, Phase::Validate, 'validate'));
     }
 
     /** @return Collection<int, Hook> */
     protected function getApplyHooks(Event $event, State $state): Collection
     {
-        $event_apply_methods = MethodFinder::for($event)
-            ->prefixed('apply')
-            ->expecting($state::class)
-            ->map(fn (ReflectionMethod $method) => Hook::fromClassMethod($event, $method)->forcePhases(Phase::Apply));
+        return $this->hooksFor($event, Phase::Apply)
+            ->merge($this->hooksWithPrefix($event, Phase::Apply, 'apply'));
+    }
 
-        $states_apply_methods = MethodFinder::for($state)
-            ->prefixed('apply')
-            ->expecting($event::class)
-            ->map(fn (ReflectionMethod $method) => Hook::fromClassMethod($state, $method)->forcePhases(Phase::Apply));
+    /** @return Collection<int, Hook> */
+    protected function hooksWithPrefix(Event $event, Phase $phase, string $prefix): Collection
+    {
+        return MethodFinder::for($event)
+            ->prefixed($prefix)
+            ->map(fn (ReflectionMethod $name) => Hook::fromClassMethod($event, $name)->forcePhases($phase));
+    }
 
-        return collect($this->hooks[$event::class] ?? [])
-            ->merge($event_apply_methods)
-            ->merge($states_apply_methods)
-            ->filter(fn (Hook $hook) => $hook->runsInPhase(Phase::Apply));
+    /** @return Collection<int, Hook> */
+    protected function hooksFor(Event|State $target, ?Phase $phase = null): Collection
+    {
+        return Collection::make($this->hooks[$target::class] ?? [])
+            ->when($phase, fn (Collection $hooks) => $hooks->filter(fn (Hook $hook) => $hook->runsInPhase($phase)));
     }
 
     protected function shouldDispatchPhase(Phase $phase): bool

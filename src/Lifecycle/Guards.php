@@ -7,18 +7,17 @@ use Illuminate\Auth\Access\Response;
 use Throwable;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
-use Thunk\Verbs\State;
+use Thunk\Verbs\Support\DependencyResolver;
 
 class Guards
 {
-    public static function for(Event $event, ?State $state = null): static
+    public static function for(Event $event): static
     {
-        return new static($event, $state);
+        return new static($event);
     }
 
     public function __construct(
-        public Event $event,
-        public ?State $state = null,
+        public Event $event
     ) {}
 
     public function check(): static
@@ -61,7 +60,8 @@ class Guards
     protected function passesAuthorization(): bool
     {
         if (method_exists($this->event, 'authorize')) {
-            $result = app()->call([$this->event, 'authorize']);
+            $resolver = DependencyResolver::for($this->event->authorize(...), event: $this->event);
+            $result = call_user_func_array([$this->event, 'authorize'], $resolver());
 
             if ($result instanceof Response) {
                 return $result->authorize();
@@ -79,7 +79,6 @@ class Guards
 
     protected function passesValidation(): bool
     {
-        return app(Dispatcher::class)
-            ->validate($this->event, $this->state);
+        return app(Dispatcher::class)->validate($this->event);
     }
 }
