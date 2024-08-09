@@ -115,12 +115,17 @@ class StateManager
 
     protected function reconstitute(State $state, bool $singleton = false): static
     {
+        // FIXME: Is this OK without specifying a state? It may have more effects than previously,
+        //        but there was an incorrect assumption before that it would only run on that one
+        //        state, which is not true because apply() without arguments was assumed to accept
+        //        all states, so it would run no matter what. Needs discussion!
+
         // When we're replaying, the Broker is in charge of applying the correct events
         // to the State, so we only need to do it *outside* of replays.
         if (! $this->is_replaying) {
             $this->events
                 ->read(state: $state, after_id: $state->last_event_id, singleton: $singleton)
-                ->each(fn (Event $event) => $this->dispatcher->apply($event, $state));
+                ->each(fn (Event $event) => $this->dispatcher->apply($event));
         }
 
         return $this;

@@ -10,7 +10,6 @@ use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\MethodFinder;
 use Thunk\Verbs\Support\Reflector;
-use Thunk\Verbs\Support\StateCollection;
 
 class Dispatcher
 {
@@ -54,36 +53,36 @@ class Dispatcher
         return true;
     }
 
-    public function apply(Event $event, State $state): void
+    public function apply(Event $event): void
     {
         if ($this->shouldDispatchPhase(Phase::Apply)) {
-            $this->getApplyHooks($event, $state)->each(fn (Hook $hook) => $hook->apply($this->container, $event, $state));
+            $this->getApplyHooks($event)->each(fn (Hook $hook) => $hook->apply($this->container, $event));
         }
 
-        $state->last_event_id = $event->id;
+        $event->states()->each(fn (State $state) => $state->last_event_id = $event->id);
     }
 
-    public function fired(Event $event, StateCollection $states): void
+    public function fired(Event $event): void
     {
         if ($this->shouldDispatchPhase(Phase::Fired)) {
-            $this->getFiredHooks($event)->each(fn (Hook $hook) => $hook->fired($this->container, $event, $states));
+            $this->getFiredHooks($event)->each(fn (Hook $hook) => $hook->fired($this->container, $event));
         }
     }
 
-    public function handle(Event $event, StateCollection $states): Collection
+    public function handle(Event $event): Collection
     {
         if (! $this->shouldDispatchPhase(Phase::Handle)) {
             return collect();
         }
 
         return $this->getHandleHooks($event)
-            ->map(fn (Hook $hook) => $hook->handle($this->container, $event, $states));
+            ->map(fn (Hook $hook) => $hook->handle($this->container, $event));
     }
 
-    public function replay(Event $event, StateCollection $states): void
+    public function replay(Event $event): void
     {
         if ($this->shouldDispatchPhase(Phase::Replay)) {
-            $this->getReplayHooks($event)->each(fn (Hook $hook) => $hook->replay($this->container, $event, $states));
+            $this->getReplayHooks($event)->each(fn (Hook $hook) => $hook->replay($this->container, $event));
         }
     }
 
@@ -138,7 +137,7 @@ class Dispatcher
     }
 
     /** @return Collection<int, Hook> */
-    protected function getApplyHooks(Event $event, State $state): Collection
+    protected function getApplyHooks(Event $event): Collection
     {
         return $this->hooksFor($event, Phase::Apply)
             ->merge($this->hooksWithPrefix($event, Phase::Apply, 'apply'));

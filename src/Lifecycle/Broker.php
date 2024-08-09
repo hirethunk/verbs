@@ -38,17 +38,13 @@ class Broker implements BrokersEvents
         // NOTE: Any changes to how the dispatcher is called here
         // should also be applied to the `replay` method
 
-        $states = $event->states();
+        Guards::for($event)->check();
 
-        $states->each(fn ($state) => Guards::for($event, $state)->check());
-
-        Guards::for($event, null)->check();
-
-        $states->each(fn ($state) => $this->dispatcher->apply($event, $state));
+        $this->dispatcher->apply($event);
 
         app(Queue::class)->queue($event);
 
-        $this->dispatcher->fired($event, $states);
+        $this->dispatcher->fired($event);
 
         if ($this->commit_immediately || $event instanceof CommitsImmediately) {
             $this->commit();
@@ -93,8 +89,8 @@ class Broker implements BrokersEvents
                         $beforeEach($event);
                     }
 
-                    $event->states()->each(fn ($state) => $this->dispatcher->apply($event, $state));
-                    $this->dispatcher->replay($event, $event->states());
+                    $this->dispatcher->apply($event);
+                    $this->dispatcher->replay($event);
 
                     if ($afterEach) {
                         $afterEach($event);

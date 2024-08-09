@@ -51,7 +51,7 @@ class Guards
         }
 
         if (method_exists($this->event, 'failedValidation')) {
-            $this->event->failedValidation($this->state);
+            $this->event->failedValidation($exception);
         }
 
         throw $exception;
