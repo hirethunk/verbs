@@ -18,6 +18,8 @@ class Broker implements BrokersEvents
     public function __construct(
         protected Dispatcher $dispatcher,
         protected MetadataManager $metadata,
+        protected EventQueue $queue,
+        protected StateManager $states,
     ) {}
 
     public function fireIfValid(Event $event): ?Event
@@ -42,7 +44,7 @@ class Broker implements BrokersEvents
 
         $this->dispatcher->apply($event);
 
-        app(Queue::class)->queue($event);
+        $this->queue->queue($event);
 
         $this->dispatcher->fired($event);
 
@@ -55,7 +57,7 @@ class Broker implements BrokersEvents
 
     public function commit(): bool
     {
-        $events = app(EventQueue::class)->flush();
+        $events = $this->queue->flush();
 
         if (empty($events)) {
             return true;
@@ -63,7 +65,7 @@ class Broker implements BrokersEvents
 
         // FIXME: Only write changes + handle aggregate versioning
 
-        app(StateManager::class)->writeSnapshots();
+        $this->states->writeSnapshots();
 
         foreach ($events as $event) {
             $this->metadata->setLastResults($event, $this->dispatcher->handle($event));
@@ -72,18 +74,16 @@ class Broker implements BrokersEvents
         return $this->commit();
     }
 
-    public function replay(?callable $beforeEach = null, ?callable $afterEach = null)
+    public function replay(?callable $beforeEach = null, ?callable $afterEach = null): void
     {
         $this->is_replaying = true;
 
-        $state_manager = app(StateManager::class);
-
         try {
-            $state_manager->reset(include_storage: true);
+            $this->states->reset(include_storage: true);
 
             app(StoresEvents::class)->read()
-                ->each(function (Event $event) use ($state_manager, $beforeEach, $afterEach) {
-                    $state_manager->setReplaying(true);
+                ->each(function (Event $event) use ($beforeEach, $afterEach) {
+                    $this->states->setReplaying(true);
 
                     if ($beforeEach) {
                         $beforeEach($event);
@@ -96,12 +96,10 @@ class Broker implements BrokersEvents
                         $afterEach($event);
                     }
 
-                    $state_manager->prune();
-
-                    return $event;
+                    $this->states->prune();
                 });
         } finally {
-            $state_manager->setReplaying(false);
+            $this->states->setReplaying(false);
             $this->is_replaying = false;
         }
     }
