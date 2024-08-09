@@ -138,16 +138,29 @@ class Dispatcher
     /** @return Collection<int, Hook> */
     protected function getApplyHooks(Event $event): Collection
     {
-        return $this->hooksFor($event, Phase::Apply)
-            ->merge($this->hooksWithPrefix($event, Phase::Apply, 'apply'));
+        // Get apply hooks on event
+        $hooks = $this->hooksFor($event, Phase::Apply);
+        $hooks = $hooks->merge($this->hooksWithPrefix($event, Phase::Apply, 'apply'));
+
+        // Find apply hooks on any states that care about this event
+        foreach ($event->states() as $state) {
+            $hooks = $hooks->merge($this->hooksFor($state, Phase::Apply));
+            $hooks = $hooks->merge($this->hooksWithPrefix($state, Phase::Apply, 'apply', expecting: $event::class));
+        }
+
+        return $hooks;
     }
 
     /** @return Collection<int, Hook> */
-    protected function hooksWithPrefix(Event $event, Phase $phase, string $prefix): Collection
+    protected function hooksWithPrefix(Event|State $target, Phase $phase, string $prefix, ?string $expecting = null): Collection
     {
-        return MethodFinder::for($event)
-            ->prefixed($prefix)
-            ->map(fn (ReflectionMethod $name) => Hook::fromClassMethod($event, $name)->forcePhases($phase));
+        $finder = MethodFinder::for($target)->prefixed($prefix);
+
+        if ($expecting) {
+            $finder->expecting($expecting);
+        }
+
+        return $finder->map(fn (ReflectionMethod $name) => Hook::fromClassMethod($target, $name)->forcePhases($phase));
     }
 
     /** @return Collection<int, Hook> */

@@ -66,7 +66,7 @@ class MethodFinder
 
     protected function expectsParameters(ReflectionMethod $method): bool
     {
-        if ($this->types && count($this->types) === 0) {
+        if (! $this->types || $this->types->isEmpty()) {
             return true;
         }
 

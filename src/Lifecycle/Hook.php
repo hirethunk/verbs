@@ -98,7 +98,7 @@ class Hook
     public function handle(Container $container, Event $event): mixed
     {
         if ($this->runsInPhase(Phase::Handle)) {
-            $this->execute($container, $event);
+            return $this->execute($container, $event);
         }
 
         return null;
