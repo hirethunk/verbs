@@ -50,7 +50,7 @@ class SnapshotStore implements StoresSnapshots
         }
 
         return VerbSnapshot::upsert(
-            values: collect($states)->unique()->map($this->formatForWrite(...))->all(),
+            values: collect($states)->map($this->formatForWrite(...))->unique('id')->all(),
             uniqueBy: ['id'],
             update: ['data', 'last_event_id', 'updated_at']
         );
