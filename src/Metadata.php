@@ -16,6 +16,18 @@ class Metadata implements ArrayAccess
         $this->merge($data);
     }
 
+    public function put(string $key, mixed $value): static
+    {
+        $this->{$key} = $value;
+
+        return $this;
+    }
+
+    public function get(string $key, mixed $default = null): mixed
+    {
+        return $this->{$key} ?? $default;
+    }
+
     public function merge(iterable $data): static
     {
         foreach ($data as $key => $value) {

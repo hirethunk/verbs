@@ -64,6 +64,7 @@ class MetadataManager
         return $this;
     }
 
+    /** @return ($key is empty ? Metadata : mixed) */
     public function get(Event $event, ?string $key = null, mixed $default = null): mixed
     {
         $this->initialize($event);
