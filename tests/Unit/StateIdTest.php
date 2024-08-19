@@ -65,8 +65,9 @@ class StateIdTestEvent extends Event
     #[StateId(StateIdTestState::class, autofill: false)]
     public ?int $other_state_id = null;
 
-    public function apply(StateIdTestState $state)
+    public function apply(StateIdTestState $state, StateIdTestState $other_state)
     {
         $state->acknowledged = true;
+        $other_state->acknowledged = true;
     }
 }

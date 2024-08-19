@@ -120,7 +120,14 @@ class StateManager
         if (! $this->is_replaying) {
             $this->events
                 ->read(state: $state, after_id: $state->last_event_id, singleton: $singleton)
-                ->each(fn (Event $event) => $this->dispatcher->apply($event, $state));
+                ->each(fn (Event $event) => $this->dispatcher->apply($event));
+
+            // It's possible for an event to mutate state out of order when reconstituting,
+            // so as a precaution, we'll clear all other states from the store and reload
+            // them from snapshots as needed in the rest of the request.
+            // FIXME: We still need to figure this out
+            // $this->states->reset();
+            //$this->remember($state);
         }
 
         return $this;

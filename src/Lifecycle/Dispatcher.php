@@ -10,7 +10,6 @@ use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\MethodFinder;
 use Thunk\Verbs\Support\Reflector;
-use Thunk\Verbs\Support\StateCollection;
 
 class Dispatcher
 {
@@ -39,14 +38,14 @@ class Dispatcher
         $this->skipped_phases = $phases;
     }
 
-    public function validate(Event $event, ?State $state = null): bool
+    public function validate(Event $event): bool
     {
         if (! $this->shouldDispatchPhase(Phase::Validate)) {
             return true;
         }
 
-        foreach ($this->getValidationHooks($event, $state) as $hook) {
-            if (! $hook->validate($this->container, $event, $state)) {
+        foreach ($this->getValidationHooks($event) as $hook) {
+            if (! $hook->validate($this->container, $event)) {
                 throw new EventNotValidForCurrentState("Validation failed in '{$hook->name}'");
             }
         }
@@ -54,116 +53,121 @@ class Dispatcher
         return true;
     }
 
-    public function apply(Event $event, State $state): void
+    public function apply(Event $event): void
     {
         if ($this->shouldDispatchPhase(Phase::Apply)) {
-            $this->getApplyHooks($event, $state)->each(fn (Hook $hook) => $hook->apply($this->container, $event, $state));
+            $this->getApplyHooks($event)->each(fn (Hook $hook) => $hook->apply($this->container, $event));
         }
 
-        $state->last_event_id = $event->id;
+        $event->states()->each(fn (State $state) => $state->last_event_id = $event->id);
     }
 
-    public function fired(Event $event, StateCollection $states): void
+    public function fired(Event $event): void
     {
         if ($this->shouldDispatchPhase(Phase::Fired)) {
-            $this->getFiredHooks($event)->each(fn (Hook $hook) => $hook->fired($this->container, $event, $states));
+            $this->getFiredHooks($event)->each(fn (Hook $hook) => $hook->fired($this->container, $event));
         }
     }
 
-    public function handle(Event $event, StateCollection $states): Collection
+    public function handle(Event $event): Collection
     {
         if (! $this->shouldDispatchPhase(Phase::Handle)) {
             return collect();
         }
 
-        return $this->getHandleHooks($event)
-            ->map(fn (Hook $hook) => $hook->handle($this->container, $event, $states));
+        return $this->getHandleHooks($event)->map(fn (Hook $hook) => $hook->handle($this->container, $event));
     }
 
-    public function replay(Event $event, StateCollection $states): void
+    public function replay(Event $event): void
     {
         if ($this->shouldDispatchPhase(Phase::Replay)) {
-            $this->getReplayHooks($event)->each(fn (Hook $hook) => $hook->replay($this->container, $event, $states));
+            $this->getReplayHooks($event)->each(fn (Hook $hook) => $hook->replay($this->container, $event));
         }
     }
 
     /** @return Collection<int, Hook> */
     protected function getFiredHooks(Event $event): Collection
     {
-        $hooks = collect($this->hooks[$event::class] ?? []);
+        $hooks = $this->hooksFor($event, Phase::Fired);
 
         if (method_exists($event, 'fired')) {
             $hooks->prepend(Hook::fromClassMethod($event, 'fired')->forcePhases(Phase::Fired));
         }
 
-        return $hooks->filter(fn (Hook $hook) => $hook->runsInPhase(Phase::Fired));
+        return $hooks;
     }
 
     /** @return Collection<int, Hook> */
     protected function getHandleHooks(Event $event): Collection
     {
-        // FIXME: We need to handle interfaces, too
-
-        $hooks = collect($this->hooks[$event::class] ?? []);
-
-        // TODO: We may want a special hook that only runs during handle but not replay. We've talked about
-        // using "once" or "stored" or "committed" or "react" but can't quite agree. Just leaving it out for now.
+        $hooks = $this->hooksFor($event, Phase::Handle);
 
         if (method_exists($event, 'handle')) {
             $hooks->prepend(Hook::fromClassMethod($event, 'handle')->forcePhases(Phase::Handle, Phase::Replay));
         }
 
-        return $hooks->filter(fn (Hook $hook) => $hook->runsInPhase(Phase::Handle));
+        return $hooks;
     }
 
     /** @return Collection<int, Hook> */
     protected function getReplayHooks(Event $event): Collection
     {
-        $hooks = collect($this->hooks[$event::class] ?? []);
+        $hooks = $this->hooksFor($event, Phase::Replay);
 
         if (method_exists($event, 'handle')) {
             $hooks->prepend(Hook::fromClassMethod($event, 'handle')->forcePhases(Phase::Handle, Phase::Replay));
         }
 
-        return $hooks->filter(fn (Hook $hook) => $hook->runsInPhase(Phase::Replay));
+        return $hooks;
     }
 
     /** @return Collection<int, Hook> */
-    protected function getValidationHooks(Event $event, ?State $state = null): Collection
+    protected function getAuthorizeHooks(Event $event): Collection
     {
-        $hooks = collect($this->hooks[$event::class] ?? []);
-
-        $validation_hooks = $state === null
-            ? MethodFinder::for($event)
-                ->prefixed('validate')
-                ->map(fn (ReflectionMethod $name) => Hook::fromClassMethod($event, $name)->forcePhases(Phase::Validate))
-            : MethodFinder::for($event)
-                ->prefixed('validate')
-                ->expecting($state::class)
-                ->map(fn (ReflectionMethod $name) => Hook::fromClassMethod($event, $name)->forcePhases(Phase::Validate));
-
-        return $hooks
-            ->merge($validation_hooks)
-            ->filter(fn (Hook $hook) => $hook->runsInPhase(Phase::Validate));
+        return $this->hooksFor($event, Phase::Authorize)
+            ->merge($this->hooksWithPrefix($event, Phase::Authorize, 'authorize'));
     }
 
     /** @return Collection<int, Hook> */
-    protected function getApplyHooks(Event $event, State $state): Collection
+    protected function getValidationHooks(Event $event): Collection
     {
-        $event_apply_methods = MethodFinder::for($event)
-            ->prefixed('apply')
-            ->expecting($state::class)
-            ->map(fn (ReflectionMethod $method) => Hook::fromClassMethod($event, $method)->forcePhases(Phase::Apply));
+        return $this->hooksFor($event, Phase::Validate)
+            ->merge($this->hooksWithPrefix($event, Phase::Validate, 'validate'));
+    }
 
-        $states_apply_methods = MethodFinder::for($state)
-            ->prefixed('apply')
-            ->expecting($event::class)
-            ->map(fn (ReflectionMethod $method) => Hook::fromClassMethod($state, $method)->forcePhases(Phase::Apply));
+    /** @return Collection<int, Hook> */
+    protected function getApplyHooks(Event $event): Collection
+    {
+        // Get apply hooks on event
+        $hooks = $this->hooksFor($event, Phase::Apply);
+        $hooks = $hooks->merge($this->hooksWithPrefix($event, Phase::Apply, 'apply'));
 
-        return collect($this->hooks[$event::class] ?? [])
-            ->merge($event_apply_methods)
-            ->merge($states_apply_methods)
-            ->filter(fn (Hook $hook) => $hook->runsInPhase(Phase::Apply));
+        // Find apply hooks on any states that care about this event
+        foreach ($event->states() as $state) {
+            $hooks = $hooks->merge($this->hooksFor($state, Phase::Apply));
+            $hooks = $hooks->merge($this->hooksWithPrefix($state, Phase::Apply, 'apply', expecting: $event::class));
+        }
+
+        return $hooks;
+    }
+
+    /** @return Collection<int, Hook> */
+    protected function hooksWithPrefix(Event|State $target, Phase $phase, string $prefix, ?string $expecting = null): Collection
+    {
+        $finder = MethodFinder::for($target)->prefixed($prefix);
+
+        if ($expecting) {
+            $finder->expecting($expecting);
+        }
+
+        return $finder->map(fn (ReflectionMethod $name) => Hook::fromClassMethod($target, $name)->forcePhases($phase));
+    }
+
+    /** @return Collection<int, Hook> */
+    protected function hooksFor(Event|State $target, ?Phase $phase = null): Collection
+    {
+        return Collection::make($this->hooks[$target::class] ?? [])
+            ->when($phase, fn (Collection $hooks) => $hooks->filter(fn (Hook $hook) => $hook->runsInPhase($phase)));
     }
 
     protected function shouldDispatchPhase(Phase $phase): bool
