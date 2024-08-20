@@ -89,7 +89,6 @@ it('uses the original event times when replaying', function () {
         ->toBe(CarbonImmutable::parse('2024-04-01 12:00:00')->unix());
 });
 
-
 it('creates new snapshots when replaying', function () {
     Carbon::setTestNow('2024-04-01 12:00:00');
 
@@ -143,8 +142,7 @@ class ReplayCommandTestEvent extends Event
         public int $add = 0,
         public int $subtract = 0,
         #[StateId(ReplayCommandTestState::class)] public ?int $state_id = null,
-    ) {
-    }
+    ) {}
 
     public function apply(ReplayCommandTestState $state)
     {
@@ -171,8 +169,7 @@ class ReplayCommandTestWormholeEvent extends Event
 {
     public function __construct(
         #[StateId(ReplayCommandTestWormholeState::class)] public ?int $state_id = null
-    ) {
-    }
+    ) {}
 
     public function apply(ReplayCommandTestWormholeState $state): void
     {
