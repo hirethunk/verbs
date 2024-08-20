@@ -111,10 +111,10 @@ it('creates new snapshots when replaying', function () {
     $snapshot1 = VerbSnapshot::firstWhere('state_id', $state1_id);
     $snapshot2 = VerbSnapshot::firstWhere('state_id', $state2_id);
 
-    expect($snapshot1->data)->toBe(json_encode(['count' => 1]));
+    expect($snapshot1->data)->toBe(json_encode(['count' => 1], JSON_PRETTY_PRINT));
     expect($snapshot1->created_at)->toEqual(CarbonImmutable::parse('2024-04-01 12:00:00'));
 
-    expect($snapshot2->data)->toBe(json_encode(['count' => 3]));
+    expect($snapshot2->data)->toBe(json_encode(['count' => 3], JSON_PRETTY_PRINT));
     expect($snapshot2->created_at)->toEqual(CarbonImmutable::parse('2024-04-01 12:00:00'));
 
     Carbon::setTestNow('2024-05-15 18:00:00');
@@ -130,10 +130,10 @@ it('creates new snapshots when replaying', function () {
     $snapshot1 = VerbSnapshot::firstWhere('state_id', $state1_id);
     $snapshot2 = VerbSnapshot::firstWhere('state_id', $state2_id);
 
-    expect($snapshot1->data)->toBe(json_encode(['count' => 1]));
+    expect($snapshot1->data)->toBe(json_encode(['count' => 1], JSON_PRETTY_PRINT));
     expect($snapshot1->created_at)->toEqual(CarbonImmutable::parse('2024-05-15 18:00:00'));
 
-    expect($snapshot2->data)->toBe(json_encode(['count' => 3]));
+    expect($snapshot2->data)->toBe(json_encode(['count' => 3], JSON_PRETTY_PRINT));
     expect($snapshot2->created_at)->toEqual(CarbonImmutable::parse('2024-05-15 18:00:00'));
 });
 
