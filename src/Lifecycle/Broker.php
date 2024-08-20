@@ -20,7 +20,8 @@ class Broker implements BrokersEvents
         protected MetadataManager $metadata,
         protected EventQueue $queue,
         protected StateManager $states,
-    ) {}
+    ) {
+    }
 
     public function fireIfValid(Event $event): ?Event
     {
@@ -100,6 +101,7 @@ class Broker implements BrokersEvents
                 });
         } finally {
             $this->states->setReplaying(false);
+            $this->states->writeSnapshots();
             $this->is_replaying = false;
         }
     }
