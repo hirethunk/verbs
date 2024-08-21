@@ -8,6 +8,7 @@ use Illuminate\Database\Query\Builder as BaseBuilder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\LazyCollection;
+use InvalidArgumentException;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Contracts\StoresEvents;
@@ -45,6 +46,45 @@ class EventStore implements StoresEvents
 
         return VerbEvent::insert($this->formatForWrite($events))
             && VerbStateEvent::insert($this->formatRelationshipsForWrite($events));
+    }
+
+    public function allRelatedIds(Bits|UuidInterface|AbstractUid|int|string|null $state_id, ?string $type): array
+    {
+        if ($state_id === null && $type === null) {
+            throw new InvalidArgumentException('You must specify a state ID or type.');
+        }
+
+        $known_state_ids = Collection::make([$state_id])->filter();
+        $known_event_ids = new Collection();
+
+        do {
+            $discovered_event_ids = VerbStateEvent::query()
+                ->select('event_id')
+                ->distinct()
+                ->whereNotIn('event_id', $known_event_ids)
+                ->when(
+                    value: $state_id === null,
+                    callback: fn (Builder $query) => $query->where('state_type', $type),
+                    default: fn (Builder $query) => $query->where('state_id', $state_id),
+                )
+                ->toBase()
+                ->pluck('event_id');
+
+            $discovered_state_ids = VerbStateEvent::query()
+                ->select('state_id')
+                ->distinct()
+                ->whereIn('event_id', $known_event_ids)
+                ->whereNotIn('state_id', $known_state_ids)
+                ->toBase()
+                ->distinct()
+                ->pluck('state_id');
+
+            $known_event_ids = $known_event_ids->merge($discovered_event_ids);
+            $known_state_ids = $known_state_ids->merge($discovered_state_ids);
+
+        } while ($discovered_state_ids->isNotEmpty());
+
+        return [$known_state_ids, $known_event_ids];
     }
 
     protected function readEvents(

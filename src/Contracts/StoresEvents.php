@@ -19,4 +19,6 @@ interface StoresEvents
 
     /** @param  Event[]  $events */
     public function write(array $events): bool;
+
+    public function allRelatedIds(Bits|UuidInterface|AbstractUid|int|string|null $state_id, ?string $type): array;
 }
