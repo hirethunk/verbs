@@ -12,6 +12,7 @@ use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\StateCacheSizeTooLow;
 use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\State;
+use Thunk\Verbs\Support\EventStateRegistry;
 use Thunk\Verbs\Support\StateInstanceCache;
 use UnexpectedValueException;
 
@@ -24,6 +25,7 @@ class StateManager
         protected StoresSnapshots $snapshots,
         protected StoresEvents $events,
         protected StateInstanceCache $states,
+        protected EventStateRegistry $event_states,
     ) {
         $this->states->onDiscard(fn () => throw_unless($this->is_replaying, StateCacheSizeTooLow::class));
     }
@@ -102,6 +104,8 @@ class StateManager
     public function reset(bool $include_storage = false): static
     {
         $this->states->reset();
+        $this->event_states->reset();
+
         $this->is_replaying = false;
 
         if ($include_storage) {

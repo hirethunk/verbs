@@ -75,6 +75,7 @@ class VerbsServiceProvider extends PackageServiceProvider
                 states: new StateInstanceCache(
                     capacity: $app->make(Repository::class)->get('verbs.state_cache_size', 100)
                 ),
+                event_states: $app->make(EventStateRegistry::class),
             );
         });
 
