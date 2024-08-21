@@ -3,6 +3,7 @@
 use Thunk\Verbs\Attributes\Autodiscovery\StateId;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Lifecycle\StateManager;
+use Thunk\Verbs\Models\VerbSnapshot;
 use Thunk\Verbs\State;
 
 /*
@@ -56,6 +57,26 @@ test('scenario 1', function () {
 
     expect($state1->counter)->toBe(0)
         ->and($state2->counter)->toBe(2);
+});
+
+test('partially up-to-date snapshots', function () {
+    StateReconstitutionTestEvent2::fire(state2_id: 1);
+    $event2 = StateReconstitutionTestEvent2::fire(state2_id: 1);
+    StateReconstitutionTestEvent2::fire(state2_id: 1);
+
+    Verbs::commit();
+
+    $snapshot = VerbSnapshot::query()->where('state_id', 1)->sole();
+    $snapshot->update([
+        'data' => '{"counter":2}',
+        'last_event_id' => $event2->id,
+    ]);
+
+    app(StateManager::class)->reset();
+
+    $state = StateReconstitutionTestState2::load(1);
+
+    expect($state->counter)->toBe(3);
 });
 
 class StateReconstitutionTestState1 extends State
