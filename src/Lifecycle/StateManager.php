@@ -25,7 +25,6 @@ class StateManager
         protected StoresSnapshots $snapshots,
         protected StoresEvents $events,
         protected StateInstanceCache $states,
-        protected EventStateRegistry $event_states,
     ) {
         $this->states->onDiscard(fn () => throw_unless($this->is_replaying, StateCacheSizeTooLow::class));
     }
@@ -104,7 +103,7 @@ class StateManager
     public function reset(bool $include_storage = false): static
     {
         $this->states->reset();
-        $this->event_states->reset();
+        app(EventStateRegistry::class)->reset();
 
         $this->is_replaying = false;
 
