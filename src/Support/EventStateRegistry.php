@@ -23,12 +23,12 @@ class EventStateRegistry
     public function __construct(
         protected StateManager $manager
     ) {
-        $this->discovered_states = new WeakMap();
+        $this->discovered_states = new WeakMap;
     }
 
     public function reset()
     {
-        $this->discovered_states = new WeakMap();
+        $this->discovered_states = new WeakMap;
     }
 
     public function getStates(Event $event): StateCollection
