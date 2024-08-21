@@ -8,7 +8,6 @@ use Illuminate\Database\Query\Builder as BaseBuilder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\LazyCollection;
-use InvalidArgumentException;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Contracts\StoresEvents;
@@ -57,18 +56,14 @@ class EventStore implements StoresEvents
             && VerbStateEvent::insert($this->formatRelationshipsForWrite($events));
     }
 
-    public function allRelatedIds(Bits|UuidInterface|AbstractUid|int|string|null $state_id, ?string $type): Collection
+    public function allRelatedIds(State $state, bool $singleton = false): Collection
     {
-        if ($state_id === null && $type === null) {
-            throw new InvalidArgumentException('You must specify a state ID or type.');
-        }
-
-        $known_state_ids = Collection::make([$state_id])->filter();
+        $known_state_ids = $singleton ? new Collection() : Collection::make([$state->id]);
         $known_event_ids = VerbStateEvent::query()
             ->distinct()
             ->select('event_id')
-            ->unless($type === null, fn (Builder $query) => $query->where('state_type', $type))
-            ->unless($state_id === null, fn (Builder $query) => $query->where('state_id', $state_id))
+            ->where('state_type', $state::class)
+            ->unless($singleton, fn (Builder $query) => $query->where('state_id', $state->id))
             ->toBase()
             ->pluck('event_id');
 
