@@ -64,23 +64,18 @@ class EventStore implements StoresEvents
         }
 
         $known_state_ids = Collection::make([$state_id])->filter();
-        $known_event_ids = new Collection;
+        $known_event_ids = VerbStateEvent::query()
+            ->distinct()
+            ->select('event_id')
+            ->unless($type === null, fn (Builder $query) => $query->where('state_type', $type))
+            ->unless($state_id === null, fn (Builder $query) => $query->where('state_id', $state_id))
+            ->toBase()
+            ->pluck('event_id');
 
         do {
-            $discovered_event_ids = VerbStateEvent::query()
-                ->select('event_id')
-                ->distinct()
-                ->whereNotIn('event_id', $known_event_ids)
-                ->unless($type === null, fn (Builder $query) => $query->where('state_type', $type))
-                ->unless($state_id === null, fn (Builder $query) => $query->where('state_id', $state_id))
-                ->toBase()
-                ->pluck('event_id');
-
-            $known_event_ids = $known_event_ids->merge($discovered_event_ids);
-
             $discovered_state_ids = VerbStateEvent::query()
-                ->select('state_id')
                 ->distinct()
+                ->select('state_id')
                 ->whereIn('event_id', $known_event_ids)
                 ->whereNotIn('state_id', $known_state_ids)
                 ->toBase()
@@ -89,7 +84,17 @@ class EventStore implements StoresEvents
 
             $known_state_ids = $known_state_ids->merge($discovered_state_ids);
 
-        } while ($discovered_state_ids->isNotEmpty());
+            $discovered_event_ids = VerbStateEvent::query()
+                ->distinct()
+                ->select('event_id')
+                ->whereNotIn('event_id', $known_event_ids)
+                ->whereIn('state_id', $known_state_ids)
+                ->toBase()
+                ->pluck('event_id');
+
+            $known_event_ids = $known_event_ids->merge($discovered_event_ids);
+
+        } while ($discovered_event_ids->isNotEmpty());
 
         return $known_event_ids;
     }

@@ -1,19 +1,9 @@
 <?php
 
 use Thunk\Verbs\Attributes\Autodiscovery\StateId;
-use Thunk\Verbs\Contracts\StoresEvents;
-use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Facades\Verbs;
-use Thunk\Verbs\Lifecycle\MetadataManager;
 use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\State;
-use Thunk\Verbs\Testing\EventStoreFake;
-use Thunk\Verbs\Testing\SnapshotStoreFake;
-
-beforeEach(function () {
-    app()->instance(StoresSnapshots::class, new SnapshotStoreFake);
-    app()->instance(StoresEvents::class, new EventStoreFake(app(MetadataManager::class)));
-});
 
 /*
  * The Problem(s)
@@ -38,6 +28,8 @@ beforeEach(function () {
  * - Reconstituting state2 re-runs the same apply method on state2 before also running it on state1
  * - Double-apply happens
  */
+
+// FIXME: We need to account for partially up-to-date snapshots that only need *some* events applied but not all
 
 test('scenario 1', function () {
     $state1_id = snowflake_id();
@@ -86,6 +78,7 @@ class StateReconstitutionTestEvent1 extends \Thunk\Verbs\Event
 
     public function apply(StateReconstitutionTestState1 $state1, StateReconstitutionTestState2 $state2): void
     {
+        dump("Applying event {$this->id}");
         $state1->counter = $state1->counter + $state2->counter;
         $state2->counter++;
     }
@@ -98,6 +91,7 @@ class StateReconstitutionTestEvent2 extends \Thunk\Verbs\Event
 
     public function apply(StateReconstitutionTestState2 $state2): void
     {
+        dump("Applying event {$this->id}");
         $state2->counter++;
     }
 }

@@ -18,6 +18,8 @@ use UnexpectedValueException;
 
 class StateManager
 {
+    protected bool $is_reconstituting = false;
+
     protected bool $is_replaying = false;
 
     public function __construct(
@@ -62,7 +64,12 @@ class StateManager
         }
 
         $this->remember($state);
-        $this->reconstitute($state);
+
+        if (! $this->is_reconstituting) {
+            $this->is_reconstituting = true;
+            $this->reconstitute($state);
+            $this->is_reconstituting = false;
+        }
 
         return $state;
     }
@@ -126,16 +133,11 @@ class StateManager
         // When we're replaying, the Broker is in charge of applying the correct events
         // to the State, so we only need to do it *outside* of replays.
         if (! $this->is_replaying) {
-            $this->events
-                ->read(state: $state, after_id: $state->last_event_id, singleton: $singleton)
-                ->each(fn (Event $event) => $this->dispatcher->apply($event));
-
-            // It's possible for an event to mutate state out of order when reconstituting,
-            // so as a precaution, we'll clear all other states from the store and reload
-            // them from snapshots as needed in the rest of the request.
-            // FIXME: We still need to figure this out
-            // $this->states->reset();
-            //$this->remember($state);
+            //            $this->events
+            //                ->read(state: $state, after_id: $state->last_event_id, singleton: $singleton)
+            //                ->each(fn (Event $event) => $this->dispatcher->apply($event));
+            (new StateReconstructor($this->events, $this->dispatcher))
+                ->reconstruct($state::class, $singleton ? null : $state->id);
         }
 
         return $this;
