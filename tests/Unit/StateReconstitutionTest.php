@@ -60,23 +60,33 @@ test('scenario 1', function () {
 });
 
 test('partially up-to-date snapshots', function () {
-    StateReconstitutionTestEvent2::fire(state2_id: 1);
-    $event2 = StateReconstitutionTestEvent2::fire(state2_id: 1);
-    StateReconstitutionTestEvent2::fire(state2_id: 1);
+    StateReconstitutionTestEvent2::fire(state2_id: 2);                         // 1=null, 2=1
+    $event2 = StateReconstitutionTestEvent2::fire(state2_id: 2);               // 1=null, 2=2
+    $event3 = StateReconstitutionTestEvent1::fire(state1_id: 1, state2_id: 2); // 1=2, 2=3
+    StateReconstitutionTestEvent2::fire(state2_id: 2);                         // 1=2, 2=4
+    StateReconstitutionTestEvent1::fire(state1_id: 1, state2_id: 2);           // 1=6, 2=5
 
     Verbs::commit();
 
-    $snapshot = VerbSnapshot::query()->where('state_id', 1)->sole();
-    $snapshot->update([
+    $snapshot1 = VerbSnapshot::query()->where('state_id', 1)->sole();
+    $snapshot1->update([
+        'data' => '{"counter":2}',
+        'last_event_id' => $event3->id,
+    ]);
+
+    $snapshot2 = VerbSnapshot::query()->where('state_id', 2)->sole();
+    $snapshot2->update([
         'data' => '{"counter":2}',
         'last_event_id' => $event2->id,
     ]);
 
     app(StateManager::class)->reset();
 
-    $state = StateReconstitutionTestState2::load(1);
+    $state1 = StateReconstitutionTestState1::load(1);
+    $state2 = StateReconstitutionTestState2::load(2);
 
-    expect($state->counter)->toBe(3);
+    expect($state1->counter)->toBe(6);
+    expect($state2->counter)->toBe(5);
 });
 
 class StateReconstitutionTestState1 extends State
