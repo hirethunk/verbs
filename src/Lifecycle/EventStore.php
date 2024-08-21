@@ -55,7 +55,7 @@ class EventStore implements StoresEvents
         }
 
         $known_state_ids = Collection::make([$state_id])->filter();
-        $known_event_ids = new Collection();
+        $known_event_ids = new Collection;
 
         do {
             $discovered_event_ids = VerbStateEvent::query()
