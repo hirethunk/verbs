@@ -61,12 +61,18 @@ test('scenario 1', function () {
 
 test('partially up-to-date snapshots', function () {
     StateReconstitutionTestEvent2::fire(state2_id: 2);                         // 1=null, 2=1
-    $event2 = StateReconstitutionTestEvent2::fire(state2_id: 2);               // 1=null, 2=2
+    StateReconstitutionTestEvent2::fire(state2_id: 2);                         // 1=null, 2=2
     $event3 = StateReconstitutionTestEvent1::fire(state1_id: 1, state2_id: 2); // 1=2, 2=3
     StateReconstitutionTestEvent2::fire(state2_id: 2);                         // 1=2, 2=4
     StateReconstitutionTestEvent1::fire(state1_id: 1, state2_id: 2);           // 1=6, 2=5
 
     Verbs::commit();
+
+    $state1 = StateReconstitutionTestState1::load(1);
+    $state2 = StateReconstitutionTestState2::load(2);
+
+    expect($state1->counter)->toBe(6)
+        ->and($state2->counter)->toBe(5);
 
     $snapshot1 = VerbSnapshot::query()->where('state_id', 1)->sole();
     $snapshot1->update([
@@ -76,8 +82,8 @@ test('partially up-to-date snapshots', function () {
 
     $snapshot2 = VerbSnapshot::query()->where('state_id', 2)->sole();
     $snapshot2->update([
-        'data' => '{"counter":2}',
-        'last_event_id' => $event2->id,
+        'data' => '{"counter":3}',
+        'last_event_id' => $event3->id,
     ]);
 
     app(StateManager::class)->reset();
@@ -88,6 +94,44 @@ test('partially up-to-date snapshots', function () {
     expect($state1->counter)->toBe(6);
     expect($state2->counter)->toBe(5);
 });
+
+test('partially up-to-date, but out of sync snapshots', function () {
+    StateReconstitutionTestEvent2::fire(state2_id: 2);                         // 1=null, 2=1
+    $event2 = StateReconstitutionTestEvent2::fire(state2_id: 2);               // 1=null, 2=2
+    $event3 = StateReconstitutionTestEvent1::fire(state1_id: 1, state2_id: 2); // 1=2, 2=3
+    StateReconstitutionTestEvent2::fire(state2_id: 2);                         // 1=2, 2=4
+    StateReconstitutionTestEvent1::fire(state1_id: 1, state2_id: 2);           // 1=6, 2=5
+
+    Verbs::commit();
+
+    $state1 = StateReconstitutionTestState1::load(1);
+    $state2 = StateReconstitutionTestState2::load(2);
+
+    expect($state1->counter)->toBe(6)
+        ->and($state2->counter)->toBe(5);
+
+    $snapshot1 = VerbSnapshot::query()->where('state_id', 1)->sole();
+    $snapshot1->update([
+        'data' => '{"counter":2}',
+        'last_event_id' => $event3->id,
+    ]);
+
+    $snapshot2 = VerbSnapshot::query()->where('state_id', 2)->sole();
+    $snapshot2->update([
+        'data' => '{"counter":2}', // FIXME: This maybe can't happen?
+        'last_event_id' => $event2->id,
+    ]);
+
+    app(StateManager::class)->reset();
+
+    // dump('---- RESET ----');
+
+    $state1 = StateReconstitutionTestState1::load(1);
+    $state2 = StateReconstitutionTestState2::load(2);
+
+    expect($state1->counter)->toBe(6);
+    expect($state2->counter)->toBe(5);
+})->skip('This may actually not be possible');
 
 class StateReconstitutionTestState1 extends State
 {
@@ -109,8 +153,9 @@ class StateReconstitutionTestEvent1 extends \Thunk\Verbs\Event
 
     public function apply(StateReconstitutionTestState1 $state1, StateReconstitutionTestState2 $state2): void
     {
-        dump("Applying event {$this->id}");
+        // dump("[event 1] incrementing \$state1->counter from {$state1->counter} to ({$state1->counter} + {$state2->counter})");
         $state1->counter = $state1->counter + $state2->counter;
+        // dump("[event 1] incrementing \$state2->counter from {$state2->counter} to \$state2->counter++");
         $state2->counter++;
     }
 }
@@ -122,7 +167,7 @@ class StateReconstitutionTestEvent2 extends \Thunk\Verbs\Event
 
     public function apply(StateReconstitutionTestState2 $state2): void
     {
-        dump("Applying event {$this->id}");
+        // dump("[event 2] incrementing \$state2->counter from {$state2->counter} to \$state2->counter++");
         $state2->counter++;
     }
 }

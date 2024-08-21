@@ -91,7 +91,7 @@ class EventStore implements StoresEvents
 
         } while ($discovered_event_ids->isNotEmpty());
 
-        return $known_event_ids;
+        return $known_event_ids->sort();
     }
 
     protected function readEvents(

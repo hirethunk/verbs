@@ -5,6 +5,7 @@ namespace Thunk\Verbs\Lifecycle;
 use Glhd\Bits\Bits;
 use Ramsey\Uuid\UuidInterface;
 use ReflectionClass;
+use RuntimeException;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Contracts\StoresSnapshots;
@@ -134,6 +135,27 @@ class StateManager
             try {
                 $this->is_reconstituting = true;
                 $this->events->get($this->events->allRelatedIds($state, $singleton))
+                    ->filter(function (Event $event) {
+                        $last_event_ids = $event->states()
+                            ->map(fn (State $state) => $state->last_event_id)
+                            ->filter();
+
+                        $min = $last_event_ids->min() ?? PHP_INT_MIN;
+                        $max = $last_event_ids->max() ?? PHP_INT_MIN;
+
+                        // If all states have had this or future events applied, just ignore them
+                        if ($min >= $event->id && $max >= $event->id) {
+                            return false;
+                        }
+
+                        // We should never be in a situation where some events are ahead and
+                        // others are behind, so if that's the case we'll throw an exception
+                        if ($max > $event->id && $min <= $event->id) {
+                            throw new RuntimeException('Trying to apply an event to states that are out of sync.');
+                        }
+
+                        return true;
+                    })
                     ->each($this->dispatcher->apply(...));
             } finally {
                 $this->is_reconstituting = false;
