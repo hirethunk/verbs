@@ -36,6 +36,15 @@ class EventStore implements StoresEvents
             ->map(fn (VerbEvent $model) => $model->event());
     }
 
+    public function get(iterable $ids): LazyCollection
+    {
+        return VerbEvent::query()
+            ->whereIn('id', collect($ids))
+            ->lazyById()
+            ->each(fn (VerbEvent $model) => $this->metadata->set($model->event(), $model->metadata()))
+            ->map(fn (VerbEvent $model) => $model->event());
+    }
+
     public function write(array $events): bool
     {
         if (empty($events)) {
@@ -48,7 +57,7 @@ class EventStore implements StoresEvents
             && VerbStateEvent::insert($this->formatRelationshipsForWrite($events));
     }
 
-    public function allRelatedIds(Bits|UuidInterface|AbstractUid|int|string|null $state_id, ?string $type): array
+    public function allRelatedIds(Bits|UuidInterface|AbstractUid|int|string|null $state_id, ?string $type): Collection
     {
         if ($state_id === null && $type === null) {
             throw new InvalidArgumentException('You must specify a state ID or type.');
@@ -62,13 +71,12 @@ class EventStore implements StoresEvents
                 ->select('event_id')
                 ->distinct()
                 ->whereNotIn('event_id', $known_event_ids)
-                ->when(
-                    value: $state_id === null,
-                    callback: fn (Builder $query) => $query->where('state_type', $type),
-                    default: fn (Builder $query) => $query->where('state_id', $state_id),
-                )
+                ->unless($type === null, fn (Builder $query) => $query->where('state_type', $type))
+                ->unless($state_id === null, fn (Builder $query) => $query->where('state_id', $state_id))
                 ->toBase()
                 ->pluck('event_id');
+
+            $known_event_ids = $known_event_ids->merge($discovered_event_ids);
 
             $discovered_state_ids = VerbStateEvent::query()
                 ->select('state_id')
@@ -79,12 +87,11 @@ class EventStore implements StoresEvents
                 ->distinct()
                 ->pluck('state_id');
 
-            $known_event_ids = $known_event_ids->merge($discovered_event_ids);
             $known_state_ids = $known_state_ids->merge($discovered_state_ids);
 
         } while ($discovered_state_ids->isNotEmpty());
 
-        return [$known_state_ids, $known_event_ids];
+        return $known_event_ids;
     }
 
     protected function readEvents(

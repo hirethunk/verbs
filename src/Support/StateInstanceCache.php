@@ -52,10 +52,6 @@ class StateInstanceCache
 
     public function forget(string|int $key): static
     {
-        if ($this->discard_callback) {
-            call_user_func($this->discard_callback, $this->cache[$key]);
-        }
-
         unset($this->cache[$key]);
 
         return $this;
@@ -78,6 +74,11 @@ class StateInstanceCache
         $this->cache = [];
 
         return $this;
+    }
+
+    public function all(): array
+    {
+        return $this->cache;
     }
 
     public function onDiscard(Closure $callback): static

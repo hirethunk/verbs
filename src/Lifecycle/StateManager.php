@@ -4,6 +4,7 @@ namespace Thunk\Verbs\Lifecycle;
 
 use Glhd\Bits\Bits;
 use Ramsey\Uuid\UuidInterface;
+use ReflectionClass;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Contracts\StoresSnapshots;
@@ -51,8 +52,12 @@ class StateManager
                 throw new UnexpectedValueException(sprintf('Expected State <%d> to be of type "%s" but got "%s"', $id, class_basename($type), class_basename($state)));
             }
         } else {
-            $state = $type::make();
+            // State::__construct() auto-registers the state with the StateManager, so we need to
+            // skip the constructor until we've already set the ID.
+            $reflect = new ReflectionClass($type);
+            $state = $reflect->newInstanceWithoutConstructor();
             $state->id = $id;
+            $state->__construct();
         }
 
         $this->remember($state);

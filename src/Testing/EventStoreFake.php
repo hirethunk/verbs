@@ -57,6 +57,16 @@ class EventStoreFake implements StoresEvents
         return true;
     }
 
+    public function allRelatedIds(Bits|UuidInterface|AbstractUid|int|string|null $state_id, ?string $type): Collection
+    {
+        // FIXME
+    }
+
+    public function get(iterable $ids): LazyCollection
+    {
+        // FIXME
+    }
+
     /** @return Collection<int, Event> */
     public function committed(string $class_name, ?Closure $filter = null): Collection
     {
