@@ -58,7 +58,7 @@ class EventStore implements StoresEvents
 
     public function allRelatedIds(State $state, bool $singleton = false): Collection
     {
-        $known_state_ids = $singleton ? new Collection() : Collection::make([$state->id]);
+        $known_state_ids = $singleton ? new Collection : Collection::make([$state->id]);
         $known_event_ids = VerbStateEvent::query()
             ->distinct()
             ->select('event_id')
