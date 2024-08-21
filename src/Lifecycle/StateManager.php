@@ -64,12 +64,7 @@ class StateManager
         }
 
         $this->remember($state);
-
-        if (! $this->is_reconstituting) {
-            $this->is_reconstituting = true;
-            $this->reconstitute($state);
-            $this->is_reconstituting = false;
-        }
+        $this->reconstitute($state);
 
         return $state;
     }
@@ -131,10 +126,18 @@ class StateManager
     protected function reconstitute(State $state, bool $singleton = false): static
     {
         // When we're replaying, the Broker is in charge of applying the correct events
-        // to the State, so we only need to do it *outside* of replays.
-        if (! $this->is_replaying) {
-            $this->events->get($this->events->allRelatedIds($state, $singleton))
-                ->each($this->dispatcher->apply(...));
+        // to the State, so we need to skip during replays. Similarly, if we're already
+        // reconstituting in a recursive call, the root call is responsible for applying
+        // events, so we should also skip in that case.
+
+        if (! $this->is_replaying && ! $this->is_reconstituting) {
+            try {
+                $this->is_reconstituting = true;
+                $this->events->get($this->events->allRelatedIds($state, $singleton))
+                    ->each($this->dispatcher->apply(...));
+            } finally {
+                $this->is_reconstituting = false;
+            }
         }
 
         return $this;
