@@ -8,7 +8,6 @@ use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Exceptions\StateCacheSizeTooLow;
 use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\StateInstanceCache;
@@ -23,9 +22,7 @@ class StateManager
         protected StoresSnapshots $snapshots,
         protected StoresEvents $events,
         protected StateInstanceCache $states,
-    ) {
-        $this->states->onDiscard(fn () => throw_unless($this->is_replaying, StateCacheSizeTooLow::class));
-    }
+    ) {}
 
     public function register(State $state): State
     {
