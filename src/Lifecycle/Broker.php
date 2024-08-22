@@ -66,6 +66,7 @@ class Broker implements BrokersEvents
         // FIXME: Only write changes + handle aggregate versioning
 
         $this->states->writeSnapshots();
+        $this->states->prune();
 
         foreach ($events as $event) {
             $this->metadata->setLastResults($event, $this->dispatcher->handle($event));
