@@ -5,6 +5,7 @@ namespace Thunk\Verbs\Lifecycle;
 use Glhd\Bits\Bits;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Builder as BaseBuilder;
+use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\LazyCollection;
@@ -15,6 +16,7 @@ use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\ConcurrencyException;
 use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Models\VerbEvent;
+use Thunk\Verbs\Models\VerbSnapshot;
 use Thunk\Verbs\Models\VerbStateEvent;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\Serializer;
@@ -56,7 +58,7 @@ class EventStore implements StoresEvents
             && VerbStateEvent::insert($this->formatRelationshipsForWrite($events));
     }
 
-    public function allRelatedIds(State $state, bool $singleton = false): Collection
+    public function summarize(State $state, bool $singleton = false): AggregateStateSummary
     {
         $known_state_ids = $singleton ? new Collection : Collection::make([$state->id]);
         $known_event_ids = VerbStateEvent::query()
@@ -91,7 +93,22 @@ class EventStore implements StoresEvents
 
         } while ($discovered_event_ids->isNotEmpty());
 
-        return $known_event_ids->sort();
+        $aggregates = VerbSnapshot::query()
+            ->toBase()
+            ->tap(fn (BaseBuilder $query) => $query->select([
+                $this->aggregateExpression($query, 'last_event_id', 'min'),
+                $this->aggregateExpression($query, 'last_event_id', 'max'),
+            ]))
+            ->whereIn('state_id', $known_state_ids)
+            ->first();
+
+        return new AggregateStateSummary(
+            state: $state,
+            related_event_ids: $discovered_event_ids,
+            related_state_ids: $discovered_state_ids,
+            min_applied_event_id: $aggregates->min_last_event_id,
+            max_applied_event_id: $aggregates->max_last_event_id,
+        );
     }
 
     protected function readEvents(
@@ -124,11 +141,7 @@ class EventStore implements StoresEvents
         $query->select([
             'state_type',
             'state_id',
-            DB::raw(sprintf(
-                'max(%s) as %s',
-                $query->getGrammar()->wrap('event_id'),
-                $query->getGrammar()->wrapTable('max_event_id')
-            )),
+            $this->aggregateExpression($query, 'event_id', 'max'),
         ]);
 
         $query->groupBy('state_type', 'state_id');
@@ -192,5 +205,15 @@ class EventStore implements StoresEvents
                 'updated_at' => now(),
             ]))
             ->all();
+    }
+
+    protected function aggregateExpression(BaseBuilder $query, string $column, string $function): Expression
+    {
+        return DB::raw(sprintf(
+            '%s(%s) as %s',
+            $function,
+            $query->getGrammar()->wrap($column),
+            $query->getGrammar()->wrapTable("{$function}_{$column}")
+        ));
     }
 }

@@ -3,11 +3,11 @@
 namespace Thunk\Verbs\Contracts;
 
 use Glhd\Bits\Bits;
-use Illuminate\Support\Collection;
 use Illuminate\Support\LazyCollection;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Lifecycle\AggregateStateSummary;
 use Thunk\Verbs\State;
 
 interface StoresEvents
@@ -23,5 +23,5 @@ interface StoresEvents
     /** @param  Event[]  $events */
     public function write(array $events): bool;
 
-    public function allRelatedIds(State $state, bool $singleton = false): Collection;
+    public function summarize(State $state, bool $singleton = false): AggregateStateSummary;
 }

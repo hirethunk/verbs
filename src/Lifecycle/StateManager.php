@@ -134,7 +134,10 @@ class StateManager
         if (! $this->is_replaying && ! $this->is_reconstituting) {
             try {
                 $this->is_reconstituting = true;
-                $this->events->get($this->events->allRelatedIds($state, $singleton))
+
+                $summary = $this->events->summarize($state, $singleton);
+
+                $this->events->get($summary->related_event_ids)
                     ->filter(function (Event $event) {
                         $last_event_ids = $event->states()
                             ->map(fn (State $state) => $state->last_event_id)
@@ -157,6 +160,7 @@ class StateManager
                         return true;
                     })
                     ->each($this->dispatcher->apply(...));
+
             } finally {
                 $this->is_reconstituting = false;
             }
