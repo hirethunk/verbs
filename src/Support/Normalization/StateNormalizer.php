@@ -22,6 +22,7 @@ class StateNormalizer implements DenormalizerInterface, NormalizerInterface
         if ($data instanceof State) {
             return $data;
         }
+
         return app(StateManager::class)->load((int) $data, $type);
     }
 
