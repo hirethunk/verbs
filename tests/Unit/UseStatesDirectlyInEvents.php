@@ -13,6 +13,23 @@ it('supports using states directly in events', function () {
     $this->assertTrue($contact_request->acknowledged);
 });
 
+it('supports using a nested state directly in events', function () {
+    $parent = ParentState::new();
+    $child = ChildState::new();
+    ChildAddedToParent::fire(
+        parent: $parent,
+        child: $child,
+    );
+
+    $this->assertEquals($child, $parent->child);
+
+    $this->assertEquals(0, $child->count);
+
+    NestedStateAccessed::fire(parent: $parent);
+
+    $this->assertEquals(1, $child->count);
+});
+
 class ContactRequestState extends State
 {
     public bool $acknowledged = false;
@@ -27,5 +44,37 @@ class ContactRequestAcknowledged extends Event
     public function apply()
     {
         $this->contact_request->acknowledged = true;
+    }
+}
+
+class ParentState extends State
+{
+    public ChildState $child;
+}
+
+class ChildState extends State
+{
+    public int $count = 0;
+}
+
+class ChildAddedToParent extends Event
+{
+    public ParentState $parent;
+
+    public ChildState $child;
+
+    public function applyToParentState()
+    {
+        $this->parent->child = $this->child;
+    }
+}
+
+class NestedStateAccessed extends Event
+{
+    public ParentState $parent;
+
+    public function apply()
+    {
+        $this->parent->child->count++; // 1
     }
 }
