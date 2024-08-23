@@ -60,6 +60,8 @@ class EventStore implements StoresEvents
 
     public function summarize(State $state, bool $singleton = false): AggregateStateSummary
     {
+        // FIXME: We probably either need to know the state types or go by snapshot ID
+
         $known_state_ids = $singleton ? new Collection : Collection::make([$state->id]);
         $known_event_ids = VerbStateEvent::query()
             ->distinct()

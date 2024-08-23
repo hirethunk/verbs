@@ -16,4 +16,6 @@ interface StoresSnapshots
     public function write(array $states): bool;
 
     public function reset(): bool;
+
+    public function delete(Bits|UuidInterface|AbstractUid|int|string ...$ids): bool;
 }

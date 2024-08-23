@@ -58,8 +58,7 @@ class StateManager
         } else {
             // State::__construct() auto-registers the state with the StateManager, so we need to
             // skip the constructor until we've already set the ID.
-            $reflect = new ReflectionClass($type);
-            $state = $reflect->newInstanceWithoutConstructor();
+            $state = (new ReflectionClass($type))->newInstanceWithoutConstructor();
             $state->id = $id;
             $state->__construct();
         }
@@ -137,28 +136,32 @@ class StateManager
 
                 $summary = $this->events->summarize($state, $singleton);
 
+                if ($summary->min_applied_event_id !== $summary->max_applied_event_id) {
+                    $this->snapshots->delete($summary->related_state_ids);
+                }
+
                 $this->events->get($summary->related_event_ids)
-                    ->filter(function (Event $event) {
-                        $last_event_ids = $event->states()
-                            ->map(fn (State $state) => $state->last_event_id)
-                            ->filter();
-
-                        $min = $last_event_ids->min() ?? PHP_INT_MIN;
-                        $max = $last_event_ids->max() ?? PHP_INT_MIN;
-
-                        // If all states have had this or future events applied, just ignore them
-                        if ($min >= $event->id && $max >= $event->id) {
-                            return false;
-                        }
-
-                        // We should never be in a situation where some events are ahead and
-                        // others are behind, so if that's the case we'll throw an exception
-                        if ($max > $event->id && $min <= $event->id) {
-                            throw new RuntimeException('Trying to apply an event to states that are out of sync.');
-                        }
-
-                        return true;
-                    })
+                    // ->filter(function (Event $event) {
+                    //     $last_event_ids = $event->states()
+                    //         ->map(fn (State $state) => $state->last_event_id)
+                    //         ->filter();
+                    //
+                    //     $min = $last_event_ids->min() ?? PHP_INT_MIN;
+                    //     $max = $last_event_ids->max() ?? PHP_INT_MIN;
+                    //
+                    //     // If all states have had this or future events applied, just ignore them
+                    //     if ($min >= $event->id && $max >= $event->id) {
+                    //         return false;
+                    //     }
+                    //
+                    //     // We should never be in a situation where some events are ahead and
+                    //     // others are behind, so if that's the case we'll throw an exception
+                    //     if ($max > $event->id && $min <= $event->id) {
+                    //         throw new RuntimeException('Trying to apply an event to states that are out of sync.');
+                    //     }
+                    //
+                    //     return true;
+                    // })
                     ->each($this->dispatcher->apply(...));
 
             } finally {
