@@ -2,6 +2,7 @@
 
 use Thunk\Verbs\Event;
 use Thunk\Verbs\State;
+use Thunk\Verbs\Support\StateCollection;
 
 it('supports using states directly in events', function () {
     $contact_request = ContactRequestState::new();
@@ -50,9 +51,28 @@ it('supports using a nested state directly in events', function () {
     $this->assertEquals(1, $child->count);
 });
 
+it('supports state collections', function () {
+    $contact_request1 = ContactRequestState::new();
+    $contact_request2 = ContactRequestState::new();
+
+    $contact_requests = new StateCollection([
+        $contact_request1,
+        $contact_request2,
+    ]);
+
+    ContactRequestsProcessed::commit(
+        contact_requests: $contact_requests
+    );
+
+    $this->assertTrue($contact_request1->processed);
+    $this->assertTrue($contact_request2->processed);
+});
+
 class ContactRequestState extends State
 {
     public bool $acknowledged = false;
+
+    public bool $processed = false;
 }
 
 class ContactRequestAcknowledged extends Event
@@ -64,6 +84,20 @@ class ContactRequestAcknowledged extends Event
     public function apply()
     {
         $this->contact_request->acknowledged = true;
+    }
+}
+
+class ContactRequestsProcessed extends Event
+{
+    public function __construct(
+        public StateCollection $contact_requests
+    ) {}
+
+    public function apply()
+    {
+        $this->contact_requests->each(
+            fn (ContactRequestState $contact_request) => $contact_request->processed = true
+        );
     }
 }
 
