@@ -26,7 +26,7 @@ it('accepts an id and loads the state', function () {
 it('supports using a nested state directly in events', function () {
     $parent = ParentState::new();
     $child = ChildState::new();
-    ChildAddedToParent::fire(
+    ChildAddedToParent::commit(
         parent: $parent,
         child: $child,
     );
@@ -35,7 +35,7 @@ it('supports using a nested state directly in events', function () {
 
     $this->assertEquals(0, $child->count);
 
-    NestedStateAccessed::fire(parent: $parent);
+    NestedStateAccessed::commit(parent: $parent);
 
     $this->assertEquals(1, $child->count);
 });
