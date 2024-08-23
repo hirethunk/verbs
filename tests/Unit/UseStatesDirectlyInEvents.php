@@ -23,6 +23,16 @@ it('accepts an id and loads the state', function () {
     $this->assertTrue($contact_request->acknowledged);
 });
 
+it('supports singleton states', function () {
+    $contact_request = ContactRequestState::singleton();
+
+    ContactRequestAcknowledged::commit(
+        contact_request: $contact_request
+    );
+
+    $this->assertTrue($contact_request->acknowledged);
+});
+
 it('supports using a nested state directly in events', function () {
     $parent = ParentState::new();
     $child = ChildState::new();
