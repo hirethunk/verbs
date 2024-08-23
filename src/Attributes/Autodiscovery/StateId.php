@@ -39,6 +39,12 @@ class StateId extends StateDiscoveryAttribute
             return $manager->make($id, $this->state_type);
         }
 
+        // If we allowed autofill, then we can assume that this creates a new state.
+        // This prevents having to try to load a snapshot that we know does not exist.
+        if ($this->autofill && $this->property->getType()->allowsNull()) {
+            return $manager->make($id, $this->state_type);
+        }
+
         return collect(Arr::wrap($id))
             ->map(fn ($id) => $manager->load($id, $this->state_type))
             ->all();
