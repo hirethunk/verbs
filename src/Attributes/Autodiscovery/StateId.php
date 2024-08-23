@@ -23,18 +23,20 @@ class StateId extends StateDiscoveryAttribute
         }
     }
 
-    public function discoverState(Event $event, StateManager $manager): array
+    public function discoverState(Event $event, StateManager $manager): State|array
     {
         $id = $this->property->getValue($event);
+
+        if (! is_array($id)) {
+            $this->alias ??= $this->inferAliasFromVariableName($this->property->getName());
+        }
 
         // If the ID hasn't been set yet, we'll automatically set one
         if ($id === null && $this->autofill) {
             $id = snowflake_id();
             $this->property->setValue($event, $id);
-        }
 
-        if (! is_array($id)) {
-            $this->alias ??= $this->inferAliasFromVariableName($this->property->getName());
+            return $manager->make($id, $this->state_type);
         }
 
         return collect(Arr::wrap($id))
