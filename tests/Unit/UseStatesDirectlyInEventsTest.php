@@ -5,33 +5,33 @@ use Thunk\Verbs\State;
 use Thunk\Verbs\Support\StateCollection;
 
 it('supports using states directly in events', function () {
-    $contact_request = ContactRequestState::new();
+    $user_request = UserRequestState::new();
 
-    ContactRequestAcknowledged::commit(
-        contact_request: $contact_request
+    UserRequestAcknowledged::commit(
+        user_request: $user_request
     );
 
-    $this->assertTrue($contact_request->acknowledged);
+    $this->assertTrue($user_request->acknowledged);
 });
 
 it('accepts an id and loads the state', function () {
-    $contact_request = ContactRequestState::new();
+    $user_request = UserRequestState::new();
 
-    ContactRequestAcknowledged::commit(
-        contact_request: $contact_request->id
+    UserRequestAcknowledged::commit(
+        user_request: $user_request->id
     );
 
-    $this->assertTrue($contact_request->acknowledged);
+    $this->assertTrue($user_request->acknowledged);
 });
 
 it('supports singleton states', function () {
-    $contact_request = ContactRequestState::singleton();
+    $user_request = UserRequestState::singleton();
 
-    ContactRequestAcknowledged::commit(
-        contact_request: $contact_request
+    UserRequestAcknowledged::commit(
+        user_request: $user_request
     );
 
-    $this->assertTrue($contact_request->acknowledged);
+    $this->assertTrue($user_request->acknowledged);
 });
 
 it('supports using a nested state directly in events', function () {
@@ -52,51 +52,51 @@ it('supports using a nested state directly in events', function () {
 });
 
 it('supports state collections', function () {
-    $contact_request1 = ContactRequestState::new();
-    $contact_request2 = ContactRequestState::new();
+    $user_request1 = UserRequestState::new();
+    $user_request2 = UserRequestState::new();
 
-    $contact_requests = new StateCollection([
-        $contact_request1,
-        $contact_request2,
+    $user_requests = new StateCollection([
+        $user_request1,
+        $user_request2,
     ]);
 
-    ContactRequestsProcessed::commit(
-        contact_requests: $contact_requests
+    UserRequestsProcessed::commit(
+        user_requests: $user_requests
     );
 
-    $this->assertTrue($contact_request1->processed);
-    $this->assertTrue($contact_request2->processed);
+    $this->assertTrue($user_request1->processed);
+    $this->assertTrue($user_request2->processed);
 });
 
-class ContactRequestState extends State
+class UserRequestState extends State
 {
     public bool $acknowledged = false;
 
     public bool $processed = false;
 }
 
-class ContactRequestAcknowledged extends Event
+class UserRequestAcknowledged extends Event
 {
     public function __construct(
-        public ContactRequestState $contact_request
+        public UserRequestState $user_request
     ) {}
 
     public function apply()
     {
-        $this->contact_request->acknowledged = true;
+        $this->user_request->acknowledged = true;
     }
 }
 
-class ContactRequestsProcessed extends Event
+class UserRequestsProcessed extends Event
 {
     public function __construct(
-        public StateCollection $contact_requests
+        public StateCollection $user_requests
     ) {}
 
     public function apply()
     {
-        $this->contact_requests->each(
-            fn (ContactRequestState $contact_request) => $contact_request->processed = true
+        $this->user_requests->each(
+            fn (UserRequestState $user_request) => $user_request->processed = true
         );
     }
 }
