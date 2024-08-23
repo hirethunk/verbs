@@ -13,6 +13,16 @@ it('supports using states directly in events', function () {
     $this->assertTrue($contact_request->acknowledged);
 });
 
+it('accepts an id and loads the state', function () {
+    $contact_request = ContactRequestState::new();
+
+    ContactRequestAcknowledged::commit(
+        contact_request: $contact_request->id
+    );
+
+    $this->assertTrue($contact_request->acknowledged);
+});
+
 it('supports using a nested state directly in events', function () {
     $parent = ParentState::new();
     $child = ChildState::new();
