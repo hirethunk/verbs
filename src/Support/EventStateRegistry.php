@@ -16,6 +16,7 @@ use Thunk\Verbs\State;
 class EventStateRegistry
 {
     protected array $discovered_attributes = [];
+
     protected array $discovered_properties = [];
 
     public function __construct(
@@ -120,6 +121,7 @@ class EventStateRegistry
         return collect($reflect->getProperties(ReflectionProperty::IS_PUBLIC))
             ->filter(function (ReflectionProperty $property) {
                 $propertyType = $property->getType()?->getName();
+
                 return $propertyType
                     && (is_subclass_of($propertyType, State::class) || $propertyType === State::class || $propertyType === StateCollection::class);
             })
