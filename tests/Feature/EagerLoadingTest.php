@@ -19,7 +19,7 @@ it('identifies the correct data when calling the attribute', function () {
         ->filter()
         ->values();
 
-    expect($attrs->all())->toBe([[TestEagerLoadingModel::class, 1337]]);
+    expect($attrs->all())->toBe([[TestEagerLoadingModel::class, $event, 'test_model_id', 'test_model']]);
 });
 
 it('eager-loads models for events', function () {
