@@ -3,7 +3,9 @@
 namespace Thunk\Verbs\Lifecycle;
 
 use Glhd\Bits\Bits;
+use LogicException;
 use Ramsey\Uuid\UuidInterface;
+use ReflectionClass;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Contracts\StoresSnapshots;
@@ -48,11 +50,9 @@ class StateManager
                 throw new UnexpectedValueException(sprintf('Expected State <%d> to be of type "%s" but got "%s"', $id, class_basename($type), class_basename($state)));
             }
         } else {
-            $state = $type::make();
-            $state->id = $id;
+            $state = $this->make($id, $type);
         }
 
-        $this->remember($state);
         $this->reconstitute($state);
 
         return $state;
@@ -77,6 +77,28 @@ class StateManager
         $this->reconstitute($state, singleton: true);
 
         return $state;
+    }
+
+    /**
+     * @template TState of State
+     *
+     * @param  class-string<TState>  $type
+     * @return TState
+     */
+    public function make(Bits|UuidInterface|AbstractUid|int|string $id, string $type): State
+    {
+        // If we've already instantiated this state, we'll load it
+        if ($existing = $this->states->get($this->key($id, $type))) {
+            return $existing;
+        }
+
+        // State::__construct() auto-registers the state with the StateManager,
+        // so we need to skip the constructor until we've already set the ID.
+        $state = (new ReflectionClass($type))->newInstanceWithoutConstructor();
+        $state->id = Id::from($id);
+        $state->__construct();
+
+        return $this->remember($state);
     }
 
     public function writeSnapshots(): bool
@@ -133,6 +155,14 @@ class StateManager
     protected function remember(State $state): State
     {
         $key = $this->key($state->id, $state::class);
+
+        if ($this->states->get($key) === $state) {
+            return $state;
+        }
+
+        if ($this->states->has($key)) {
+            throw new LogicException('Trying to remember state twice.');
+        }
 
         $this->states->put($key, $state);
 
