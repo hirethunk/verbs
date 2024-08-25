@@ -99,7 +99,7 @@ class Broker implements BrokersEvents
                         $afterEach($event);
                     }
 
-                    if ($iteration++ % 500 === 0) {
+                    if ($iteration++ % 500 === 0 && $this->states->willPrune()) {
                         $this->states->writeSnapshots();
                         $this->states->prune();
                     }
