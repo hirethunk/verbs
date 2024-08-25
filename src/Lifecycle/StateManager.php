@@ -125,6 +125,11 @@ class StateManager
         return $this;
     }
 
+    public function willPrune(): bool
+    {
+        return $this->states->willPrune();
+    }
+
     public function prune(): static
     {
         $this->states->prune();

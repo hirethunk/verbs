@@ -49,11 +49,19 @@ class SnapshotStore implements StoresSnapshots
             return true;
         }
 
-        return VerbSnapshot::upsert(
-            values: collect($states)->map($this->formatForWrite(...))->unique('id')->all(),
-            uniqueBy: ['id'],
-            update: ['data', 'last_event_id', 'updated_at']
-        );
+        foreach (array_chunk($states, 20) as $chunk) {
+            $upserted = VerbSnapshot::upsert(
+                values: collect($chunk)->map($this->formatForWrite(...))->unique('id')->all(),
+                uniqueBy: ['id'],
+                update: ['data', 'last_event_id', 'updated_at']
+            );
+
+            if (! $upserted) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public function reset(): bool
