@@ -86,14 +86,12 @@ class Broker implements BrokersEvents
         try {
             $this->states->reset(include_storage: true);
 
-            $iteration = 0;
-
             app(StoresEvents::class)->read()
                 ->chunk(500)
                 ->each(function (Enumerable $events) use ($beforeEach, $afterEach) {
                     EagerLoader::load(...$events);
 
-                    $events->each(function (Event $event) use ($beforeEach, $afterEach, &$iteration) {
+                    $events->each(function (Event $event) use ($beforeEach, $afterEach) {
                         $this->states->setReplaying(true);
 
                         if ($beforeEach) {
@@ -108,10 +106,8 @@ class Broker implements BrokersEvents
                         }
                     });
 
-                    if ($iteration++ % 500 === 0) {
-                        $this->states->writeSnapshots();
-                        $this->states->prune();
-                    }
+                    $this->states->writeSnapshots();
+                    $this->states->prune();
                 });
         } finally {
             $this->states->writeSnapshots();
