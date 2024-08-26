@@ -53,6 +53,7 @@ class StateManager
             $state = $this->make($id, $type);
         }
 
+        $this->remember($state);
         $this->reconstitute($state);
 
         return $state;
