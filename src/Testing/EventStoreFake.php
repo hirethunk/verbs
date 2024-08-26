@@ -60,12 +60,12 @@ class EventStoreFake implements StoresEvents
 
     public function summarize(State $state, bool $singleton = false): AggregateStateSummary
     {
-        // FIXME
+        return new AggregateStateSummary($state, collect(), collect(), null, null);
     }
 
     public function get(iterable $ids): LazyCollection
     {
-        // FIXME
+        return new LazyCollection();
     }
 
     /** @return Collection<int, Event> */

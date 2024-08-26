@@ -98,6 +98,7 @@ class EventStore implements StoresEvents
         $aggregates = VerbSnapshot::query()
             ->toBase()
             ->tap(fn (BaseBuilder $query) => $query->select([
+                $this->aggregateExpression($query, 'id', 'count'),
                 $this->aggregateExpression($query, 'last_event_id', 'min'),
                 $this->aggregateExpression($query, 'last_event_id', 'max'),
             ]))
@@ -106,10 +107,12 @@ class EventStore implements StoresEvents
 
         return new AggregateStateSummary(
             state: $state,
-            related_event_ids: $discovered_event_ids,
-            related_state_ids: $discovered_state_ids,
+            related_event_ids: $known_event_ids,
+            related_state_ids: $known_state_ids,
             min_applied_event_id: $aggregates->min_last_event_id,
             max_applied_event_id: $aggregates->max_last_event_id,
+            out_of_sync: ($aggregates->count_id && (int) $aggregates->count_id !== count($known_state_ids))
+                || $aggregates->min_last_event_id !== $aggregates->max_last_event_id,
         );
     }
 

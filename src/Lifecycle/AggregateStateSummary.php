@@ -13,5 +13,6 @@ class AggregateStateSummary
         public readonly Collection $related_state_ids,
         public readonly ?int $min_applied_event_id,
         public readonly ?int $max_applied_event_id,
+        public readonly bool $out_of_sync,
     ) {}
 }
