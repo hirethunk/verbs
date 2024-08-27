@@ -157,7 +157,7 @@ it('does not include the state ID or last_event_id in its payload', function () 
 });
 
 it('allows us to store a serializable class(es) as a property', function () {
-    $original_event = new EventWithPhpDocArray();
+    $original_event = new EventWithPhpDocArray;
 
     $serialized_data = app(Serializer::class)->serialize($original_event);
 
@@ -212,9 +212,8 @@ class EventWithConstructor extends Event
 class EventWithPhpDocArray extends Event
 {
     public function __construct(
-        public DTO $dto = new DTO(),
+        public DTO $dto = new DTO,
         /** @var DTO[] $dtos */
-        public array $dtos = [new DTO()]
-    ) {
-    }
+        public array $dtos = [new DTO]
+    ) {}
 }
