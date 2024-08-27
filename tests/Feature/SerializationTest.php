@@ -156,6 +156,19 @@ it('does not include the state ID or last_event_id in its payload', function () 
     expect($result)->toBe('{"__verbs_initialized":false,"name":"Demo"}');
 });
 
+it('allows us to store a serializable class(es) as a property', function () {
+    $original_event = new EventWithPhpDocArray();
+
+    $serialized_data = app(Serializer::class)->serialize($original_event);
+
+    expect($serialized_data)->toBe('{"dto":{"fqcn":"DTO","foo":1},"dtos":[{"fqcn":"DTO","foo":1}]}');
+
+    $deserialized_event = app(Serializer::class)->deserialize(EventWithPhpDocArray::class, $serialized_data);
+
+    expect($deserialized_event->dto)->toBeInstanceOf(DTO::class)
+        ->and($deserialized_event->dtos[0])->toBeInstanceOf(DTO::class);
+});
+
 class EventWithConstructorPromotion extends Event
 {
     public function __construct(
@@ -193,5 +206,15 @@ class EventWithConstructor extends Event
     public function __construct()
     {
         $this->constructed = true;
+    }
+}
+
+class EventWithPhpDocArray extends Event
+{
+    public function __construct(
+        public DTO $dto = new DTO(),
+        /** @var DTO[] $dtos */
+        public array $dtos = [new DTO()]
+    ) {
     }
 }

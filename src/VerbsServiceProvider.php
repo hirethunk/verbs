@@ -9,7 +9,9 @@ use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Support\DateFactory;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Symfony\Component\PropertyInfo\Extractor\PhpDocExtractor;
 use Symfony\Component\PropertyInfo\Extractor\ReflectionExtractor;
+use Symfony\Component\PropertyInfo\PropertyInfoExtractor;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
 use Symfony\Component\Serializer\Mapping\ClassDiscriminatorFromClassMetadata;
 use Symfony\Component\Serializer\Mapping\Factory\ClassMetadataFactory;
@@ -107,7 +109,11 @@ class VerbsServiceProvider extends PackageServiceProvider
                 : new AnnotationLoader;
 
             return new PropertyNormalizer(
-                propertyTypeExtractor: new ReflectionExtractor,
+                propertyTypeExtractor: new PropertyInfoExtractor(
+                    typeExtractors: [
+                        new PhpDocExtractor,
+                        new ReflectionExtractor,
+                    ]),
                 classDiscriminatorResolver: new ClassDiscriminatorFromClassMetadata(new ClassMetadataFactory($loader)),
             );
         });

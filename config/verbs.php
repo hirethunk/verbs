@@ -1,5 +1,6 @@
 <?php
 
+use Symfony\Component\Serializer\Normalizer\ArrayDenormalizer;
 use Symfony\Component\Serializer\Normalizer\BackedEnumNormalizer;
 use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 use Symfony\Component\Serializer\Normalizer\PropertyNormalizer;
@@ -42,6 +43,7 @@ return [
     'normalizers' => [
         SelfSerializingNormalizer::class,
         CollectionNormalizer::class,
+        ArrayDenormalizer::class,
         ModelNormalizer::class,
         StateNormalizer::class,
         BitsNormalizer::class,
