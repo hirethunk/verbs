@@ -68,11 +68,11 @@ return [
 
     /*
    |--------------------------------------------------------------------------
-   | Table Names
+   | Connection Names
    |--------------------------------------------------------------------------
    |
-   | By default, Verbs prefixes all of its table names with "verb_". However, you
-   | may wish to customize these table names to better fit your application.
+   | By default, Verbs will use your default database connection, However, you may
+   | wish to customize these connection names to better fit your application.
    |
    */
     'connections' => [
