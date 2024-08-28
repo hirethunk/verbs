@@ -4,6 +4,16 @@ use Thunk\Verbs\Models\VerbEvent;
 use Thunk\Verbs\Models\VerbSnapshot;
 use Thunk\Verbs\Models\VerbStateEvent;
 
+test('VerbEvent connection name can be configured', function () {
+    $expected_connection_name = 'events';
+
+    config()->set('verbs.connections.events', $expected_connection_name);
+
+    $verb_model = new VerbEvent;
+    $actual_connection_name = $verb_model->getConnectionName();
+    expect($expected_connection_name)->toBe($actual_connection_name);
+});
+
 test('VerbEvent table name can be configured', function () {
     $expected_table_name = 'verb_events';
 
@@ -24,6 +34,16 @@ test('VerbEvent table name can be configured with different table name', functio
     expect($expected_table_name)->toBe($actual_table_name);
 });
 
+test('VerbSnapshot connection name can be configured', function () {
+    $expected_connection_name = 'events';
+
+    config()->set('verbs.connections.snapshots', $expected_connection_name);
+
+    $verb_model = new VerbSnapshot;
+    $actual_connection_name = $verb_model->getConnectionName();
+    expect($expected_connection_name)->toBe($actual_connection_name);
+});
+
 test('VerbSnapshot table name can be configured', function () {
     $expected_table_name = 'verb_snapshots';
 
@@ -42,6 +62,16 @@ test('VerbSnapshot table name can be configured with different table name', func
     $actual_table_name = $verb_model->getTable();
 
     expect($expected_table_name)->toBe($actual_table_name);
+});
+
+test('VerbStateEvent connection name can be configured', function () {
+    $expected_connection_name = 'events';
+
+    config()->set('verbs.connections.state_events', $expected_connection_name);
+
+    $verb_model = new VerbStateEvent;
+    $actual_connection_name = $verb_model->getConnectionName();
+    expect($expected_connection_name)->toBe($actual_connection_name);
 });
 
 test('VerbStateEvent table name can be configured', function () {

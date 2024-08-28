@@ -67,6 +67,21 @@ return [
     ],
 
     /*
+   |--------------------------------------------------------------------------
+   | Table Names
+   |--------------------------------------------------------------------------
+   |
+   | By default, Verbs prefixes all of its table names with "verb_". However, you
+   | may wish to customize these table names to better fit your application.
+   |
+   */
+    'connections' => [
+        'events' => env('VERBS_EVENTS_CONNECTION'),
+        'snapshots' => env('VERBS_SNAPSHOT_CONNECTION'),
+        'state_events' => env('VERBS_STATE_EVENTS_CONNECTION'),
+    ],
+
+    /*
     |--------------------------------------------------------------------------
     | Table Names
     |--------------------------------------------------------------------------
