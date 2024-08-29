@@ -39,7 +39,7 @@ abstract class Migrations implements MigratesData
             try {
                 $data = $migration($data);
                 if (! is_array($data)) {
-                    throw new \TypeError();
+                    throw new \TypeError;
                 }
             } catch (\TypeError $e) {
                 throw new MigratorException("Migration Failed: v$key must accept and return an array");

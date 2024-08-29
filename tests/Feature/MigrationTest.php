@@ -208,7 +208,7 @@ it('throws an exception when strings are used as migration versions', function (
     $migrations = [
         'test' => fn () => [],
     ];
-    $migrator = new TestMigrations();
+    $migrator = new TestMigrations;
 
     $migrator::migrate($migrations, []);
 })->throws(MigratorException::class, 'integer');
@@ -319,7 +319,7 @@ class DtoWithMigrationClass implements SerializedByVerbs, ShouldMigrateData
 
     public static function migrations(): Migrations
     {
-        return new TestMigrations();
+        return new TestMigrations;
     }
 }
 
