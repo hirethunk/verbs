@@ -42,7 +42,7 @@ it('migrates with a Migrations class', function () {
 it('can migrate dtos in events', function () {
     $event = '{"dto":{"fqcn":"DTOWithMigration"}}';
 
-    $event = app(Serializer::class)->deserialize(EventWithDto::class, json_decode($event, true));
+    $event = app(Serializer::class)->deserialize(EventWithMigrationDto::class, json_decode($event, true));
 
     expect($event->dto->migrated)->toBeTrue();
 });
@@ -259,12 +259,12 @@ class DTOWithVersion implements SerializedByVerbs, ShouldMigrateData
     }
 }
 
-class DTO implements SerializedByVerbs
+class DTOPlain implements SerializedByVerbs
 {
     use NormalizeToPropertiesAndClassName;
 }
 
-class EventWithDto extends Event
+class EventWithMigrationDto extends Event
 {
     public function __construct(
         public DTOWithMigration $dto
