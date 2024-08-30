@@ -1,6 +1,5 @@
 <?php
 
-use Thunk\Verbs\Attributes\Migrations\MigrationUsing;
 use Thunk\Verbs\Attributes\Migrations\PropertyAdded;
 use Thunk\Verbs\Attributes\Migrations\PropertyAddedUsing;
 use Thunk\Verbs\Attributes\Migrations\PropertyMigrated;
@@ -30,6 +29,7 @@ it('migrates when deserializing', function (string|object $class, $data) {
     'DTO migration' => [DTOWithMigration::class, []],
     'DTO in events' => [EventWithMigrationDto::class, '{"dto":{"fqcn":"DTOWithMigration"}}'],
     'DTO in states' => [StateWithMigration::class, '{"dto":{"fqcn":"DTOWithMigration"}}'],
+    'DTO with attribute migrations' => [DtoWithAttributeMigrations::class, ['first_property' => 'initial']],
 ]);
 
 it('matches methods to migrations', function () {
@@ -252,7 +252,6 @@ it('generates migrations from attributes', function () {
         #[PropertyRemoved(version: 4, property: 'removed_property')]
         public function __construct() {}
 
-        #[MigrationUsing(version: 5)]
         #[PropertyAddedUsing(version: 2, property: 'added_property')]
         #[PropertyMigratedUsing(version: 3, property: 'migrated_property')]
         public function migrateProperty(array $data)
@@ -263,7 +262,7 @@ it('generates migrations from attributes', function () {
 
     $migrations = $object->migrations();
 
-    expect($migrations)->toHaveCount(6)->toHaveKeys([0, 1, 2, 3, 4, 5]);
+    expect($migrations)->toHaveCount(5)->toHaveKeys([0, 1, 2, 3, 4]);
 });
 
 it('Property Attributes can migrate data correctly', function (object|string $object, array $expected, array $initial) {
@@ -319,61 +318,12 @@ it('Property Attributes can migrate data correctly', function (object|string $ob
             return 'new_value';
         }
     }, ['migrated_property' => 'new_value', '__vn' => 0], ['migrated_property' => 'old_value']],
-    'PropertyRemoved' => [DTOWithPropertyRemovedAttribute::class, ['__vn' => 0], ['removed_property' => 'value']],
-    'MigrationUsing' => [new class
-    {
-        use HasMigrations;
-
-        #[MigrationUsing(version: 0)]
-        public function migrateProperty(array $data)
-        {
-            return ['migrated' => true];
-        }
-
-        public function __construct() {}
-    }, ['migrated' => true, '__vn' => 0], []],
+    'PropertyRemoved' => [DTOWithPropertyRemovedAttribute::class, ['__vn' => 0], ['removed_property' => 'value']]
 ]);
 
 // Test the multi-stage migration
 it('migrates data correctly through multiple stages', function () {
-    $target = new class implements ShouldMigrateData
-    {
-        use HasMigrations;
-
-        #[PropertyMigrated(version: 2, using: 'migrateProperty')]
-        #[PropertyAdded(version: 1, value: 'replaced')]
-        public string $first_property;
-
-        public string $second_property;
-
-        #[PropertyMigratedUsing(version: 3, property: 'first_property')]
-        public function secondMigration(array $data)
-        {
-            return $data['first_property'].'_twice';
-        }
-
-        public function migrateProperty(array $data)
-        {
-            return $data['first_property'].'_migrated';
-        }
-
-        #[PropertyAddedUsing(version: 4, property: 'second_property')]
-        public function add(array $data)
-        {
-            return 'added';
-        }
-
-        #[MigrationUsing(version: 5)]
-        public function finalMigration(array $data)
-        {
-            $final = $data['first_property'].'_'.$data['second_property'];
-
-            return ['final' => $final];
-        }
-
-        #[PropertyRemoved(version: 0, property: 'first_property')]
-        public function __construct() {}
-    };
+    $target = new DtoWithAttributeMigrations;
 
     $migrations = $target->migrations();
 
@@ -391,10 +341,7 @@ it('migrates data correctly through multiple stages', function () {
     expect($data)->toBe(['__vn' => 3, 'first_property' => 'replaced_migrated_twice']);
 
     $data = Migrator::migrate([4 => $migrations[4]], $data);
-    expect($data)->toBe(['__vn' => 4, 'first_property' => 'replaced_migrated_twice', 'second_property' => 'added']);
-
-    $data = Migrator::migrate([5 => $migrations[5]], $data);
-    expect($data)->toBe(['final' => 'replaced_migrated_twice_added', '__vn' => 5]);
+    expect($data)->toBe(['__vn' => 4, 'first_property' => 'replaced_migrated_twice', 'migrated' => true]);
 });
 
 class EventWithMigrationDto extends Event
@@ -439,3 +386,34 @@ class DTOWithPropertyRemovedAttribute implements ShouldMigrateData
 {
     use HasMigrations;
 }
+
+class DtoWithAttributeMigrations implements ShouldMigrateData
+{
+    use HasMigrations;
+
+    #[PropertyMigrated(version: 2, using: 'migrateProperty')]
+    #[PropertyAdded(version: 1, value: 'replaced')]
+    public string $first_property;
+
+    public bool $migrated;
+
+    #[PropertyMigratedUsing(version: 3, property: 'first_property')]
+    public function secondMigration(array $data)
+    {
+        return $data['first_property'].'_twice';
+    }
+
+    public function migrateProperty(array $data)
+    {
+        return $data['first_property'].'_migrated';
+    }
+
+    #[PropertyAddedUsing(version: 4, property: 'migrated')]
+    public function add(array $data)
+    {
+        return true;
+    }
+
+    #[PropertyRemoved(version: 0, property: 'first_property')]
+    public function __construct() {}
+};
