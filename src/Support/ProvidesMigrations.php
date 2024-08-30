@@ -1,6 +1,6 @@
 <?php
 
-namespace Thunk\Verbs\Attributes\Migrations;
+namespace Thunk\Verbs\Support;
 
 use Thunk\Verbs\Exceptions\MigratorException;
 

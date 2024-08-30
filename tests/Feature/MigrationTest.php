@@ -1,10 +1,17 @@
 <?php
 
+use Thunk\Verbs\Attributes\Migrations\MigrationUsing;
+use Thunk\Verbs\Attributes\Migrations\PropertyAdded;
+use Thunk\Verbs\Attributes\Migrations\PropertyAddedUsing;
+use Thunk\Verbs\Attributes\Migrations\PropertyMigrated;
+use Thunk\Verbs\Attributes\Migrations\PropertyMigratedUsing;
+use Thunk\Verbs\Attributes\Migrations\PropertyRemoved;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\MigratorException;
 use Thunk\Verbs\SerializedByVerbs;
 use Thunk\Verbs\ShouldMigrateData;
 use Thunk\Verbs\State;
+use Thunk\Verbs\Support\HasMigrations;
 use Thunk\Verbs\Support\Migrations;
 use Thunk\Verbs\Support\Migrator;
 use Thunk\Verbs\Support\Normalization\NormalizeToPropertiesAndClassName;
@@ -75,7 +82,10 @@ it('matches methods to migrations', function () {
 });
 
 it('throws exceptions for invalid migrations', function ($migrations, string $message) {
-    expect(fn () => Migrator::migrate($migrations, []))->toThrow(MigratorException::class, $message);
+    $data = [
+        'existing' => 'data',
+    ];
+    expect(fn () => Migrator::migrate($migrations, $data))->toThrow(MigratorException::class, $message);
 })->with([
     'bad return type' => [[
         0 => fn (array $data): string => '',
@@ -95,6 +105,65 @@ it('throws exceptions for invalid migrations', function ($migrations, string $me
     'string version' => [[
         'test' => fn () => [],
     ], 'integer'],
+    'duplicate attribute' => [new class implements ShouldMigrateData
+    {
+        use HasMigrations;
+
+        #[PropertyAdded(version: 0, value: 'default_value')]
+        public string $added_property;
+
+        #[PropertyAdded(version: 0, value: 'default_value')]
+        public string $added_property_duplicate;
+
+        public function __construct() {}
+    }, 'Duplicate migration version'],
+    'PropertyAdded respects existing data' => [new class implements ShouldMigrateData
+    {
+        use HasMigrations;
+
+        #[PropertyAdded(version: 0, value: 'default_value')]
+        public string $existing;
+    }, 'already exists'],
+    'PropertyRemoved fails if property does not exist' => [new class implements ShouldMigrateData
+    {
+        use HasMigrations;
+
+        #[PropertyRemoved(version: 0, property: 'non_existent')]
+        public function __construct() {}
+    }, 'does not exist'],
+    'PropertyMigrated fails if the using method does not exist' => [new class implements ShouldMigrateData
+    {
+        use HasMigrations;
+
+        #[PropertyMigrated(version: 0, using: 'method')]
+        public int $non_existent;
+
+        public function __construct() {}
+    }, 'does not exist'],
+    'PropertyMigratedUsing function should accept an array' => [new class implements ShouldMigrateData
+    {
+        use HasMigrations;
+
+        #[PropertyMigratedUsing(version: 0, property: 'property')]
+        public function non_existent(string $data): array
+        {
+            return [];
+        }
+
+        public function __construct() {}
+    }, 'array and return the new value'],
+    'PropertyAddedUsing function should accept an array' => [new class implements ShouldMigrateData
+    {
+        use HasMigrations;
+
+        #[PropertyAddedUsing(version: 0, property: 'property')]
+        public function non_existent(string $data): array
+        {
+            return [];
+        }
+
+        public function __construct() {}
+    }, 'array and return the new value'],
 ]);
 
 it('increments the migration version correctly', function () {
@@ -169,6 +238,165 @@ it('stores migration versions', function (string $class) {
     'SerializedByVerbs' => DTOWithMigration::class,
 ]);
 
+it('generates migrations from attributes', function () {
+    $object = new class
+    {
+        use HasMigrations;
+
+        #[PropertyAdded(version: 0, value: 'default_value')]
+        public string $added_property;
+
+        #[PropertyMigrated(version: 1, using: 'method')]
+        public string $migrated_property;
+
+        #[PropertyRemoved(version: 4, property: 'removed_property')]
+        public function __construct() {}
+
+        #[MigrationUsing(version: 5)]
+        #[PropertyAddedUsing(version: 2, property: 'added_property')]
+        #[PropertyMigratedUsing(version: 3, property: 'migrated_property')]
+        public function migrateProperty(array $data)
+        {
+            return $data;
+        }
+    };
+
+    $migrations = $object->migrations();
+
+    expect($migrations)->toHaveCount(6)->toHaveKeys([0, 1, 2, 3, 4, 5]);
+});
+
+it('Property Attributes can migrate data correctly', function (object|string $object, array $expected, array $initial) {
+    if (is_string($object)) {
+        $object = new $object;
+    }
+    $migrations = $object->migrations();
+    $data = Migrator::migrate($migrations, $initial);
+    expect($data)->toBe($expected);
+})->with([
+    'PropertyAdded' => [new class
+    {
+        use HasMigrations;
+
+        #[PropertyAdded(version: 0, value: 'default_value')]
+        public string $added_property;
+
+        public function __construct() {}
+    }, ['added_property' => 'default_value', '__vn' => 0], []],
+    'PropertyMigrated' => [new class
+    {
+        use HasMigrations;
+
+        #[PropertyMigrated(version: 0, using: 'migrateProperty')]
+        public string $migrated_property;
+
+        public function migrateProperty(array $data)
+        {
+            return 'default_value';
+        }
+
+        public function __construct() {}
+    }, ['migrated_property' => 'default_value', '__vn' => 0], ['migrated_property' => 'previous']],
+    'PropertyAddedUsing' => [new class
+    {
+        use HasMigrations;
+
+        #[PropertyAddedUsing(version: 0, property: 'added_property')]
+        public function migrateProperty(array $data)
+        {
+            return 'default_value';
+        }
+
+        public function __construct() {}
+    }, ['added_property' => 'default_value', '__vn' => 0], []],
+    'PropertyMigratedUsing' => [new class implements ShouldMigrateData
+    {
+        use HasMigrations;
+
+        #[PropertyMigratedUsing(version: 0, property: 'migrated_property')]
+        public function migrateProperty(array $data)
+        {
+            return 'new_value';
+        }
+    }, ['migrated_property' => 'new_value', '__vn' => 0], ['migrated_property' => 'old_value']],
+    'PropertyRemoved' => [DTOWithPropertyRemovedAttribute::class, ['__vn' => 0], ['removed_property' => 'value']],
+    'MigrationUsing' => [new class
+    {
+        use HasMigrations;
+
+        #[MigrationUsing(version: 0)]
+        public function migrateProperty(array $data)
+        {
+            return ['migrated' => true];
+        }
+
+        public function __construct() {}
+    }, ['migrated' => true, '__vn' => 0], []],
+]);
+
+// Test the multi-stage migration
+it('migrates data correctly through multiple stages', function () {
+    $target = new class implements ShouldMigrateData
+    {
+        use HasMigrations;
+
+        #[PropertyMigrated(version: 2, using: 'migrateProperty')]
+        #[PropertyAdded(version: 1, value: 'replaced')]
+        public string $first_property;
+
+        public string $second_property;
+
+        #[PropertyMigratedUsing(version: 3, property: 'first_property')]
+        public function secondMigration(array $data)
+        {
+            return $data['first_property'].'_twice';
+        }
+
+        public function migrateProperty(array $data)
+        {
+            return $data['first_property'].'_migrated';
+        }
+
+        #[PropertyAddedUsing(version: 4, property: 'second_property')]
+        public function add(array $data)
+        {
+            return 'added';
+        }
+
+        #[MigrationUsing(version: 5)]
+        public function finalMigration(array $data)
+        {
+            $final = $data['first_property'].'_'.$data['second_property'];
+
+            return ['final' => $final];
+        }
+
+        #[PropertyRemoved(version: 0, property: 'first_property')]
+        public function __construct() {}
+    };
+
+    $migrations = $target->migrations();
+
+    $initialData = ['first_property' => 'initial'];
+    $data = Migrator::migrate([$migrations[0]], $initialData);
+    expect($data)->toBe(['__vn' => 0]);
+
+    $data = Migrator::migrate([1 => $migrations[1]], $data);
+    expect($data)->toBe(['__vn' => 1, 'first_property' => 'replaced']);
+
+    $data = Migrator::migrate([2 => $migrations[2]], $data);
+    expect($data)->toBe(['__vn' => 2, 'first_property' => 'replaced_migrated']);
+
+    $data = Migrator::migrate([3 => $migrations[3]], $data);
+    expect($data)->toBe(['__vn' => 3, 'first_property' => 'replaced_migrated_twice']);
+
+    $data = Migrator::migrate([4 => $migrations[4]], $data);
+    expect($data)->toBe(['__vn' => 4, 'first_property' => 'replaced_migrated_twice', 'second_property' => 'added']);
+
+    $data = Migrator::migrate([5 => $migrations[5]], $data);
+    expect($data)->toBe(['final' => 'replaced_migrated_twice_added', '__vn' => 5]);
+});
+
 class EventWithMigrationDto extends Event
 {
     public function __construct(public DTOWithMigration $dto) {}
@@ -204,4 +432,10 @@ class StateWithMigration extends State implements ShouldMigrateData
     {
         return [0 => fn ($data) => array_merge($data, ['migrated' => true])];
     }
+}
+
+#[PropertyRemoved(0, 'removed_property')]
+class DTOWithPropertyRemovedAttribute implements ShouldMigrateData
+{
+    use HasMigrations;
 }
