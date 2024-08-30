@@ -4,7 +4,7 @@ namespace Thunk\Verbs\Support;
 
 use Thunk\Verbs\Exceptions\MigratorException;
 
-trait ProvidesMigrations
+trait HasMigrationMethods
 {
     /**
      * @throws MigratorException

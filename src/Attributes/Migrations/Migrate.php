@@ -5,7 +5,7 @@ namespace Thunk\Verbs\Attributes\Migrations;
 use Thunk\Verbs\Exceptions\MigratorException;
 
 #[\Attribute(\Attribute::IS_REPEATABLE | \Attribute::TARGET_PROPERTY)]
-class PropertyMigrated
+class Migrate
 {
     public function __construct(
         public int $version,

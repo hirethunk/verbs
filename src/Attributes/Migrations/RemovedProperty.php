@@ -5,7 +5,7 @@ namespace Thunk\Verbs\Attributes\Migrations;
 use Thunk\Verbs\Exceptions\MigratorException;
 
 #[\Attribute(\Attribute::TARGET_CLASS | \Attribute::TARGET_METHOD)]
-class PropertyRemoved
+class RemovedProperty
 {
     public function __construct(
         public int $version,

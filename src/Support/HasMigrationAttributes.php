@@ -2,15 +2,14 @@
 
 namespace Thunk\Verbs\Support;
 
-use Thunk\Verbs\Attributes\Migrations\MigrationUsing;
-use Thunk\Verbs\Attributes\Migrations\PropertyAdded;
-use Thunk\Verbs\Attributes\Migrations\PropertyAddedUsing;
-use Thunk\Verbs\Attributes\Migrations\PropertyMigrated;
-use Thunk\Verbs\Attributes\Migrations\PropertyMigratedUsing;
-use Thunk\Verbs\Attributes\Migrations\PropertyRemoved;
+use Thunk\Verbs\Attributes\Migrations\Add;
+use Thunk\Verbs\Attributes\Migrations\AddUsing;
+use Thunk\Verbs\Attributes\Migrations\Migrate;
+use Thunk\Verbs\Attributes\Migrations\MigrateUsing;
+use Thunk\Verbs\Attributes\Migrations\RemovedProperty;
 use Thunk\Verbs\Exceptions\MigratorException;
 
-trait HasMigrations
+trait HasMigrationAttributes
 {
     public function migrations(): Migrations|array
     {
@@ -51,19 +50,19 @@ trait HasMigrations
         foreach ($attributes as $attribute) {
             $attrInstance = $attribute->newInstance();
 
-            if ($attrInstance instanceof PropertyMigratedUsing) {
+            if ($attrInstance instanceof MigrateUsing) {
                 $migrations = $this->setMigrationForVersion($attrInstance->version, $migrations, function (array $data) use ($method, $attrInstance) {
                     return $attrInstance->migrate(static::class, $method->getName(), $data);
                 });
             }
 
-            if ($attrInstance instanceof PropertyAddedUsing) {
+            if ($attrInstance instanceof AddUsing) {
                 $migrations = $this->setMigrationForVersion($attrInstance->version, $migrations, function (array $data) use ($method, $attrInstance) {
                     return $attrInstance->migrate(static::class, $method->getName(), $data);
                 });
             }
 
-            if ($attrInstance instanceof PropertyRemoved) {
+            if ($attrInstance instanceof RemovedProperty) {
                 $migrations = $this->setMigrationForVersion($attrInstance->version, $migrations, function (array $data) use ($attrInstance) {
                     return $attrInstance->migrate($data);
                 });
@@ -86,13 +85,13 @@ trait HasMigrations
         foreach ($attributes as $attribute) {
             $attrInstance = $attribute->newInstance();
 
-            if ($attrInstance instanceof PropertyAdded) {
+            if ($attrInstance instanceof Add) {
                 $migrations = $this->setmigrationForVersion($attrInstance->version, $migrations, function (array $data) use ($property, $attrInstance) {
                     return $attrInstance->migrate($property->getName(), $data);
                 });
             }
 
-            if ($attrInstance instanceof PropertyMigrated) {
+            if ($attrInstance instanceof Migrate) {
                 $migrations = $this->setMigrationForVersion($attrInstance->version, $migrations, function (array $data) use ($property, $attrInstance) {
                     return $attrInstance->migrate(static::class, $property->getName(), $data);
                 });
@@ -109,7 +108,7 @@ trait HasMigrations
         foreach ($attributes as $attribute) {
             $attrInstance = $attribute->newInstance();
 
-            if ($attrInstance instanceof PropertyRemoved) {
+            if ($attrInstance instanceof RemovedProperty) {
                 $migrations = $this->setMigrationForVersion($attrInstance->version, $migrations, function (array $data) use ($attrInstance) {
                     return $attrInstance->migrate($data);
                 });

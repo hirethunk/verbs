@@ -5,7 +5,7 @@ namespace Thunk\Verbs\Attributes\Migrations;
 use Thunk\Verbs\Exceptions\MigratorException;
 
 #[\Attribute(\Attribute::TARGET_METHOD)]
-class PropertyMigratedUsing
+class AddUsing
 {
     public function __construct(
         public int $version,
@@ -17,7 +17,6 @@ class PropertyMigratedUsing
         $reflect = new \ReflectionClass($target);
 
         $method = $reflect->getMethod($using);
-
         $instance = $reflect->newInstanceWithoutConstructor();
         $method = $method->getClosure($instance);
         try {
@@ -25,6 +24,7 @@ class PropertyMigratedUsing
         } catch (\TypeError $e) {
             throw new MigratorException("Method $using should accept an array and return the new value for $this->property.");
         }
+        $data[$this->property] = $method($data);
 
         return $data;
     }

@@ -5,7 +5,7 @@ namespace Thunk\Verbs\Attributes\Migrations;
 use Thunk\Verbs\Exceptions\MigratorException;
 
 #[\Attribute(\Attribute::TARGET_PROPERTY)]
-class PropertyAdded
+class Add
 {
     public function __construct(
         public int $version,

@@ -6,5 +6,5 @@ use Thunk\Verbs\ShouldMigrateData;
 
 abstract class Migrations implements ShouldMigrateData
 {
-    use ProvidesMigrations;
+    use HasMigrationMethods;
 }

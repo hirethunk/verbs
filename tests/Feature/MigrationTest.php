@@ -1,16 +1,16 @@
 <?php
 
-use Thunk\Verbs\Attributes\Migrations\PropertyAdded;
-use Thunk\Verbs\Attributes\Migrations\PropertyAddedUsing;
-use Thunk\Verbs\Attributes\Migrations\PropertyMigrated;
-use Thunk\Verbs\Attributes\Migrations\PropertyMigratedUsing;
-use Thunk\Verbs\Attributes\Migrations\PropertyRemoved;
+use Thunk\Verbs\Attributes\Migrations\Add;
+use Thunk\Verbs\Attributes\Migrations\AddUsing;
+use Thunk\Verbs\Attributes\Migrations\Migrate;
+use Thunk\Verbs\Attributes\Migrations\MigrateUsing;
+use Thunk\Verbs\Attributes\Migrations\RemovedProperty;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\MigratorException;
 use Thunk\Verbs\SerializedByVerbs;
 use Thunk\Verbs\ShouldMigrateData;
 use Thunk\Verbs\State;
-use Thunk\Verbs\Support\HasMigrations;
+use Thunk\Verbs\Support\HasMigrationAttributes;
 use Thunk\Verbs\Support\Migrations;
 use Thunk\Verbs\Support\Migrator;
 use Thunk\Verbs\Support\Normalization\NormalizeToPropertiesAndClassName;
@@ -107,44 +107,44 @@ it('throws exceptions for invalid migrations', function ($migrations, string $me
     ], 'integer'],
     'duplicate attribute' => [new class implements ShouldMigrateData
     {
-        use HasMigrations;
+        use HasMigrationAttributes;
 
-        #[PropertyAdded(version: 0, value: 'default_value')]
+        #[Add(version: 0, value: 'default_value')]
         public string $added_property;
 
-        #[PropertyAdded(version: 0, value: 'default_value')]
+        #[Add(version: 0, value: 'default_value')]
         public string $added_property_duplicate;
 
         public function __construct() {}
     }, 'Duplicate migration version'],
     'PropertyAdded respects existing data' => [new class implements ShouldMigrateData
     {
-        use HasMigrations;
+        use HasMigrationAttributes;
 
-        #[PropertyAdded(version: 0, value: 'default_value')]
+        #[Add(version: 0, value: 'default_value')]
         public string $existing;
     }, 'already exists'],
     'PropertyRemoved fails if property does not exist' => [new class implements ShouldMigrateData
     {
-        use HasMigrations;
+        use HasMigrationAttributes;
 
-        #[PropertyRemoved(version: 0, property: 'non_existent')]
+        #[RemovedProperty(version: 0, property: 'non_existent')]
         public function __construct() {}
     }, 'does not exist'],
     'PropertyMigrated fails if the using method does not exist' => [new class implements ShouldMigrateData
     {
-        use HasMigrations;
+        use HasMigrationAttributes;
 
-        #[PropertyMigrated(version: 0, using: 'method')]
+        #[Migrate(version: 0, using: 'method')]
         public int $non_existent;
 
         public function __construct() {}
     }, 'does not exist'],
     'PropertyMigratedUsing function should accept an array' => [new class implements ShouldMigrateData
     {
-        use HasMigrations;
+        use HasMigrationAttributes;
 
-        #[PropertyMigratedUsing(version: 0, property: 'property')]
+        #[MigrateUsing(version: 0, property: 'property')]
         public function non_existent(string $data): array
         {
             return [];
@@ -154,9 +154,9 @@ it('throws exceptions for invalid migrations', function ($migrations, string $me
     }, 'array and return the new value'],
     'PropertyAddedUsing function should accept an array' => [new class implements ShouldMigrateData
     {
-        use HasMigrations;
+        use HasMigrationAttributes;
 
-        #[PropertyAddedUsing(version: 0, property: 'property')]
+        #[AddUsing(version: 0, property: 'property')]
         public function non_existent(string $data): array
         {
             return [];
@@ -241,19 +241,19 @@ it('stores migration versions', function (string $class) {
 it('generates migrations from attributes', function () {
     $object = new class
     {
-        use HasMigrations;
+        use HasMigrationAttributes;
 
-        #[PropertyAdded(version: 0, value: 'default_value')]
+        #[Add(version: 0, value: 'default_value')]
         public string $added_property;
 
-        #[PropertyMigrated(version: 1, using: 'method')]
+        #[Migrate(version: 1, using: 'method')]
         public string $migrated_property;
 
-        #[PropertyRemoved(version: 4, property: 'removed_property')]
+        #[RemovedProperty(version: 4, property: 'removed_property')]
         public function __construct() {}
 
-        #[PropertyAddedUsing(version: 2, property: 'added_property')]
-        #[PropertyMigratedUsing(version: 3, property: 'migrated_property')]
+        #[AddUsing(version: 2, property: 'added_property')]
+        #[MigrateUsing(version: 3, property: 'migrated_property')]
         public function migrateProperty(array $data)
         {
             return $data;
@@ -275,18 +275,18 @@ it('Property Attributes can migrate data correctly', function (object|string $ob
 })->with([
     'PropertyAdded' => [new class
     {
-        use HasMigrations;
+        use HasMigrationAttributes;
 
-        #[PropertyAdded(version: 0, value: 'default_value')]
+        #[Add(version: 0, value: 'default_value')]
         public string $added_property;
 
         public function __construct() {}
     }, ['added_property' => 'default_value', '__vn' => 0], []],
     'PropertyMigrated' => [new class
     {
-        use HasMigrations;
+        use HasMigrationAttributes;
 
-        #[PropertyMigrated(version: 0, using: 'migrateProperty')]
+        #[Migrate(version: 0, using: 'migrateProperty')]
         public string $migrated_property;
 
         public function migrateProperty(array $data)
@@ -298,9 +298,9 @@ it('Property Attributes can migrate data correctly', function (object|string $ob
     }, ['migrated_property' => 'default_value', '__vn' => 0], ['migrated_property' => 'previous']],
     'PropertyAddedUsing' => [new class
     {
-        use HasMigrations;
+        use HasMigrationAttributes;
 
-        #[PropertyAddedUsing(version: 0, property: 'added_property')]
+        #[AddUsing(version: 0, property: 'added_property')]
         public function migrateProperty(array $data)
         {
             return 'default_value';
@@ -310,9 +310,9 @@ it('Property Attributes can migrate data correctly', function (object|string $ob
     }, ['added_property' => 'default_value', '__vn' => 0], []],
     'PropertyMigratedUsing' => [new class implements ShouldMigrateData
     {
-        use HasMigrations;
+        use HasMigrationAttributes;
 
-        #[PropertyMigratedUsing(version: 0, property: 'migrated_property')]
+        #[MigrateUsing(version: 0, property: 'migrated_property')]
         public function migrateProperty(array $data)
         {
             return 'new_value';
@@ -381,23 +381,25 @@ class StateWithMigration extends State implements ShouldMigrateData
     }
 }
 
-#[PropertyRemoved(0, 'removed_property')]
+#[RemovedProperty(0, 'removed_property')]
 class DTOWithPropertyRemovedAttribute implements ShouldMigrateData
 {
-    use HasMigrations;
+    use HasMigrationAttributes;
 }
 
-class DtoWithAttributeMigrations implements ShouldMigrateData
+#[RemovedProperty(version: 0, property: 'first_property')]
+class DtoWithAttributeMigrations implements SerializedByVerbs, ShouldMigrateData
 {
-    use HasMigrations;
+    use HasMigrationAttributes;
+    use NormalizeToPropertiesAndClassName;
 
-    #[PropertyMigrated(version: 2, using: 'migrateProperty')]
-    #[PropertyAdded(version: 1, value: 'replaced')]
+    #[Migrate(version: 2, using: 'migrateProperty')]
+    #[Add(version: 1, value: 'replaced')]
     public string $first_property;
 
     public bool $migrated;
 
-    #[PropertyMigratedUsing(version: 3, property: 'first_property')]
+    #[MigrateUsing(version: 3, property: 'first_property')]
     public function secondMigration(array $data)
     {
         return $data['first_property'].'_twice';
@@ -408,12 +410,9 @@ class DtoWithAttributeMigrations implements ShouldMigrateData
         return $data['first_property'].'_migrated';
     }
 
-    #[PropertyAddedUsing(version: 4, property: 'migrated')]
+    #[AddUsing(version: 4, property: 'migrated')]
     public function add(array $data)
     {
         return true;
     }
-
-    #[PropertyRemoved(version: 0, property: 'first_property')]
-    public function __construct() {}
 }
