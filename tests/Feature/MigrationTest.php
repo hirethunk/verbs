@@ -318,7 +318,7 @@ it('Property Attributes can migrate data correctly', function (object|string $ob
             return 'new_value';
         }
     }, ['migrated_property' => 'new_value', '__vn' => 0], ['migrated_property' => 'old_value']],
-    'PropertyRemoved' => [DTOWithPropertyRemovedAttribute::class, ['__vn' => 0], ['removed_property' => 'value']]
+    'PropertyRemoved' => [DTOWithPropertyRemovedAttribute::class, ['__vn' => 0], ['removed_property' => 'value']],
 ]);
 
 // Test the multi-stage migration
@@ -416,4 +416,4 @@ class DtoWithAttributeMigrations implements ShouldMigrateData
 
     #[PropertyRemoved(version: 0, property: 'first_property')]
     public function __construct() {}
-};
+}
