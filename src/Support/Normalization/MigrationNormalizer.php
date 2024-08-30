@@ -9,7 +9,7 @@ use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Component\Serializer\SerializerAwareInterface;
 use Thunk\Verbs\ShouldMigrateData;
-use Thunk\Verbs\Support\Migrations;
+use Thunk\Verbs\Support\Migrator;
 
 class MigrationNormalizer implements DenormalizerInterface, NormalizerInterface, SerializerAwareInterface
 {
@@ -64,9 +64,11 @@ class MigrationNormalizer implements DenormalizerInterface, NormalizerInterface,
         }
 
         $reflect = new ReflectionClass($type);
+
+        /** @var ShouldMigrateData $instance */
         $instance = $reflect->newInstanceWithoutConstructor();
 
-        $data = Migrations::migrate($instance->migrations(), $data);
+        $data = Migrator::migrate($instance, $data);
         $data = \Arr::except($data, ['__vn']);
 
         $context['migrated'] = true;

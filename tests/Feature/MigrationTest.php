@@ -6,54 +6,24 @@ use Thunk\Verbs\SerializedByVerbs;
 use Thunk\Verbs\ShouldMigrateData;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\Migrations;
+use Thunk\Verbs\Support\Migrator;
 use Thunk\Verbs\Support\Normalization\NormalizeToPropertiesAndClassName;
 use Thunk\Verbs\Support\Serializer;
 
-it('migrates an Event when deserializing', function () {
-    $event = app(Serializer::class)->deserialize(EventWithMigration::class, []);
-
-    expect($event->migrated)->toBeTrue();
+beforeEach(function () {
+    $this->serializer = app(Serializer::class);
 });
 
-it('migrates a State when deserializing', function () {
-    $state = app(Serializer::class)->deserialize(StateWithMigration::class, []);
-
-    expect($state->migrated)->toBeTrue();
-});
-
-it('migrates a class that implements SerializedByVerbs', function () {
-    $dto = app(Serializer::class)->deserialize(DTOWithMigration::class, []);
-
-    expect($dto->migrated)->toBeTrue();
-});
-
-it('migrates with a Migrations class', function () {
-    $target = new class extends State
-    {
-        public DTOWithMigration $dto;
-    };
-    $data = '{"dto":{"fqcn":"DTOWithMigration"}}';
-
-    $state = app(Serializer::class)->deserialize($target, $data);
-
-    expect($state->dto->migrated)->toBeTrue();
-});
-
-it('can migrate dtos in events', function () {
-    $event = '{"dto":{"fqcn":"DTOWithMigration"}}';
-
-    $event = app(Serializer::class)->deserialize(EventWithMigrationDto::class, json_decode($event, true));
-
-    expect($event->dto->migrated)->toBeTrue();
-});
-
-it('can migrate dtos in states', function () {
-    $state = '{"dto":{"fqcn":"DTOWithMigration"}}';
-
-    $state = app(Serializer::class)->deserialize(StateWithMigration::class, json_decode($state, true));
-
-    expect($state->migrated)->toBeTrue();
-});
+it('migrates when deserializing', function (string|object $class, $data) {
+    $object = $this->serializer->deserialize($class, is_string($data) ? json_decode($data, true) : $data);
+    expect($object->migrated ?? $object->dto->migrated ?? false)->toBeTrue();
+})->with([
+    'Event migration' => [EventWithMigration::class, []],
+    'State migration' => [StateWithMigration::class, []],
+    'DTO migration' => [DTOWithMigration::class, []],
+    'DTO in events' => [EventWithMigrationDto::class, '{"dto":{"fqcn":"DTOWithMigration"}}'],
+    'DTO in states' => [StateWithMigration::class, '{"dto":{"fqcn":"DTOWithMigration"}}'],
+]);
 
 it('matches methods to migrations', function () {
     $migrator = new class extends Migrations
@@ -97,178 +67,111 @@ it('matches methods to migrations', function () {
         }
     };
 
-    $migrations = $migrator->getMigrations();
+    $migrations = $migrator->migrations();
 
     expect($migrations)
         ->toHaveCount(6)
         ->toHaveKeys([0, 1, 3, 4, 10, 15]);
 });
 
-it('can migrate static methods', function () {
-    $migrator = new class extends Migrations
+it('throws exceptions for invalid migrations', function ($migrations, string $message) {
+    expect(fn () => Migrator::migrate($migrations, []))->toThrow(MigratorException::class, $message);
+})->with([
+    'bad return type' => [[
+        0 => fn (array $data): string => '',
+    ], 'accept and return an array'],
+    'bad parameter type' => [[
+        0 => fn (string $data): array => [],
+    ], 'accept and return an array'],
+    'duplicate version' => [new class extends Migrations
     {
-        public static function v0(array $data): array
-        {
-            return array_merge($data, ['migrated' => true]);
-        }
-    };
+        public function v0() {}
 
-    $data = $migrator::migrate($migrator->getMigrations(), []);
+        public function v0_duplicate() {}
+    }, 'Duplicate migration version'],
+    'not callable' => [[
+        0 => 'not a callable',
+    ], 'callable'],
+    'string version' => [[
+        'test' => fn () => [],
+    ], 'integer'],
+]);
 
-    expect($data['migrated'])->toBeTrue();
+it('increments the migration version correctly', function () {
+    $migrations = [
+        0 => fn (array $data) => array_merge($data, ['step1' => true]),
+        1 => fn (array $data) => array_merge($data, ['step2' => true]),
+    ];
+
+    $data = [];
+    $result = Migrator::migrate($migrations, $data);
+    expect($result['__vn'])->toBe(1);
 });
 
-it('throws an exception when a migration has a bad return type', function () {
-    $migrator = new class extends Migrations
-    {
-        public function v0(array $data): string
-        {
-            return '';
-        }
-    };
-
-    $migrator::migrate($migrator->getMigrations(), []);
-})->throws(MigratorException::class, 'accept and return an array');
-
-it('throws an exception when a migration has a bad parameter type', function () {
-    $migrator = new class extends Migrations
-    {
-        public function v0(string $data): array
-        {
-            return [];
-        }
-    };
-
-    $migrator::migrate($migrator->getMigrations(), []);
-})->throws(MigratorException::class, 'accept and return an array');
-
-it('throws an exception when a migration has a duplicate version', function () {
-    // create dynamic class
-    $migrator = new class extends Migrations
-    {
-        public function v1(array $data): array
-        {
-            return [];
-        }
-
-        public function v01_duplicate(array $data): array
-        {
-            return [];
-        }
-    };
-    $migrator::migrate($migrator->getMigrations(), []);
-})->throws(MigratorException::class, 'Duplicate migration version');
-
-it('throws an exception when a migration is not a callable', function () {
-    $migrations = [
-        0 => 'not a callable',
-    ];
-
-    Migrations::migrate($migrations, []);
-
-})->throws(MigratorException::class, 'callable');
-
 it("doesn't rerun migrations", function () {
-    $migrator = new class extends Migrations
-    {
-        public function v0(array $data): array
-        {
-            return ['migrated' => $data['old_data']];
-        }
-    };
-    $data = [
-        'old_data' => 'moved',
+    $migrations = [
+        0 => fn (array $data) => ['migrated' => $data['old_data']],
     ];
 
-    $data = $migrator::migrate($migrator->getMigrations(), $data);
-    $data = $migrator::migrate($migrator->getMigrations(), $data);
-
+    $data = ['old_data' => 'moved'];
+    $data = Migrator::migrate($migrations, $data);
+    $data = Migrator::migrate($migrations, $data);
     expect($data['migrated'])->toBe('moved');
 });
 
-it('stores migration versions on events', function () {
-    $event = new class extends Event implements ShouldMigrateData
-    {
-        public bool $migrated;
-
-        public static function migrations(): Migrations|array
-        {
-            return [
-                0 => fn () => [],
-            ];
-        }
-    };
-
-    $serialized = app(Serializer::class)->serialize($event);
-
-    expect(json_decode($serialized, true)['__vn'])->toBe(0);
+it('handles no migrations gracefully', function () {
+    $migrator = new class extends Migrations {};
+    $data = ['key' => 'value'];
+    $result = Migrator::migrate($migrator, $data);
+    expect($result)->toBe($data);
 });
 
-it('throws an exception when strings are used as migration versions', function () {
+it('executes multiple migrations in sequence', function () {
     $migrations = [
-        'test' => fn () => [],
+        0 => fn (array $data) => array_merge($data, ['step1' => true]),
+        1 => fn (array $data) => array_merge($data, ['step2' => true]),
     ];
-    $migrator = new TestMigrations;
 
-    $migrator::migrate($migrations, []);
-})->throws(MigratorException::class, 'integer');
-
-it('store migration versions on states', function () {
-    $state = new class extends State implements ShouldMigrateData
-    {
-        public static function migrations(): Migrations|array
-        {
-            return [
-                0 => fn () => [],
-            ];
-        }
-    };
-
-    $serialized = app(Serializer::class)->serialize($state);
-
-    expect(json_decode($serialized, true)['__vn'])->toBe(0);
+    $data = [];
+    $data = Migrator::migrate($migrations, $data);
+    expect($data)
+        ->toBe(['step1' => true, 'step2' => true, '__vn' => 1]);
 });
 
-it('stores migration versions on classes', function () {
-    $target = new class implements SerializedByVerbs, ShouldMigrateData
-    {
-        use NormalizeToPropertiesAndClassName;
+it('skips already applied migrations', function () {
+    $firstMigrations = [
+        0 => fn (array $data) => array_merge($data, ['step1' => true]),
+    ];
 
-        public static function migrations(): Migrations|array
-        {
-            return [
-                0 => fn () => [],
-            ];
-        }
-    };
+    $data = Migrator::migrate($firstMigrations, []);
 
-    $serialized = app(Serializer::class)->serialize($target);
+    expect($data)
+        ->toBe(['step1' => true, '__vn' => 0]);
 
-    expect(json_decode($serialized, true)['__vn'])->toBe(0);
+    $secondMigrations = [
+        0 => fn ($data) => [],
+        1 => fn (array $data) => array_merge($data, ['step2' => true]),
+    ];
+
+    $data = Migrator::migrate($secondMigrations, $data);
+
+    expect($data)
+        ->toBe(['step1' => true, '__vn' => 1, 'step2' => true]);
 });
 
-class DTOWithVersion implements SerializedByVerbs, ShouldMigrateData
-{
-    use NormalizeToPropertiesAndClassName;
-
-    public int $__vn = 0;
-
-    public static function migrations(): Migrations|array
-    {
-        return [];
-    }
-}
-
-class DTOPlain implements SerializedByVerbs
-{
-    use NormalizeToPropertiesAndClassName;
-}
+it('stores migration versions', function (string $class) {
+    $object = new $class;
+    $serialized = $this->serializer->serialize($object);
+    expect(json_decode($serialized, true)['__vn'])->toBe(0);
+})->with([
+    'Event' => EventWithMigration::class,
+    'State' => StateWithMigration::class,
+    'SerializedByVerbs' => DTOWithMigration::class,
+]);
 
 class EventWithMigrationDto extends Event
 {
-    public function __construct(
-        public DTOWithMigration $dto
-    ) {}
+    public function __construct(public DTOWithMigration $dto) {}
 }
 
 class DTOWithMigration implements SerializedByVerbs, ShouldMigrateData
@@ -277,25 +180,19 @@ class DTOWithMigration implements SerializedByVerbs, ShouldMigrateData
 
     public bool $migrated;
 
-    public static function migrations(): Migrations|array
+    public function migrations(): Migrations|array
     {
-        return [
-            0 => fn ($data) => array_merge($data, ['migrated' => true]),
-        ];
+        return [0 => fn ($data) => array_merge($data, ['migrated' => true])];
     }
 }
 
 class EventWithMigration extends Event implements ShouldMigrateData
 {
-    public function __construct(
-        public bool $migrated,
-    ) {}
+    public bool $migrated;
 
-    public static function migrations(): array
+    public function migrations(): array
     {
-        return [
-            0 => fn ($data) => array_merge($data, ['migrated' => true]),
-        ];
+        return [0 => fn ($data) => array_merge($data, ['migrated' => true])];
     }
 }
 
@@ -303,30 +200,8 @@ class StateWithMigration extends State implements ShouldMigrateData
 {
     public $migrated;
 
-    public static function migrations(): array
+    public function migrations(): array
     {
-        return [
-            0 => fn ($data) => array_merge($data, ['migrated' => true]),
-        ];
-    }
-}
-
-class DtoWithMigrationClass implements SerializedByVerbs, ShouldMigrateData
-{
-    use NormalizeToPropertiesAndClassName;
-
-    public bool $migrated;
-
-    public static function migrations(): Migrations
-    {
-        return new TestMigrations;
-    }
-}
-
-class TestMigrations extends Migrations
-{
-    public function v0(array $data): array
-    {
-        return array_merge($data, ['migrated' => true]);
+        return [0 => fn ($data) => array_merge($data, ['migrated' => true])];
     }
 }
