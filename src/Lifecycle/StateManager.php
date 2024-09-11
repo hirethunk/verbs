@@ -3,7 +3,6 @@
 namespace Thunk\Verbs\Lifecycle;
 
 use Glhd\Bits\Bits;
-use Illuminate\Support\Collection;
 use LogicException;
 use Ramsey\Uuid\UuidInterface;
 use ReflectionClass;
@@ -35,14 +34,17 @@ class StateManager
         return $this->remember($state);
     }
 
-    /** @param  class-string<State>  $type */
-    public function load(Bits|UuidInterface|AbstractUid|int|string|array|Collection $id, string $type): StateCollection|State
+    /**
+     * @template S instanceof State
+     *
+     * @param  class-string<S>  $type
+     * @return S|StateCollection<int,S>
+     */
+    public function load(Bits|UuidInterface|AbstractUid|iterable|int|string $id, string $type): StateCollection|State
     {
-        $ids = StateCollection::wrap($id);
-
-        $states = $ids->map(fn ($id) => $this->loadOne($id, $type));
-
-        return $states->count() === 1 ? $states->first() : $states;
+        return is_iterable($id)
+            ? $this->loadMany($id, $type)
+            : $this->loadOne($id, $type);
     }
 
     /** @param  class-string<State>  $type */
@@ -148,6 +150,34 @@ class StateManager
         $this->reconstitute($state);
 
         return $state;
+    }
+
+    /** @param  class-string<State>  $type */
+    protected function loadMany(iterable $ids, string $type): StateCollection
+    {
+        $ids = collect($ids)->map(Id::from(...));
+
+        $missing = $ids->reject(fn ($id) => $this->states->has($this->key($id, $type)));
+
+        // Load all available snapshots for missing states
+        $this->snapshots->load($missing, $type)->each(function (State $state) {
+            $this->remember($state);
+            $this->reconstitute($state);
+        });
+
+        // Then make any states that don't exist yet
+        $missing
+            ->reject(fn ($id) => $this->states->has($this->key($id, $type)))
+            ->each(function (string|int $id) use ($type) {
+                $state = $this->make($id, $type);
+                $this->remember($state);
+                $this->reconstitute($state);
+            });
+
+        // At this point, all the states should be in our cache, so we can just load everything
+        return StateCollection::make(
+            $ids->map(fn ($id) => $this->states->get($this->key($id, $type)))
+        );
     }
 
     protected function reconstitute(State $state, bool $singleton = false): static

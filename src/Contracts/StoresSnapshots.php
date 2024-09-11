@@ -6,10 +6,11 @@ use Glhd\Bits\Bits;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\State;
+use Thunk\Verbs\Support\StateCollection;
 
 interface StoresSnapshots
 {
-    public function load(Bits|UuidInterface|AbstractUid|int|string $id, string $type): ?State;
+    public function load(Bits|UuidInterface|AbstractUid|iterable|int|string $id, string $type): State|StateCollection|null;
 
     public function loadSingleton(string $type): ?State;
 
