@@ -3,7 +3,6 @@
 namespace Thunk\Verbs\Lifecycle;
 
 use Glhd\Bits\Bits;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use LogicException;
 use Ramsey\Uuid\UuidInterface;
@@ -37,7 +36,7 @@ class StateManager
     }
 
     /** @param  class-string<State>  $type */
-    public function load(Bits|UuidInterface|AbstractUid|int|string|array|Collection $id, string $type): StateCollection | State
+    public function load(Bits|UuidInterface|AbstractUid|int|string|array|Collection $id, string $type): StateCollection|State
     {
         $ids = StateCollection::wrap($id);
 

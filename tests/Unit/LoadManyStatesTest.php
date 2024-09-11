@@ -2,7 +2,6 @@
 
 use Thunk\Verbs\Attributes\Autodiscovery\StateId;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\State;
 
 it('can load many states from an array of ids', function () {
