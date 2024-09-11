@@ -23,22 +23,34 @@ class StateId extends StateDiscoveryAttribute
         }
     }
 
-    public function discoverState(Event $event, StateManager $manager): array
+    public function discoverState(Event $event, StateManager $manager): State|array
     {
         $id = $this->property->getValue($event);
+        $property_name = $this->property->getName();
+        $meta = $event->metadata();
+
+        if (! is_array($id)) {
+            $this->alias ??= $this->inferAliasFromVariableName($property_name);
+        }
 
         // If the ID hasn't been set yet, we'll automatically set one
         if ($id === null && $this->autofill) {
             $id = snowflake_id();
             $this->property->setValue($event, $id);
+
+            $autofilled = $meta->get('autofilled', []);
+            $autofilled[$property_name] = true;
+            $meta->put('autofilled', $autofilled);
+
+            return $manager->make($id, $this->state_type);
         }
 
-        if (! is_array($id)) {
-            $this->alias ??= $this->inferAliasFromVariableName($this->property->getName());
+        // If we autofilled the value when it first fired, then we know this is the
+        // first event for that given state, and we don't need to try to load it
+        if ($meta->get("autofilled.{$property_name}", false)) {
+            return $manager->make($id, $this->state_type);
         }
 
-        return collect(Arr::wrap($id))
-            ->map(fn ($id) => $manager->load($id, $this->state_type))
-            ->all();
+        return array_map(fn ($id) => $manager->load($id, $this->state_type), Arr::wrap($id));
     }
 }

@@ -3,7 +3,10 @@
 namespace Thunk\Verbs\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event as EventFacade;
 use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Models\VerbEvent;
@@ -25,12 +28,23 @@ class ReplayCommand extends Command
             return 1;
         }
 
-        $progress = progress('Replaying…', VerbEvent::count());
+        // Prepare for a long-running, database-heavy run
+        ini_set('memory_limit', '-1');
+        EventFacade::forget(QueryExecuted::class);
+        DB::disableQueryLog();
 
+        $started_at = time();
+
+        $progress = progress('Replaying…', VerbEvent::count());
         $progress->start();
 
         $broker->replay(
-            beforeEach: fn (Event $event) => $progress->label(sprintf('%s (%d)', $event::class, $event->id)),
+            beforeEach: fn (Event $event) => $progress->label(sprintf(
+                '[%s] %s::%d',
+                date('i:s', time() - $started_at),
+                class_basename($event),
+                $event->id,
+            )),
             afterEach: fn () => $progress->advance(),
         );
 

@@ -30,11 +30,7 @@ abstract class State implements UrlRoutable
             $args = $args[0];
         }
 
-        $state = app(Serializer::class)->deserialize(static::class, $args, call_constructor: true);
-
-        app(StateManager::class)->register($state);
-
-        return $state;
+        return app(Serializer::class)->deserialize(static::class, $args, call_constructor: true);
     }
 
     /** @return StateFactory<static> */
