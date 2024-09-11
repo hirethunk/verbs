@@ -12,6 +12,7 @@ use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Exceptions\StateNotFoundException;
 use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\Support\Serializer;
+use Thunk\Verbs\Support\StateCollection;
 
 abstract class State implements UrlRoutable
 {
@@ -64,12 +65,12 @@ abstract class State implements UrlRoutable
         return $result;
     }
 
-    public static function load($from): static
+    public static function load($from): static|StateCollection
     {
         return static::loadByKey(static::normalizeKey($from));
     }
 
-    public static function loadByKey($from): static
+    public static function loadByKey($from): static|StateCollection
     {
         return app(StateManager::class)->load($from, static::class);
     }

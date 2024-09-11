@@ -3,6 +3,8 @@
 namespace Thunk\Verbs\Lifecycle;
 
 use Glhd\Bits\Bits;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use LogicException;
 use Ramsey\Uuid\UuidInterface;
 use ReflectionClass;
@@ -12,6 +14,7 @@ use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\State;
+use Thunk\Verbs\Support\StateCollection;
 use Thunk\Verbs\Support\StateInstanceCache;
 use UnexpectedValueException;
 
@@ -34,29 +37,13 @@ class StateManager
     }
 
     /** @param  class-string<State>  $type */
-    public function load(Bits|UuidInterface|AbstractUid|int|string $id, string $type): State
+    public function load(Bits|UuidInterface|AbstractUid|int|string|array|Collection $id, string $type): StateCollection | State
     {
-        $id = Id::from($id);
-        $key = $this->key($id, $type);
+        $ids = StateCollection::wrap($id);
 
-        // FIXME: If the state we're loading has a last_event_id that's ahead of the registry's last_event_id, we need to re-build the state
+        $states = $ids->map(fn ($id) => $this->loadOne($id, $type));
 
-        if ($state = $this->states->get($key)) {
-            return $state;
-        }
-
-        if ($state = $this->snapshots->load($id, $type)) {
-            if (! $state instanceof $type) {
-                throw new UnexpectedValueException(sprintf('Expected State <%d> to be of type "%s" but got "%s"', $id, class_basename($type), class_basename($state)));
-            }
-        } else {
-            $state = $this->make($id, $type);
-        }
-
-        $this->remember($state);
-        $this->reconstitute($state);
-
-        return $state;
+        return $states->count() === 1 ? $states->first() : $states;
     }
 
     /** @param  class-string<State>  $type */
@@ -136,6 +123,32 @@ class StateManager
         $this->states->prune();
 
         return $this;
+    }
+
+    /** @param  class-string<State>  $type */
+    protected function loadOne(Bits|UuidInterface|AbstractUid|int|string $id, string $type): State
+    {
+        $id = Id::from($id);
+        $key = $this->key($id, $type);
+
+        // FIXME: If the state we're loading has a last_event_id that's ahead of the registry's last_event_id, we need to re-build the state
+
+        if ($state = $this->states->get($key)) {
+            return $state;
+        }
+
+        if ($state = $this->snapshots->load($id, $type)) {
+            if (! $state instanceof $type) {
+                throw new UnexpectedValueException(sprintf('Expected State <%d> to be of type "%s" but got "%s"', $id, class_basename($type), class_basename($state)));
+            }
+        } else {
+            $state = $this->make($id, $type);
+        }
+
+        $this->remember($state);
+        $this->reconstitute($state);
+
+        return $state;
     }
 
     protected function reconstitute(State $state, bool $singleton = false): static
