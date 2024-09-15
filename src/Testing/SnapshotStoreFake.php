@@ -13,6 +13,7 @@ use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\State;
+use Thunk\Verbs\Support\StateCollection;
 
 class SnapshotStoreFake implements StoresSnapshots
 {
@@ -36,8 +37,14 @@ class SnapshotStoreFake implements StoresSnapshots
         return true;
     }
 
-    public function load(UuidInterface|string|int|AbstractUid|Bits $id, string $type): ?State
+    public function load(Bits|UuidInterface|AbstractUid|iterable|int|string $id, string $type): State|StateCollection|null
     {
+        if (is_iterable($id)) {
+            return StateCollection::make(collect($id)
+                ->map(fn ($id) => $this->states[$type][Id::from($id)] ?? null)
+                ->filter());
+        }
+
         return $this->states[$type][Id::from($id)] ?? null;
     }
 
