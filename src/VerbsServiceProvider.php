@@ -159,7 +159,7 @@ class VerbsServiceProvider extends PackageServiceProvider
 
         // Hook into Laravel event dispatcher
         $this->app->make(LaravelDispatcher::class)
-            ->listen('*', fn (string $name, array $data) => $this->handleEvent($data[0]));
+            ->listen('*', fn (string $name, array $data) => $this->handleEvent($data[0] ?? null));
     }
 
     protected function handleEvent($event = null)

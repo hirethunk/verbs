@@ -66,6 +66,7 @@ class Broker implements BrokersEvents
         // FIXME: Only write changes + handle aggregate versioning
 
         $this->states->writeSnapshots();
+        $this->states->prune();
 
         foreach ($events as $event) {
             $this->metadata->setLastResults($event, $this->dispatcher->handle($event));
@@ -81,8 +82,10 @@ class Broker implements BrokersEvents
         try {
             $this->states->reset(include_storage: true);
 
+            $iteration = 0;
+
             app(StoresEvents::class)->read()
-                ->each(function (Event $event) use ($beforeEach, $afterEach) {
+                ->each(function (Event $event) use ($beforeEach, $afterEach, &$iteration) {
                     $this->states->setReplaying(true);
 
                     if ($beforeEach) {
@@ -96,10 +99,14 @@ class Broker implements BrokersEvents
                         $afterEach($event);
                     }
 
-                    $this->states->writeSnapshots();
-                    $this->states->prune();
+                    if ($iteration++ % 500 === 0 && $this->states->willPrune()) {
+                        $this->states->writeSnapshots();
+                        $this->states->prune();
+                    }
                 });
         } finally {
+            $this->states->writeSnapshots();
+            $this->states->prune();
             $this->states->setReplaying(false);
             $this->is_replaying = false;
         }

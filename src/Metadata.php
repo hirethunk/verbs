@@ -11,8 +11,6 @@ class Metadata implements ArrayAccess
 
     public function __construct(array $data = [])
     {
-        $this->extra = new Collection;
-
         $this->merge($data);
     }
 
@@ -39,26 +37,36 @@ class Metadata implements ArrayAccess
 
     public function __get(string $name)
     {
+        $this->extra ??= new Collection;
+
         return $this->extra->get($name);
     }
 
     public function __set(string $name, $value): void
     {
+        $this->extra ??= new Collection;
+
         $this->extra->put($name, $value);
     }
 
     public function __isset(string $name): bool
     {
+        $this->extra ??= new Collection;
+
         return $this->extra->has($name);
     }
 
     public function __unset(string $name): void
     {
+        $this->extra ??= new Collection;
+
         $this->extra->forget($name);
     }
 
     public function __sleep(): array
     {
+        $this->extra ??= new Collection;
+
         return $this->extra->toArray();
     }
 
