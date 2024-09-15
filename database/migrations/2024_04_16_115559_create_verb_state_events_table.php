@@ -21,7 +21,7 @@ return new class extends Migration
 
             // The 'state_id' column needs to be set up differently depending
             // on if you're using Snowflakes vs. ULIDs/etc.
-            Id::createColumnDefinition($table, 'state_id')->connection($this->connectionName())->index();
+            Id::createColumnDefinition($table, 'state_id')->index();
 
             $table->string('state_type')->index();
 
