@@ -106,8 +106,10 @@ class Broker implements BrokersEvents
                         }
                     });
 
-                    $this->states->writeSnapshots();
-                    $this->states->prune();
+                    if ($this->states->willPrune()) {
+                        $this->states->writeSnapshots();
+                        $this->states->prune();
+                    }
                 });
         } finally {
             $this->states->writeSnapshots();

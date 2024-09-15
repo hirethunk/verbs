@@ -43,6 +43,11 @@ class StateInstanceCache
         return $this;
     }
 
+    public function willPrune(): bool
+    {
+        return count($this->cache) > $this->capacity;
+    }
+
     public function values(): array
     {
         return $this->cache;
