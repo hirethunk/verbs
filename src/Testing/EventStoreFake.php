@@ -65,7 +65,7 @@ class EventStoreFake implements StoresEvents
 
     public function get(iterable $ids): LazyCollection
     {
-        return new LazyCollection();
+        return new LazyCollection;
     }
 
     /** @return Collection<int, Event> */
