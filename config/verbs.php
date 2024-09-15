@@ -67,6 +67,21 @@ return [
     ],
 
     /*
+   |--------------------------------------------------------------------------
+   | Connection Names
+   |--------------------------------------------------------------------------
+   |
+   | By default, Verbs will use your default database connection, However, you may
+   | wish to customize these connection names to better fit your application.
+   |
+   */
+    'connections' => [
+        'events' => env('VERBS_EVENTS_CONNECTION'),
+        'snapshots' => env('VERBS_SNAPSHOT_CONNECTION'),
+        'state_events' => env('VERBS_STATE_EVENTS_CONNECTION'),
+    ],
+
+    /*
     |--------------------------------------------------------------------------
     | Table Names
     |--------------------------------------------------------------------------

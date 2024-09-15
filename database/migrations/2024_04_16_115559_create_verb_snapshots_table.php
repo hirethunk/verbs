@@ -14,13 +14,13 @@ return new class extends Migration
     public function up()
     {
         // If we migrated before Verbs 0.5.0 we need to do a little extra work
-        $migrating = Schema::hasTable($this->tableName());
+        $migrating = Schema::connection($this->connectionName())->hasTable($this->tableName());
 
         if ($migrating) {
-            Schema::rename($this->tableName(), '__verbs_snapshots_pre_050');
+            Schema::connection($this->connectionName())->rename($this->tableName(), '__verbs_snapshots_pre_050');
         }
 
-        Schema::create($this->tableName(), function (Blueprint $table) {
+        Schema::connection($this->connectionName())->create($this->tableName(), function (Blueprint $table) {
             $table->snowflakeId();
 
             // The 'state_id' column needs to be set up differently depending on
@@ -39,7 +39,8 @@ return new class extends Migration
         });
 
         if ($migrating) {
-            DB::table('__verbs_snapshots_pre_050')
+            DB::connection($this->connectionName())
+                ->table('__verbs_snapshots_pre_050')
                 ->select('*')
                 ->chunkById(100, $this->migrateChunk(...));
         }
@@ -47,10 +48,10 @@ return new class extends Migration
 
     public function down()
     {
-        Schema::dropIfExists($this->tableName());
+        Schema::connection($this->connectionName())->dropIfExists($this->tableName());
 
-        if (Schema::hasTable('__verbs_snapshots_pre_050')) {
-            Schema::rename('__verbs_snapshots_pre_050', $this->tableName());
+        if (Schema::connection($this->connectionName())->hasTable('__verbs_snapshots_pre_050')) {
+            Schema::connection($this->connectionName())->rename('__verbs_snapshots_pre_050', $this->tableName());
         }
     }
 
@@ -67,7 +68,12 @@ return new class extends Migration
             'updated_at' => $row->updated_at,
         ]);
 
-        DB::table($this->tableName())->insert($rows->toArray());
+        DB::connection($this->connectionName())->table($this->tableName())->insert($rows->toArray());
+    }
+
+    protected function connectionName(): ?string
+    {
+        return config('verbs.connections.snapshots');
     }
 
     protected function tableName(): string
