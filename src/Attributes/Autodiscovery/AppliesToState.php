@@ -24,22 +24,24 @@ class AppliesToState extends StateDiscoveryAttribute
         }
     }
 
-    public function discoverState(Event $event, StateManager $manager): array
+    public function discoverState(Event $event, StateManager $manager): State|array
     {
         $property = $this->getStateIdProperty($event);
         $id = $event->{$property};
+
+        if (! is_array($id)) {
+            $this->alias ??= $this->inferAliasFromVariableName($property);
+        }
 
         // If the ID hasn't been set yet, we'll automatically set one
         if ($id === null && $this->autofill) {
             $id = snowflake_id();
             $event->{$property} = $id;
+
+            return $manager->make($id, $this->state_type);
         }
 
         // TODO: Check type of data
-
-        if (! is_array($id)) {
-            $this->alias ??= $this->inferAliasFromVariableName($property);
-        }
 
         return collect(Arr::wrap($id))
             ->map(fn ($id) => $manager->load($id, $this->state_type))

@@ -17,6 +17,8 @@ class EventStateRegistry
 {
     protected array $discovered_attributes = [];
 
+    protected array $discovered_properties = [];
+
     public function __construct(
         protected StateManager $manager
     ) {}
@@ -25,6 +27,9 @@ class EventStateRegistry
     {
         $discovered = new StateCollection;
         $deferred = new StateCollection;
+
+        // If there are any properties that are states, we'll load them first
+        $discovered->push(...$this->getProperties($event));
 
         foreach ($this->getAttributes($event) as $attribute) {
             // If there are state dependencies that the attribute relies on that we haven't already
@@ -100,5 +105,27 @@ class EventStateRegistry
     protected function isStateDiscoveryAttribute(ReflectionAttribute $attribute): bool
     {
         return is_a($attribute->getName(), StateDiscoveryAttribute::class, true);
+    }
+
+    /** @return Collection<int, State> */
+    protected function getProperties(Event $target): Collection
+    {
+        return $this->discovered_properties[$target::class] ??= $this->findAllProperties($target);
+    }
+
+    /** @return Collection<int, State> */
+    protected function findAllProperties(Event $target): Collection
+    {
+        $reflect = new ReflectionClass($target);
+
+        return collect($reflect->getProperties(ReflectionProperty::IS_PUBLIC))
+            ->filter(function (ReflectionProperty $property) {
+                $propertyType = $property->getType()?->getName();
+
+                return $propertyType
+                    && (is_subclass_of($propertyType, State::class) || $propertyType === State::class || $propertyType === StateCollection::class);
+            })
+            ->map(fn (ReflectionProperty $property) => $property->getValue($target))
+            ->flatten();
     }
 }

@@ -3,6 +3,8 @@
 namespace Thunk\Verbs\Lifecycle;
 
 use Glhd\Bits\Bits;
+use Illuminate\Database\MultipleRecordsFoundException;
+use Illuminate\Support\Collection;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Contracts\StoresSnapshots;
@@ -11,6 +13,7 @@ use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Models\VerbSnapshot;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\Serializer;
+use Thunk\Verbs\Support\StateCollection;
 
 class SnapshotStore implements StoresSnapshots
 {
@@ -19,14 +22,11 @@ class SnapshotStore implements StoresSnapshots
         protected Serializer $serializer,
     ) {}
 
-    public function load(Bits|UuidInterface|AbstractUid|int|string $id, string $type): ?State
+    public function load(Bits|UuidInterface|AbstractUid|iterable|int|string $id, string $type): State|StateCollection|null
     {
-        $snapshot = VerbSnapshot::firstWhere([
-            'state_id' => Id::from($id),
-            'type' => $type,
-        ]);
-
-        return $snapshot?->state();
+        return is_iterable($id)
+            ? $this->loadMany(collect($id), $type)
+            : $this->loadOne($id, $type);
     }
 
     public function loadSingleton(string $type): ?State
@@ -49,11 +49,19 @@ class SnapshotStore implements StoresSnapshots
             return true;
         }
 
-        return VerbSnapshot::upsert(
-            values: collect($states)->map($this->formatForWrite(...))->unique('id')->all(),
-            uniqueBy: ['id'],
-            update: ['data', 'last_event_id', 'updated_at']
-        );
+        foreach (array_chunk($states, 20) as $chunk) {
+            $upserted = VerbSnapshot::upsert(
+                values: collect($chunk)->map($this->formatForWrite(...))->unique('id')->all(),
+                uniqueBy: ['id'],
+                update: ['data', 'last_event_id', 'updated_at'],
+            );
+
+            if (! $upserted) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public function reset(): bool
@@ -61,6 +69,38 @@ class SnapshotStore implements StoresSnapshots
         VerbSnapshot::truncate();
 
         return true;
+    }
+
+    protected function loadOne(Bits|UuidInterface|AbstractUid|int|string $id, string $type): ?State
+    {
+        // This mimics "sole" but returns null if no records are found rather than triggering an exception
+
+        $snapshots = VerbSnapshot::query()
+            ->where('type', '=', $type)
+            ->where('id', $id)
+            ->take(2)
+            ->get();
+
+        $count = $snapshots->count();
+
+        return match ($count) {
+            0 => null,
+            1 => $snapshots->first()->state(),
+            default => throw new MultipleRecordsFoundException($count),
+        };
+    }
+
+    protected function loadMany(Collection $ids, string $type): StateCollection
+    {
+        $ids->ensure([Bits::class, UuidInterface::class, AbstractUid::class, 'int', 'string']);
+
+        $states = VerbSnapshot::query()
+            ->where('type', '=', $type)
+            ->whereIn('id', $ids)
+            ->get()
+            ->map(fn (VerbSnapshot $snapshot) => $snapshot->state());
+
+        return StateCollection::make($states);
     }
 
     protected function formatForWrite(State $state): array

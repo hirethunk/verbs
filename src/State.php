@@ -12,6 +12,7 @@ use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Exceptions\StateNotFoundException;
 use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\Support\Serializer;
+use Thunk\Verbs\Support\StateCollection;
 
 abstract class State implements UrlRoutable
 {
@@ -30,11 +31,7 @@ abstract class State implements UrlRoutable
             $args = $args[0];
         }
 
-        $state = app(Serializer::class)->deserialize(static::class, $args, call_constructor: true);
-
-        app(StateManager::class)->register($state);
-
-        return $state;
+        return app(Serializer::class)->deserialize(static::class, $args, call_constructor: true);
     }
 
     /** @return StateFactory<static> */
@@ -57,6 +54,11 @@ abstract class State implements UrlRoutable
         return StateFactory::new(static::class);
     }
 
+    public static function new()
+    {
+        return static::load(snowflake()->make());
+    }
+
     public static function loadOrFail($from): static
     {
         $result = static::load($from);
@@ -68,12 +70,12 @@ abstract class State implements UrlRoutable
         return $result;
     }
 
-    public static function load($from): static
+    public static function load($from): static|StateCollection
     {
         return static::loadByKey(static::normalizeKey($from));
     }
 
-    public static function loadByKey($from): static
+    public static function loadByKey($from): static|StateCollection
     {
         return app(StateManager::class)->load($from, static::class);
     }
