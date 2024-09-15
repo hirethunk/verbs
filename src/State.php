@@ -53,6 +53,11 @@ abstract class State implements UrlRoutable
         return StateFactory::new(static::class);
     }
 
+    public static function new()
+    {
+        return static::load(snowflake()->make());
+    }
+
     public static function loadOrFail($from): static
     {
         $result = static::load($from);

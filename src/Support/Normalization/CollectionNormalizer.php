@@ -22,6 +22,10 @@ class CollectionNormalizer implements DenormalizerInterface, NormalizerInterface
     /** @param  class-string<Collection>  $type */
     public function denormalize(mixed $data, string $type, ?string $format = null, array $context = []): Collection
     {
+        if ($data instanceof Collection) {
+            return $data;
+        }
+
         $fqcn = data_get($data, 'fqcn', Collection::class);
         $items = data_get($data, 'items', []);
         $isAssoc = data_get($data, 'associative', false);
