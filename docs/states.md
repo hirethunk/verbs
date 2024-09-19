@@ -151,22 +151,14 @@ Route::get('/users/{user_state}', function(UserState $user_state) {
 You may want a state that only needs one iteration across the entire application--this is called a singleton state.
 Singleton states require no id, since there is no need to differentiate among state instances.
 
-In our events that apply to a singleton state, we simply need to use the
-`AppliesToSingletonState` [attribute](/docs/technical/attributes#content-appliestosingletonstate).
+To tell Verbs to treat a State as a singleton, implement the `SingletonState` interface.
 
 ```php
-#[AppliesToSingletonState(CountState::class)]
-class IncrementCount extends Event
+class CountState extends State implements SingletonState
 {
-    public function apply(CountState $state)
-    {
-        $state->count++;
-    }
+    // ...
 }
 ```
-
-This event uses `AppliesToSingletonState` to tell Verbs that it should always be applied to a single `CountState` across
-the entire application (as opposed to having different counts for different situations).
 
 ### Loading the singleton state
 

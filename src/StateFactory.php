@@ -42,7 +42,6 @@ class StateFactory
         protected Collection $transformations = new Collection,
         protected ?int $count = null,
         protected int|string|null $id = null,
-        protected bool $singleton = false,
         protected ?Generator $faker = null,
         protected Collection $makeCallbacks = new Collection,
         protected Collection $createCallbacks = new Collection,
@@ -93,11 +92,6 @@ class StateFactory
         return $this->clone(['id' => Id::from($id)]);
     }
 
-    public function singleton(bool $singleton = true): static
-    {
-        return $this->clone(['singleton' => $singleton]);
-    }
-
     /** @return TStateType|StateCollection<TStateType> */
     public function create(array $data = [], Bits|UuidInterface|AbstractUid|int|string|null $id = null): State|StateCollection
     {
@@ -121,7 +115,7 @@ class StateFactory
             return StateCollection::make([$this->createState()]);
         }
 
-        if ($this->singleton) {
+        if (is_subclass_of($this->state_class, SingletonState::class)) {
             throw new RuntimeException('You cannot create multiple singleton states of the same type.');
         }
 
@@ -146,7 +140,6 @@ class StateFactory
                 state_id: $this->id ?? Id::make(),
                 state_class: $this->state_class,
                 state_data: $this->getRawData(),
-                singleton: $this->singleton,
             )
             : $this->initial_event::fire(
                 ...$this->getRawData(),
@@ -179,7 +172,6 @@ class StateFactory
             transformations: $with['transformations'] ?? $this->transformations,
             count: $with['count'] ?? $this->count,
             id: $with['id'] ?? $this->id,
-            singleton: $with['singleton'] ?? $this->singleton,
             faker: $with['faker'] ?? $this->faker,
             makeCallbacks: $with['makeCallbacks'] ?? $this->makeCallbacks,
             createCallbacks: $with['createCallbacks'] ?? $this->createCallbacks,
