@@ -2,26 +2,12 @@
 
 namespace Thunk\Verbs\Support;
 
-use Closure;
-
 class StateInstanceCache
 {
     public function __construct(
         protected int $capacity = 100,
         protected array $cache = [],
-        protected ?Closure $discard_callback = null,
     ) {}
-
-    public function remember(string|int $key, Closure $callback): mixed
-    {
-        if ($this->has($key)) {
-            return $this->get($key);
-        }
-
-        $this->put($key, $value = $callback());
-
-        return $value;
-    }
 
     public function get(string|int $key, mixed $default = null): mixed
     {
@@ -50,22 +36,16 @@ class StateInstanceCache
         return isset($this->cache[$key]);
     }
 
-    public function forget(string|int $key): static
+    public function prune(): static
     {
-        if ($this->discard_callback) {
-            call_user_func($this->discard_callback, $this->cache[$key]);
-        }
-
-        unset($this->cache[$key]);
+        $this->cache = array_slice($this->cache, offset: -1 * $this->capacity, preserve_keys: true);
 
         return $this;
     }
 
-    public function prune(): static
+    public function willPrune(): bool
     {
-        $this->cache = array_slice($this->cache, -1 * $this->capacity, null, true);
-
-        return $this;
+        return count($this->cache) > $this->capacity;
     }
 
     public function values(): array
@@ -76,13 +56,6 @@ class StateInstanceCache
     public function reset(): static
     {
         $this->cache = [];
-
-        return $this;
-    }
-
-    public function onDiscard(Closure $callback): static
-    {
-        $this->discard_callback = $callback;
 
         return $this;
     }

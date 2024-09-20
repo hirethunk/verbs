@@ -22,12 +22,16 @@ class CollectionNormalizer implements DenormalizerInterface, NormalizerInterface
     /** @param  class-string<Collection>  $type */
     public function denormalize(mixed $data, string $type, ?string $format = null, array $context = []): Collection
     {
+        if ($data instanceof Collection) {
+            return $data;
+        }
+
         $fqcn = data_get($data, 'fqcn', Collection::class);
         $items = data_get($data, 'items', []);
         $isAssoc = data_get($data, 'associative', false);
 
         if ($items === []) {
-            return new $fqcn();
+            return new $fqcn;
         }
 
         $subtype = data_get($data, 'type');
@@ -100,7 +104,7 @@ class CollectionNormalizer implements DenormalizerInterface, NormalizerInterface
     protected function getCollectionMetadata(Collection $collection): array
     {
         $only_objects = true;
-        $types = new Collection();
+        $types = new Collection;
 
         foreach ($collection as $value) {
             $only_objects = $only_objects && is_object($value);
@@ -121,6 +125,6 @@ class CollectionNormalizer implements DenormalizerInterface, NormalizerInterface
                 ->unique();
 
             return $common->isEmpty() ? $parents : $parents->intersect($common);
-        }, new Collection());
+        }, new Collection);
     }
 }

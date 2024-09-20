@@ -59,18 +59,20 @@ class EventStore implements StoresEvents
                 ->where('state_type', $state::class)
                 ->when($after_id, fn (Builder $query) => $query->whereRelation('event', 'id', '>', Id::from($after_id)))
                 ->lazyById()
+                ->remember()
                 ->map(fn (VerbStateEvent $pivot) => $pivot->event);
         }
 
         return VerbEvent::query()
             ->when($after_id, fn (Builder $query) => $query->where('id', '>', Id::from($after_id)))
-            ->lazyById();
+            ->lazyById()
+            ->remember();
     }
 
     /** @param  Event[]  $events */
     protected function guardAgainstConcurrentWrites(array $events): void
     {
-        $max_event_ids = new Collection();
+        $max_event_ids = new Collection;
 
         $query = VerbStateEvent::query()->toBase();
 

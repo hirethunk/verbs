@@ -33,12 +33,12 @@ class Wormhole
 
     public function realMutableNow(): Carbon
     {
-        return $this->mutable_now?->copy() ?? Carbon::instance(new DateTime());
+        return $this->mutable_now?->copy() ?? Carbon::instance(new DateTime);
     }
 
     public function realImmutableNow(): CarbonImmutable
     {
-        return $this->immutable_now ?? CarbonImmutable::instance(new DateTime());
+        return $this->immutable_now ?? CarbonImmutable::instance(new DateTime);
     }
 
     public function warp(Event $event, Closure $callback)

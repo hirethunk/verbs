@@ -11,11 +11,11 @@ it('performs event store assertions', function () {
     Verbs::assertNothingCommitted();
 
     app(StoresEvents::class)->write([
-        $event1 = new VerbFakesTestEvent(),
-        $event2 = new VerbFakesTestEvent(),
-        $event3 = new VerbFakesTestEvent(),
-        $event4 = new VerbFakesTestEvent(),
-        $event5 = new VerbFakesTestEvent(),
+        $event1 = new VerbFakesTestEvent,
+        $event2 = new VerbFakesTestEvent,
+        $event3 = new VerbFakesTestEvent,
+        $event4 = new VerbFakesTestEvent,
+        $event5 = new VerbFakesTestEvent,
     ]);
 
     // assertCommitted() with type-hinted callback

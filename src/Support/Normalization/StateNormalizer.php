@@ -13,12 +13,16 @@ class StateNormalizer implements DenormalizerInterface, NormalizerInterface
 {
     public function supportsDenormalization(mixed $data, string $type, ?string $format = null, array $context = []): bool
     {
-        return is_a($type, State::class, true) && is_numeric($data);
+        return is_a($type, State::class, true) && (is_numeric($data) || is_a($data, State::class, true));
     }
 
     /** @param  class-string<State>  $type */
     public function denormalize(mixed $data, string $type, ?string $format = null, array $context = []): State
     {
+        if ($data instanceof State) {
+            return $data;
+        }
+
         return app(StateManager::class)->load((int) $data, $type);
     }
 

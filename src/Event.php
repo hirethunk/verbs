@@ -34,6 +34,7 @@ abstract class Event
         return PendingEvent::make(static::class, $args);
     }
 
+    /** @return ($key is empty ? Metadata : mixed) */
     public function metadata(?string $key = null, mixed $default = null): mixed
     {
         return app(MetadataManager::class)->get($this, $key, $default);
@@ -43,7 +44,7 @@ abstract class Event
     {
         // TODO: This is a bit hacky, but is probably OK right now
 
-        static $map = new WeakMap();
+        static $map = new WeakMap;
 
         return $map[$this] ??= app(EventStateRegistry::class)->getStates($this);
     }

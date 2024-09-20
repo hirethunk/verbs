@@ -3,8 +3,10 @@
 namespace Thunk\Verbs\Lifecycle;
 
 use Illuminate\Support\Collection;
+use stdClass;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Metadata;
+use Thunk\Verbs\State;
 use UnexpectedValueException;
 use WeakMap;
 
@@ -19,8 +21,8 @@ class MetadataManager
 
     public function __construct()
     {
-        $this->ephemeral = new WeakMap();
-        $this->persistent = new WeakMap();
+        $this->ephemeral = new WeakMap;
+        $this->persistent = new WeakMap;
     }
 
     public function createMetadataUsing(?callable $callback = null): void
@@ -39,22 +41,30 @@ class MetadataManager
 
     public function getLastResults(Event $event): Collection
     {
-        return $this->getEphemeral($event, '_last_results', new Collection());
+        return $this->getEphemeral($event, '_last_results', new Collection);
     }
 
-    public function getEphemeral(Event $event, ?string $key = null, mixed $default = null): mixed
+    public function getEphemeral(Event|State $target, ?string $key = null, mixed $default = null): mixed
     {
-        return data_get($this->ephemeral[$event] ?? [], $key, $default);
+        $ephemeral = data_get($this->ephemeral[$target] ?? [], $key, $not_found = new stdClass);
+
+        if ($ephemeral === $not_found) {
+            $this->setEphemeral($target, $key, $default);
+            $ephemeral = $default;
+        }
+
+        return $ephemeral;
     }
 
-    public function setEphemeral(Event $event, string $key, mixed $value): static
+    public function setEphemeral(Event|State $target, string $key, mixed $value): static
     {
-        $this->ephemeral[$event] ??= [];
-        $this->ephemeral[$event][$key] = $value;
+        $this->ephemeral[$target] ??= [];
+        $this->ephemeral[$target][$key] = $value;
 
         return $this;
     }
 
+    /** @return ($key is empty ? Metadata : mixed) */
     public function get(Event $event, ?string $key = null, mixed $default = null): mixed
     {
         $this->initialize($event);
@@ -79,7 +89,7 @@ class MetadataManager
 
     protected function makeMetadata(Event $event): Metadata
     {
-        $metadata = new Metadata();
+        $metadata = new Metadata;
 
         foreach ($this->callbacks as $callback) {
             $result = $callback($metadata, $event);

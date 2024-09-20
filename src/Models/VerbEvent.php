@@ -28,6 +28,11 @@ class VerbEvent extends Model
 
     protected ?Metadata $meta = null;
 
+    public function getConnectionName()
+    {
+        return $this->connection ?? config('verbs.connections.events');
+    }
+
     public function getTable()
     {
         return $this->table ?? config('verbs.tables.events', 'verb_events');

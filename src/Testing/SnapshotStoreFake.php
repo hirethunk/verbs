@@ -13,6 +13,7 @@ use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\State;
+use Thunk\Verbs\Support\StateCollection;
 
 class SnapshotStoreFake implements StoresSnapshots
 {
@@ -23,21 +24,27 @@ class SnapshotStoreFake implements StoresSnapshots
 
     public function __construct()
     {
-        $this->states = new Collection();
+        $this->states = new Collection;
     }
 
     public function write(array $states): bool
     {
         foreach ($states as $state) {
-            $this->states[$state::class] ??= new Collection();
+            $this->states[$state::class] ??= new Collection;
             $this->states[$state::class]->put(Id::from($state->id), $state);
         }
 
         return true;
     }
 
-    public function load(UuidInterface|string|int|AbstractUid|Bits $id, string $type): ?State
+    public function load(Bits|UuidInterface|AbstractUid|iterable|int|string $id, string $type): State|StateCollection|null
     {
+        if (is_iterable($id)) {
+            return StateCollection::make(collect($id)
+                ->map(fn ($id) => $this->states[$type][Id::from($id)] ?? null)
+                ->filter());
+        }
+
         return $this->states[$type][Id::from($id)] ?? null;
     }
 
@@ -48,7 +55,7 @@ class SnapshotStoreFake implements StoresSnapshots
 
     public function reset(): bool
     {
-        $this->states = new Collection();
+        $this->states = new Collection;
 
         return true;
     }
@@ -88,7 +95,7 @@ class SnapshotStoreFake implements StoresSnapshots
     public function written(string $class_name, ?Closure $filter = null): Collection
     {
         if (! $this->hasWritten($class_name)) {
-            return new Collection();
+            return new Collection;
         }
 
         return $this->states[$class_name]

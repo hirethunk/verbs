@@ -67,6 +67,21 @@ return [
     ],
 
     /*
+   |--------------------------------------------------------------------------
+   | Connection Names
+   |--------------------------------------------------------------------------
+   |
+   | By default, Verbs will use your default database connection, However, you may
+   | wish to customize these connection names to better fit your application.
+   |
+   */
+    'connections' => [
+        'events' => env('VERBS_EVENTS_CONNECTION'),
+        'snapshots' => env('VERBS_SNAPSHOT_CONNECTION'),
+        'state_events' => env('VERBS_STATE_EVENTS_CONNECTION'),
+    ],
+
+    /*
     |--------------------------------------------------------------------------
     | Table Names
     |--------------------------------------------------------------------------
@@ -108,20 +123,4 @@ return [
     | If you want to always manually commit, you can disable auto-commit.
     */
     'autocommit' => true,
-
-    /*
-    |--------------------------------------------------------------------------
-    | State Cache Size
-    |--------------------------------------------------------------------------
-    |
-    | By default, Verbs will keep up to 100 State objects in memory at one time.
-    | Most applications will never need more than a handful of States for any
-    | given request, so this limit will only make any difference when you're
-    | replaying events.
-    |
-    | If your application needs to operate on more than 100 States at any given
-    | time, you should increase this setting to some value higher than the
-    | maximum number of States you will ever need.
-    */
-    'state_cache_size' => 100,
 ];

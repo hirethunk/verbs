@@ -10,7 +10,7 @@ use Thunk\Verbs\Testing\EventStoreFake;
 use Thunk\Verbs\Testing\SnapshotStoreFake;
 
 beforeEach(function () {
-    app()->instance(StoresSnapshots::class, new SnapshotStoreFake());
+    app()->instance(StoresSnapshots::class, new SnapshotStoreFake);
     app()->instance(StoresEvents::class, new EventStoreFake(app(MetadataManager::class)));
 });
 

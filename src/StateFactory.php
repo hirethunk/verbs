@@ -39,13 +39,13 @@ class StateFactory
     /** @param  class-string<TStateType>  $state_class */
     public function __construct(
         protected string $state_class,
-        protected Collection $transformations = new Collection(),
+        protected Collection $transformations = new Collection,
         protected ?int $count = null,
         protected int|string|null $id = null,
         protected bool $singleton = false,
         protected ?Generator $faker = null,
-        protected Collection $makeCallbacks = new Collection(),
-        protected Collection $createCallbacks = new Collection(),
+        protected Collection $makeCallbacks = new Collection,
+        protected Collection $createCallbacks = new Collection,
     ) {}
 
     public function definition(): array
@@ -114,7 +114,7 @@ class StateFactory
         }
 
         if ($this->count < 1) {
-            return new StateCollection();
+            return new StateCollection;
         }
 
         if ($this->count === 1) {

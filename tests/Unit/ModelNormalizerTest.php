@@ -10,17 +10,17 @@ use Thunk\Verbs\Support\Normalization\ModelNormalizer;
 
 it('throws an exception when trying to serialize a model', function () {
     $serializer = new SymfonySerializer(
-        normalizers: [new ModelNormalizer()],
-        encoders: [new JsonEncoder()],
+        normalizers: [new ModelNormalizer],
+        encoders: [new JsonEncoder],
     );
 
-    $serializer->normalize(new ModelNormalizerTestModel(), 'json');
+    $serializer->normalize(new ModelNormalizerTestModel, 'json');
 })->throws(DoNotStoreModelsOnEventsOrStates::class);
 
 it('denormalizes models', function () {
     $serializer = new SymfonySerializer(
-        normalizers: [$normalizer = new ModelNormalizer()],
-        encoders: [new JsonEncoder()],
+        normalizers: [$normalizer = new ModelNormalizer],
+        encoders: [new JsonEncoder],
     );
 
     $identifier = new ModelIdentifier(
@@ -49,8 +49,8 @@ it('denormalizes models', function () {
 
 it('normalizes models when forced to do so', function () {
     $serializer = new SymfonySerializer(
-        normalizers: [$normalizer = new ModelNormalizer()],
-        encoders: [new JsonEncoder()],
+        normalizers: [$normalizer = new ModelNormalizer],
+        encoders: [new JsonEncoder],
     );
 
     ModelNormalizer::dangerouslyAllowModelNormalization();
