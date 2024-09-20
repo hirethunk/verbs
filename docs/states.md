@@ -118,9 +118,6 @@ in [event lifecycle](/docs/technical/event-lifecycle).
 
 ## Loading a State
 
-All state instances are singletons, scoped to an [id](/docs/technical/ids). i.e. say we had a Card Game app--if we apply
-a `CardDiscarded` event, we make sure only the `CardState` state with its globablly unique `card_id` is affected.
-
 To retrieve the State, simply call load:
 
 ```php
@@ -148,10 +145,10 @@ Route::get('/users/{user_state}', function(UserState $user_state) {
 
 ## Singleton States
 
-You may want a state that only needs one iteration across the entire application--this is called a singleton state.
-Singleton states require no id, since there is no need to differentiate among state instances.
+You may want a state that only needs one iteration across the entire application—this is called a singleton state.
+Singleton states require no ID because there is only ever one copy in existence across your entire app.
 
-To tell Verbs to treat a State as a singleton, implement the `SingletonState` interface.
+To tell Verbs to treat a State as a singleton, extend the `SingletonState` class, rather than `State`.
 
 ```php
 class CountState extends State implements SingletonState
@@ -162,7 +159,8 @@ class CountState extends State implements SingletonState
 
 ### Loading the singleton state
 
-Since singleton's require no IDs, simply call the `singleton()` method.
+Since singletons require no IDs, simply call the `singleton()` method. Trying to load a singleton state in any
+other way will result in a `BadMethodCall` exception.
 
 ```php
 YourState::singleton();
