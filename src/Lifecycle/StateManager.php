@@ -61,7 +61,7 @@ class StateManager
             return $state;
         }
 
-        $state = $this->snapshots->loadSingleton($type) ?? new $type();
+        $state = $this->snapshots->loadSingleton($type) ?? new $type;
         $state->id ??= snowflake_id();
 
         // We'll store a reference to it by the type for future singleton access
