@@ -26,26 +26,28 @@ it('can store multiple different states with the same ID', function () {
 });
 
 it('loads snapshots based on the state_id', function () {
+    $id = snowflake()->make();
+
     SnapshotStoreTestEvent::commit(
-        state_id: 321,
+        state_id: $id,
         name: 'event one',
     );
 
     $store = app(StoresSnapshots::class);
 
-    $state = $store->load(321, SnapshotStoreTestDifferentState::class);
+    $state = $store->load($id, SnapshotStoreTestDifferentState::class);
 
     expect($state)
-        ->id->toBe(321)
+        ->id->toBe($id)
         ->name->toBe('event one');
 
-    $states = $store->load([321], SnapshotStoreTestDifferentState::class);
+    $states = $store->load([$id], SnapshotStoreTestDifferentState::class);
 
     expect($states)
         ->count()->toBe(1);
 
     expect($states->first())
-        ->id->toBe(321)
+        ->id->toBe($id)
         ->name->toBe('event one');
 });
 
