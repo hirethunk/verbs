@@ -38,7 +38,7 @@ it('loads snapshots based on the state_id', function () {
     $state = $store->load($id, SnapshotStoreTestDifferentState::class);
 
     expect($state)
-        ->id->toBe($id)
+        ->id->toBe($id->id())
         ->name->toBe('event one');
 
     $states = $store->load([$id], SnapshotStoreTestDifferentState::class);
@@ -47,7 +47,7 @@ it('loads snapshots based on the state_id', function () {
         ->count()->toBe(1);
 
     expect($states->first())
-        ->id->toBe($id)
+        ->id->toBe($id->id())
         ->name->toBe('event one');
 });
 
@@ -70,7 +70,7 @@ class SnapshotStoreTestStateTwo extends State
 class SnapshotStoreTestEvent extends Event
 {
     #[StateId(SnapshotStoreTestDifferentState::class)]
-    public int $state_id;
+    public Bits $state_id;
 
     public string $name;
 
