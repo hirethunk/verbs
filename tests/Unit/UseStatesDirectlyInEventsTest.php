@@ -1,6 +1,7 @@
 <?php
 
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\StateCollection;
 
@@ -66,6 +67,28 @@ it('supports state collections', function () {
 
     $this->assertTrue($user_request1->processed);
     $this->assertTrue($user_request2->processed);
+});
+
+it('loads the correct state when multiple are used', function () {
+    $user_request1 = UserRequestState::new();
+
+    $event1 = UserRequestAcknowledged::fire(
+        user_request: $user_request1
+    );
+
+    $this->assertTrue($user_request1->acknowledged);
+
+    $this->assertEquals($event1->id, $user_request1->last_event_id);
+
+    $user_request2 = UserRequestState::new();
+
+    $event2 = UserRequestAcknowledged::fire(
+        user_request: $user_request2
+    );
+
+    $this->assertTrue($user_request2->acknowledged);
+
+    $this->assertEquals($event2->id, $user_request2->last_event_id);
 });
 
 class UserRequestState extends State
