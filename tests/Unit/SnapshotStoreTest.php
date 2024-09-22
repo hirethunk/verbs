@@ -27,25 +27,25 @@ it('can store multiple different states with the same ID', function () {
 
 it('loads snapshots based on the state_id', function () {
     SnapshotStoreTestEvent::commit(
-        state_id: 'abc',
+        state_id: 321,
         name: 'event one',
     );
 
     $store = app(StoresSnapshots::class);
 
-    $state = $store->load('abc', SnapshotStoreTestDifferentState::class);
+    $state = $store->load(321, SnapshotStoreTestDifferentState::class);
 
     expect($state)
-        ->id->toBe('abc')
+        ->id->toBe(321)
         ->name->toBe('event one');
 
-    $states = $store->load(['abc'], SnapshotStoreTestDifferentState::class);
+    $states = $store->load([321], SnapshotStoreTestDifferentState::class);
 
     expect($states)
         ->count()->toBe(1);
 
     expect($states->first())
-        ->id->toBe('abc')
+        ->id->toBe(321)
         ->name->toBe('event one');
 });
 
@@ -68,7 +68,7 @@ class SnapshotStoreTestStateTwo extends State
 class SnapshotStoreTestEvent extends Event
 {
     #[StateId(SnapshotStoreTestDifferentState::class)]
-    public string $state_id;
+    public int $state_id;
 
     public string $name;
 
