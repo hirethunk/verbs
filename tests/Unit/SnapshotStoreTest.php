@@ -35,13 +35,13 @@ it('loads snapshots based on the state_id', function () {
 
     $store = app(StoresSnapshots::class);
 
-    $state = $store->load($id, 'SnapshotStoreTestDifferentState');
+    $state = $store->load($id, SnapshotStoreTestDifferentState::class);
 
     expect($state)
         ->id->toBe($id->id())
         ->name->toBe('event one');
 
-    $states = $store->load([$id], 'SnapshotStoreTestDifferentState');
+    $states = $store->load([$id], SnapshotStoreTestDifferentState::class);
 
     expect($states)
         ->count()->toBe(1);
