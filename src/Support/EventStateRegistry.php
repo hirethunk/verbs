@@ -110,7 +110,7 @@ class EventStateRegistry
     /** @return Collection<int, State> */
     protected function getProperties(Event $target): Collection
     {
-        return $this->discovered_properties[$target::class] ??= $this->findAllProperties($target);
+        return $this->discovered_properties[$target::class][$target->id] ??= $this->findAllProperties($target);
     }
 
     /** @return Collection<int, State> */
