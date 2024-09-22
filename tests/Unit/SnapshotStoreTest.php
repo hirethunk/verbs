@@ -3,7 +3,9 @@
 use Glhd\Bits\Bits;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
+use Thunk\Verbs\Attributes\Autodiscovery\StateId;
 use Thunk\Verbs\Contracts\StoresSnapshots;
+use Thunk\Verbs\Event;
 use Thunk\Verbs\Models\VerbSnapshot;
 use Thunk\Verbs\State;
 
@@ -23,6 +25,21 @@ it('can store multiple different states with the same ID', function () {
         ->and($snapshot1)->id->not()->toBe($snapshot2->id);
 });
 
+it('loads snapshots based on the state_id', function () {
+    SnapshotStoreTestEvent::commit(
+        state_id: 'abc',
+        name: 'event one',
+    );
+
+    $store = app(StoresSnapshots::class);
+
+    $state = $store->load('abc', SnapshotStoreTestDifferentState::class);
+
+    expect($state)
+        ->id->toBe('abc')
+        ->name->toBe('event one');
+});
+
 class SnapshotStoreTestStateOne extends State
 {
     public function __construct(
@@ -37,4 +54,24 @@ class SnapshotStoreTestStateTwo extends State
         public Bits|UuidInterface|AbstractUid|int|string|null $id,
         public string $name,
     ) {}
+}
+
+class SnapshotStoreTestEvent extends Event
+{
+    #[StateId(SnapshotStoreTestDifferentState::class)]
+    public string $state_id;
+
+    public string $name;
+
+    public function apply(SnapshotStoreTestDifferentState $state)
+    {
+        $state->name = $this->name;
+    }
+}
+
+class SnapshotStoreTestDifferentState extends State
+{
+    public Bits|UuidInterface|AbstractUid|int|string|null $id;
+
+    public string $name;
 }
