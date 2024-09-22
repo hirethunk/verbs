@@ -1,7 +1,6 @@
 <?php
 
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\StateCollection;
 
