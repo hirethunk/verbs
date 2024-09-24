@@ -113,7 +113,7 @@ class SnapshotStore implements StoresSnapshots
     protected function formatForWrite(State $state): array
     {
         return [
-            'id' => $this->metadata->getEphemeral($state, 'id', snowflake_id()),
+            'id' => $this->metadata->getEphemeral($state, 'snapshot_id', snowflake_id()),
             'state_id' => Id::from($state->id),
             'type' => $state::class,
             'data' => $this->serializer->serialize($state),

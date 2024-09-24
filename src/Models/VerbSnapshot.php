@@ -22,6 +22,11 @@ class VerbSnapshot extends Model
 
     protected ?State $state = null;
 
+    public function getConnectionName()
+    {
+        return $this->connection ?? config('verbs.connections.snapshots');
+    }
+
     public function getTable()
     {
         return $this->table ?? config('verbs.tables.snapshots', 'verb_snapshots');
@@ -33,7 +38,7 @@ class VerbSnapshot extends Model
         $this->state->id = $this->state_id;
         $this->state->last_event_id = $this->last_event_id;
 
-        app(MetadataManager::class)->setEphemeral($this->state, 'id', $this->id);
+        app(MetadataManager::class)->setEphemeral($this->state, 'snapshot_id', $this->id);
 
         return $this->state;
     }

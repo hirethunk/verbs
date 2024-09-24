@@ -1,6 +1,7 @@
 <?php
 
 use Thunk\Verbs\Event;
+use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\StateCollection;
 
@@ -25,9 +26,9 @@ it('accepts an id and loads the state', function () {
 });
 
 it('supports singleton states', function () {
-    $user_request = UserRequestState::singleton();
+    $user_request = UserRequestSingletonState::singleton();
 
-    UserRequestAcknowledged::commit(
+    SingletonUserRequestAcknowledged::commit(
         user_request: $user_request
     );
 
@@ -75,10 +76,29 @@ class UserRequestState extends State
     public bool $processed = false;
 }
 
+class UserRequestSingletonState extends SingletonState
+{
+    public bool $acknowledged = false;
+
+    public bool $processed = false;
+}
+
 class UserRequestAcknowledged extends Event
 {
     public function __construct(
         public UserRequestState $user_request
+    ) {}
+
+    public function apply()
+    {
+        $this->user_request->acknowledged = true;
+    }
+}
+
+class SingletonUserRequestAcknowledged extends Event
+{
+    public function __construct(
+        public UserRequestSingletonState $user_request
     ) {}
 
     public function apply()

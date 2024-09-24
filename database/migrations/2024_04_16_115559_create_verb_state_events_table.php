@@ -10,11 +10,11 @@ return new class extends Migration
     public function up()
     {
         // If they've already migrated under the previous migration name, just skip
-        if (Schema::hasTable($this->tableName())) {
+        if (Schema::connection($this->connectionName())->hasTable($this->tableName())) {
             return;
         }
 
-        Schema::create($this->tableName(), function (Blueprint $table) {
+        Schema::connection($this->connectionName())->create($this->tableName(), function (Blueprint $table) {
             $table->snowflakeId();
 
             $table->snowflake('event_id')->index();
@@ -31,7 +31,12 @@ return new class extends Migration
 
     public function down()
     {
-        Schema::dropIfExists($this->tableName());
+        Schema::connection($this->connectionName())->dropIfExists($this->tableName());
+    }
+
+    protected function connectionName(): ?string
+    {
+        return config('verbs.connections.state_events');
     }
 
     protected function tableName(): string
