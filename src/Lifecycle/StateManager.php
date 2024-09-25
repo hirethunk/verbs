@@ -210,10 +210,9 @@ class StateManager
 
                 $summary = $this->events->summarize($state);
 
-                // FIXME:
-                if ($summary->out_of_sync) {
-                    $this->snapshots->delete(...$summary->related_state_ids);
-                }
+                // FIXME: We probably need to re-write all the snapshots after we're done
+                // FIXME: Swap out existing state manager, push all related states into new state manager
+                // FIXME: run all the event on them, swap them out
 
                 $this->events->get($summary->related_event_ids)
                     ->filter(function (Event $event) {

@@ -22,5 +22,5 @@ interface StoresEvents
     /** @param  Event[]  $events */
     public function write(array $events): bool;
 
-    public function summarize(State $state, bool $singleton = false): AggregateStateSummary;
+    public function summarize(State ...$states): AggregateStateSummary;
 }
