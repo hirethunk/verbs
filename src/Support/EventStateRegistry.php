@@ -119,11 +119,16 @@ class EventStateRegistry
         $reflect = new ReflectionClass($target);
 
         return collect($reflect->getProperties(ReflectionProperty::IS_PUBLIC))
-            ->filter(function (ReflectionProperty $property) {
-                $propertyType = $property->getType()?->getName();
+            ->filter(function (ReflectionProperty $property) use ($target) {
+                $propertyType = $property->getType();
+                $propertyTypeName = $propertyType?->getName();
 
-                return $propertyType
-                    && (is_subclass_of($propertyType, State::class) || $propertyType === State::class || $propertyType === StateCollection::class);
+                if ($propertyType->allowsNull() && $property->getValue($target) === null) {
+                    return false;
+                }
+
+                return $propertyTypeName
+                    && (is_subclass_of($propertyTypeName, State::class) || $propertyTypeName === State::class || $propertyTypeName === StateCollection::class);
             })
             ->map(fn (ReflectionProperty $property) => $property->getValue($target))
             ->flatten();
