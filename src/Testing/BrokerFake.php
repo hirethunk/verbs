@@ -10,6 +10,7 @@ use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\Broker;
 use Thunk\Verbs\Lifecycle\BrokerConvenienceMethods;
+use Thunk\Verbs\Lifecycle\Dispatcher;
 
 class BrokerFake implements BrokersEvents
 {
@@ -75,6 +76,11 @@ class BrokerFake implements BrokersEvents
     public function replay(?callable $beforeEach = null, ?callable $afterEach = null)
     {
         $this->broker->replay($beforeEach, $afterEach);
+    }
+
+    public function listen(object|string $listener)
+    {
+        app(Dispatcher::class)->register($listener);
     }
 
     public function commitImmediately(bool $commit_immediately = true): void
