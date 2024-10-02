@@ -7,6 +7,7 @@ use Illuminate\Support\LazyCollection;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Lifecycle\AggregateStateSummary;
 use Thunk\Verbs\State;
 
 interface StoresEvents
@@ -17,6 +18,10 @@ interface StoresEvents
         bool $singleton = false
     ): LazyCollection;
 
+    public function get(iterable $ids): LazyCollection;
+
     /** @param  Event[]  $events */
     public function write(array $events): bool;
+
+    public function summarize(State $state, bool $singleton = false): AggregateStateSummary;
 }
