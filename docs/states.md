@@ -56,7 +56,7 @@ to track:
 
 ```php
 // CountIncremented.php
-class CountIncremented class extends Event
+class CountIncremented extends Event
 {
     #[StateId(CountState::class)]
     public int $example_id;
@@ -251,7 +251,7 @@ which frees up your models to better serve your frontfacing UI needs. Once you'v
 your state instance's id to correspond directly to a model instance.
 
 ```php
-class FooCreated class
+class FooCreated
 {
     #[StateId(FooState::class)]
     public int $foo_id;
