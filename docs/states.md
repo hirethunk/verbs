@@ -56,7 +56,7 @@ to track:
 
 ```php
 // CountIncremented.php
-class CountIncremented class extends Event
+class CountIncremented extends Event
 {
     #[StateId(CountState::class)]
     public int $example_id;
