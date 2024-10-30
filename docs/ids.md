@@ -17,9 +17,17 @@ A helper method you can use to generate a snowflake right out of the box: `snowf
 For models that you're going to manage via events, pull in the `HasSnowflakes` trait:
 
 ```php
+use Glhd\Bits\Database\HasSnowflakes;
+use Glhd\Bits\Snowflake;
+
 class JobApplication extends Model
 {
     use HasSnowflakes; // Add this to your model
+
+    // Any attribute can be cast to a `Snowflake` (or `Sonyflake`)
+    protected $casts = [
+        'id' => Snowflake::class,
+    ];
 }
 ```
 
