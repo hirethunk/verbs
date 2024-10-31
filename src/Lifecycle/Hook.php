@@ -4,6 +4,7 @@ namespace Thunk\Verbs\Lifecycle;
 
 use Closure;
 use Illuminate\Contracts\Container\Container;
+use InvalidArgumentException;
 use ReflectionMethod;
 use RuntimeException;
 use SplObjectStorage;
@@ -14,14 +15,20 @@ use Thunk\Verbs\Support\Wormhole;
 
 class Hook
 {
-    public static function fromClassMethod(object $target, ReflectionMethod|string $method): static
+    public static function fromClassMethod(string|object $target, ReflectionMethod|string $method): static
     {
+        if (is_string($target) && ! class_exists($target)) {
+            throw new InvalidArgumentException('Hooks can only be registered for objects or classes.');
+        }
+
         if (is_string($method)) {
             $method = new ReflectionMethod($target, $method);
         }
 
         $hook = new static(
-            callback: Closure::fromCallable([$target, $method->getName()]),
+            callback: is_string($target)
+                ? fn (...$args) => app($target)->{$method->getName()}(...$args)
+                : Closure::fromCallable([$target, $method->getName()]),
             events: Reflector::getEventParameters($method),
             states: Reflector::getStateParameters($method),
             name: $method->getName(),
@@ -70,6 +77,22 @@ class Hook
     public function runsInPhase(Phase $phase): bool
     {
         return isset($this->phases[$phase]) && $this->phases[$phase] === true;
+    }
+
+    public function inferPhasesIfNoneSet(): void
+    {
+        // If we already have phases set, we don't need to do anything
+        if ($this->phases->count() > 0) {
+            return;
+        }
+
+        // Assume that if the hook cares about events, it's a handle hook,
+        // and if it cares about states, it's an apply hook
+        if (count($this->events)) {
+            $this->forcePhases(Phase::Handle);
+        } elseif (count($this->states)) {
+            $this->forcePhases(Phase::Apply);
+        }
     }
 
     public function validate(Container $container, Event $event): bool

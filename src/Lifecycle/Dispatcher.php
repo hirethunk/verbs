@@ -21,9 +21,11 @@ class Dispatcher
         protected Container $container
     ) {}
 
-    public function register(object $target): void
+    public function register(string|object $target): void
     {
         foreach (Reflector::getHooks($target) as $hook) {
+            $hook->inferPhasesIfNoneSet();
+
             foreach ($hook->events as $event_type) {
                 $this->hooks[$event_type][] = $hook;
             }
