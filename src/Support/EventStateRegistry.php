@@ -8,6 +8,7 @@ use InvalidArgumentException;
 use ReflectionAttribute;
 use ReflectionClass;
 use ReflectionProperty;
+use ReflectionUnionType;
 use Thunk\Verbs\Attributes\Autodiscovery\StateDiscoveryAttribute;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\StateManager;
@@ -121,14 +122,25 @@ class EventStateRegistry
         return collect($reflect->getProperties(ReflectionProperty::IS_PUBLIC))
             ->filter(function (ReflectionProperty $property) use ($target) {
                 $propertyType = $property->getType();
-                $propertyTypeName = $propertyType?->getName();
 
-                if ($propertyType->allowsNull() && $property->getValue($target) === null) {
-                    return false;
+                $propertyTypes = $propertyType instanceof ReflectionUnionType ? $propertyType->getTypes() : [$propertyType];
+
+                foreach ($propertyTypes as $type) {
+                    if ($type->allowsNull() && $property->getValue($target) === null) {
+                        continue;
+                    }
+
+                    $propertyTypeName = $type?->getName();
+
+                    if ($propertyTypeName
+                        && (is_subclass_of($propertyTypeName, State::class)
+                            || $propertyTypeName === State::class
+                            || $propertyTypeName === StateCollection::class)) {
+                        return true;
+                    }
                 }
 
-                return $propertyTypeName
-                    && (is_subclass_of($propertyTypeName, State::class) || $propertyTypeName === State::class || $propertyTypeName === StateCollection::class);
+                return false;
             })
             ->map(fn (ReflectionProperty $property) => $property->getValue($target))
             ->flatten();

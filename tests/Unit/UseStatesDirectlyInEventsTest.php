@@ -101,6 +101,24 @@ it('loads the correct state when multiple are used', function () {
     $this->assertEquals($event2->id, $user_request2->last_event_id);
 });
 
+it('supports union typed properties in events', function() {
+    $user_request = UserRequestState::new();
+
+    UserRequestsWithUnionTypes::commit(
+        user_request: $user_request,
+        value: 'foo'
+    );
+
+    $this->assertEquals($user_request->unionTypedValue, 'foo');
+
+    UserRequestsWithUnionTypes::commit(
+        user_request: $user_request,
+        value: 12
+    );
+
+    $this->assertEquals($user_request->unionTypedValue, 12);
+});
+
 class UserRequestState extends State
 {
     public bool $acknowledged = false;
@@ -108,6 +126,8 @@ class UserRequestState extends State
     public bool $processed = false;
 
     public bool $nullable = false;
+
+    public string|int $unionTypedValue = '';
 }
 
 class UserRequestAcknowledged extends Event
@@ -146,6 +166,18 @@ class UserRequestsWithNullable extends Event
     public function apply()
     {
         $this->user_request1->nullable = true;
+    }
+}
+
+class UserRequestsWithUnionTypes extends Event 
+{
+    public function __construct(
+        public UserRequestState $user_request,
+        public string|int $value
+    ) {}
+
+    public function apply() {
+        $this->user_request->unionTypedValue = $this->value;
     }
 }
 
