@@ -2,13 +2,13 @@
 
 namespace Thunk\Verbs\Examples\Subscriptions\Events;
 
-use Thunk\Verbs\Attributes\Autodiscovery\AppliesToSingletonState;
+use Thunk\Verbs\Attributes\Autodiscovery\AppliesToState;
 use Thunk\Verbs\Attributes\Hooks\Once;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Examples\Subscriptions\Models\Report;
 use Thunk\Verbs\Examples\Subscriptions\States\GlobalReportState;
 
-#[AppliesToSingletonState(GlobalReportState::class)]
+#[AppliesToState(GlobalReportState::class)]
 class GlobalReportGenerated extends Event
 {
     #[Once]

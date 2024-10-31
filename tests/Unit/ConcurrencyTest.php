@@ -4,7 +4,7 @@ use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\ConcurrencyException;
 use Thunk\Verbs\Lifecycle\EventStore;
 use Thunk\Verbs\Models\VerbEvent;
-use Thunk\Verbs\State;
+use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\Support\StateCollection;
 
 it('does not throw on sequential events', function () {
@@ -49,4 +49,4 @@ class ConcurrencyTestEvent extends Event
     }
 }
 
-class ConcurrencyTestState extends State {}
+class ConcurrencyTestState extends SingletonState {}

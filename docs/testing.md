@@ -4,7 +4,8 @@ We enjoy improving Verbs by providing easy, readable testing affordances.
 
 When testing verbs events, you'll need to call [commit](/docs/reference/events#content-committing) manually.
 
-You may continue manually adding `Verbs::commit()` after each `Event::fire()` method; however, we've created `Verbs::commitImmediately` to issue a blanket commit on all events you fire in tests.
+You may continue manually adding `Verbs::commit()` after each `Event::fire()` method; however, we've created
+`Verbs::commitImmediately` to issue a blanket commit on all events you fire in tests.
 
 ```php
 beforeEach(function () {
@@ -19,7 +20,8 @@ You may also implement the `CommitsImmediately` interface directly on an Event.
 
 The following Test `assert()` methods are available to thoroughly check your committing granularly.
 
-Before using these methods, add `Verbs::fake()` to your test so Verbs can set up a fake event store to isolate the testing environment.
+Before using these methods, add `Verbs::fake()` to your test so Verbs can set up a fake event store to isolate the
+testing environment.
 
 ```php
 Verbs::assertNothingCommitted();
@@ -29,9 +31,11 @@ Verbs::assertNotCommitted(...);
 
 ## State Factories
 
-In tests, you may find yourself needing to fire and commit several events in order to bring your State to the point where it actually needs testing.
+In tests, you may find yourself needing to fire and commit several events in order to bring your State to the point
+where it actually needs testing.
 
-The `State::factory()` method allows you to bypass manually building up the State, functioning similarly to `Model::factory()`.
+The `State::factory()` method allows you to bypass manually building up the State, functioning similarly to
+`Model::factory()`.
 
 This allows you to call:
 
@@ -58,15 +62,20 @@ Or, in the case of a [singleton state](/docs/reference/states#content-singleton-
 ChurnState::factory()->create(['churn' => 40]);
 ```
 
-Next, we'll get into how these factories work, and continue after with some [Verbs factory methods](testing#content-factory-methods) you may already be familiar with from Eloquent factories.
+Next, we'll get into how these factories work, and continue after with
+some [Verbs factory methods](testing#content-factory-methods) you may already be familiar with from Eloquent factories.
 
 ### `VerbsStateInitialized`
 
-Under the hood, these methods will fire (and immediately commit) a new `VerbsStateInitialized` event, which will fire onto the given state, identified by the id argument (if id is null, we assume it is a singleton) and return a copy of that state.
+Under the hood, these methods will fire (and immediately commit) a new `VerbsStateInitialized` event, which will fire
+onto the given state, identified by the id argument (if id is null, we assume it is a singleton) and return a copy of
+that state.
 
-This is primarily designed for booting up states for testing. If you are migrating non-event-sourced codebases to Verbs, when there is a need to initiate a state for legacy data, it's better to create a custom `MigratedFromLegacy` event.
+This is primarily designed for booting up states for testing. If you are migrating non-event-sourced codebases to Verbs,
+when there is a need to initiate a state for legacy data, it's better to create a custom `MigratedFromLegacy` event.
 
-You may also change the initial event fired from the StateFactory from `VerbsStateInitialized` to an event class of your choosing by setting an `$intial_event` property on your State Factory.
+You may also change the initial event fired from the StateFactory from `VerbsStateInitialized` to an event class of your
+choosing by setting an `$intial_event` property on your State Factory.
 
 ```php
 class ExampleStateFactory extends StateFactory
@@ -75,11 +84,13 @@ class ExampleStateFactory extends StateFactory
 }
 ```
 
-`VerbsStateInitialized` implements the `CommitsImmediately` interface detailed [above](testing#content-verbscommit), so if you change from this initial event makes sure to extend the interface on your replacement event.
+`VerbsStateInitialized` implements the `CommitsImmediately` interface detailed [above](testing#content-verbscommit), so
+if you change from this initial event makes sure to extend the interface on your replacement event.
 
 ### Factory Methods
 
-Some methods accept Verbs [IDs](/docs/technical/ids), which, written longform, could be any of these types: `Bits|UuidInterface|AbstractUid|int|string`.
+Some methods accept Verbs [IDs](/docs/technical/ids), which, written longform, could be any of these types:
+`Bits|UuidInterface|AbstractUid|int|string`.
 
 For brevity, this will be abbreviated in the following applicable methods as `Id`.
 
@@ -97,14 +108,6 @@ Set the state ID explicitly (cannot be used with `count`).
 
 ```php
 UserState::factory()->id(123)->create();
-```
-
-#### `singleton()`
-
-Mark that this is a singleton state (cannot be used with `count`).
-
-```php
-UserState::factory()->singleton()->create();
 ```
 
 #### `state(callable|array $data)`
@@ -168,7 +171,8 @@ If you'd like to chain behavior after your Factory `create()` executes, do so in
 
 #### `configure()`
 
-The configure method in your custom factory allows you to set `afterMaking` and `afterCreating` effects (see [laravel docs](https://laravel.com/docs/11.x/eloquent-factories#factory-callbacks)).
+The configure method in your custom factory allows you to set `afterMaking` and `afterCreating` effects (
+see [laravel docs](https://laravel.com/docs/11.x/eloquent-factories#factory-callbacks)).
 
 ##### `afterMaking()` & `afterCreating()`
 
