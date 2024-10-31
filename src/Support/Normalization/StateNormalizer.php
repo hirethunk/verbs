@@ -13,7 +13,7 @@ class StateNormalizer implements DenormalizerInterface, NormalizerInterface
 {
     public function supportsDenormalization(mixed $data, string $type, ?string $format = null, array $context = []): bool
     {
-        return is_a($type, State::class, true) && (is_numeric($data) || is_a($data, State::class, true));
+        return is_a($type, State::class, true) && (is_numeric($data) || is_string($data) || is_a($data, State::class, true));
     }
 
     /** @param  class-string<State>  $type */
@@ -23,7 +23,7 @@ class StateNormalizer implements DenormalizerInterface, NormalizerInterface
             return $data;
         }
 
-        return app(StateManager::class)->load((int) $data, $type);
+        return app(StateManager::class)->load($data, $type);
     }
 
     public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool
