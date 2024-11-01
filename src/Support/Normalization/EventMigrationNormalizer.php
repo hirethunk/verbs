@@ -15,8 +15,8 @@ class EventMigrationNormalizer implements DenormalizerInterface, NormalizerInter
 
     public function normalize($object, ?string $format = null, array $context = []): array
     {
-        if (!$object instanceof Event) {
-            throw new InvalidArgumentException(class_basename($this) . ' can only normalize Events');
+        if (! $object instanceof Event) {
+            throw new InvalidArgumentException(class_basename($this).' can only normalize Events');
         }
 
         $context['migrated'] = true;
@@ -26,13 +26,13 @@ class EventMigrationNormalizer implements DenormalizerInterface, NormalizerInter
 
     public function supportsNormalization($data, ?string $format = null, array $context = []): bool
     {
-        if (!$data instanceof Event) {
+        if (! $data instanceof Event) {
             return false;
         }
 
         $alreadyMigrated = $context['migrated'] ?? false;
 
-        return !$alreadyMigrated;
+        return ! $alreadyMigrated;
     }
 
     public function getSupportedTypes(?string $format): array
@@ -71,7 +71,7 @@ class EventMigrationNormalizer implements DenormalizerInterface, NormalizerInter
     {
         $hasMigrated = $context['migrated'] ?? false;
 
-        return !$hasMigrated && is_a($type, Event::class, true);
+        return ! $hasMigrated && is_a($type, Event::class, true);
     }
 
     private static function migrate(array $migrations, array $data): array

@@ -211,7 +211,7 @@ class EventWithMigrations extends Event
     public static function migrate(): array
     {
         return [
-            fn(Collection $v0) => $v0->put('migrated', true),
+            fn (Collection $v0) => $v0->put('migrated', true),
         ];
     }
 }
