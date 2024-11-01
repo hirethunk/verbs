@@ -3,6 +3,7 @@
 use Carbon\CarbonInterface;
 use Glhd\Bits\Bits;
 use Glhd\Bits\Snowflake;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Normalizer\PropertyNormalizer;
@@ -156,6 +157,13 @@ it('does not include the state ID or last_event_id in its payload', function () 
     expect($result)->toBe('{"__verbs_initialized":false,"name":"Demo"}');
 });
 
+it('migrates events when deserializing', function () {
+    $event = app(Serializer::class)
+        ->deserialize(EventWithMigrations::class, []);
+
+    expect($event->migrated)->toBe(true);
+});
+
 class EventWithConstructorPromotion extends Event
 {
     public function __construct(
@@ -193,5 +201,17 @@ class EventWithConstructor extends Event
     public function __construct()
     {
         $this->constructed = true;
+    }
+}
+
+class EventWithMigrations extends Event
+{
+    public bool $migrated;
+
+    public static function migrate(): array
+    {
+        return [
+            fn(Collection $v0) => $v0->put('migrated', true),
+        ];
     }
 }
