@@ -5,6 +5,7 @@ namespace Thunk\Verbs\Lifecycle;
 use Glhd\Bits\Bits;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Builder as BaseBuilder;
+use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\LazyCollection;
@@ -15,6 +16,7 @@ use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\ConcurrencyException;
 use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Models\VerbEvent;
+use Thunk\Verbs\Models\VerbSnapshot;
 use Thunk\Verbs\Models\VerbStateEvent;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\Serializer;
@@ -35,6 +37,15 @@ class EventStore implements StoresEvents
             ->map(fn (VerbEvent $model) => $model->event());
     }
 
+    public function get(iterable $ids): LazyCollection
+    {
+        return VerbEvent::query()
+            ->whereIn('id', collect($ids))
+            ->lazyById()
+            ->each(fn (VerbEvent $model) => $this->metadata->set($model->event(), $model->metadata()))
+            ->map(fn (VerbEvent $model) => $model->event());
+    }
+
     public function write(array $events): bool
     {
         if (empty($events)) {
@@ -45,6 +56,64 @@ class EventStore implements StoresEvents
 
         return VerbEvent::insert($this->formatForWrite($events))
             && VerbStateEvent::insert($this->formatRelationshipsForWrite($events));
+    }
+
+    public function summarize(State $state, bool $singleton = false): AggregateStateSummary
+    {
+        // FIXME: We probably either need to know the state types or go by snapshot ID
+
+        $known_state_ids = $singleton ? new Collection : Collection::make([$state->id]);
+        $known_event_ids = VerbStateEvent::query()
+            ->distinct()
+            ->select('event_id')
+            ->where('state_type', $state::class)
+            ->unless($singleton, fn (Builder $query) => $query->where('state_id', $state->id))
+            ->toBase()
+            ->pluck('event_id');
+
+        do {
+            $discovered_state_ids = VerbStateEvent::query()
+                ->distinct()
+                ->select('state_id')
+                ->whereIn('event_id', $known_event_ids)
+                ->whereNotIn('state_id', $known_state_ids)
+                ->toBase()
+                ->distinct()
+                ->pluck('state_id');
+
+            $known_state_ids = $known_state_ids->merge($discovered_state_ids);
+
+            $discovered_event_ids = VerbStateEvent::query()
+                ->distinct()
+                ->select('event_id')
+                ->whereNotIn('event_id', $known_event_ids)
+                ->whereIn('state_id', $known_state_ids)
+                ->toBase()
+                ->pluck('event_id');
+
+            $known_event_ids = $known_event_ids->merge($discovered_event_ids);
+
+        } while ($discovered_event_ids->isNotEmpty());
+
+        $aggregates = VerbSnapshot::query()
+            ->toBase()
+            ->tap(fn (BaseBuilder $query) => $query->select([
+                $this->aggregateExpression($query, 'id', 'count'),
+                $this->aggregateExpression($query, 'last_event_id', 'min'),
+                $this->aggregateExpression($query, 'last_event_id', 'max'),
+            ]))
+            ->whereIn('state_id', $known_state_ids)
+            ->first();
+
+        return new AggregateStateSummary(
+            state: $state,
+            related_event_ids: $known_event_ids,
+            related_state_ids: $known_state_ids,
+            min_applied_event_id: $aggregates->min_last_event_id,
+            max_applied_event_id: $aggregates->max_last_event_id,
+            out_of_sync: ($aggregates->count_id && (int) $aggregates->count_id !== count($known_state_ids))
+                || $aggregates->min_last_event_id !== $aggregates->max_last_event_id,
+        );
     }
 
     protected function readEvents(
@@ -79,11 +148,7 @@ class EventStore implements StoresEvents
         $query->select([
             'state_type',
             'state_id',
-            DB::raw(sprintf(
-                'max(%s) as %s',
-                $query->getGrammar()->wrap('event_id'),
-                $query->getGrammar()->wrapTable('max_event_id')
-            )),
+            $this->aggregateExpression($query, 'event_id', 'max'),
         ]);
 
         $query->groupBy('state_type', 'state_id');
@@ -147,5 +212,15 @@ class EventStore implements StoresEvents
                 'updated_at' => now(),
             ]))
             ->all();
+    }
+
+    protected function aggregateExpression(BaseBuilder $query, string $column, string $function): Expression
+    {
+        return DB::raw(sprintf(
+            '%s(%s) as %s',
+            $function,
+            $query->getGrammar()->wrap($column),
+            $query->getGrammar()->wrapTable("{$function}_{$column}")
+        ));
     }
 }
