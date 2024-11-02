@@ -21,7 +21,6 @@ use Thunk\Verbs\Support\Serializer;
 
 class EventStore implements StoresEvents
 {
-
     private array $event_class_map = [];
 
     public function __construct(
