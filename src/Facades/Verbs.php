@@ -23,6 +23,7 @@ use Thunk\Verbs\Testing\EventStoreFake;
  * @method static EventStoreFake assertNothingCommitted()
  * @method static CarbonInterface realNow()
  * @method static void skipPhases(Phase ...$phases)
+ * @method static void mapLegacyEvents(array $map)
  */
 class Verbs extends Facade
 {

@@ -21,6 +21,9 @@ use Thunk\Verbs\Support\Serializer;
 
 class EventStore implements StoresEvents
 {
+
+    private array $event_class_map = [];
+
     public function __construct(
         protected MetadataManager $metadata,
     ) {}
@@ -147,5 +150,26 @@ class EventStore implements StoresEvents
                 'updated_at' => now(),
             ]))
             ->all();
+    }
+
+    /**
+     * @param  array<string, array<string, string>>|array<string, string>  $map
+     */
+    public function mapLegacyEvents(array $map): void
+    {
+        foreach ($map as $new_event => $legacy_events) {
+            if (! is_array($legacy_events)) {
+                $legacy_events = [$legacy_events];
+            }
+
+            foreach ($legacy_events as $legacy_event) {
+                $this->event_class_map[$legacy_event] = $new_event;
+            }
+        }
+    }
+
+    public function resolveType(string $type): string
+    {
+        return $this->event_class_map[$type] ?? $type;
     }
 }
