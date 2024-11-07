@@ -40,12 +40,4 @@ class AccountOpened extends Event
 
         Verbs::unlessReplaying(fn () => Mail::send(new WelcomeEmail($this->user_id)));
     }
-
-    public static function migrate()
-    {
-        return [
-            1 => fn(Collection $v0) => $v0->except('user_id'),
-            2 => fn(Collection $v1) => $v1->merge(['email' => 'default@email.gov']),
-        ];
-    }
 }
