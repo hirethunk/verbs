@@ -190,7 +190,9 @@ class Dispatcher
     protected function hooksFor(Event|State $target, ?Phase $phase = null): Collection
     {
         return Collection::make($this->hooks[$target::class] ?? [])
-            ->when($phase, fn (Collection $hooks) => $hooks->filter(fn (Hook $hook) => $hook->runsInPhase($phase)));
+            ->when($phase, fn (Collection $hooks) => $hooks->filter(fn (Hook $hook) => $hook->runsInPhase($phase)))
+            ->when(is_a($target, Event::class), fn (Collection $hooks) => $hooks->merge($this->hooks[Event::class] ?? []))
+            ->when(is_a($target, State::class), fn (Collection $hooks) => $hooks->merge($this->hooks[State::class] ?? []));
     }
 
     protected function shouldDispatchPhase(Phase $phase): bool
