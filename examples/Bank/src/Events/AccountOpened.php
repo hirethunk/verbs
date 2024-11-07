@@ -2,14 +2,14 @@
 
 namespace Thunk\Verbs\Examples\Bank\Events;
 
-use Thunk\Verbs\Event;
-use Thunk\Verbs\Facades\Verbs;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Mail;
-use Thunk\Verbs\Examples\Bank\Models\Account;
-use Thunk\Verbs\Examples\Bank\Mail\WelcomeEmail;
 use Thunk\Verbs\Attributes\Autodiscovery\StateId;
+use Thunk\Verbs\Event;
+use Thunk\Verbs\Examples\Bank\Mail\WelcomeEmail;
+use Thunk\Verbs\Examples\Bank\Models\Account;
 use Thunk\Verbs\Examples\Bank\States\AccountState;
+use Thunk\Verbs\Facades\Verbs;
 
 class AccountOpened extends Event
 {

@@ -5,7 +5,6 @@ use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Lifecycle\Phase;
 
-
 it('can modify props on events in the mount phase', function () {
     Verbs::registerListener(Listener::class);
 
@@ -21,6 +20,7 @@ it('can modify props on events in the mount phase', function () {
 class EventWithNullProp extends Event
 {
     public ?string $name = null;
+
     public string $album;
 }
 
