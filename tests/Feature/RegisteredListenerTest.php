@@ -27,7 +27,6 @@ class EveryoneException extends Exception {}
 
 class EveryListener
 {
-
     #[On(Phase::Boot)]
     public static function every(Event $event)
     {
