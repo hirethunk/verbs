@@ -102,7 +102,6 @@ class Dispatcher
         $hooks = $this->hooksFor($event, Phase::Mount);
 
         if (method_exists($event, 'mount')) {
-            dump($event);
             $hooks->prepend(Hook::fromClassMethod($event, 'mount')->forcePhases(Phase::Mount));
         }
 
