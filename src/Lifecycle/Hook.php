@@ -72,13 +72,13 @@ class Hook
         return isset($this->phases[$phase]) && $this->phases[$phase] === true;
     }
 
-    public function mount(Container $container, Event $event): bool
+    public function boot(Container $container, Event $event): bool
     {
-        if ($this->runsInPhase(Phase::Mount)) {
+        if ($this->runsInPhase(Phase::Boot)) {
             return $this->execute($container, $event) ?? true;
         }
 
-        throw new RuntimeException('Hook::mount called on a non-mount hook.');
+        throw new RuntimeException('Hook::boot called on a non-boot hook.');
     }
 
     public function validate(Container $container, Event $event): bool

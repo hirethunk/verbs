@@ -37,7 +37,7 @@ class Broker implements BrokersEvents
             return null;
         }
 
-        $this->dispatcher->mount($event);
+        $this->dispatcher->boot($event);
 
         // NOTE: Any changes to how the dispatcher is called here
         // should also be applied to the `replay` method

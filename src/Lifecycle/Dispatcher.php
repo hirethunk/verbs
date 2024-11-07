@@ -38,13 +38,13 @@ class Dispatcher
         $this->skipped_phases = $phases;
     }
 
-    public function mount(Event $event): bool
+    public function boot(Event $event): bool
     {
-        if (! $this->shouldDispatchPhase(Phase::Mount)) {
+        if (! $this->shouldDispatchPhase(Phase::Boot)) {
             return true;
         }
 
-        $this->getMountHooks($event)->each(fn (Hook $hook) => $hook->mount($this->container, $event));
+        $this->getBootHooks($event)->each(fn (Hook $hook) => $hook->boot($this->container, $event));
 
         return true;
     }
@@ -97,12 +97,12 @@ class Dispatcher
     }
 
     /** @return Collection<int, Hook> */
-    protected function getMountHooks(Event $event): Collection
+    protected function getBootHooks(Event $event): Collection
     {
-        $hooks = $this->hooksFor($event, Phase::Mount);
+        $hooks = $this->hooksFor($event, Phase::Boot);
 
-        if (method_exists($event, 'mount')) {
-            $hooks->prepend(Hook::fromClassMethod($event, 'mount')->forcePhases(Phase::Mount));
+        if (method_exists($event, 'boot')) {
+            $hooks->prepend(Hook::fromClassMethod($event, 'boot')->forcePhases(Phase::Boot));
         }
 
         return $hooks;

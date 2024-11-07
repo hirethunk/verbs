@@ -27,7 +27,8 @@ class EveryoneException extends Exception {}
 
 class EveryListener
 {
-    #[On(Phase::Mount)]
+
+    #[On(Phase::Boot)]
     public static function every(Event $event)
     {
         throw new EveryoneException;
@@ -36,7 +37,7 @@ class EveryListener
 
 class OneListener
 {
-    #[On(Phase::Mount)]
+    #[On(Phase::Boot)]
     public static function one(EventOne $event)
     {
         throw new JustOneException();

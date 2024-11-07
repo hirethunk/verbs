@@ -5,7 +5,7 @@ use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Lifecycle\Phase;
 
-it('can modify props on events in the mount phase', function () {
+it('can modify props on events in the Boot phase', function () {
     Verbs::registerListener(Listener::class);
 
     $e = EventWithNullProp::fire(
@@ -26,7 +26,7 @@ class EventWithNullProp extends Event
 
 class Listener
 {
-    #[On(Phase::Mount)]
+    #[On(Phase::Boot)]
     public static function setNameToLilWayne(EventWithNullProp $event)
     {
         $event->name = 'Lil Wayne';
