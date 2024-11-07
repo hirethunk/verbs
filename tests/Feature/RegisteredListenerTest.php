@@ -8,15 +8,15 @@ use Thunk\Verbs\Lifecycle\Phase;
 it('can match a single event by typehinting the specific class', function () {
     Verbs::registerListener(OneListener::class);
 
-    expect(fn() => EventOne::fire())->toThrow(JustOneException::class);
-    expect(fn() => EventTwo::fire())->not->toThrow(JustOneException::class);
+    expect(fn () => EventOne::fire())->toThrow(JustOneException::class);
+    expect(fn () => EventTwo::fire())->not->toThrow(JustOneException::class);
 });
 
 it('can match all events by typehinting the base class', function () {
     Verbs::registerListener(EveryListener::class);
 
-    expect(fn() => EventOne::fire())->toThrow(EveryoneException::class);
-    expect(fn() => EventTwo::fire())->toThrow(EveryoneException::class);
+    expect(fn () => EventOne::fire())->toThrow(EveryoneException::class);
+    expect(fn () => EventTwo::fire())->toThrow(EveryoneException::class);
 });
 
 class EventOne extends Event {}
@@ -39,7 +39,6 @@ class OneListener
     #[On(Phase::Boot)]
     public static function one(EventOne $event)
     {
-        throw new JustOneException();
+        throw new JustOneException;
     }
 }
-
