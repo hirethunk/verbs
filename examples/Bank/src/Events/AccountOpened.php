@@ -2,7 +2,6 @@
 
 namespace Thunk\Verbs\Examples\Bank\Events;
 
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Mail;
 use Thunk\Verbs\Attributes\Autodiscovery\StateId;
 use Thunk\Verbs\Event;
