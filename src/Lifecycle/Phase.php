@@ -4,6 +4,7 @@ namespace Thunk\Verbs\Lifecycle;
 
 enum Phase: string
 {
+    case Mount = 'mount';
     case Authorize = 'authorize';
     case Validate = 'validate';
     case Apply = 'apply';

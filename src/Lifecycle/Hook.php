@@ -14,7 +14,7 @@ use Thunk\Verbs\Support\Wormhole;
 
 class Hook
 {
-    public static function fromClassMethod(object $target, ReflectionMethod|string $method): static
+    public static function fromClassMethod(string|object $target, ReflectionMethod|string $method): static
     {
         if (is_string($method)) {
             $method = new ReflectionMethod($target, $method);
@@ -70,6 +70,15 @@ class Hook
     public function runsInPhase(Phase $phase): bool
     {
         return isset($this->phases[$phase]) && $this->phases[$phase] === true;
+    }
+
+    public function mount(Container $container, Event $event): bool
+    {
+        if ($this->runsInPhase(Phase::Mount)) {
+            return $this->execute($container, $event) ?? true;
+        }
+
+        throw new RuntimeException('Hook::mount called on a non-mount hook.');
     }
 
     public function validate(Container $container, Event $event): bool

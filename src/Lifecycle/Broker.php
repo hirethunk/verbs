@@ -37,6 +37,8 @@ class Broker implements BrokersEvents
             return null;
         }
 
+        $this->dispatcher->mount($event);
+
         // NOTE: Any changes to how the dispatcher is called here
         // should also be applied to the `replay` method
 
@@ -120,5 +122,10 @@ class Broker implements BrokersEvents
     public function skipPhases(Phase ...$phases): void
     {
         $this->dispatcher->skipPhases(...$phases);
+    }
+
+    public function registerListener(string|object $target): void
+    {
+        $this->dispatcher->register($target);
     }
 }

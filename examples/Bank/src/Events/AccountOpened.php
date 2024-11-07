@@ -2,13 +2,14 @@
 
 namespace Thunk\Verbs\Examples\Bank\Events;
 
-use Illuminate\Support\Facades\Mail;
-use Thunk\Verbs\Attributes\Autodiscovery\StateId;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Examples\Bank\Mail\WelcomeEmail;
-use Thunk\Verbs\Examples\Bank\Models\Account;
-use Thunk\Verbs\Examples\Bank\States\AccountState;
 use Thunk\Verbs\Facades\Verbs;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Mail;
+use Thunk\Verbs\Examples\Bank\Models\Account;
+use Thunk\Verbs\Examples\Bank\Mail\WelcomeEmail;
+use Thunk\Verbs\Attributes\Autodiscovery\StateId;
+use Thunk\Verbs\Examples\Bank\States\AccountState;
 
 class AccountOpened extends Event
 {
@@ -38,5 +39,13 @@ class AccountOpened extends Event
         ]);
 
         Verbs::unlessReplaying(fn () => Mail::send(new WelcomeEmail($this->user_id)));
+    }
+
+    public static function migrate()
+    {
+        return [
+            1 => fn(Collection $v0) => $v0->except('user_id'),
+            2 => fn(Collection $v1) => $v1->merge(['email' => 'default@email.gov']),
+        ];
     }
 }

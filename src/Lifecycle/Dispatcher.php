@@ -21,7 +21,7 @@ class Dispatcher
         protected Container $container
     ) {}
 
-    public function register(object $target): void
+    public function register(string|object $target): void
     {
         foreach (Reflector::getHooks($target) as $hook) {
             foreach ($hook->events as $event_type) {
@@ -36,6 +36,17 @@ class Dispatcher
     public function skipPhases(Phase ...$phases): void
     {
         $this->skipped_phases = $phases;
+    }
+
+    public function mount(Event $event): bool
+    {
+        if (! $this->shouldDispatchPhase(Phase::Mount)) {
+            return true;
+        }
+
+        $this->getMountHooks($event)->each(fn (Hook $hook) => $hook->mount($this->container, $event));
+
+        return true;
     }
 
     public function validate(Event $event): bool
@@ -83,6 +94,19 @@ class Dispatcher
         if ($this->shouldDispatchPhase(Phase::Replay)) {
             $this->getReplayHooks($event)->each(fn (Hook $hook) => $hook->replay($this->container, $event));
         }
+    }
+
+    /** @return Collection<int, Hook> */
+    protected function getMountHooks(Event $event): Collection
+    {
+        $hooks = $this->hooksFor($event, Phase::Mount);
+
+        if (method_exists($event, 'mount')) {
+            dump($event);
+            $hooks->prepend(Hook::fromClassMethod($event, 'mount')->forcePhases(Phase::Mount));
+        }
+
+        return $hooks;
     }
 
     /** @return Collection<int, Hook> */
