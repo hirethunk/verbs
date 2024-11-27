@@ -8,6 +8,9 @@ use ReflectionMethod;
 use RuntimeException;
 use SplObjectStorage;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Metadata;
+use Thunk\Verbs\State;
+use Thunk\Verbs\Support\DeferredWriteData;
 use Thunk\Verbs\Support\DependencyResolver;
 use Thunk\Verbs\Support\Reflector;
 use Thunk\Verbs\Support\Wormhole;
@@ -47,6 +50,7 @@ class Hook
         public array $states = [],
         public SplObjectStorage $phases = new SplObjectStorage,
         public ?string $name = null,
+        public ?DeferredWriteData $deferred = null,
     ) {}
 
     public function forcePhases(Phase ...$phases): static
@@ -107,7 +111,12 @@ class Hook
     public function replay(Container $container, Event $event): void
     {
         if ($this->runsInPhase(Phase::Replay)) {
-            app(Wormhole::class)->warp($event, fn () => $this->execute($container, $event));
+            $callable = fn () => $this->execute($container, $event);
+            if ($this->deferred) {
+                app(DeferredWriteQueue::class)->add($event, $callable, $this->deferred);
+            } else {
+                app(Wormhole::class)->warp($event, $callable);
+            }
         }
     }
 
