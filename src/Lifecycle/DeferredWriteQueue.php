@@ -26,5 +26,6 @@ class DeferredWriteQueue
                 app(Wormhole::class)->warp($callback[0], $callback[1]);
             }
         }
+        $this->callbacks = [];
     }
 }
