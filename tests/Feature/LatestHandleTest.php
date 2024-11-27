@@ -6,7 +6,6 @@ use Thunk\Verbs\Commands\ReplayCommand;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Facades\Verbs;
-use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\State;
 
 beforeEach(function () {
@@ -68,8 +67,7 @@ class LatestHandleTestEvent extends Event
     public function __construct(
         public int $add = 0,
         #[StateId(LatestHandleTestState::class)] public ?int $state_id = null,
-    ) {
-    }
+    ) {}
 
     public function apply(LatestHandleTestState $state)
     {
@@ -88,8 +86,7 @@ class AnotherLatestHandleTestEvent extends Event
     public function __construct(
         public int $add = 0,
         #[StateId(LatestHandleTestState::class)] public ?int $state_id = null,
-    ) {
-    }
+    ) {}
 
     public function apply(LatestHandleTestState $state)
     {

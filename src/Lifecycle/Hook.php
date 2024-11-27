@@ -8,8 +8,6 @@ use ReflectionMethod;
 use RuntimeException;
 use SplObjectStorage;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Metadata;
-use Thunk\Verbs\State;
 use Thunk\Verbs\Support\DeferredWriteData;
 use Thunk\Verbs\Support\DependencyResolver;
 use Thunk\Verbs\Support\Reflector;
