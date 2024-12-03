@@ -46,14 +46,17 @@ class DeferredWriteQueue
         foreach ($states as $state) {
             if ($state === null) {
                 $id .= 'null';
+
                 continue;
             }
             if (is_string($state) || is_int($state)) {
                 $id .= $state;
+
                 continue;
             }
             if ($state instanceof State) {
                 $id .= $state->id;
+
                 continue;
             }
             throw new \InvalidArgumentException('Invalid state type');
