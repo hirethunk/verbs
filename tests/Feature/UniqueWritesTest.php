@@ -9,7 +9,6 @@ use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\State;
 
 beforeEach(function () {
-    $GLOBALS['replay_test_counts'] = [];
     $GLOBALS['handle_count'] = 0;
 });
 
@@ -31,7 +30,6 @@ it('prevents duplicate writes by uniqueBy', function () {
 
     $GLOBALS['handle_count'] = 0;
 
-    config(['app.env' => 'testing']);
     $this->artisan(ReplayCommand::class);
 
     expect($GLOBALS['handle_count'])->toBe(2);
@@ -56,7 +54,6 @@ it('prevents duplicate writes automatically using the StateId attribute', functi
 
     $GLOBALS['handle_count'] = 0;
 
-    config(['app.env' => 'testing']);
     $this->artisan(ReplayCommand::class);
 
     expect($GLOBALS['handle_count'])->toBe(2);
@@ -75,7 +72,19 @@ it('prevents duplicate writes automatically using a specific name', function () 
 
     $GLOBALS['handle_count'] = 0;
 
-    config(['app.env' => 'testing']);
+    $this->artisan(ReplayCommand::class);
+
+    expect($GLOBALS['handle_count'])->toBe(1);
+});
+
+it('can receive handle data when replay_only is set', function () {
+    $this->assertTrue(CommitOnlyTestEvent::commit());
+    $this->assertTrue(CommitOnlyTestEvent::commit());
+
+    expect($GLOBALS['handle_count'])->toBe(2);
+
+    $GLOBALS['handle_count'] = 0;
+
     $this->artisan(ReplayCommand::class);
 
     expect($GLOBALS['handle_count'])->toBe(1);
@@ -167,6 +176,16 @@ class AnotherNamedHandleTestEvent extends Event
     public function handle(): void
     {
         $GLOBALS['handle_count']++;
+    }
+}
+
+class CommitOnlyTestEvent extends Event
+{
+    #[UniqueBy(null, replay_only: true)]
+    public function handle(): bool
+    {
+        $GLOBALS['handle_count']++;
+        return true;
     }
 }
 

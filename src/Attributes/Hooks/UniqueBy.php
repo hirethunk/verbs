@@ -14,6 +14,7 @@ class UniqueBy implements HookAttribute
     public function __construct(
         public string|array|null $property,
         public ?string $name = null,
+        public bool $replay_only = false,
     ) {}
 
     public function applyToHook(Hook $hook): void

@@ -101,10 +101,10 @@ class Hook
     {
         if ($this->runsInPhase(Phase::Handle)) {
             $callable = fn () => $this->execute($container, $event);
-            if ($this->deferred_attribute) {
+            if ($this->deferred_attribute && !$this->deferred_attribute->replay_only) {
                 app(DeferredWriteQueue::class)->addHook($event, $this->deferred_attribute, $callable);
             } else {
-                $this->execute($container, $event);
+                return $this->execute($container, $event);
             }
         }
 
