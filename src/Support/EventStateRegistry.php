@@ -48,6 +48,18 @@ class EventStateRegistry
         return $discovered;
     }
 
+    public function statesForProperty(Event $event, string $property): StateCollection
+    {
+        $attributes = $this->getAttributes($event);
+        $property = $attributes
+            ->firstOrFail(fn (StateDiscoveryAttribute $attribute) => $attribute->propertyName() === $property);
+
+        $states = new StateCollection;
+        $this->discoverAndPushState($property, $event, $states);
+
+        return $states;
+    }
+
     /** @return Collection<string, State> */
     protected function discoverAndPushState(StateDiscoveryAttribute $attribute, Event $target, StateCollection $discovered): Collection
     {

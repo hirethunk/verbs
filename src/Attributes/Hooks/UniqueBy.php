@@ -4,18 +4,20 @@ namespace Thunk\Verbs\Attributes\Hooks;
 
 use Attribute;
 use Thunk\Verbs\Lifecycle\Hook;
-use Thunk\Verbs\Support\DeferredWriteData;
 
 #[Attribute(Attribute::TARGET_METHOD)]
-class Latest implements HookAttribute
+class UniqueBy implements HookAttribute
 {
+    /**
+     * @param  string|string[]  $property
+     */
     public function __construct(
-        public ?string $unique_id = null,
-        public ?string $type = null,
+        public string|array|null $property,
+        public ?string $name = null,
     ) {}
 
     public function applyToHook(Hook $hook): void
     {
-        $hook->deferred = new DeferredWriteData($this->type, $this->unique_id);
+        $hook->deferred_attribute = $this;
     }
 }
