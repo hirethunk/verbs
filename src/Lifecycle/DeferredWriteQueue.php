@@ -12,6 +12,7 @@ use Thunk\Verbs\Support\Wormhole;
 class DeferredWriteQueue
 {
     private array $callbacks = [];
+
     private int $count = 0;
 
     public function addHook(Event $event, DeferFor $deferred, callable $callback): void
