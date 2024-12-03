@@ -32,7 +32,7 @@ class DeferredWriteQueue
 
         $uniqueByKey .= $states->map(fn (State $state) => $state->id)->implode('|');
 
-        $name = $deferred->name ?? 'DeferredWriteQueue';
+        $name = $deferred->name ?? get_class($event);
 
         $this->callbacks[$name][$uniqueByKey] = [$event, $callback, true];
     }

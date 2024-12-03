@@ -1,5 +1,6 @@
 <?php
 
+use Thunk\Verbs\Attributes\Autodiscovery\AppliesToState;
 use Thunk\Verbs\Attributes\Autodiscovery\StateId;
 use Thunk\Verbs\Attributes\Hooks\UniqueBy;
 use Thunk\Verbs\Commands\ReplayCommand;
@@ -41,22 +42,25 @@ it('prevents duplicate writes automatically using the StateId attribute', functi
 
     // State 1
     LatestHandleTestEvent::fire(state_id: $state1_id);
+    LatestHandleTestEvent::fire(state_id: $state1_id);
     AnotherLatestHandleTestEvent::fire(state_id: $state1_id);
     AnotherLatestHandleTestEvent::fire(state_id: $state1_id);
 
     // State 2
     LatestHandleTestEvent::fire(state_id: $state2_id);
+    LatestHandleTestEvent::fire(state_id: $state2_id);
+    AnotherLatestHandleTestEvent::fire(state_id: $state2_id);
     AnotherLatestHandleTestEvent::fire(state_id: $state2_id);
 
     Verbs::commit();
 
-    expect($GLOBALS['handle_count'])->toBe(2);
+    expect($GLOBALS['handle_count'])->toBe(4);
 
     $GLOBALS['handle_count'] = 0;
 
     $this->artisan(ReplayCommand::class);
 
-    expect($GLOBALS['handle_count'])->toBe(2);
+    expect($GLOBALS['handle_count'])->toBe(4);
 });
 
 it('prevents duplicate writes automatically using a specific name', function () {
@@ -131,9 +135,8 @@ it('only runs callbacks once', function () {
 
 class LatestHandleTestEvent extends Event
 {
-    public function __construct(
-        #[StateId(LatestHandleTestState::class)] public ?int $state_id = null,
-    ) {}
+    #[StateId(LatestHandleTestState::class)]
+    public int $state_id;
 
     #[UniqueBy('state_id')]
     public function handle(): void
@@ -142,11 +145,10 @@ class LatestHandleTestEvent extends Event
     }
 }
 
+#[AppliesToState(LatestHandleTestState::class, 'state_id')]
 class AnotherLatestHandleTestEvent extends Event
 {
-    public function __construct(
-        #[StateId(LatestHandleTestState::class)] public ?int $state_id = null,
-    ) {}
+    public int $state_id;
 
     #[UniqueBy('state_id')]
     public function handle(): void
@@ -157,9 +159,6 @@ class AnotherLatestHandleTestEvent extends Event
 
 class NamedHandleTestEvent extends Event
 {
-    public function __construct(
-    ) {}
-
     #[UniqueBy(null, name: 'named')]
     public function handle(): void
     {
@@ -169,9 +168,6 @@ class NamedHandleTestEvent extends Event
 
 class AnotherNamedHandleTestEvent extends Event
 {
-    public function __construct(
-    ) {}
-
     #[UniqueBy(null, name: 'named')]
     public function handle(): void
     {

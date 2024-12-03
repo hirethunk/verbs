@@ -66,4 +66,10 @@ class AppliesToState extends StateDiscoveryAttribute
 
         throw new InvalidArgumentException("No ID property provided AppliesToState for {$this->state_type}");
     }
+
+
+    public function propertyName(): string
+    {
+        return $this->id;
+    }
 }
