@@ -38,7 +38,7 @@ class DeferredWriteQueue
     }
 
     /**
-     * @param  iterable<State|string|int|null>  $states
+     * @param  iterable<State|string|null>  $states
      */
     public function addCallback(iterable $states, callable $callback, string $name): void
     {
@@ -49,7 +49,7 @@ class DeferredWriteQueue
 
                 continue;
             }
-            if (is_string($state) || is_int($state)) {
+            if (is_string($state)) {
                 $id .= $state;
 
                 continue;
