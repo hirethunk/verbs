@@ -2,7 +2,7 @@
 
 use Thunk\Verbs\Attributes\Autodiscovery\AppliesToState;
 use Thunk\Verbs\Attributes\Autodiscovery\StateId;
-use Thunk\Verbs\Attributes\Hooks\UniqueBy;
+use Thunk\Verbs\Attributes\Hooks\DeferFor;
 use Thunk\Verbs\Commands\ReplayCommand;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Id;
@@ -97,34 +97,34 @@ it('can receive handle data when replay_only is set', function () {
 it('only runs callbacks once', function () {
     NamedHandleTestEvent::fire();
 
-    Verbs::whenUnique(null, function () {
+    Verbs::defer(null, function () {
         $GLOBALS['handle_count']++;
     });
 
-    Verbs::whenUnique(null, function () {
+    Verbs::defer(null, function () {
         $GLOBALS['handle_count']++;
     });
 
-    Verbs::whenUnique(null, function () {
+    Verbs::defer(null, function () {
         $GLOBALS['handle_count']++;
     }, 'another');
 
-    Verbs::whenUnique(null, function () {
+    Verbs::defer(null, function () {
         $GLOBALS['handle_count']++;
     }, 'another');
 
     $state = LatestHandleTestState::load(snowflake_id());
     $state2 = LatestHandleTestState::load(snowflake_id());
 
-    Verbs::whenUnique($state, function () {
+    Verbs::defer($state, function () {
         $GLOBALS['handle_count']++;
     }, 'another');
 
-    Verbs::whenUnique($state, function () {
+    Verbs::defer($state, function () {
         $GLOBALS['handle_count']++;
     }, 'another');
 
-    Verbs::whenUnique([$state, $state2], function () {
+    Verbs::defer([$state, $state2], function () {
         $GLOBALS['handle_count']++;
     }, 'another');
 
@@ -138,7 +138,7 @@ class LatestHandleTestEvent extends Event
     #[StateId(LatestHandleTestState::class)]
     public int $state_id;
 
-    #[UniqueBy('state_id')]
+    #[DeferFor('state_id')]
     public function handle(): void
     {
         $GLOBALS['handle_count']++;
@@ -150,7 +150,7 @@ class AnotherLatestHandleTestEvent extends Event
 {
     public int $state_id;
 
-    #[UniqueBy('state_id')]
+    #[DeferFor('state_id')]
     public function handle(): void
     {
         $GLOBALS['handle_count']++;
@@ -159,7 +159,7 @@ class AnotherLatestHandleTestEvent extends Event
 
 class NamedHandleTestEvent extends Event
 {
-    #[UniqueBy(null, name: 'named')]
+    #[DeferFor(null, name: 'named')]
     public function handle(): void
     {
         $GLOBALS['handle_count']++;
@@ -168,7 +168,7 @@ class NamedHandleTestEvent extends Event
 
 class AnotherNamedHandleTestEvent extends Event
 {
-    #[UniqueBy(null, name: 'named')]
+    #[DeferFor(null, name: 'named')]
     public function handle(): void
     {
         $GLOBALS['handle_count']++;
@@ -177,7 +177,7 @@ class AnotherNamedHandleTestEvent extends Event
 
 class CommitOnlyTestEvent extends Event
 {
-    #[UniqueBy(null, replay_only: true)]
+    #[DeferFor(null, replay_only: true)]
     public function handle(): bool
     {
         $GLOBALS['handle_count']++;

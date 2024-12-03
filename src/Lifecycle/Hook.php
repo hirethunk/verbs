@@ -7,7 +7,7 @@ use Illuminate\Contracts\Container\Container;
 use ReflectionMethod;
 use RuntimeException;
 use SplObjectStorage;
-use Thunk\Verbs\Attributes\Hooks\UniqueBy;
+use Thunk\Verbs\Attributes\Hooks\DeferFor;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Support\DependencyResolver;
 use Thunk\Verbs\Support\Reflector;
@@ -43,12 +43,12 @@ class Hook
     }
 
     public function __construct(
-        public Closure $callback,
-        public array $events = [],
-        public array $states = [],
+        public Closure          $callback,
+        public array            $events = [],
+        public array            $states = [],
         public SplObjectStorage $phases = new SplObjectStorage,
-        public ?string $name = null,
-        public ?UniqueBy $deferred_attribute = null,
+        public ?string          $name = null,
+        public ?DeferFor        $deferred_attribute = null,
     ) {}
 
     public function forcePhases(Phase ...$phases): static

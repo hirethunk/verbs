@@ -2,7 +2,7 @@
 
 namespace Thunk\Verbs\Lifecycle;
 
-use Thunk\Verbs\Attributes\Hooks\UniqueBy;
+use Thunk\Verbs\Attributes\Hooks\DeferFor;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\EventStateRegistry;
@@ -13,10 +13,10 @@ class DeferredWriteQueue
 {
     private array $callbacks = [];
 
-    public function addHook(Event $event, UniqueBy $deferred, callable $callback): void
+    public function addHook(Event $event, DeferFor $deferred, callable $callback): void
     {
         /** @var string[] $propertyNames */
-        $propertyNames = is_array($deferred->property) ? $deferred->property : [$deferred->property];
+        $propertyNames = is_array($deferred->property_name) ? $deferred->property_name : [$deferred->property_name];
 
         $uniqueByKey = '';
         $states = new StateCollection;
@@ -32,13 +32,13 @@ class DeferredWriteQueue
 
         $uniqueByKey .= $states->map(fn (State $state) => $state->id)->implode('|');
 
-        $name = $deferred->name ?? get_class($event);
+        $name = $deferred->name === DeferFor::EVENT_CLASS ? get_class($event) : $deferred->name;
 
         $this->callbacks[$name][$uniqueByKey] = [$event, $callback, true];
     }
 
     /**
-     * @param  iterable<State|null>  $states
+     * @param  iterable<State|string|int|null>  $states
      */
     public function addCallback(iterable $states, callable $callback, string $name): void
     {
@@ -46,10 +46,17 @@ class DeferredWriteQueue
         foreach ($states as $state) {
             if ($state === null) {
                 $id .= 'null';
-
                 continue;
             }
-            $id .= $state->id;
+            if (is_string($state) || is_int($state)) {
+                $id .= $state;
+                continue;
+            }
+            if ($state instanceof State) {
+                $id .= $state->id;
+                continue;
+            }
+            throw new \InvalidArgumentException('Invalid state type');
         }
 
         $this->callbacks[$name][$id] = [null, $callback, false];

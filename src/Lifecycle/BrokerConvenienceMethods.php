@@ -75,9 +75,9 @@ trait BrokerConvenienceMethods
         }
     }
 
-    public function whenUnique(State|iterable|null $state, callable $callback, string $name = 'default'): void
+    public function defer(State|string|int|iterable|null $unique_by, callable $callback, string $name = 'default'): void
     {
-        $states = is_iterable($state) ? $state : [$state];
+        $states = is_iterable($unique_by) ? $unique_by : [$unique_by];
         app(DeferredWriteQueue::class)->addCallback($states, $callback, $name);
     }
 
