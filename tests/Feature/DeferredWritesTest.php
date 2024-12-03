@@ -186,4 +186,8 @@ class CommitOnlyTestEvent extends Event
     }
 }
 
-class LatestHandleTestState extends State {}
+
+
+class LatestHandleTestState extends State {
+    public $test = 'test';
+}

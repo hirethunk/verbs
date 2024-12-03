@@ -12,6 +12,7 @@ use Thunk\Verbs\Support\Wormhole;
 class DeferredWriteQueue
 {
     private array $callbacks = [];
+    private int $count = 0;
 
     public function addHook(Event $event, DeferFor $deferred, callable $callback): void
     {
@@ -34,7 +35,7 @@ class DeferredWriteQueue
 
         $name = $deferred->name === DeferFor::EVENT_CLASS ? get_class($event) : $deferred->name;
 
-        $this->callbacks[$name][$uniqueByKey] = [$event, $callback, true];
+        $this->callbacks[$name][$uniqueByKey][$this->count++] = [$event, $callback, true];
     }
 
     /**
@@ -62,20 +63,26 @@ class DeferredWriteQueue
             throw new \InvalidArgumentException('Invalid state type');
         }
 
-        $this->callbacks[$name][$id] = [null, $callback, false];
+        unset($this->callbacks[$name][$id]);
+        $this->callbacks[$name][$id][$this->count++] = [null, $callback, false];
     }
 
     public function flush(): void
     {
-        foreach ($this->callbacks as $callbacks) {
-            foreach ($callbacks as $callback) {
-                if ($callback[2]) {
-                    app(Wormhole::class)->warp($callback[0], $callback[1]);
+        foreach ($this->callbacks as $namedCallbacks) {
+            foreach ($namedCallbacks as $stateGroup) {
+                $lastCallback = end($stateGroup);
+                [$event, $callback, $isEventCallback] = $lastCallback;
+
+                if ($isEventCallback) {
+                    app(Wormhole::class)->warp($event, $callback);
                 } else {
-                    $callback[1]();
+                    $callback();
                 }
             }
         }
+
         $this->callbacks = [];
+        $this->count = 0;
     }
 }
