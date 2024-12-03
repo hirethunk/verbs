@@ -181,6 +181,7 @@ class CommitOnlyTestEvent extends Event
     public function handle(): bool
     {
         $GLOBALS['handle_count']++;
+
         return true;
     }
 }
