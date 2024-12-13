@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event as EventFacade;
 use Thunk\Verbs\Contracts\BrokersEvents;
+use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Models\VerbEvent;
 
@@ -18,11 +19,11 @@ use function Laravel\Prompts\warning;
 
 class ReplayCommand extends Command
 {
-    protected $signature = 'verbs:replay {--force}';
+    protected $signature = 'verbs:replay {--force} {--reattach}';
 
     protected $description = 'Replay all Verbs events.';
 
-    public function handle(BrokersEvents $broker): int
+    public function handle(BrokersEvents $broker, StoresEvents $event_store): int
     {
         if (! $this->confirmed() || ! $this->confirmedAgainIfProduction()) {
             return 1;
@@ -39,12 +40,18 @@ class ReplayCommand extends Command
         $progress->start();
 
         $broker->replay(
-            beforeEach: fn (Event $event) => $progress->label(sprintf(
-                '[%s] %s::%d',
-                date('i:s', time() - $started_at),
-                class_basename($event),
-                $event->id,
-            )),
+            beforeEach: function (Event $event) use ($event_store, $progress, $started_at) {
+                if ($this->option('reattach')) {
+                    $event_store->reattach([$event]);
+                }
+
+                $progress->label(sprintf(
+                    '[%s] %s::%d',
+                    date('i:s', time() - $started_at),
+                    class_basename($event),
+                    $event->id,
+                ));
+            },
             afterEach: fn () => $progress->advance(),
         );
 
