@@ -34,6 +34,17 @@ it('supports singleton states', function () {
     $this->assertTrue($user_request->acknowledged);
 });
 
+it('supports nullable state properties', function () {
+    $user_request1 = UserRequestState::new();
+
+    UserRequestsWithNullable::commit(
+        user_request1: $user_request1,
+        user_request2: null,
+    );
+
+    $this->assertTrue($user_request1->nullable);
+});
+
 it('supports using a nested state directly in events', function () {
     $parent = ParentState::new();
     $child = ChildState::new();
@@ -95,6 +106,8 @@ class UserRequestState extends State
     public bool $acknowledged = false;
 
     public bool $processed = false;
+
+    public bool $nullable = false;
 }
 
 class UserRequestAcknowledged extends Event
@@ -120,6 +133,19 @@ class UserRequestsProcessed extends Event
         $this->user_requests->each(
             fn (UserRequestState $user_request) => $user_request->processed = true
         );
+    }
+}
+
+class UserRequestsWithNullable extends Event
+{
+    public function __construct(
+        public UserRequestState $user_request1,
+        public ?UserRequestState $user_request2
+    ) {}
+
+    public function apply()
+    {
+        $this->user_request1->nullable = true;
     }
 }
 
