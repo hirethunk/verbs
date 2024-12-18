@@ -1,12 +1,29 @@
 <?php
 
+use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\Str;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\State;
+use Thunk\Verbs\Support\IdManager;
+
+use function Pest\Laravel\artisan;
 
 beforeEach(function () {
+    // This is necessary because our Orchestra setup migrates the database
+    // before our tests run, so we need to re-run our migrations
     config()->set('verbs.id_type', 'uuid');
+    app()->instance(IdManager::class, new IdManager('uuid'));
+    Facade::clearResolvedInstance(IdManager::class);
+    artisan('migrate:fresh');
+});
+
+afterAll(function () {
+    // This just resets the migrations back to how the were before this test suite
+    config()->set('verbs.id_type', 'snowflake');
+    app()->instance(IdManager::class, new IdManager('snowflake'));
+    Facade::clearResolvedInstance(IdManager::class);
+    artisan('migrate:fresh');
 });
 
 it('supports using uuids as state ids', function () {
