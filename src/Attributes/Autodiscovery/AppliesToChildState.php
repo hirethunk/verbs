@@ -37,4 +37,9 @@ class AppliesToChildState extends StateDiscoveryAttribute
 
         return $manager->load($parent->{$this->id}, $this->state_type);
     }
+
+    public function propertyName(): ?string
+    {
+        return $this->id;
+    }
 }

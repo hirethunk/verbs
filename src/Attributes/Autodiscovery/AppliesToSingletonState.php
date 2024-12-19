@@ -24,4 +24,9 @@ class AppliesToSingletonState extends StateDiscoveryAttribute
     {
         return $manager->singleton($this->state_type);
     }
+
+    public function propertyName(): ?string
+    {
+        return null;
+    }
 }

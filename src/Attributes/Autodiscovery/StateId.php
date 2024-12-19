@@ -53,4 +53,9 @@ class StateId extends StateDiscoveryAttribute
 
         return array_map(fn ($id) => $manager->load($id, $this->state_type), Arr::wrap($id));
     }
+
+    public function propertyName(): string
+    {
+        return $this->property->getName();
+    }
 }
