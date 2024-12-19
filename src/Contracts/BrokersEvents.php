@@ -15,6 +15,4 @@ interface BrokersEvents
     public function isValid(Event $event): bool;
 
     public function replay(?callable $beforeEach = null, ?callable $afterEach = null);
-
-    public function registerListener(string|object $target);
 }

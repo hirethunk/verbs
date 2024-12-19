@@ -81,9 +81,4 @@ class BrokerFake implements BrokersEvents
     {
         $this->broker->commitImmediately($commit_immediately);
     }
-
-    public function registerListener(string|object $target): void
-    {
-        $this->broker->registerListener($target);
-    }
 }

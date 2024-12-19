@@ -19,7 +19,7 @@ use Thunk\Verbs\State;
 class Reflector extends BaseReflector
 {
     /** @return Collection<int, Hook> */
-    public static function getHooks(string|object $target): Collection
+    public static function getHooks(object $target): Collection
     {
         if ($target instanceof Closure) {
             return collect([Hook::fromClosure($target)]);

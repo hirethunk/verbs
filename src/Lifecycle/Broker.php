@@ -123,9 +123,4 @@ class Broker implements BrokersEvents
     {
         $this->dispatcher->skipPhases(...$phases);
     }
-
-    public function registerListener(string|object $target): void
-    {
-        $this->dispatcher->register($target);
-    }
 }

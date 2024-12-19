@@ -21,7 +21,7 @@ class Dispatcher
         protected Container $container
     ) {}
 
-    public function register(string|object $target): void
+    public function register(object $target): void
     {
         foreach (Reflector::getHooks($target) as $hook) {
             foreach ($hook->events as $event_type) {
@@ -38,15 +38,11 @@ class Dispatcher
         $this->skipped_phases = $phases;
     }
 
-    public function boot(Event $event): bool
+    public function boot(Event $event): void
     {
-        if (! $this->shouldDispatchPhase(Phase::Boot)) {
-            return true;
+        if ($this->shouldDispatchPhase(Phase::Boot)) {
+            $this->getBootHooks($event)->each(fn (Hook $hook) => $hook->boot($this->container, $event));
         }
-
-        $this->getBootHooks($event)->each(fn (Hook $hook) => $hook->boot($this->container, $event));
-
-        return true;
     }
 
     public function validate(Event $event): bool
@@ -190,8 +186,6 @@ class Dispatcher
     protected function hooksFor(Event|State $target, ?Phase $phase = null): Collection
     {
         return Collection::make($this->hooks[$target::class] ?? [])
-            ->when(is_a($target, Event::class), fn (Collection $hooks) => $hooks->merge($this->hooks[Event::class] ?? []))
-            ->when(is_a($target, State::class), fn (Collection $hooks) => $hooks->merge($this->hooks[State::class] ?? []))
             ->when($phase, fn (Collection $hooks) => $hooks->filter(fn (Hook $hook) => $hook->runsInPhase($phase)));
     }
 
