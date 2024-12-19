@@ -84,7 +84,7 @@ class SnapshotStore implements StoresSnapshots
 
         $snapshots = VerbSnapshot::query()
             ->where('type', '=', $type)
-            ->where('id', $id)
+            ->where('state_id', $id)
             ->take(2)
             ->get();
 
@@ -103,7 +103,7 @@ class SnapshotStore implements StoresSnapshots
 
         $states = VerbSnapshot::query()
             ->where('type', '=', $type)
-            ->whereIn('id', $ids)
+            ->whereIn('state_id', $ids)
             ->get()
             ->map(fn (VerbSnapshot $snapshot) => $snapshot->state());
 
