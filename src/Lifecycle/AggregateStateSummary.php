@@ -14,7 +14,7 @@ class AggregateStateSummary
     {
         $summary = new static(
             original_states: Collection::make($states),
-            related_event_ids: new Collection(),
+            related_event_ids: new Collection,
             related_states: Collection::make($states)->map(StateIdentity::from(...)),
         );
 
@@ -27,9 +27,9 @@ class AggregateStateSummary
      * @param  Collection<int, StateIdentity>  $related_states
      */
     public function __construct(
-        public Collection $original_states = new Collection(),
-        public Collection $related_event_ids = new Collection(),
-        public Collection $related_states = new Collection(),
+        public Collection $original_states = new Collection,
+        public Collection $related_event_ids = new Collection,
+        public Collection $related_states = new Collection,
     ) {}
 
     protected function discover(): static
