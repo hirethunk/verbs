@@ -70,9 +70,7 @@ class AggregateStateSummary
                 fn ($state) => $query->whereNot(fn (Builder $query) => $this->addConstraint($state, $query)))
             )
             ->toBase()
-            ->distinct()
-            ->get()
-            ->map(StateIdentity::from(...));
+            ->chunkMap(StateIdentity::from(...));
 
         $this->related_states = $this->related_states->merge($discovered_states);
 
