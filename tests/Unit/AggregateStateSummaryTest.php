@@ -33,7 +33,7 @@ test('it finds the correct states and events for one state', function () {
         }
     }
 
-    $target_state = new AggregateStateSummaryTestState1();
+    $target_state = new AggregateStateSummaryTestState1;
     $target_state->id = 10;
 
     $summary = AggregateStateSummary::summarize($target_state);
@@ -85,10 +85,10 @@ test('it finds the correct states and events for multiple states', function () {
         }
     }
 
-    $target_state1 = new AggregateStateSummaryTestState1();
+    $target_state1 = new AggregateStateSummaryTestState1;
     $target_state1->id = 10;
 
-    $target_state2 = new AggregateStateSummaryTestState2();
+    $target_state2 = new AggregateStateSummaryTestState2;
     $target_state2->id = 11;
 
     $summary = AggregateStateSummary::summarize($target_state1, $target_state2);
