@@ -2,9 +2,9 @@
 
 namespace Thunk\Verbs\Examples\Counter\States;
 
-use Thunk\Verbs\State;
+use Thunk\Verbs\SingletonState;
 
-class CountState extends State
+class CountState extends SingletonState
 {
     public int $count = 0;
 }

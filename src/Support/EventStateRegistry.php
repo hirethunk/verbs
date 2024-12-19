@@ -15,6 +15,7 @@ use Thunk\Verbs\Attributes\Autodiscovery\StateDiscoveryAttribute;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\State;
+use WeakMap;
 
 class EventStateRegistry
 {
@@ -22,11 +23,25 @@ class EventStateRegistry
 
     protected array $discovered_properties = [];
 
+    protected WeakMap $discovered_states;
+
     public function __construct(
         protected StateManager $manager,
-    ) {}
+    ) {
+        $this->discovered_states = new WeakMap;
+    }
+
+    public function reset()
+    {
+        $this->discovered_states = new WeakMap;
+    }
 
     public function getStates(Event $event): StateCollection
+    {
+        return $this->discovered_states[$event] ??= $this->discoverStates($event);
+    }
+
+    protected function discoverStates(Event $event): StateCollection
     {
         $discovered = new StateCollection;
         $deferred = new StateCollection;

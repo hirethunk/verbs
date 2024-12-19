@@ -5,6 +5,7 @@ namespace Thunk\Verbs\Lifecycle;
 use Glhd\Bits\Bits;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Builder as BaseBuilder;
+use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\LazyCollection;
@@ -16,6 +17,7 @@ use Thunk\Verbs\Exceptions\ConcurrencyException;
 use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Models\VerbEvent;
 use Thunk\Verbs\Models\VerbStateEvent;
+use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\Serializer;
 
@@ -28,9 +30,17 @@ class EventStore implements StoresEvents
     public function read(
         ?State $state = null,
         Bits|UuidInterface|AbstractUid|int|string|null $after_id = null,
-        bool $singleton = false,
     ): LazyCollection {
-        return $this->readEvents($state, $after_id, $singleton)
+        return $this->readEvents($state, $after_id)
+            ->each(fn (VerbEvent $model) => $this->metadata->set($model->event(), $model->metadata()))
+            ->map(fn (VerbEvent $model) => $model->event());
+    }
+
+    public function get(iterable $ids): LazyCollection
+    {
+        return VerbEvent::query()
+            ->whereIn('id', collect($ids))
+            ->lazyById()
             ->each(fn (VerbEvent $model) => $this->metadata->set($model->event(), $model->metadata()))
             ->map(fn (VerbEvent $model) => $model->event());
     }
@@ -47,15 +57,19 @@ class EventStore implements StoresEvents
             && VerbStateEvent::insert($this->formatRelationshipsForWrite($events));
     }
 
+    public function summarize(State ...$states): AggregateStateSummary
+    {
+        return AggregateStateSummary::summarize(...$states);
+    }
+
     protected function readEvents(
         ?State $state,
         Bits|UuidInterface|AbstractUid|int|string|null $after_id,
-        bool $singleton,
     ): LazyCollection {
         if ($state) {
             return VerbStateEvent::query()
                 ->with('event')
-                ->unless($singleton, fn (Builder $query) => $query->where('state_id', $state->id))
+                ->unless($state instanceof SingletonState, fn (Builder $query) => $query->where('state_id', $state->id))
                 ->where('state_type', $state::class)
                 ->when($after_id, fn (Builder $query) => $query->whereRelation('event', 'id', '>', Id::from($after_id)))
                 ->lazyById()
@@ -79,11 +93,7 @@ class EventStore implements StoresEvents
         $query->select([
             'state_type',
             'state_id',
-            DB::raw(sprintf(
-                'max(%s) as %s',
-                $query->getGrammar()->wrap('event_id'),
-                $query->getGrammar()->wrapTable('max_event_id')
-            )),
+            $this->aggregateExpression($query, 'event_id', 'max'),
         ]);
 
         $query->groupBy('state_type', 'state_id');
@@ -148,5 +158,15 @@ class EventStore implements StoresEvents
             ]))
             ->values()
             ->all();
+    }
+
+    protected function aggregateExpression(BaseBuilder $query, string $column, string $function): Expression
+    {
+        return DB::raw(sprintf(
+            '%s(%s) as %s',
+            $function,
+            $query->getGrammar()->wrap($column),
+            $query->getGrammar()->wrapTable("{$function}_{$column}")
+        ));
     }
 }
