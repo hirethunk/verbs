@@ -26,11 +26,8 @@ class Dispatcher
         foreach (Reflector::getHooks($target) as $hook) {
             $hook->inferPhasesIfNoneSet();
 
-            foreach ($hook->events as $event_type) {
-                $this->hooks[$event_type][] = $hook;
-            }
-            foreach ($hook->states as $state_type) {
-                $this->hooks[$state_type][] = $hook;
+            foreach ($hook->targets as $fqcn) {
+                $this->hooks[$fqcn][] = $hook;
             }
         }
     }
@@ -168,7 +165,9 @@ class Dispatcher
     /** @return Collection<int, Hook> */
     protected function hooksFor(Event|State $target, ?Phase $phase = null): Collection
     {
-        return Collection::make($this->hooks[$target::class] ?? [])
+        return Collection::make($this->hooks)
+            ->only(Reflector::getClassInstanceOf($target))
+            ->flatten()
             ->when($phase, fn (Collection $hooks) => $hooks->filter(fn (Hook $hook) => $hook->runsInPhase($phase)));
     }
 

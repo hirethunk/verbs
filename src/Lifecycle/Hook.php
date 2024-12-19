@@ -30,8 +30,7 @@ class Hook
             callback: is_string($target)
                 ? fn (...$args) => $method->invokeArgs(app($target), $args)
                 : Closure::fromCallable([$target, $method->getName()]),
-            events: Reflector::getEventParameters($method),
-            states: Reflector::getStateParameters($method),
+            targets: Reflector::getParameterTypes($method),
             name: $method->getName(),
             reflection: $method,
         );
@@ -43,8 +42,7 @@ class Hook
     {
         $hook = new static(
             callback: $callback,
-            events: Reflector::getEventParameters($callback),
-            states: Reflector::getStateParameters($callback),
+            targets: Reflector::getParameterTypes($callback),
         );
 
         return Reflector::applyHookAttributes($callback, $hook);
@@ -52,8 +50,7 @@ class Hook
 
     public function __construct(
         public Closure $callback,
-        public array $events = [],
-        public array $states = [],
+        public array $targets = [],
         public SplObjectStorage $phases = new SplObjectStorage,
         public ?string $name = null,
         public ?ReflectionFunctionAbstract $reflection = null,
@@ -84,6 +81,8 @@ class Hook
 
     public function inferPhasesIfNoneSet(): void
     {
+        // FIXME
+
         // If we already have phases set, we don't need to do anything
         if ($this->phases->count() > 0) {
             return;
