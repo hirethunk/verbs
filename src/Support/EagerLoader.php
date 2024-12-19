@@ -41,8 +41,8 @@ class EagerLoader
                 ->whereIn((new $class_name)->getKeyName(), $keys)
                 ->eachById(function (Model $model) use ($discovered) {
                     foreach ($discovered['fill'][$model::class][$model->getKey()] as [$event, $target_property]) {
-                        // This let's us set the property even if it's protected
-                        (fn () => $this->{$target_property} = clone $model)(...)->call($event);
+                        // This lets us set the property even if it's protected
+                        (fn () => $this->{$target_property} = $model)(...)->call($event);
                     }
                 });
         }
