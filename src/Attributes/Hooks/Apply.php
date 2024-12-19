@@ -20,6 +20,6 @@ class Apply implements HookAttribute
 
     public function applyToHook(Hook $hook): void
     {
-        $hook->states[] = $this->state_type;
+        $hook->targets[] = $this->state_type;
     }
 }

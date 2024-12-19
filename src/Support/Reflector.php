@@ -42,6 +42,23 @@ class Reflector extends BaseReflector
         return static::getParametersOfType(State::class, $method)->values()->all();
     }
 
+    public static function getParameterTypes(ReflectionFunctionAbstract|Closure $method): array
+    {
+        $method = static::reflectFunction($method);
+
+        if (empty($parameters = $method->getParameters())) {
+            return [];
+        }
+
+        return Collection::make($parameters)
+            ->map(fn (ReflectionParameter $parameter) => static::getParameterClassNames($parameter))
+            ->flatten()
+            ->filter()
+            ->unique()
+            ->values()
+            ->toArray();
+    }
+
     public static function applyHookAttributes(ReflectionFunctionAbstract|Closure $method, Hook $hook): Hook
     {
         $method = static::reflectFunction($method);
@@ -78,6 +95,20 @@ class Reflector extends BaseReflector
             ->map(fn (array $names) => array_filter($names, fn ($name) => is_a($name, $type, true)))
             ->reject(fn (array $names) => empty($names))
             ->map(fn (array $names) => Arr::first($names));
+    }
+
+    /** @return class-string[] */
+    public static function getClassInstanceOf(string|object $class): array
+    {
+        $reflection = new ReflectionClass($class);
+
+        $class_and_interface_names = array_unique($reflection->getInterfaceNames());
+
+        do {
+            $class_and_interface_names[] = $reflection->getName();
+        } while ($reflection = $reflection->getParentClass());
+
+        return $class_and_interface_names;
     }
 
     protected static function reflectFunction(ReflectionFunctionAbstract|Closure $function): ReflectionFunctionAbstract
