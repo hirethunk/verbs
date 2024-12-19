@@ -42,6 +42,8 @@ class Broker implements BrokersEvents
         // NOTE: Any changes to how the dispatcher is called here
         // should also be applied to the `replay` method
 
+        $this->dispatcher->boot($event);
+
         Guards::for($event)->check();
 
         $this->dispatcher->apply($event);

@@ -9,6 +9,11 @@ class VerbStateEvent extends Model
 {
     public $guarded = [];
 
+    public function getConnectionName()
+    {
+        return $this->connection ?? config('verbs.connections.state_events');
+    }
+
     public function getTable()
     {
         return $this->table ?? config('verbs.tables.state_events', 'verb_state_events');

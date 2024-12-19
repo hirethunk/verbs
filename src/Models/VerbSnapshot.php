@@ -22,6 +22,11 @@ class VerbSnapshot extends Model
 
     protected ?State $state = null;
 
+    public function getConnectionName()
+    {
+        return $this->connection ?? config('verbs.connections.snapshots');
+    }
+
     public function getTable()
     {
         return $this->table ?? config('verbs.tables.snapshots', 'verb_snapshots');

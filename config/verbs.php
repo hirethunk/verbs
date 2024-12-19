@@ -1,5 +1,6 @@
 <?php
 
+use Symfony\Component\Serializer\Normalizer\ArrayDenormalizer;
 use Symfony\Component\Serializer\Normalizer\BackedEnumNormalizer;
 use Symfony\Component\Serializer\Normalizer\DateTimeNormalizer;
 use Symfony\Component\Serializer\Normalizer\PropertyNormalizer;
@@ -42,6 +43,7 @@ return [
     'normalizers' => [
         SelfSerializingNormalizer::class,
         CollectionNormalizer::class,
+        ArrayDenormalizer::class,
         ModelNormalizer::class,
         StateNormalizer::class,
         BitsNormalizer::class,
@@ -64,6 +66,21 @@ return [
     */
     'serializer_context' => [
         PropertyNormalizer::NORMALIZE_VISIBILITY => PropertyNormalizer::NORMALIZE_PUBLIC,
+    ],
+
+    /*
+   |--------------------------------------------------------------------------
+   | Connection Names
+   |--------------------------------------------------------------------------
+   |
+   | By default, Verbs will use your default database connection, However, you may
+   | wish to customize these connection names to better fit your application.
+   |
+   */
+    'connections' => [
+        'events' => env('VERBS_EVENTS_CONNECTION'),
+        'snapshots' => env('VERBS_SNAPSHOT_CONNECTION'),
+        'state_events' => env('VERBS_STATE_EVENTS_CONNECTION'),
     ],
 
     /*
