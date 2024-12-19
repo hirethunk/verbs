@@ -22,6 +22,8 @@ class Type
             throw new CannotResolveParameter('You must provide a parameter type for Verbs to inject.');
         }
 
+        // FIXME: We need to add support for union types here now
+
         if ($type instanceof ReflectionIntersectionType || $type instanceof ReflectionUnionType) {
             throw new CannotResolveParameter('Verbs cannot inject intersection or union types.');
         }
