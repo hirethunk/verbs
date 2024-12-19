@@ -54,6 +54,8 @@ class TestEagerLoadingEvent extends Event
 
 class TestEagerLoadingModel extends Model
 {
+    public $incrementing = false;
+
     public $timestamps = false;
 
     protected $table = 'test_eager_loading';
