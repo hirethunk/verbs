@@ -20,7 +20,8 @@ class Broker implements BrokersEvents
         protected MetadataManager $metadata,
         protected EventQueue $queue,
         protected StateManager $states,
-    ) {}
+    ) {
+    }
 
     public function fireIfValid(Event $event): ?Event
     {
@@ -37,10 +38,10 @@ class Broker implements BrokersEvents
             return null;
         }
 
-        $this->dispatcher->boot($event);
-
         // NOTE: Any changes to how the dispatcher is called here
         // should also be applied to the `replay` method
+
+        $this->dispatcher->boot($event);
 
         Guards::for($event)->check();
 
@@ -77,7 +78,7 @@ class Broker implements BrokersEvents
         return $this->commit();
     }
 
-    public function replay(?callable $beforeEach = null, ?callable $afterEach = null): void
+    public function replay(callable $beforeEach = null, callable $afterEach = null): void
     {
         $this->is_replaying = true;
 

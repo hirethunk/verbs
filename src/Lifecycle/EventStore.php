@@ -23,11 +23,12 @@ class EventStore implements StoresEvents
 {
     public function __construct(
         protected MetadataManager $metadata,
-    ) {}
+    ) {
+    }
 
     public function read(
-        ?State $state = null,
-        Bits|UuidInterface|AbstractUid|int|string|null $after_id = null,
+        State $state = null,
+        Bits|UuidInterface|AbstractUid|int|string $after_id = null,
         bool $singleton = false,
     ): LazyCollection {
         return $this->readEvents($state, $after_id, $singleton)
@@ -146,6 +147,7 @@ class EventStore implements StoresEvents
                 'created_at' => now(),
                 'updated_at' => now(),
             ]))
+            ->values()
             ->all();
     }
 }
