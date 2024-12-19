@@ -25,11 +25,11 @@ it('identifies the correct data when calling the attribute', function () {
 it('eager-loads models for events', function () {
     TestEagerLoadingModel::migrate();
 
-    $model1 = TestEagerLoadingModel::create(['name' => 'test 1']);
-    $model2 = TestEagerLoadingModel::create(['name' => 'test 2']);
+    $model1 = TestEagerLoadingModel::create(['id' => 1337, 'name' => 'test 1']);
+    $model2 = TestEagerLoadingModel::create(['id' => 9876, 'name' => 'test 2']);
 
-    $event1 = new TestEagerLoadingEvent($model1->getKey());
-    $event2 = new TestEagerLoadingEvent($model2->getKey());
+    $event1 = new TestEagerLoadingEvent(1337);
+    $event2 = new TestEagerLoadingEvent(9876);
 
     EagerLoader::load($event1, $event2);
 
