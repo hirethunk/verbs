@@ -24,8 +24,6 @@ class Dispatcher
     public function register(string|object $target): void
     {
         foreach (Reflector::getHooks($target) as $hook) {
-            $hook->inferPhasesIfNoneSet();
-
             foreach ($hook->targets as $fqcn) {
                 $this->hooks[$fqcn][] = $hook;
             }

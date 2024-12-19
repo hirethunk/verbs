@@ -79,24 +79,6 @@ class Hook
         return isset($this->phases[$phase]) && $this->phases[$phase] === true;
     }
 
-    public function inferPhasesIfNoneSet(): void
-    {
-        // FIXME
-
-        // If we already have phases set, we don't need to do anything
-        if ($this->phases->count() > 0) {
-            return;
-        }
-
-        // Assume that if the hook cares about events, it's a handle hook,
-        // and if it cares about states, it's an apply hook
-        if (count($this->events)) {
-            $this->forcePhases(Phase::Handle);
-        } elseif (count($this->states)) {
-            $this->forcePhases(Phase::Apply);
-        }
-    }
-
     public function validate(Container $container, Event $event): bool
     {
         if ($this->runsInPhase(Phase::Validate)) {
