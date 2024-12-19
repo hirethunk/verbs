@@ -14,7 +14,7 @@ use Thunk\Verbs\Support\Wormhole;
 
 class Hook
 {
-    public static function fromClassMethod(string|object $target, ReflectionMethod|string $method): static
+    public static function fromClassMethod(object $target, ReflectionMethod|string $method): static
     {
         if (is_string($method)) {
             $method = new ReflectionMethod($target, $method);
@@ -47,7 +47,8 @@ class Hook
         public array $states = [],
         public SplObjectStorage $phases = new SplObjectStorage,
         public ?string $name = null,
-    ) {}
+    ) {
+    }
 
     public function forcePhases(Phase ...$phases): static
     {
