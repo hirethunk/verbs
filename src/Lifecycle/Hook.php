@@ -5,6 +5,7 @@ namespace Thunk\Verbs\Lifecycle;
 use Closure;
 use Illuminate\Contracts\Container\Container;
 use InvalidArgumentException;
+use ReflectionFunctionAbstract;
 use ReflectionMethod;
 use RuntimeException;
 use SplObjectStorage;
@@ -27,11 +28,12 @@ class Hook
 
         $hook = new static(
             callback: is_string($target)
-                ? fn (...$args) => app($target)->{$method->getName()}(...$args)
+                ? fn (...$args) => $method->invokeArgs(app($target), $args)
                 : Closure::fromCallable([$target, $method->getName()]),
             events: Reflector::getEventParameters($method),
             states: Reflector::getStateParameters($method),
             name: $method->getName(),
+            reflection: $method,
         );
 
         return Reflector::applyHookAttributes($method, $hook);
@@ -54,6 +56,7 @@ class Hook
         public array $states = [],
         public SplObjectStorage $phases = new SplObjectStorage,
         public ?string $name = null,
+        public ?ReflectionFunctionAbstract $reflection = null,
     ) {}
 
     public function forcePhases(Phase ...$phases): static
@@ -136,7 +139,12 @@ class Hook
 
     protected function execute(Container $container, Event $event): mixed
     {
-        $resolver = DependencyResolver::for($this->callback, container: $container, event: $event);
+        $resolver = DependencyResolver::for(
+            callback: $this->callback,
+            container: $container,
+            event: $event,
+            reflection: $this->reflection,
+        );
 
         return call_user_func_array($this->callback, $resolver());
     }

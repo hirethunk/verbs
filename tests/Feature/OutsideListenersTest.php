@@ -99,33 +99,30 @@ class OutsideListenersTestListener
         $this->log($trigger);
     }
 
-    #[Listen(OutsideListenersTestEvent2::class)]
-    public function singleListenerWithImplicitHandlePhase($e)
-    {
-        $this->log($e);
-    }
+    // #[Listen(OutsideListenersTestEvent2::class)]
+    // public function singleListenerWithImplicitHandlePhase($e)
+    // {
+    //     $this->log($e);
+    // }
 
-    #[Listen(OutsideListenersTestEvent1::class)]
-    #[Listen(OutsideListenersTestEvent2::class)]
-    public function multiListenerWithImplicitHandlePhase($e)
-    {
-        $this->log($e);
-    }
+    // #[Listen(OutsideListenersTestEvent1::class)]
+    // #[Listen(OutsideListenersTestEvent2::class)]
+    // public function multiListenerWithImplicitHandlePhase($e)
+    // {
+    //     $this->log($e);
+    // }
 
     // Authorize Phase
     // ----------------------------------------------------------------------
 
-    #[Listen(OutsideListenersTestEvent2::class)]
     #[On(Phase::Authorize)]
-    public function singleListenerWithExplicitAuthorizePhase($e)
+    public function singleListenerWithExplicitAuthorizePhase(OutsideListenersTestEvent2 $e)
     {
         $this->log($e);
     }
 
-    #[Listen(OutsideListenersTestEvent1::class)]
-    #[Listen(OutsideListenersTestEvent2::class)]
     #[On(Phase::Authorize)]
-    public function multiListenerWithExplicitAuthorizePhase($e)
+    public function multiListenerWithExplicitAuthorizePhase(OutsideListenersTestEvent1|OutsideListenersTestEvent2 $e)
     {
         $this->log($e);
     }
@@ -133,17 +130,14 @@ class OutsideListenersTestListener
     // Validate Phase
     // ----------------------------------------------------------------------
 
-    #[Listen(OutsideListenersTestEvent2::class)]
     #[On(Phase::Validate)]
-    public function singleListenerWithExplicitValidatePhase($e)
+    public function singleListenerWithExplicitValidatePhase(OutsideListenersTestEvent2 $e)
     {
         $this->log($e);
     }
 
-    #[Listen(OutsideListenersTestEvent1::class)]
-    #[Listen(OutsideListenersTestEvent2::class)]
     #[On(Phase::Validate)]
-    public function multiListenerWithExplicitValidatePhase($e)
+    public function multiListenerWithExplicitValidatePhase(OutsideListenersTestEvent1|OutsideListenersTestEvent2 $e)
     {
         $this->log($e);
     }
@@ -151,17 +145,14 @@ class OutsideListenersTestListener
     // Apply Phase
     // ----------------------------------------------------------------------
 
-    #[Listen(OutsideListenersTestEvent2::class)]
     #[On(Phase::Apply)]
-    public function singleListenerWithExplicitApplyPhase($e)
+    public function singleListenerWithExplicitApplyPhase(OutsideListenersTestEvent2 $e)
     {
         $this->log($e);
     }
 
-    #[Listen(OutsideListenersTestEvent1::class)]
-    #[Listen(OutsideListenersTestEvent2::class)]
     #[On(Phase::Apply)]
-    public function multiListenerWithExplicitApplyPhase($e)
+    public function multiListenerWithExplicitApplyPhase(OutsideListenersTestEvent1|OutsideListenersTestEvent2 $e)
     {
         $this->log($e);
     }
@@ -169,17 +160,14 @@ class OutsideListenersTestListener
     // Fired Phase
     // ----------------------------------------------------------------------
 
-    #[Listen(OutsideListenersTestEvent2::class)]
     #[On(Phase::Fired)]
-    public function singleListenerWithExplicitFiredPhase($e)
+    public function singleListenerWithExplicitFiredPhase(OutsideListenersTestEvent2 $e)
     {
         $this->log($e);
     }
 
-    #[Listen(OutsideListenersTestEvent1::class)]
-    #[Listen(OutsideListenersTestEvent2::class)]
     #[On(Phase::Fired)]
-    public function multiListenerWithExplicitFiredPhase($e)
+    public function multiListenerWithExplicitFiredPhase(OutsideListenersTestEvent1|OutsideListenersTestEvent2 $e)
     {
         $this->log($e);
     }
@@ -187,17 +175,14 @@ class OutsideListenersTestListener
     // Handle Phase
     // ----------------------------------------------------------------------
 
-    #[Listen(OutsideListenersTestEvent2::class)]
     #[On(Phase::Handle)]
-    public function singleListenerWithExplicitHandlePhase($e)
+    public function singleListenerWithExplicitHandlePhase(OutsideListenersTestEvent2 $e)
     {
         $this->log($e);
     }
 
-    #[Listen(OutsideListenersTestEvent1::class)]
-    #[Listen(OutsideListenersTestEvent2::class)]
     #[On(Phase::Handle)]
-    public function multiListenerWithExplicitHandlePhase($e)
+    public function multiListenerWithExplicitHandlePhase(OutsideListenersTestEvent1|OutsideListenersTestEvent2 $e)
     {
         $this->log($e);
     }
@@ -205,17 +190,14 @@ class OutsideListenersTestListener
     // Replay Phase
     // ----------------------------------------------------------------------
 
-    #[Listen(OutsideListenersTestEvent2::class)]
     #[On(Phase::Replay)]
-    public function singleListenerWithExplicitReplayPhase($e)
+    public function singleListenerWithExplicitReplayPhase(OutsideListenersTestEvent2 $e)
     {
         $this->log($e);
     }
 
-    #[Listen(OutsideListenersTestEvent1::class)]
-    #[Listen(OutsideListenersTestEvent2::class)]
     #[On(Phase::Replay)]
-    public function multiListenerWithExplicitReplayPhase($e)
+    public function multiListenerWithExplicitReplayPhase(OutsideListenersTestEvent1|OutsideListenersTestEvent2 $e)
     {
         $this->log($e);
     }
