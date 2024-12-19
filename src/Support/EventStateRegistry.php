@@ -7,7 +7,10 @@ use Illuminate\Support\Collection;
 use InvalidArgumentException;
 use ReflectionAttribute;
 use ReflectionClass;
+use ReflectionIntersectionType;
+use ReflectionNamedType;
 use ReflectionProperty;
+use ReflectionUnionType;
 use Thunk\Verbs\Attributes\Autodiscovery\StateDiscoveryAttribute;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\StateManager;
@@ -20,7 +23,7 @@ class EventStateRegistry
     protected array $discovered_properties = [];
 
     public function __construct(
-        protected StateManager $manager
+        protected StateManager $manager,
     ) {}
 
     public function getStates(Event $event): StateCollection
@@ -54,7 +57,7 @@ class EventStateRegistry
         $states = Arr::wrap(
             $attribute
                 ->setDiscoveredState($discovered)
-                ->discoverState($target, $this->manager)
+                ->discoverState($target, $this->manager),
         );
 
         $discovered->push(...$states);
@@ -110,7 +113,7 @@ class EventStateRegistry
     /** @return Collection<int, State> */
     protected function getProperties(Event $target): Collection
     {
-        return $this->discovered_properties[$target::class] ??= $this->findAllProperties($target);
+        return $this->discovered_properties[$target::class][$target->id] ??= $this->findAllProperties($target);
     }
 
     /** @return Collection<int, State> */
@@ -119,13 +122,39 @@ class EventStateRegistry
         $reflect = new ReflectionClass($target);
 
         return collect($reflect->getProperties(ReflectionProperty::IS_PUBLIC))
-            ->filter(function (ReflectionProperty $property) {
-                $propertyType = $property->getType()?->getName();
+            ->filter(function (ReflectionProperty $property) use ($target) {
+                $property_type = $property->getType();
 
-                return $propertyType
-                    && (is_subclass_of($propertyType, State::class) || $propertyType === State::class || $propertyType === StateCollection::class);
+                if (
+                    $property_type instanceof ReflectionNamedType
+                    && $property_type->allowsNull()
+                    && $property->getValue($target) === null
+                ) {
+                    return false;
+                }
+
+                $all_property_types = match ($property_type::class) {
+                    ReflectionUnionType::class, ReflectionIntersectionType::class => $property_type->getTypes(),
+                    default => [$property_type],
+                };
+
+                foreach ($all_property_types as $type) {
+                    $name = $type?->getName();
+                    if ($name && $this->isStateClass($name)) {
+                        return true;
+                    }
+                }
+
+                return false;
             })
             ->map(fn (ReflectionProperty $property) => $property->getValue($target))
             ->flatten();
+    }
+
+    protected function isStateClass(string $name): bool
+    {
+        return is_subclass_of($name, State::class)
+            || $name === State::class
+            || $name === StateCollection::class;
     }
 }

@@ -145,6 +145,7 @@ class EventStore implements StoresEvents
                 'created_at' => now(),
                 'updated_at' => now(),
             ]))
+            ->values()
             ->all();
     }
 }
