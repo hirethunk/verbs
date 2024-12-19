@@ -25,16 +25,16 @@ it('identifies the correct data when calling the attribute', function () {
 it('eager-loads models for events', function () {
     TestEagerLoadingModel::migrate();
 
-    $model1 = TestEagerLoadingModel::create(['id' => 1337, 'name' => 'test 1']);
-    $model2 = TestEagerLoadingModel::create(['id' => 9876, 'name' => 'test 2']);
+    $model1 = TestEagerLoadingModel::create(['name' => 'test 1']);
+    $model2 = TestEagerLoadingModel::create(['name' => 'test 2']);
 
-    $event1 = new TestEagerLoadingEvent(1337);
-    $event2 = new TestEagerLoadingEvent(9876);
+    $event1 = new TestEagerLoadingEvent($model1->getKey());
+    $event2 = new TestEagerLoadingEvent($model2->getKey());
 
     EagerLoader::load($event1, $event2);
 
-    expect($event1->getTestModel()->toArray())->toBe($model1->toArray())
-        ->and($event2->getTestModel()->toArray())->toBe($model2->toArray());
+    expect($model1->is($event1->getTestModel()))->toBeTrue()
+        ->and($model2->is($event2->getTestModel()))->toBeTrue();
 });
 
 class TestEagerLoadingEvent extends Event
