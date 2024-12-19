@@ -20,8 +20,7 @@ class Broker implements BrokersEvents
         protected MetadataManager $metadata,
         protected EventQueue $queue,
         protected StateManager $states,
-    ) {
-    }
+    ) {}
 
     public function fireIfValid(Event $event): ?Event
     {
@@ -78,7 +77,7 @@ class Broker implements BrokersEvents
         return $this->commit();
     }
 
-    public function replay(callable $beforeEach = null, callable $afterEach = null): void
+    public function replay(?callable $beforeEach = null, ?callable $afterEach = null): void
     {
         $this->is_replaying = true;
 
