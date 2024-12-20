@@ -55,4 +55,6 @@ abstract class StateDiscoveryAttribute
             ? Str::beforeLast($name, '_id')
             : Str::beforeLast($name, 'Id');
     }
+
+    abstract public function propertyName(): ?string;
 }

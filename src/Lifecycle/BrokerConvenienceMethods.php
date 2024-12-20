@@ -11,6 +11,7 @@ use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\EventNotAuthorized;
 use Thunk\Verbs\Exceptions\EventNotValid;
 use Thunk\Verbs\Facades\Id;
+use Thunk\Verbs\State;
 use Thunk\Verbs\Support\IdManager;
 use Thunk\Verbs\Support\Wormhole;
 
@@ -72,6 +73,12 @@ trait BrokerConvenienceMethods
         if (! $this->is_replaying) {
             $callback();
         }
+    }
+
+    public function defer(State|string|iterable|null $unique_by, callable $callback, string $name = 'default'): void
+    {
+        $states = is_iterable($unique_by) ? $unique_by : [$unique_by];
+        app(DeferredWriteQueue::class)->addCallback($states, $callback, $name);
     }
 
     public function realNow(): CarbonInterface
