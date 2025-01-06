@@ -35,6 +35,13 @@ class Dispatcher
         $this->skipped_phases = $phases;
     }
 
+    public function boot(Event $event): void
+    {
+        if ($this->shouldDispatchPhase(Phase::Boot)) {
+            $this->getBootHooks($event)->each(fn (Hook $hook) => $hook->boot($this->container, $event));
+        }
+    }
+
     public function validate(Event $event): bool
     {
         if (! $this->shouldDispatchPhase(Phase::Validate)) {
@@ -80,6 +87,18 @@ class Dispatcher
         if ($this->shouldDispatchPhase(Phase::Replay)) {
             $this->getReplayHooks($event)->each(fn (Hook $hook) => $hook->replay($this->container, $event));
         }
+    }
+
+    /** @return Collection<int, Hook> */
+    protected function getBootHooks(Event $event): Collection
+    {
+        $hooks = $this->hooksFor($event, Phase::Boot);
+
+        if (method_exists($event, 'boot')) {
+            $hooks->prepend(Hook::fromClassMethod($event, 'boot')->forcePhases(Phase::Boot));
+        }
+
+        return $hooks;
     }
 
     /** @return Collection<int, Hook> */
