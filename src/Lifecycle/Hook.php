@@ -7,6 +7,7 @@ use Illuminate\Contracts\Container\Container;
 use ReflectionMethod;
 use RuntimeException;
 use SplObjectStorage;
+use Thunk\Verbs\Attributes\Hooks\DeferFor;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Support\DependencyResolver;
 use Thunk\Verbs\Support\Reflector;
@@ -44,6 +45,7 @@ class Hook
         public array $targets = [],
         public SplObjectStorage $phases = new SplObjectStorage,
         public ?string $name = null,
+        public ?DeferFor $deferred_attribute = null,
     ) {}
 
     public function forcePhases(Phase ...$phases): static
@@ -104,7 +106,12 @@ class Hook
     public function handle(Container $container, Event $event): mixed
     {
         if ($this->runsInPhase(Phase::Handle)) {
-            return $this->execute($container, $event);
+            $callable = fn () => $this->execute($container, $event);
+            if ($this->deferred_attribute && ! $this->deferred_attribute->replay_only) {
+                app(DeferredWriteQueue::class)->addHook($event, $this->deferred_attribute, $callable);
+            } else {
+                return $this->execute($container, $event);
+            }
         }
 
         return null;
@@ -113,7 +120,12 @@ class Hook
     public function replay(Container $container, Event $event): void
     {
         if ($this->runsInPhase(Phase::Replay)) {
-            app(Wormhole::class)->warp($event, fn () => $this->execute($container, $event));
+            $callable = fn () => $this->execute($container, $event);
+            if ($this->deferred_attribute) {
+                app(DeferredWriteQueue::class)->addHook($event, $this->deferred_attribute, $callable);
+            } else {
+                app(Wormhole::class)->warp($event, $callable);
+            }
         }
     }
 

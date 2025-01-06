@@ -73,6 +73,7 @@ class Broker implements BrokersEvents
         foreach ($events as $event) {
             $this->metadata->setLastResults($event, $this->dispatcher->handle($event));
         }
+        app(DeferredWriteQueue::class)->flush();
 
         return $this->commit();
     }
@@ -107,6 +108,7 @@ class Broker implements BrokersEvents
                     }
                 });
         } finally {
+            app(DeferredWriteQueue::class)->flush();
             $this->states->writeSnapshots();
             $this->states->prune();
             $this->states->setReplaying(false);
