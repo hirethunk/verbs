@@ -22,8 +22,7 @@ class Hook
 
         $hook = new static(
             callback: Closure::fromCallable([$target, $method->getName()]),
-            events: Reflector::getEventParameters($method),
-            states: Reflector::getStateParameters($method),
+            targets: Reflector::getParameterTypes($method),
             name: $method->getName(),
         );
 
@@ -34,8 +33,7 @@ class Hook
     {
         $hook = new static(
             callback: $callback,
-            events: Reflector::getEventParameters($callback),
-            states: Reflector::getStateParameters($callback),
+            targets: Reflector::getParameterTypes($callback),
         );
 
         return Reflector::applyHookAttributes($callback, $hook);
@@ -43,8 +41,7 @@ class Hook
 
     public function __construct(
         public Closure $callback,
-        public array $events = [],
-        public array $states = [],
+        public array $targets = [],
         public SplObjectStorage $phases = new SplObjectStorage,
         public ?string $name = null,
     ) {}
