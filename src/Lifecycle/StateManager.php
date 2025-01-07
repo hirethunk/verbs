@@ -199,7 +199,7 @@ class StateManager
             // them from snapshots as needed in the rest of the request.
             // FIXME: We still need to figure this out
             // $this->states->reset();
-            //$this->remember($state);
+            // $this->remember($state);
         }
 
         return $this;

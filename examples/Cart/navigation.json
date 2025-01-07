@@ -1,0 +1,55 @@
+[
+    {
+        "title": "Intro",
+        "slug": "intro",
+        "items": [
+            {
+                "title": "About",
+                "slug": "readme",
+                "path": "README.md"
+            }
+        ]
+    },
+    {
+        "title": "Events",
+        "slug": "events",
+        "items": [
+            {
+                "title": "ItemRestocked",
+                "slug": "restock",
+                "path": "src/Events/ItemRestocked.php"
+            },
+            {
+                "title": "ItemAddedToCart",
+                "slug": "add-to-cart",
+                "path": "src/Events/ItemAddedToCart.php"
+            },
+            {
+                "title": "ItemRemovedFromCart",
+                "slug": "remove-from-cart",
+                "path": "src/Events/ItemRemovedFromCart.php"
+            },
+            {
+                "title": "CheckedOut",
+                "slug": "checkout",
+                "path": "src/Events/CheckedOut.php"
+            }
+        ]
+    },
+    {
+        "title": "State",
+        "slug": "state",
+        "items": [
+            {
+                "title": "CartState",
+                "slug": "cart",
+                "path": "src/States/CartState.php"
+            },
+            {
+                "title": "ItemState",
+                "slug": "item",
+                "path": "src/States/ItemState.php"
+            }
+        ]
+    }
+]
