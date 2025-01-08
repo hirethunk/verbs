@@ -47,7 +47,12 @@ class StateManager
             : $this->loadOne($id, $type);
     }
 
-    /** @param  class-string<State>  $type */
+    /**
+     * @template TStateClass of State
+     *
+     * @param  class-string<TStateClass>  $type
+     * @return TStateClass
+     */
     public function singleton(string $type): State
     {
         // FIXME: If the state we're loading has a last_event_id that's ahead of the registry's last_event_id, we need to re-build the state
@@ -56,14 +61,14 @@ class StateManager
             return $state;
         }
 
-        $state = $this->snapshots->loadSingleton($type) ?? $type::make();
+        $state = $this->snapshots->loadSingleton($type) ?? new $type;
         $state->id ??= snowflake_id();
 
         // We'll store a reference to it by the type for future singleton access
         $this->states->put($type, $state);
         $this->remember($state);
 
-        $this->reconstitute($state, singleton: true);
+        $this->reconstitute($state);
 
         return $state;
     }
@@ -180,13 +185,13 @@ class StateManager
         );
     }
 
-    protected function reconstitute(State $state, bool $singleton = false): static
+    protected function reconstitute(State $state): static
     {
         // When we're replaying, the Broker is in charge of applying the correct events
         // to the State, so we only need to do it *outside* of replays.
         if (! $this->is_replaying) {
             $this->events
-                ->read(state: $state, after_id: $state->last_event_id, singleton: $singleton)
+                ->read(state: $state, after_id: $state->last_event_id)
                 ->each(fn (Event $event) => $this->dispatcher->apply($event));
 
             // It's possible for an event to mutate state out of order when reconstituting,

@@ -7,7 +7,7 @@ use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Models\VerbEvent;
 
 it('State factory initializes a state', function () {
-    $count_state = CountState::factory()->singleton()->create([
+    $count_state = CountState::factory()->create([
         'count' => 1337,
     ]);
 

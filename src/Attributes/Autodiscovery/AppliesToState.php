@@ -8,6 +8,7 @@ use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\StateManager;
+use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\State;
 
 #[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
@@ -26,6 +27,10 @@ class AppliesToState extends StateDiscoveryAttribute
 
     public function discoverState(Event $event, StateManager $manager): State|array
     {
+        if (is_subclass_of($this->state_type, SingletonState::class)) {
+            return $this->state_type::singleton();
+        }
+
         $property = $this->getStateIdProperty($event);
         $id = $event->{$property};
 
