@@ -49,6 +49,9 @@
     "autoload-dev": {
         "psr-4": {
             "Thunk\\Verbs\\Tests\\": "tests/",
+            "Thunk\\Verbs\\Examples\\Cart\\": "examples/Cart/src/",
+            "Thunk\\Verbs\\Examples\\Cart\\Tests\\": "examples/Cart/tests/",
+            "Thunk\\Verbs\\Examples\\Cart\\Database\\Factories\\": "examples/Cart/database/factories/",
             "Thunk\\Verbs\\Examples\\Counter\\": "examples/Counter/src/",
             "Thunk\\Verbs\\Examples\\Counter\\Tests\\": "examples/Counter/tests/",
             "Thunk\\Verbs\\Examples\\Counter\\Database\\Factories\\": "examples/Counter/database/factories/",
