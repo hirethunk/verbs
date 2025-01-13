@@ -40,6 +40,8 @@ class AggregateStateSummary
             $continue = $this->discoverNewStates() && $this->discoverNewEventIds();
         } while ($continue);
 
+        $this->related_event_ids = $this->related_event_ids->sort();
+
         return $this;
     }
 
@@ -63,6 +65,7 @@ class AggregateStateSummary
     protected function discoverNewStates(): bool
     {
         $discovered_states = VerbStateEvent::query()
+            ->orderBy('id')
             ->distinct()
             ->select(['state_id', 'state_type'])
             ->whereIn('event_id', $this->related_event_ids)

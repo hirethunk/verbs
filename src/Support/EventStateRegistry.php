@@ -43,6 +43,7 @@ class EventStateRegistry
 
     protected function discoverStates(Event $event): StateCollection
     {
+        dump('Discovering state: '.$event::class." ($event->id)");
         $discovered = new StateCollection;
         $deferred = new StateCollection;
 

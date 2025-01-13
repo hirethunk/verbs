@@ -6,12 +6,12 @@ use Glhd\Bits\Bits;
 use LogicException;
 use Ramsey\Uuid\UuidInterface;
 use ReflectionClass;
-use RuntimeException;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Id;
+use Thunk\Verbs\Models\VerbStateEvent;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\EventStateRegistry;
 use Thunk\Verbs\Support\StateCollection;
@@ -166,7 +166,7 @@ class StateManager
         $this->remember($state);
         $this->reconstitute($state);
 
-        return $state;
+        return $this->states->get($key); // FIXME
     }
 
     /** @param  class-string<State>  $type */
@@ -193,57 +193,73 @@ class StateManager
 
         // At this point, all the states should be in our cache, so we can just load everything
         return StateCollection::make(
-            $ids->map(fn ($id) => $this->states->get($this->key($id, $type)))
+            $ids->map(fn ($id) => $this->states->get($this->key($id, $type))),
         );
     }
 
     protected function reconstitute(State $state): static
     {
-        // When we're replaying, the Broker is in charge of applying the correct events
-        // to the State, so we need to skip during replays. Similarly, if we're already
-        // reconstituting in a recursive call, the root call is responsible for applying
-        // events, so we should also skip in that case.
+        // FIXME: Only run this if the state is out of date
+        if (! $this->needsReconstituting($state)) {
+            // dump('skipping: everything in sync');
+            return $this;
+        }
 
         if (! $this->is_replaying && ! $this->is_reconstituting) {
+            $real_registry = app(EventStateRegistry::class);
+
             try {
                 $this->is_reconstituting = true;
 
                 $summary = $this->events->summarize($state);
 
-                // FIXME: We probably need to re-write all the snapshots after we're done
-                // FIXME: Swap out existing state manager, push all related states into new state manager
-                // FIXME: run all the event on them, swap them out
+                [$temp_manager] = $this->bindNewEmptyStateManager();
 
-                $this->events->get($summary->related_event_ids)
-                    ->filter(function (Event $event) {
-                        $last_event_ids = $event->states()
-                            ->map(fn (State $state) => $state->last_event_id)
-                            ->filter();
-
-                        $min = $last_event_ids->min() ?? PHP_INT_MIN;
-                        $max = $last_event_ids->max() ?? PHP_INT_MIN;
-
-                        // If all states have had this or future events applied, just ignore them
-                        if ($min >= $event->id && $max >= $event->id) {
-                            return false;
-                        }
-
-                        // We should never be in a situation where some events are ahead and
-                        // others are behind, so if that's the case we'll throw an exception
-                        if ($max > $event->id && $min <= $event->id) {
-                            throw new RuntimeException('Trying to apply an event to states that are out of sync.');
-                        }
-
-                        return true;
-                    })
+                $this->events
+                    ->get($summary->related_event_ids)
                     ->each($this->dispatcher->apply(...));
+
+                foreach ($temp_manager->states->all() as $key => $state) {
+                    $this->states->put($key, $state);
+                }
 
             } finally {
                 $this->is_reconstituting = false;
+
+                app()->instance(StateManager::class, $this);
+                app()->instance(EventStateRegistry::class, $real_registry);
             }
         }
 
         return $this;
+    }
+
+    protected function needsReconstituting(State $state): bool
+    {
+        $max_id = VerbStateEvent::query()
+            ->where('state_id', $state->id)
+            ->where('state_type', $state::class)
+            ->max('event_id');
+
+        return $max_id !== $state->last_event_id;
+    }
+
+    protected function bindNewEmptyStateManager()
+    {
+        $temp_manager = new StateManager(
+            dispatcher: $this->dispatcher,
+            snapshots: new NullSnapshotStore,
+            events: $this->events,
+            states: new StateInstanceCache,
+        );
+        $temp_manager->is_reconstituting = true; // FIXME
+
+        $temp_registry = new EventStateRegistry($temp_manager);
+
+        app()->instance(StateManager::class, $temp_manager);
+        app()->instance(EventStateRegistry::class, $temp_registry);
+
+        return [$temp_manager, $temp_registry];
     }
 
     protected function remember(State $state): State
