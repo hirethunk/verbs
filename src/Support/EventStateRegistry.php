@@ -2,6 +2,7 @@
 
 namespace Thunk\Verbs\Support;
 
+use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use InvalidArgumentException;
@@ -26,14 +27,16 @@ class EventStateRegistry
     protected WeakMap $discovered_states;
 
     public function __construct(
-        protected StateManager $manager,
+        protected Container $container,
     ) {
         $this->discovered_states = new WeakMap;
     }
 
-    public function reset()
+    public function reset(): static
     {
         $this->discovered_states = new WeakMap;
+
+        return $this;
     }
 
     public function getStates(Event $event): StateCollection
@@ -43,7 +46,6 @@ class EventStateRegistry
 
     protected function discoverStates(Event $event): StateCollection
     {
-        dump('Discovering state: '.$event::class." ($event->id)");
         $discovered = new StateCollection;
         $deferred = new StateCollection;
 
@@ -73,7 +75,7 @@ class EventStateRegistry
         $states = Arr::wrap(
             $attribute
                 ->setDiscoveredState($discovered)
-                ->discoverState($target, $this->manager),
+                ->discoverState($target, $this->container->make(StateManager::class)),
         );
 
         $discovered->push(...$states);

@@ -60,11 +60,6 @@ class StateInstanceCache
         return $this;
     }
 
-    public function all(): array
-    {
-        return $this->cache;
-    }
-
     protected function touch($key): void
     {
         $value = $this->cache[$key];

@@ -18,6 +18,16 @@ use Thunk\Verbs\Support\StateCollection;
 use Thunk\Verbs\Support\StateInstanceCache;
 use UnexpectedValueException;
 
+/*
+ * Three domains:
+ *  - Loading states from storage
+ *  - Creating new states
+ *  - Recreating states
+ *
+ * State managers serves both as a thing that handles
+ * *all things state* and as a "state locator"
+ */
+
 class StateManager
 {
     protected bool $is_reconstituting = false;
@@ -120,7 +130,7 @@ class StateManager
     public function reset(bool $include_storage = false): static
     {
         $this->states->reset();
-        app(EventStateRegistry::class)->reset();
+        app(EventStateRegistry::class)->reset(); // FIXME: These two classes should be more coupled or decoupled
 
         $this->is_replaying = false;
 
@@ -139,6 +149,21 @@ class StateManager
     public function prune(): static
     {
         $this->states->prune();
+
+        return $this;
+    }
+
+    /** @return State[] */
+    public function states(): array
+    {
+        return $this->states->values();
+    }
+
+    public function push(State $state): static
+    {
+        $key = $this->key($state->id, $state::class);
+
+        $this->states->put($key, $state);
 
         return $this;
     }

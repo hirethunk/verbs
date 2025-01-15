@@ -38,6 +38,7 @@ use Thunk\Verbs\Support\EventStateRegistry;
 use Thunk\Verbs\Support\IdManager;
 use Thunk\Verbs\Support\Serializer;
 use Thunk\Verbs\Support\StateInstanceCache;
+use Thunk\Verbs\Support\StateReconstructor;
 use Thunk\Verbs\Support\Wormhole;
 
 class VerbsServiceProvider extends PackageServiceProvider
@@ -66,8 +67,9 @@ class VerbsServiceProvider extends PackageServiceProvider
         $this->app->scoped(EventStore::class);
         $this->app->singleton(SnapshotStore::class);
         $this->app->scoped(EventQueue::class);
-        $this->app->scoped(EventStateRegistry::class);
+        $this->app->scoped(EventStateRegistry::class); // FIXME: Pretty sure this should be hidden behind the StateManager
         $this->app->singleton(MetadataManager::class);
+        $this->app->singleton(StateReconstructor::class);
 
         $this->app->scoped(StateManager::class, function (Container $app) {
             return new StateManager(
@@ -76,7 +78,7 @@ class VerbsServiceProvider extends PackageServiceProvider
                 events: $app->make(StoresEvents::class),
                 states: new StateInstanceCache(
                     capacity: $app->make(Repository::class)->get('verbs.state_cache_size', 100)
-                ),
+                )
             );
         });
 
