@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Collection;
 use Thunk\Verbs\Lifecycle\StateManager;
+use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\State;
 use Thunk\Verbs\StateFactory;
 
@@ -56,11 +57,11 @@ test('it auto-generates an IDs', function () {
 });
 
 test('it can create a singleton state', function () {
-    $singleton_state = FactoryTestState::factory()->singleton()->create();
+    $singleton_state = FactoryTestSingletonState::factory()->create();
 
     expect($singleton_state->id)->not->toBeNull();
 
-    $retreived_state = app(StateManager::class)->singleton(FactoryTestState::class);
+    $retreived_state = app(StateManager::class)->singleton(FactoryTestSingletonState::class);
 
     expect($retreived_state)->toBe($singleton_state);
 });
@@ -87,6 +88,11 @@ test('multiple states can be factoried at once', function () {
 });
 
 class FactoryTestState extends State
+{
+    public string $name;
+}
+
+class FactoryTestSingletonState extends SingletonState
 {
     public string $name;
 }

@@ -87,11 +87,6 @@ abstract class State implements UrlRoutable
             : $from;
     }
 
-    public static function singleton(): static
-    {
-        return app(StateManager::class)->singleton(static::class);
-    }
-
     public function storedEvents()
     {
         return app(StoresEvents::class)

@@ -5,9 +5,9 @@ namespace Thunk\Verbs\Examples\Subscriptions\States;
 use Illuminate\Support\Carbon;
 use Thunk\Verbs\Examples\Subscriptions\Events\SubscriptionCancelled;
 use Thunk\Verbs\Examples\Subscriptions\Events\SubscriptionStarted;
-use Thunk\Verbs\State;
+use Thunk\Verbs\SingletonState;
 
-class GlobalReportState extends State
+class GlobalReportState extends SingletonState
 {
     public int $total_subscriptions = 0;
 
