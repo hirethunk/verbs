@@ -100,7 +100,6 @@ class Reflector extends BaseReflector
             ->filter(fn ($class_name) => is_a($class_name, $type, true));
     }
 
-
     /** @return class-string[] */
     public static function getClassInstanceOf(string|object $class): array
     {
