@@ -100,19 +100,6 @@ class Reflector extends BaseReflector
             ->filter(fn ($class_name) => is_a($class_name, $type, true));
     }
 
-    /** @return class-string[] */
-    public static function getClassInstanceOf(string|object $class): array
-    {
-        $reflection = new ReflectionClass($class);
-
-        $class_and_interface_names = array_unique($reflection->getInterfaceNames());
-
-        do {
-            $class_and_interface_names[] = $reflection->getName();
-        } while ($reflection = $reflection->getParentClass());
-
-        return $class_and_interface_names;
-    }
 
     /** @return class-string[] */
     public static function getClassInstanceOf(string|object $class): array
