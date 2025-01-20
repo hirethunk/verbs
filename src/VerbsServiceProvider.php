@@ -47,6 +47,11 @@ class VerbsServiceProvider extends PackageServiceProvider
         $package
             ->name('verbs')
             ->hasConfigFile()
+            ->hasMigrations([
+                'create_verb_events_table',
+                'create_verb_snapshots_table',
+                'create_verb_state_events_table',
+            ])
             ->hasCommands(
                 MakeVerbEventCommand::class,
                 MakeVerbStateCommand::class,
@@ -144,12 +149,6 @@ class VerbsServiceProvider extends PackageServiceProvider
 
     public function packageBooted()
     {
-        $this->publishes([
-            __DIR__.'/../database/migrations/' => database_path('migrations'),
-        ], "{$this->package->shortName()}-migrations");
-
-        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
-
         if ($this->app->has('livewire')) {
             $manager = $this->app->make('livewire');
 
