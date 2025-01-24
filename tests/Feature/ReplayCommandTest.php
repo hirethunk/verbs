@@ -3,6 +3,7 @@
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Carbon;
 use Thunk\Verbs\Attributes\Autodiscovery\StateId;
+use Thunk\Verbs\Attributes\Hooks\Once;
 use Thunk\Verbs\Attributes\Hooks\Tag;
 use Thunk\Verbs\Commands\ReplayCommand;
 use Thunk\Verbs\Event;
@@ -46,7 +47,7 @@ it('can replay events', function () {
         ->toBe(4)
         ->and($GLOBALS['replay_test_counts'][$state2_id])
         ->toBe(4)
-        ->and($GLOBALS['handle_count'])->toBe(10);
+        ->and($GLOBALS['handle_count'])->toBe(10 * 2);
 
     // Reset 'projected' state and change data that only is touched when not replaying
     $GLOBALS['replay_test_counts'] = [];
@@ -240,6 +241,12 @@ class ReplayCommandTestEvent extends Event
         $GLOBALS['replay_test_counts'][$this->state_id] -= $this->subtract;
 
         Verbs::unlessReplaying(fn () => $GLOBALS['handle_count']++);
+    }
+
+    #[Once]
+    public function handleTwo()
+    {
+        $GLOBALS['handle_count']++;
     }
 }
 

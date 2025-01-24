@@ -59,7 +59,9 @@ class Hook
     public function forcePhases(Phase ...$phases): static
     {
         foreach ($phases as $phase) {
-            $this->phases[$phase] = true;
+            if (! isset($this->phases[$phase])) {
+                $this->phases[$phase] = true;
+            }
         }
 
         return $this;
