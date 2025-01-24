@@ -18,6 +18,8 @@ trait BrokerConvenienceMethods
 {
     public bool $is_replaying = false;
 
+    public ?array $replay_include_tags = null;
+
     /**
      * @deprecated
      * @see IdManager
