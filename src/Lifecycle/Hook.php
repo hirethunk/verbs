@@ -19,11 +19,20 @@ class Hook
         if (is_string($method)) {
             $method = new ReflectionMethod($target, $method);
         }
+        $tagAttributes = $method->getAttributes(\Thunk\Verbs\Attributes\Hooks\Tag::class);
+
+        $tags = collect($tagAttributes)
+            ->map(fn ($attr) => $attr->newInstance())
+            ->map(fn ($tag) => $tag->tags)
+            ->flatten()
+            ->map(fn ($tag) => strtolower($tag))
+            ->all();
 
         $hook = new static(
             callback: Closure::fromCallable([$target, $method->getName()]),
             targets: Reflector::getParameterTypes($method),
             name: $method->getName(),
+            tags: $tags,
         );
 
         return Reflector::applyHookAttributes($method, $hook);
@@ -44,6 +53,7 @@ class Hook
         public array $targets = [],
         public SplObjectStorage $phases = new SplObjectStorage,
         public ?string $name = null,
+        public ?array $tags = null,
     ) {}
 
     public function forcePhases(Phase ...$phases): static
@@ -112,6 +122,12 @@ class Hook
 
     public function replay(Container $container, Event $event): void
     {
+        if ($filteringTags = app(Broker::class)->replay_include_tags) {
+            if (empty(array_intersect($filteringTags, $this->tags))) {
+                return;
+            }
+        }
+
         if ($this->runsInPhase(Phase::Replay)) {
             app(Wormhole::class)->warp($event, fn () => $this->execute($container, $event));
         }

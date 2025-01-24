@@ -118,11 +118,7 @@ class Dispatcher
     {
         $hooks = $this->hooksFor($event, Phase::Handle);
 
-        if (method_exists($event, 'handle')) {
-            $hooks->prepend(Hook::fromClassMethod($event, 'handle')->forcePhases(Phase::Handle, Phase::Replay));
-        }
-
-        return $hooks;
+        return $hooks->merge($this->hooksWithPrefix($event, Phase::Handle, 'handle'));
     }
 
     /** @return Collection<int, Hook> */
@@ -130,11 +126,7 @@ class Dispatcher
     {
         $hooks = $this->hooksFor($event, Phase::Replay);
 
-        if (method_exists($event, 'handle')) {
-            $hooks->prepend(Hook::fromClassMethod($event, 'handle')->forcePhases(Phase::Handle, Phase::Replay));
-        }
-
-        return $hooks;
+        return $hooks->merge($this->hooksWithPrefix($event, Phase::Replay, 'handle'));
     }
 
     /** @return Collection<int, Hook> */

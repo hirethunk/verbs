@@ -3,6 +3,7 @@
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Carbon;
 use Thunk\Verbs\Attributes\Autodiscovery\StateId;
+use Thunk\Verbs\Attributes\Hooks\Tag;
 use Thunk\Verbs\Commands\ReplayCommand;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Id;
@@ -63,6 +64,13 @@ it('can replay events', function () {
         ->and($GLOBALS['replay_test_counts'][$state2_id])
         ->toBe(4)
         ->and($GLOBALS['handle_count'])->toBe(1337);
+});
+
+it('can replay with no events', function () {
+    config(['app.env' => 'testing']);
+    $this->artisan(ReplayCommand::class);
+
+    expect(Thunk\Verbs\Models\VerbEvent::count())->toBe(0);
 });
 
 it('uses the original event times when replaying', function () {
@@ -136,6 +144,81 @@ it('creates new snapshots when replaying', function () {
     expect($snapshot2->created_at)->toEqual(CarbonImmutable::parse('2024-05-15 18:00:00'));
 });
 
+it('can filter replayed events by tags', function () {
+    $GLOBALS['email_sent'] = [];
+    $GLOBALS['notification_sent'] = [];
+    $GLOBALS['billing_processed'] = [];
+
+    // Fire events with different tagged methods
+    TaggedReplayEvent::fire(state_id: Id::make());
+    TaggedReplayEvent::fire(state_id: Id::make());
+    TaggedReplayEvent::fire(state_id: Id::make());
+
+    Verbs::commit();
+
+    // Verify initial state
+    expect($GLOBALS['email_sent'])->toHaveCount(3)
+        ->and($GLOBALS['notification_sent'])->toHaveCount(3)
+        ->and($GLOBALS['billing_processed'])->toHaveCount(3);
+
+    // Reset counters
+    $GLOBALS['email_sent'] = [];
+    $GLOBALS['notification_sent'] = [];
+    $GLOBALS['billing_processed'] = [];
+
+    // Test single tag filter
+    config(['app.env' => 'testing']);
+    $this->artisan(ReplayCommand::class, ['--tag' => ['email']]);
+
+    expect($GLOBALS['email_sent'])->toHaveCount(3)
+        ->and($GLOBALS['notification_sent'])->toHaveCount(0)
+        ->and($GLOBALS['billing_processed'])->toHaveCount(0);
+
+    // Reset counters
+    $GLOBALS['email_sent'] = [];
+    $GLOBALS['notification_sent'] = [];
+    $GLOBALS['billing_processed'] = [];
+
+    // Test multiple tags
+    $this->artisan(ReplayCommand::class, ['--tag' => ['email', 'billing']]);
+
+    expect($GLOBALS['email_sent'])->toHaveCount(3)
+        ->and($GLOBALS['notification_sent'])->toHaveCount(0)
+        ->and($GLOBALS['billing_processed'])->toHaveCount(3);
+
+    // Reset counters
+    $GLOBALS['email_sent'] = [];
+    $GLOBALS['notification_sent'] = [];
+    $GLOBALS['billing_processed'] = [];
+
+    // Test with important tag
+    $this->artisan(ReplayCommand::class, ['--tag' => ['important']]);
+
+    expect($GLOBALS['email_sent'])->toHaveCount(0)
+        ->and($GLOBALS['notification_sent'])->toHaveCount(0)
+        ->and($GLOBALS['billing_processed'])->toHaveCount(3);
+});
+
+it('handles case sensitivity in tags correctly', function () {
+    $GLOBALS['email_sent'] = [];
+    $GLOBALS['notification_sent'] = [];
+    $GLOBALS['billing_processed'] = [];
+
+    TaggedReplayEvent::fire(state_id: Id::make());
+    Verbs::commit();
+
+    $GLOBALS['email_sent'] = [];
+    $GLOBALS['notification_sent'] = [];
+    $GLOBALS['billing_processed'] = [];
+
+    config(['app.env' => 'testing']);
+    $this->artisan(ReplayCommand::class, ['--tag' => ['EMAIL']]);
+
+    expect($GLOBALS['email_sent'])->toHaveCount(1)
+        ->and($GLOBALS['notification_sent'])->toHaveCount(0)
+        ->and($GLOBALS['billing_processed'])->toHaveCount(0);
+});
+
 class ReplayCommandTestEvent extends Event
 {
     public function __construct(
@@ -185,4 +268,34 @@ class ReplayCommandTestWormholeEvent extends Event
 class ReplayCommandTestWormholeState extends State
 {
     public CarbonImmutable $time;
+}
+
+class TaggedReplayEvent extends Event
+{
+    public function __construct(
+        #[StateId(TaggedReplayState::class)] public ?int $state_id = null,
+    ) {}
+
+    #[Tag('email')]
+    public function handleSendEmail()
+    {
+        $GLOBALS['email_sent'][] = $this->id;
+    }
+
+    #[Tag('notification')]
+    public function handleSendNotification()
+    {
+        $GLOBALS['notification_sent'][] = $this->id;
+    }
+
+    #[Tag(['billing', 'important'])]
+    public function handleProcessBilling()
+    {
+        $GLOBALS['billing_processed'][] = $this->id;
+    }
+}
+
+class TaggedReplayState extends State
+{
+    public int $count = 0;
 }
