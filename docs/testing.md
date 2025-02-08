@@ -80,7 +80,7 @@ choosing by setting an `$intial_event` property on your State Factory.
 ```php
 class ExampleStateFactory extends StateFactory
 {
-    protected $initial_event = ExampleCreated::class;
+    protected string $initial_event = ExampleCreated::class;
 }
 ```
 
@@ -132,7 +132,7 @@ UserState::factory()->create([ /* state data */ ]);
 
 Verbs makes it possible to create your own custom factories for your states.
 
-Create an `ExampleStateFactory` class in a new `App/States/Factory` folder.
+Create an `ExampleStateFactory` class in a new `App/States/Factories` folder.
 
 ```php
 namespace App\States\Factories;
