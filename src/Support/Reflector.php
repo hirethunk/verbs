@@ -3,9 +3,9 @@
 namespace Thunk\Verbs\Support;
 
 use Closure;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Reflector as BaseReflector;
+use InvalidArgumentException;
 use ReflectionClass;
 use ReflectionFunction;
 use ReflectionFunctionAbstract;
@@ -19,8 +19,12 @@ use Thunk\Verbs\State;
 class Reflector extends BaseReflector
 {
     /** @return Collection<int, Hook> */
-    public static function getHooks(object $target): Collection
+    public static function getHooks(string|object $target): Collection
     {
+        if (is_string($target) && ! class_exists($target)) {
+            throw new InvalidArgumentException('Hooks can only be registered for objects or classes.');
+        }
+
         if ($target instanceof Closure) {
             return collect([Hook::fromClosure($target)]);
         }
@@ -92,9 +96,8 @@ class Reflector extends BaseReflector
 
         return collect($parameters)
             ->map(fn (ReflectionParameter $parameter) => static::getParameterClassNames($parameter))
-            ->map(fn (array $names) => array_filter($names, fn ($name) => is_a($name, $type, true)))
-            ->reject(fn (array $names) => empty($names))
-            ->map(fn (array $names) => Arr::first($names));
+            ->flatten()
+            ->filter(fn ($class_name) => is_a($class_name, $type, true));
     }
 
     /** @return class-string[] */
