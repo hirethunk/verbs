@@ -32,7 +32,7 @@
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^7.10|^8.1",
         "orchestra/testbench": "^8.14|^9.1.0|^10.0",
-        "orchestra/testbench-core": "^8.14|^9.1.4",
+        "orchestra/testbench-core": "^8.14|^9.1.4|^10.0",
         "pestphp/pest": "^2.24|^3.7",
         "pestphp/pest-plugin-arch": "^2.4|^3.0",
         "pestphp/pest-plugin-laravel": "^2.2|^3.1",
