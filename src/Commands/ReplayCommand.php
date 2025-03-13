@@ -18,7 +18,7 @@ use function Laravel\Prompts\warning;
 
 class ReplayCommand extends Command
 {
-    protected $signature = 'verbs:replay {--force}';
+    protected $signature = 'verbs:replay {--force} {--tag=*}';
 
     protected $description = 'Replay all Verbs events.';
 
@@ -28,14 +28,26 @@ class ReplayCommand extends Command
             return 1;
         }
 
+        /** @var string[] $tags */
+        $tags = $this->option('tag');
+        $tags = array_map('strtolower', $tags);
+
         // Prepare for a long-running, database-heavy run
         ini_set('memory_limit', '-1');
         EventFacade::forget(QueryExecuted::class);
         DB::disableQueryLog();
 
+        $count = VerbEvent::count();
+
+        if ($count === 0) {
+            $this->info('No events to replay.');
+
+            return 0;
+        }
+
         $started_at = time();
 
-        $progress = progress('Replaying…', VerbEvent::count());
+        $progress = progress('Replaying…', $count);
         $progress->start();
 
         $broker->replay(
@@ -46,6 +58,7 @@ class ReplayCommand extends Command
                 $event->id,
             )),
             afterEach: fn () => $progress->advance(),
+            tags: $tags,
         );
 
         $progress->finish();

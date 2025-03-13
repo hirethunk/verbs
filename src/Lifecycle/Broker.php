@@ -77,9 +77,10 @@ class Broker implements BrokersEvents
         return $this->commit();
     }
 
-    public function replay(?callable $beforeEach = null, ?callable $afterEach = null): void
+    public function replay(?callable $beforeEach = null, ?callable $afterEach = null, ?array $tags = null): void
     {
         $this->is_replaying = true;
+        $this->replay_include_tags = $tags;
 
         try {
             $this->states->reset(include_storage: true);
@@ -110,6 +111,7 @@ class Broker implements BrokersEvents
             $this->states->writeSnapshots();
             $this->states->prune();
             $this->states->setReplaying(false);
+            $this->replay_include_tags = null;
             $this->is_replaying = false;
         }
     }

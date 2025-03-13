@@ -72,9 +72,9 @@ class BrokerFake implements BrokersEvents
         return $this->broker->commit();
     }
 
-    public function replay(?callable $beforeEach = null, ?callable $afterEach = null)
+    public function replay(?callable $beforeEach = null, ?callable $afterEach = null, ?array $tags = null)
     {
-        $this->broker->replay($beforeEach, $afterEach);
+        $this->broker->replay($beforeEach, $afterEach, $tags);
     }
 
     public function commitImmediately(bool $commit_immediately = true): void
