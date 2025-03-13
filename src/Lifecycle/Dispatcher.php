@@ -21,7 +21,7 @@ class Dispatcher
         protected Container $container
     ) {}
 
-    public function register(object $target): void
+    public function register(string|object $target): void
     {
         foreach (Reflector::getHooks($target) as $hook) {
             foreach ($hook->targets as $fqcn) {
