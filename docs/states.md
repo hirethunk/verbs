@@ -24,7 +24,7 @@ happened.
 To generate a state, use the built-in artisan command:
 
 ```shell
-php artisan verbs:state GameState
+php artisan verbs:state ExampleState
 ```
 
 When you create your first state, it will generate in a fresh `app/States` directory.
