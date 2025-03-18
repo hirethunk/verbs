@@ -151,10 +151,7 @@ Singleton states require no ID because there is only ever one copy in existence 
 To tell Verbs to treat a State as a singleton, extend the `SingletonState` class, rather than `State`.
 
 ```php
-class CountState extends State implements SingletonState
-{
-    // ...
-}
+class CountState extends SingletonState {}
 ```
 
 ### Loading the singleton state
