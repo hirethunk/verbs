@@ -64,7 +64,9 @@ class Guards
             $result = call_user_func_array([$this->event, 'authorize'], $resolver());
 
             if ($result instanceof Response) {
-                return $result->authorize();
+                $response = $result->authorize();
+
+                return $response->allowed();
             }
 
             if (is_bool($result)) {
