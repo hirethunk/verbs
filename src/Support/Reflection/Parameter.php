@@ -4,7 +4,6 @@ namespace Thunk\Verbs\Support\Reflection;
 
 use Illuminate\Support\Traits\ForwardsCalls;
 use ReflectionParameter;
-use Thunk\Verbs\Support\NamedDependency;
 
 /** @mixin ReflectionParameter */
 class Parameter
@@ -19,14 +18,7 @@ class Parameter
 
     public function accepts(mixed $value): bool
     {
-        if ($value instanceof NamedDependency) {
-            $value = $value->value;
-        }
-
-        return match (true) {
-            $this->type()->isBuiltin() => get_debug_type($value) === $this->type()->name(),
-            default => is_a($value, $this->type()->name(), true),
-        };
+        return $this->type()->includes($value);
     }
 
     public function type(): Type
