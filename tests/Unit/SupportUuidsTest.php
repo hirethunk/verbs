@@ -18,7 +18,7 @@ beforeEach(function () {
     artisan('migrate:fresh');
 });
 
-afterAll(function () {
+afterEach(function () {
     // This just resets the migrations back to how the were before this test suite
     config()->set('verbs.id_type', 'snowflake');
     app()->instance(IdManager::class, new IdManager('snowflake'));
