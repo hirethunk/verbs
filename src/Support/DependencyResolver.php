@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Collection;
 use ReflectionFunction;
+use ReflectionFunctionAbstract;
 use ReflectionParameter;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\AmbiguousDependencyException;
@@ -16,11 +17,12 @@ class DependencyResolver
 {
     protected Collection $candidates;
 
-    public static function for(callable $callback, ?Container $container = null, ?Event $event = null): static
+    public static function for(callable $callback, ?Container $container = null, ?Event $event = null, ?ReflectionFunctionAbstract $reflection = null): static
     {
         $resolver = new static(
             container: $container ?? \Illuminate\Container\Container::getInstance(),
             callback: $callback(...),
+            reflection: $reflection,
         );
 
         if ($event) {
@@ -33,6 +35,7 @@ class DependencyResolver
     public function __construct(
         protected Container $container,
         protected Closure $callback,
+        protected ?ReflectionFunctionAbstract $reflection = null,
     ) {
         $this->candidates = new Collection;
     }
@@ -81,9 +84,11 @@ class DependencyResolver
 
     public function __invoke(): array
     {
+        $this->reflection ??= new ReflectionFunction($this->callback);
+
         return array_map(
             $this->resolveParameter(...),
-            (new ReflectionFunction($this->callback))->getParameters()
+            $this->reflection->getParameters()
         );
     }
 
