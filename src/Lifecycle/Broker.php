@@ -114,6 +114,11 @@ class Broker implements BrokersEvents
         }
     }
 
+    public function listen(object|string $listener)
+    {
+        $this->dispatcher->register($listener);
+    }
+
     public function commitImmediately(bool $commit_immediately = true): void
     {
         $this->commit_immediately = $commit_immediately;
