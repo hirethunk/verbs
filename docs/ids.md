@@ -25,9 +25,12 @@ class JobApplication extends Model
     use HasSnowflakes; // Add this to your model
 
     // Any attribute can be cast to a `Snowflake` (or `Sonyflake`)
-    protected $casts = [
-        'id' => Snowflake::class,
-    ];
+    protected function casts(): array
+    {
+        return [
+            'id' => Snowflake::class,
+        ];
+    }
 }
 ```
 
