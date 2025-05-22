@@ -174,13 +174,27 @@ it('allows us to store a serializable class interface as a property', function (
 
     $serialized_data = app(Serializer::class)->serialize($original_event);
 
-    expect($serialized_data)->toBe('{"dto":{"fqcn":"DTO","foo":1}}');
+    expect($serialized_data)->toBe('{"dto":{"fqcn":"OtherDTO","bar":2}}');
 
     $deserialized_event = app(Serializer::class)->deserialize(EventWithDtoInterface::class, $serialized_data);
 
     expect($deserialized_event->dto)
-        ->toBeInstanceOf(DTO::class)
-        ->foo->toBe(1);
+        ->toBeInstanceOf(OtherDTO::class)
+        ->bar->toBe(2);
+});
+
+it('allows us to store a serializable class as a union type property', function () {
+    $original_event = new EventWithUnionType;
+
+    $serialized_data = app(Serializer::class)->serialize($original_event);
+
+    expect($serialized_data)->toBe('{"dto":{"fqcn":"OtherDTO","bar":2}}');
+
+    $deserialized_event = app(Serializer::class)->deserialize(EventWithUnionType::class, $serialized_data);
+
+    expect($deserialized_event->dto)
+        ->toBeInstanceOf(OtherDTO::class)
+        ->bar->toBe(2);
 });
 
 class EventWithConstructorPromotion extends Event
@@ -201,13 +215,20 @@ class EventWithJustPublicProperties extends Event
     public string $string;
 }
 
-interface DTOInterface extends SerializedByVerbs {}
-
-class DTO implements DTOInterface
+class DTO implements SerializedByVerbs
 {
     use NormalizeToPropertiesAndClassName;
 
     public int $foo = 1;
+}
+
+interface DTOInterface extends SerializedByVerbs {}
+
+class OtherDTO implements DTOInterface
+{
+    use NormalizeToPropertiesAndClassName;
+
+    public int $bar = 2;
 }
 
 class EventWithDto extends Event
@@ -218,7 +239,14 @@ class EventWithDto extends Event
 class EventWithDtoInterface extends Event
 {
     public function __construct(
-        public DTOInterface $dto = new DTO,
+        public DTOInterface $dto = new OtherDTO,
+    ) {}
+}
+
+class EventWithUnionType extends Event
+{
+    public function __construct(
+        public DTO|OtherDTO $dto = new OtherDTO,
     ) {}
 }
 
