@@ -5,6 +5,8 @@ namespace Thunk\Verbs\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Exceptions\UnableToReadEventException;
+use Thunk\Verbs\Lifecycle\EventStore;
 use Thunk\Verbs\Lifecycle\MetadataManager;
 use Thunk\Verbs\Metadata;
 use Thunk\Verbs\State;
@@ -40,7 +42,17 @@ class VerbEvent extends Model
 
     public function event(): Event
     {
-        $this->event ??= app(Serializer::class)->deserialize($this->type, $this->data);
+        $type = app(EventStore::class)->resolveType($this->type);
+
+        try {
+            $this->event ??= app(Serializer::class)->deserialize($type, $this->data);
+        } catch (\ReflectionException $e) {
+            if (preg_match('/Class "([^"]+)" does not exist/', $e->getMessage(), $matches)) {
+                throw new UnableToReadEventException("Event class {$matches[1]} not found, if this event has been renamed, consider using `mapLegacyEvents` to map the old event to the new event.");
+            }
+            throw $e;
+        }
+
         $this->event->id = $this->id;
 
         app(MetadataManager::class)->setEphemeral($this->event, 'created_at', $this->created_at);
