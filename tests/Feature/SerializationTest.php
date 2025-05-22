@@ -169,6 +169,20 @@ it('allows us to store a serializable class(es) as a property', function () {
         ->and($deserialized_event->dtos[0])->toBeInstanceOf(DTO::class);
 });
 
+it('allows us to store a serializable class interface as a property', function () {
+    $original_event = new EventWithDtoInterface;
+
+    $serialized_data = app(Serializer::class)->serialize($original_event);
+
+    expect($serialized_data)->toBe('{"dto":{"fqcn":"DTO","foo":1}}');
+
+    $deserialized_event = app(Serializer::class)->deserialize(EventWithDtoInterface::class, $serialized_data);
+
+    expect($deserialized_event->dto)
+        ->toBeInstanceOf(DTO::class)
+        ->foo->toBe(1);
+});
+
 class EventWithConstructorPromotion extends Event
 {
     public function __construct(
@@ -187,7 +201,9 @@ class EventWithJustPublicProperties extends Event
     public string $string;
 }
 
-class DTO implements SerializedByVerbs
+interface DTOInterface extends SerializedByVerbs {}
+
+class DTO implements DTOInterface
 {
     use NormalizeToPropertiesAndClassName;
 
@@ -197,6 +213,13 @@ class DTO implements SerializedByVerbs
 class EventWithDto extends Event
 {
     public DTO $dto;
+}
+
+class EventWithDtoInterface extends Event
+{
+    public function __construct(
+        public DTOInterface $dto = new DTO,
+    ) {}
 }
 
 class EventWithConstructor extends Event
