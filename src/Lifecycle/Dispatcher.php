@@ -79,7 +79,20 @@ class Dispatcher
             return collect();
         }
 
-        return $this->getHandleHooks($event)->map(fn (Hook $hook) => $hook->handle($this->container, $event));
+        $handleHookResults = $this->getHandleHooks($event)->map(fn (Hook $hook) => $hook->handle($this->container, $event));
+
+        // In case the original event has a `handle` method, we want to return its return value, if any.
+        //
+        // Any return values from additional handle hooks are ignored to guarantee consistent behavior
+        // and avoid side-effects that affect the event's `handle` return value caused by registered
+        // `Phase::Handle` hooks that are outside of the control of the event class.
+        //
+        // @see https://github.com/hirethunk/verbs/issues/213
+        if (method_exists($event, 'handle')) {
+            return $handleHookResults->take(1);
+        }
+
+        return collect();
     }
 
     public function replay(Event $event): void
