@@ -7,6 +7,8 @@ use Thunk\Verbs\State;
 
 class VerbStateEvent extends Model
 {
+    public const UPDATED_AT = null;
+
     public $guarded = [];
 
     public function getConnectionName()

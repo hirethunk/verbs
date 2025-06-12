@@ -129,7 +129,6 @@ class EventStore implements StoresEvents
             'data' => app(Serializer::class)->serialize($event),
             'metadata' => app(Serializer::class)->serialize($this->metadata->get($event)),
             'created_at' => app(MetadataManager::class)->getEphemeral($event, 'created_at', now()),
-            'updated_at' => now(),
         ], $event_objects);
     }
 
@@ -143,7 +142,6 @@ class EventStore implements StoresEvents
                 'state_id' => Id::from($state->id),
                 'state_type' => $state::class,
                 'created_at' => now(),
-                'updated_at' => now(),
             ]))
             ->values()
             ->all();
