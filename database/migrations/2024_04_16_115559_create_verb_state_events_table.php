@@ -23,7 +23,9 @@ return new class extends Migration
             // on if you're using Snowflakes vs. ULIDs/etc.
             Id::createColumnDefinition($table, 'state_id')->index();
 
-            $table->string('state_type')->index();
+            $table->string('state_type');
+
+            $table->index(['state_type', 'state_id'], 'state_type_state_id_index');
 
             $table->timestamps();
         });
