@@ -100,6 +100,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Replay
+    |--------------------------------------------------------------------------
+    |
+    | By default, Verbs will not perform authorization and validation checks
+    | when replaying events. If you would like, you can enable these checks.
+    |
+    */
+    'replay' => [
+        'authorization' => false,
+        'validation' => false,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Wormhole
     |--------------------------------------------------------------------------
     |

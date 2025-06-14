@@ -15,6 +15,8 @@ beforeEach(function () {
     $GLOBALS['replay_test_counts'] = [];
     $GLOBALS['handle_count'] = 0;
     $GLOBALS['times'] = [];
+    $GLOBALS['pass_authorization'] = true;
+    $GLOBALS['pass_validation'] = true;
 });
 
 it('can replay events', function () {
@@ -136,6 +138,33 @@ it('creates new snapshots when replaying', function () {
     expect($snapshot2->created_at)->toEqual(CarbonImmutable::parse('2024-05-15 18:00:00'));
 });
 
+it('can replay events with authorization and validation checks', function (string $phase) {
+    ReplayCommandTestAuthorizationValidationEvent::fire();
+    ReplayCommandTestAuthorizationValidationEvent::fire();
+    ReplayCommandTestAuthorizationValidationEvent::fire();
+
+    Verbs::commit();
+
+    expect($GLOBALS['handle_count'])->toBe(3);
+
+    $GLOBALS['handle_count'] = 0;
+
+    $this->artisan(ReplayCommand::class);
+
+    expect($GLOBALS['handle_count'])->toBe(3);
+
+    $GLOBALS['handle_count'] = 0;
+    $GLOBALS["pass_{$phase}"] = false;
+    config(["verbs.replay.{$phase}" => true]);
+
+    $this->artisan(ReplayCommand::class);
+
+    expect($GLOBALS['handle_count'])->toBe(0);
+})->with([
+    'authorization phase' => ['phase' => 'authorization'],
+    'validation phase' => ['phase' => 'validation'],
+]);
+
 class ReplayCommandTestEvent extends Event
 {
     public function __construct(
@@ -185,4 +214,22 @@ class ReplayCommandTestWormholeEvent extends Event
 class ReplayCommandTestWormholeState extends State
 {
     public CarbonImmutable $time;
+}
+
+class ReplayCommandTestAuthorizationValidationEvent extends Event
+{
+    public function authorize(): bool
+    {
+        return $GLOBALS['pass_authorization'];
+    }
+
+    public function validate(): bool
+    {
+        return $GLOBALS['pass_validation'];
+    }
+
+    public function handle(): void
+    {
+        $GLOBALS['handle_count']++;
+    }
 }

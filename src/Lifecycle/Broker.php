@@ -2,6 +2,7 @@
 
 namespace Thunk\Verbs\Lifecycle;
 
+use Throwable;
 use Thunk\Verbs\CommitsImmediately;
 use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Contracts\StoresEvents;
@@ -80,6 +81,8 @@ class Broker implements BrokersEvents
     public function replay(?callable $beforeEach = null, ?callable $afterEach = null): void
     {
         $this->is_replaying = true;
+        $checkAuthorization = config('verbs.replay.authorization');
+        $checkValidation = config('verbs.replay.validation');
 
         try {
             $this->states->reset(include_storage: true);
@@ -87,11 +90,27 @@ class Broker implements BrokersEvents
             $iteration = 0;
 
             app(StoresEvents::class)->read()
-                ->each(function (Event $event) use ($beforeEach, $afterEach, &$iteration) {
+                ->each(function (Event $event) use ($beforeEach, $afterEach, &$iteration, $checkAuthorization, $checkValidation) {
                     $this->states->setReplaying(true);
 
                     if ($beforeEach) {
                         $beforeEach($event);
+                    }
+
+                    if ($checkAuthorization) {
+                        try {
+                            Guards::for($event)->authorize();
+                        } catch (Throwable) {
+                            return;
+                        }
+                    }
+
+                    if ($checkValidation) {
+                        try {
+                            Guards::for($event)->validate();
+                        } catch (Throwable) {
+                            return;
+                        }
                     }
 
                     $this->dispatcher->apply($event);
