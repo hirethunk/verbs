@@ -7,6 +7,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Verbs is a Laravel package that provides event sourcing capabilities. It focuses on developer experience, following
 Laravel conventions, and minimizing boilerplate.
 
+## Code Rules
+
+- Never use `private` or `readonly` keywords
+- Never use strict types
+- Values are `snake_case`
+- Anything callable is `camelCase` (even if it's a variable)
+- Paths are `kebab-case` (URLs, files, etc)
+- Only apply docblocks where they provide useful IDE/static analysis value
+
 ## Testing
 
 The project uses Pest PHP for testing. Key testing patterns:
