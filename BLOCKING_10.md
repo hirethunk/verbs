@@ -22,6 +22,33 @@ different points in time, the reconstitution process can lead to:
 3. **Double Application**: The same event may be applied multiple times during cross-state reconstitution
 4. **Future Data Leakage**: Events may see "future" state when one state is reconstituted ahead of another
 
+## Daniel Notes
+
+### Goals
+
+- State Reconstitution: given a snapshot (or nothing) and any given number of applicable events, you can
+  calculate the state.
+- State Repository: support the existence of multiple state repos, keeping as much of the singleton behavior
+  as possible. There should be one "singleton" state repository, but there may be others as needed. We may need
+  to "swap out" the "current" state repository.
+
+## Chris Notes
+
+### Problems
+
+- We load States in the wrong way internally: the public API of `GameState::load()` is good for userland code,
+  but we should be loading states in a lower-level way inside Verbs so that we have better control over how the
+  state is loaded in different contexts.
+- The reality of loading state requires ALL the context: we need to know all the states and events that will be
+  used to build up that state.
+
+### Ways we load state:
+
+1. For replay
+2. For reconstitution
+3. For userland `::load()` contexts
+4. For event lifecycle hooks (during fire and replay and to some degree reconstitution)
+
 ## Concrete Example
 
 ```php
