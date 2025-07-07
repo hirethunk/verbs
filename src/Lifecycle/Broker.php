@@ -37,19 +37,31 @@ class Broker implements BrokersEvents
             return null;
         }
 
+        // $hooks = Dispatcher::fireHooks()->diff($disabled_hooks);
+        // $this->dispatcher->triggerHooks($event, $hooks);
+
+        // Lifecycle::for($event, Hooks::fire())->handle();
+
         // NOTE: Any changes to how the dispatcher is called here
         // should also be applied to the `replay` method
 
-        $this->dispatcher->boot($event);
+        Lifecycle::run(
+            event: $event,
+            phases: Phases::fire(),
+            // onHandle: fn() => $this->queue
+        );
 
-        Guards::for($event)->check();
+        // $this->dispatcher->boot($event);
+        //
+        // Guards::for($event)->check();
+        //
+        // $this->dispatcher->apply($event);
+        //
+        // $this->queue->queue($event);
+        //
+        // $this->dispatcher->fired($event);
 
-        $this->dispatcher->apply($event);
-
-        $this->queue->queue($event);
-
-        $this->dispatcher->fired($event);
-
+        // FIXME
         if ($this->commit_immediately || $event instanceof CommitsImmediately) {
             $this->commit();
         }

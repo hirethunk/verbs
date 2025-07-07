@@ -42,12 +42,46 @@ different points in time, the reconstitution process can lead to:
 - The reality of loading state requires ALL the context: we need to know all the states and events that will be
   used to build up that state.
 
+### State classes
+
+- Right now we have `StateManager` and `StateInstanceCache` and `State` and `SnapshotStore` and `VerbSnapshot`
+
+#### `StateRegistry`
+
+- `get`
+- `put`
+- has a curryable cache layer
+
+#### State functions
+
+- GLOBAL CONTEXT:   Load state from storage or cache and maybe reconstitute
+- BOTH CONTEXTS:    Remember this state (cache)
+- INTERNAL CONTEXT: Get this state if you have it (cache)
+
+- Load state from snapshot
+- Apply events to state
+- Load state from cache
+- Identify whether a state has a snapshot (or needs to be reconstituted)
+- Get a default instance of a state
+
 ### Ways we load state:
 
 1. For replay
 2. For reconstitution
 3. For userland `::load()` contexts
 4. For event lifecycle hooks (during fire and replay and to some degree reconstitution)
+
+## Maybe Solutions
+
+"Everything is a play through of an event stream"
+
+- Sometimes we play events as they happen
+- Sometimes we play them to reconstitute
+- Sometimes we play them to replay
+
+The "unit" is a "Replay" (could be called Saga) in this case. Each replay can have any number of lifecycle hooks
+enabled. It's essentially a lazy collection or iterator of an unknown number of events, and builds an internal
+collection of states.
 
 ## Concrete Example
 
@@ -233,3 +267,65 @@ Tests should verify:
 3. Add comprehensive tests comparing old vs new behavior
 4. Gradually migrate to new system with monitoring
 5. Remove old reconstitution code once stable
+
+## Additional Considerations
+
+### Event Sourcing Best Practices
+
+The synchronization issue described is a classic problem in event sourcing when dealing with aggregate boundaries. Key
+principles to consider:
+
+- **Aggregate Consistency**: Each aggregate (state) should be internally consistent, but cross-aggregate consistency can
+  be eventual
+- **Process Managers**: For coordinating changes across multiple aggregates, consider implementing process managers that
+  orchestrate multi-state operations
+- **Compensating Events**: When reconstitution fails or produces inconsistent state, having a mechanism for compensating
+  events could help recovery
+
+### Reconstitution Context Requirements
+
+Building on Chris's four loading contexts, each has different consistency requirements:
+
+1. **Replay Context**: Requires strict ordering and full consistency - all states must be at the exact same point in the
+   event stream
+2. **Reconstitution Context**: Needs consistency within the reconstitution boundary but may tolerate some staleness for
+   states outside the boundary
+3. **Userland ::load() Context**: Could potentially accept eventual consistency depending on use case
+4. **Event Lifecycle Context**: Needs point-in-time consistency for the specific moment the event is being processed
+
+### Performance Optimization Strategies
+
+Beyond the patterns listed, consider:
+
+- **Parallel Reconstitution**: For states with no interdependencies, reconstitute in parallel
+- **Incremental Reconstitution**: Only reconstitute the delta between snapshot and current state
+- **Reconstitution Caching**: Cache recently reconstituted states with TTL based on event frequency
+- **Lazy Property Loading**: Defer loading of expensive state properties until accessed
+
+### Snapshot Coordination Strategies
+
+Different approaches to maintaining snapshot consistency:
+
+1. **Event-Aligned Snapshots**: All related states snapshot at the same global event ID
+2. **Time-Based Snapshots**: Snapshot all states at regular wall-clock intervals
+3. **Logical Clock Snapshots**: Use vector clocks or hybrid logical clocks to maintain causality
+4. **Demand-Driven Snapshots**: Snapshot when reconstitution cost exceeds threshold
+
+### Error Recovery and Debugging
+
+Important considerations for production systems:
+
+- **Reconstitution Audit Trail**: Log which events were applied during reconstitution for debugging
+- **Deterministic Reconstitution**: Same events + same snapshot should always produce identical state
+- **Reconstitution Timeouts**: Prevent infinite loops with configurable timeouts
+- **State Corruption Detection**: Checksums or invariant checks to detect corrupted state
+
+### Testing Strategies Beyond Current List
+
+Additional test scenarios to consider:
+
+- **Concurrent Reconstitution**: Multiple threads reconstituting overlapping states
+- **Memory Pressure**: Reconstituting very large state graphs
+- **Network Partitions**: Handling partial event availability
+- **Schema Evolution**: Reconstituting states across event schema changes
+- **Reconstitution Determinism**: Verify identical results across multiple runs
