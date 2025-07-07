@@ -6,7 +6,7 @@ use Thunk\Verbs\Event;
 
 class Lifecycle
 {
-    public function run(Event $event, Phases $phases): Event
+    public static function run(Event $event, Phases $phases): Event
     {
         return (new static(app(Dispatcher::class), $event, $phases))->handle();
     }
@@ -32,10 +32,10 @@ class Lifecycle
             $this->dispatcher->apply($this->event);
         }
 
-        // FIXME: Maybe we need a "commit" phase
         if ($this->phases->has(Phase::Handle)) {
             // FIXME
             // $this->queue->queue($this->event);
+            $this->dispatcher->handle($this->event);
         }
 
         if ($this->phases->has(Phase::Fired)) {

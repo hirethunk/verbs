@@ -9,24 +9,12 @@ use ReflectionClass;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Contracts\StoresSnapshots;
-use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Id;
-use Thunk\Verbs\Models\VerbStateEvent;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\EventStateRegistry;
 use Thunk\Verbs\Support\StateCollection;
 use Thunk\Verbs\Support\StateInstanceCache;
 use UnexpectedValueException;
-
-/*
- * Three domains:
- *  - Loading states from storage
- *  - Creating new states
- *  - Recreating states
- *
- * State managers serves both as a thing that handles
- * *all things state* and as a "state locator"
- */
 
 class StateManager
 {
@@ -38,7 +26,7 @@ class StateManager
         protected Dispatcher $dispatcher,
         protected StoresSnapshots $snapshots,
         protected StoresEvents $events,
-        protected StateInstanceCache $states,
+        public StateInstanceCache $states,
     ) {}
 
     public function register(State $state): State
@@ -56,12 +44,6 @@ class StateManager
      */
     public function load(Bits|UuidInterface|AbstractUid|iterable|int|string $id, string $type): StateCollection|State
     {
-        // FIXME: This was not written to support loading multiple states
-        // $summary = $this->events->summarize($state);
-        // if ($summary->out_of_sync) {
-        //     $this->snapshots->delete(...$summary->related_state_ids);
-        // }
-
         return is_iterable($id)
             ? $this->loadMany($id, $type)
             : $this->loadOne($id, $type);
@@ -75,22 +57,21 @@ class StateManager
      */
     public function singleton(string $type): State
     {
-        // FIXME: If the state we're loading has a last_event_id that's ahead of the registry's last_event_id, we need to re-build the state
-
         if ($state = $this->states->get($type)) {
             return $state;
         }
 
-        $state = $this->snapshots->loadSingleton($type) ?? new $type;
-        $state->id ??= snowflake_id();
+        // FIXME
+        // $state = $this->snapshots->loadSingleton($type) ?? new $type;
+        // $state->id ??= snowflake_id();
+        //
+        // // We'll store a reference to it by the type for future singleton access
+        // $this->states->put($type, $state);
+        // $this->remember($state);
+        //
+        // $this->reconstitute($state);
 
-        // We'll store a reference to it by the type for future singleton access
-        $this->states->put($type, $state);
-        $this->remember($state);
-
-        $this->reconstitute($state);
-
-        return $state;
+        return $this->make(snowflake_id(), $type);
     }
 
     /**
@@ -174,24 +155,23 @@ class StateManager
         $id = Id::from($id);
         $key = $this->key($id, $type);
 
-        // FIXME: If the state we're loading has a last_event_id that's ahead of the registry's last_event_id, we need to re-build the state
-
         if ($state = $this->states->get($key)) {
             return $state;
         }
 
-        if ($state = $this->snapshots->load($id, $type)) {
-            if (! $state instanceof $type) {
-                throw new UnexpectedValueException(sprintf('Expected State <%d> to be of type "%s" but got "%s"', $id, class_basename($type), class_basename($state)));
-            }
-        } else {
-            $state = $this->make($id, $type);
-        }
+        // FIXME
+        // if ($state = $this->snapshots->load($id, $type)) {
+        //     if (! $state instanceof $type) {
+        //         throw new UnexpectedValueException(sprintf('Expected State <%d> to be of type "%s" but got "%s"', $id, class_basename($type), class_basename($state)));
+        //     }
+        // } else {
+        //     $state = $this->make($id, $type);
+        // }
+        //
+        // $this->remember($state);
+        // $this->reconstitute($state);
 
-        $this->remember($state);
-        $this->reconstitute($state);
-
-        return $this->states->get($key); // FIXME
+        return $this->make($id, $type);
     }
 
     /** @param  class-string<State>  $type */
@@ -224,67 +204,7 @@ class StateManager
 
     protected function reconstitute(State $state): static
     {
-        // FIXME: Only run this if the state is out of date
-        if (! $this->needsReconstituting($state)) {
-            // dump('skipping: everything in sync');
-            return $this;
-        }
-
-        if (! $this->is_replaying && ! $this->is_reconstituting) {
-            $real_registry = app(EventStateRegistry::class);
-
-            try {
-                $this->is_reconstituting = true;
-
-                $summary = $this->events->summarize($state);
-
-                [$temp_manager] = $this->bindNewEmptyStateManager();
-
-                $this->events
-                    ->get($summary->related_event_ids)
-                    ->each($this->dispatcher->apply(...));
-
-                foreach ($temp_manager->states->all() as $key => $state) {
-                    $this->states->put($key, $state);
-                }
-
-            } finally {
-                $this->is_reconstituting = false;
-
-                app()->instance(StateManager::class, $this);
-                app()->instance(EventStateRegistry::class, $real_registry);
-            }
-        }
-
         return $this;
-    }
-
-    protected function needsReconstituting(State $state): bool
-    {
-        $max_id = VerbStateEvent::query()
-            ->where('state_id', $state->id)
-            ->where('state_type', $state::class)
-            ->max('event_id');
-
-        return $max_id !== $state->last_event_id;
-    }
-
-    protected function bindNewEmptyStateManager()
-    {
-        $temp_manager = new StateManager(
-            dispatcher: $this->dispatcher,
-            snapshots: new NullSnapshotStore,
-            events: $this->events,
-            states: new StateInstanceCache,
-        );
-        $temp_manager->is_reconstituting = true; // FIXME
-
-        $temp_registry = new EventStateRegistry($temp_manager);
-
-        app()->instance(StateManager::class, $temp_manager);
-        app()->instance(EventStateRegistry::class, $temp_registry);
-
-        return [$temp_manager, $temp_registry];
     }
 
     protected function remember(State $state): State

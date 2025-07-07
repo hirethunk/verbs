@@ -3,22 +3,31 @@
 namespace Thunk\Verbs\Support;
 
 use Illuminate\Support\Enumerable;
+use Thunk\Verbs\Lifecycle\Lifecycle;
 use Thunk\Verbs\Lifecycle\Phases;
+use Thunk\Verbs\Lifecycle\StateManager;
 
 class Timeline
 {
     public function __construct(
-        public StateInstanceCache $states, // This should be a new thing that replaces the StateManager, "StateRegistry"
+        public StateManager $states,
         public Enumerable $events,
+        public Phases $phases,
     ) {}
 
-    public function handle(Phases $phases): static
+    public function handle(): static
     {
-        // Loop over events, replay configured hooks, apply snapshots as needed
-        // Use the Dispatcher to call the appropriate hooks
+        $global_registry = app(StateManager::class);
 
-        // Load GameState + fire event
-        //  - apply to GameState
+        try {
+            app()->instance(StateManager::class, $this->states);
+
+            foreach ($this->events as $event) {
+                Lifecycle::run($event, $this->phases);
+            }
+        } finally {
+            app()->instance(StateManager::class, $global_registry);
+        }
 
         return $this;
     }

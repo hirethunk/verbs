@@ -1,5 +1,27 @@
 # State Synchronization Issue - Blocking Verbs 1.0
 
+## When we get back
+
+Add cache layer to state manager
+
+```php
+$cache = [
+    new MemoryCache(),
+    new RedisCache(),
+    new DatabaseCache(),
+];
+
+$cache = [
+    new MemoryCache(),
+    new ReadOnlyCache(new RedisCache()),
+    new WriteOnlyCache(new DatabaseCache()),
+];
+```
+
+Look into using Timeline to reconstitute after loading from cache.
+
+- We need to make sure there's some way to determine if snapshots are in sync
+
 ## Problem Statement
 
 The `StateManager` class currently conflates two responsibilities that should be separated:
