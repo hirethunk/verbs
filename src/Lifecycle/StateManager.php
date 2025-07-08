@@ -35,12 +35,6 @@ class StateManager implements TracksState
         return $this->remember($state);
     }
 
-    /**
-     * @template S instanceof State
-     *
-     * @param  class-string<S>  $type
-     * @return S|StateCollection<int,S>
-     */
     public function load(Bits|UuidInterface|AbstractUid|iterable|int|string $id, string $type): StateCollection|State
     {
         return is_iterable($id)
@@ -48,12 +42,6 @@ class StateManager implements TracksState
             : $this->loadOne($id, $type);
     }
 
-    /**
-     * @template TStateClass of State
-     *
-     * @param  class-string<TStateClass>  $type
-     * @return TStateClass
-     */
     public function singleton(string $type): State
     {
         // FIXME: If the state we're loading has a last_event_id that's ahead of the registry's last_event_id, we need to re-build the state
@@ -74,12 +62,6 @@ class StateManager implements TracksState
         return $state;
     }
 
-    /**
-     * @template TState of State
-     *
-     * @param  class-string<TState>  $type
-     * @return TState
-     */
     public function make(Bits|UuidInterface|AbstractUid|int|string $id, string $type): State
     {
         // If we've already instantiated this state, we'll load it
