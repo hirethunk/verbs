@@ -4,6 +4,8 @@ namespace Thunk\Verbs\Lifecycle;
 
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Enumerable;
+use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Models\VerbStateEvent;
 use Thunk\Verbs\State;
 use Thunk\Verbs\State\StateIdentity;
@@ -33,6 +35,11 @@ class AggregateStateSummary
         public Collection $related_states = new Collection,
     ) {}
 
+    public function events(): Enumerable
+    {
+        return app(StoresEvents::class)->get($this->related_event_ids);
+    }
+
     protected function discover(): static
     {
         $this->discoverNewEventIds();
@@ -53,7 +60,7 @@ class AggregateStateSummary
             ->select('event_id')
             ->whereNotIn('event_id', $this->related_event_ids)
             ->where(fn (Builder $query) => $this->related_states->each(
-                fn ($state) => $query->orWhere(fn (Builder $query) => $this->addConstraint($state, $query)))
+                fn ($state) => $query->orWhere(fn (Builder $query) => $this->addConstraint($state, $query))),
             )
             ->toBase()
             ->pluck('event_id');
@@ -71,7 +78,7 @@ class AggregateStateSummary
             ->select(['state_id', 'state_type'])
             ->whereIn('event_id', $this->related_event_ids)
             ->where(fn (Builder $query) => $this->related_states->each(
-                fn ($state) => $query->whereNot(fn (Builder $query) => $this->addConstraint($state, $query)))
+                fn ($state) => $query->whereNot(fn (Builder $query) => $this->addConstraint($state, $query))),
             )
             ->toBase()
             ->chunkMap(StateIdentity::from(...));
