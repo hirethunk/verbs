@@ -34,6 +34,7 @@ use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 use Thunk\Verbs\Lifecycle\SnapshotStore;
 use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\Livewire\SupportVerbs;
+use Thunk\Verbs\State\Cache\MultiCache;
 use Thunk\Verbs\Support\EventStateRegistry;
 use Thunk\Verbs\Support\IdManager;
 use Thunk\Verbs\Support\Serializer;
@@ -73,12 +74,7 @@ class VerbsServiceProvider extends PackageServiceProvider
 
         $this->app->scoped(StateManager::class, function (Container $app) {
             return new StateManager(
-                dispatcher: $app->make(Dispatcher::class),
-                snapshots: $app->make(StoresSnapshots::class),
-                events: $app->make(StoresEvents::class),
-                states: new StateInstanceCache(
-                    capacity: $app->make(Repository::class)->get('verbs.state_cache_size', 100)
-                )
+                cache: new MultiCache
             );
         });
 

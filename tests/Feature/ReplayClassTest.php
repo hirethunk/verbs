@@ -14,38 +14,29 @@ use Thunk\Verbs\Support\StateInstanceCache;
 
 it('can rebuild state from events', function () {
     $events = collect(array_fill(0, 10, ReplayClassTestEvent::make(state: 1)->event));
-    $timeline = new Replay(
+    $replay = new Replay(
         states: new StateManager(
-            dispatcher: app(Dispatcher::class),
-            snapshots: app(StoresSnapshots::class),
-            events: app(StoresEvents::class),
-            states: new StateInstanceCache,
+            cache: new InMemoryCache
         ),
         events: $events,
         phases: Phases::all()
     );
 
-    $timeline->handle();
+    $replay->handle();
 
-    expect($timeline->states->states->cache)
+    expect($replay->states->cache)
         ->toHaveCount(1);
 
-    expect($timeline->states->load(1, ReplayClassTestState::class)->count)
+    expect($replay->states->load(ReplayClassTestState::class, '1')->count)
         ->toBe(10);
 });
 
 it('can cache and retrieve state across events', function () {
     $events = collect(array_fill(0, 10, ReplayClassTestEvent::make(state: 1)->event));
 
-    $timeline = new Replay(
+    $replay = new Replay(
         states: new StateManager(
-            dispatcher: app(Dispatcher::class),
-            events: app(StoresEvents::class),
-            caches: [
-                new InMemoryCache,
-                // new RedisCache,
-                // new DatabaseCache
-            ]
+            cache: new InMemoryCache
         ),
         events: $events,
         phases: Phases::all()
