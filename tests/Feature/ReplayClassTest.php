@@ -9,12 +9,12 @@ use Thunk\Verbs\Lifecycle\Phases;
 use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\State;
 use Thunk\Verbs\State\Cache\InMemoryCache;
+use Thunk\Verbs\Support\Replay;
 use Thunk\Verbs\Support\StateInstanceCache;
-use Thunk\Verbs\Support\Timeline;
 
 it('can rebuild state from events', function () {
-    $events = collect(array_fill(0, 10, TimelineTestEvent::make(state: 1)->event));
-    $timeline = new Timeline(
+    $events = collect(array_fill(0, 10, ReplayClassTestEvent::make(state: 1)->event));
+    $timeline = new Replay(
         states: new StateManager(
             dispatcher: app(Dispatcher::class),
             snapshots: app(StoresSnapshots::class),
@@ -30,14 +30,14 @@ it('can rebuild state from events', function () {
     expect($timeline->states->states->cache)
         ->toHaveCount(1);
 
-    expect($timeline->states->load(1, TimelineTestState::class)->count)
+    expect($timeline->states->load(1, ReplayClassTestState::class)->count)
         ->toBe(10);
 });
 
 it('can cache and retrieve state across events', function () {
-    $events = collect(array_fill(0, 10, TimelineTestEvent::make(state: 1)->event));
+    $events = collect(array_fill(0, 10, ReplayClassTestEvent::make(state: 1)->event));
 
-    $timeline = new Timeline(
+    $timeline = new Replay(
         states: new StateManager(
             dispatcher: app(Dispatcher::class),
             events: app(StoresEvents::class),
@@ -52,20 +52,18 @@ it('can cache and retrieve state across events', function () {
     );
 });
 
-
-
-class TimelineTestEvent extends Event
+class ReplayClassTestEvent extends Event
 {
-    #[StateId(TimelineTestState::class)] // FIXME: Breaks with State type hint
+    #[StateId(ReplayClassTestState::class)] // FIXME: Breaks with State type hint
     public int $state;
 
-    public function apply(TimelineTestState $state)
+    public function apply(ReplayClassTestState $state)
     {
         $state->count++;
     }
 }
 
-class TimelineTestState extends State
+class ReplayClassTestState extends State
 {
     public int $count = 0;
 }

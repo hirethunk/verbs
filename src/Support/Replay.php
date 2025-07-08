@@ -7,7 +7,7 @@ use Thunk\Verbs\Lifecycle\Lifecycle;
 use Thunk\Verbs\Lifecycle\Phases;
 use Thunk\Verbs\Lifecycle\StateManager;
 
-class Timeline
+class Replay
 {
     public function __construct(
         public StateManager $states,
