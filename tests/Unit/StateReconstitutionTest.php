@@ -56,7 +56,7 @@ test('scenario 1', function () {
         ->and($state2->counter)->toBe(3);
 
     Verbs::commit();
-    app(StateManager::class)->reset(include_storage: true);
+    app(StateManager::class)->reset();
 
     $state1 = StateReconstitutionTestState1::load($state1_id);
     $state2 = StateReconstitutionTestState2::load($state2_id);

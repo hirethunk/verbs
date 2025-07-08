@@ -94,7 +94,7 @@ class Broker implements BrokersEvents
         $this->is_replaying = true;
 
         try {
-            $this->states->reset(include_storage: true);
+            $this->states->reset();
 
             $iteration = 0;
 

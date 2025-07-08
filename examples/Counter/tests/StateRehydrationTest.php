@@ -31,7 +31,7 @@ it('supports rehydrating a state from events', function () {
 
     expect(VerbEvent::query()->count())->toBe(1);
 
-    app(StateManager::class)->reset(include_storage: true);
+    app(StateManager::class)->reset();
 
     $state = IncrementCount::fire()->state();
 

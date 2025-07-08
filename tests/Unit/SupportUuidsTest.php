@@ -49,7 +49,7 @@ it('loads states correctly using uuids when the snapshots table has been removed
         state: $state,
     );
 
-    app(StateManager::class)->reset(include_storage: true);
+    app(StateManager::class)->reset();
 
     $state = UuidState::load($uuid);
 
