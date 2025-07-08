@@ -38,7 +38,6 @@ use Thunk\Verbs\State\Cache\MultiCache;
 use Thunk\Verbs\Support\EventStateRegistry;
 use Thunk\Verbs\Support\IdManager;
 use Thunk\Verbs\Support\Serializer;
-use Thunk\Verbs\Support\StateInstanceCache;
 use Thunk\Verbs\Support\StateReconstructor;
 use Thunk\Verbs\Support\Wormhole;
 

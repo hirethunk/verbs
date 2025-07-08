@@ -1,16 +1,12 @@
 <?php
 
 use Thunk\Verbs\Attributes\Autodiscovery\StateId;
-use Thunk\Verbs\Contracts\StoresEvents;
-use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Lifecycle\Dispatcher;
 use Thunk\Verbs\Lifecycle\Phases;
 use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\State;
 use Thunk\Verbs\State\Cache\InMemoryCache;
 use Thunk\Verbs\Support\Replay;
-use Thunk\Verbs\Support\StateInstanceCache;
 
 it('can rebuild state from events', function () {
     $events = collect(array_fill(0, 10, ReplayClassTestEvent::make(state: 1)->event));
