@@ -5,6 +5,7 @@ namespace Thunk\Verbs\Lifecycle;
 use Thunk\Verbs\CommitsImmediately;
 use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Contracts\StoresEvents;
+use Thunk\Verbs\Contracts\TracksState;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\EventNotValid;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
@@ -19,7 +20,7 @@ class Broker implements BrokersEvents
         protected Dispatcher $dispatcher,
         protected MetadataManager $metadata,
         protected EventQueue $queue,
-        protected StateManager $states,
+        protected TracksState $states,
     ) {}
 
     public function fireIfValid(Event $event): ?Event
@@ -37,18 +38,18 @@ class Broker implements BrokersEvents
             return null;
         }
 
-        // NOTE: Any changes to how the dispatcher is called here
-        // should also be applied to the `replay` method
-
-        $this->dispatcher->boot($event);
-
-        Guards::for($event)->check();
-
-        $this->dispatcher->apply($event);
+        Lifecycle::run(
+            event: $event,
+            phases: new Phases(
+                Phase::Boot,
+                Phase::Authorize,
+                Phase::Validate,
+                Phase::Apply,
+                Phase::Fired,
+            )
+        );
 
         $this->queue->queue($event);
-
-        $this->dispatcher->fired($event);
 
         if ($this->commit_immediately || $event instanceof CommitsImmediately) {
             $this->commit();
@@ -94,8 +95,10 @@ class Broker implements BrokersEvents
                         $beforeEach($event);
                     }
 
-                    $this->dispatcher->apply($event);
-                    $this->dispatcher->replay($event);
+                    Lifecycle::run(
+                        event: $event,
+                        phases: new Phases(Phase::Apply, Phase::Replay)
+                    );
 
                     if ($afterEach) {
                         $afterEach($event);

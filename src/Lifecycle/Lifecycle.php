@@ -2,13 +2,16 @@
 
 namespace Thunk\Verbs\Lifecycle;
 
+use Illuminate\Container\Container;
 use Thunk\Verbs\Event;
 
 class Lifecycle
 {
     public static function run(Event $event, Phases $phases): Event
     {
-        return (new static(app(Dispatcher::class), $event, $phases))->handle();
+        $dispatcher = Container::getInstance()->make(Dispatcher::class);
+
+        return (new static($dispatcher, $event, $phases))->handle();
     }
 
     public function __construct(
@@ -23,9 +26,15 @@ class Lifecycle
             $this->dispatcher->boot($this->event);
         }
 
-        // FIXME: This is actually two phases
+        $guards = null;
         if ($this->phases->has(Phase::Authorize)) {
-            Guards::for($this->event)->check();
+            $guards ??= Guards::for($this->event);
+            $guards->authorize();
+        }
+
+        if ($this->phases->has(Phase::Validate)) {
+            $guards ??= Guards::for($this->event);
+            $guards->validate();
         }
 
         if ($this->phases->has(Phase::Apply)) {
@@ -33,8 +42,6 @@ class Lifecycle
         }
 
         if ($this->phases->has(Phase::Handle)) {
-            // FIXME
-            // $this->queue->queue($this->event);
             $this->dispatcher->handle($this->event);
         }
 

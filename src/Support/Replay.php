@@ -3,30 +3,30 @@
 namespace Thunk\Verbs\Support;
 
 use Illuminate\Support\Enumerable;
+use Thunk\Verbs\Contracts\TracksState;
 use Thunk\Verbs\Lifecycle\Lifecycle;
 use Thunk\Verbs\Lifecycle\Phases;
-use Thunk\Verbs\State\StateManager;
 
 class Replay
 {
     public function __construct(
-        public StateManager $states,
+        public TracksState $states,
         public Enumerable $events,
         public Phases $phases,
     ) {}
 
     public function handle(): static
     {
-        $global_registry = app(StateManager::class);
+        $original_states = app(TracksState::class);
 
         try {
-            app()->instance(StateManager::class, $this->states);
+            app()->instance(TracksState::class, $this->states);
 
             foreach ($this->events as $event) {
                 Lifecycle::run($event, $this->phases);
             }
         } finally {
-            app()->instance(StateManager::class, $global_registry);
+            app()->instance(TracksState::class, $original_states);
         }
 
         return $this;

@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Collection;
-use Thunk\Verbs\Lifecycle\StateManager;
+use Thunk\Verbs\Contracts\TracksState;
 use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\State;
 use Thunk\Verbs\StateFactory;
@@ -61,7 +61,7 @@ test('it can create a singleton state', function () {
 
     expect($singleton_state->id)->not->toBeNull();
 
-    $retreived_state = app(StateManager::class)->singleton(FactoryTestSingletonState::class);
+    $retreived_state = app(TracksState::class)->singleton(FactoryTestSingletonState::class);
 
     expect($retreived_state)->toBe($singleton_state);
 });

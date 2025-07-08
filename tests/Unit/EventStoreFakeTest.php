@@ -2,9 +2,9 @@
 
 use Thunk\Verbs\Attributes\Autodiscovery\AppliesToState;
 use Thunk\Verbs\Contracts\StoresEvents;
+use Thunk\Verbs\Contracts\TracksState;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\MetadataManager;
-use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Testing\EventStoreFake;
 
@@ -75,12 +75,12 @@ it('reads and writes stateless events normally', function () {
 it('reads and writes stateful events normally', function () {
     app()->instance(StoresEvents::class, $store = new EventStoreFake(app(MetadataManager::class)));
 
-    $state1 = app(StateManager::class)->load(
+    $state1 = app(TracksState::class)->load(
         1001,
         type: EventStoreFakeTestState::class,
     );
 
-    $state2 = app(StateManager::class)->load(
+    $state2 = app(TracksState::class)->load(
         1002,
         type: EventStoreFakeTestState::class,
     );

@@ -12,18 +12,6 @@ class Phases
         return new static(...Phase::cases());
     }
 
-    public static function fire(): static
-    {
-        return new static(
-            Phase::Boot,
-            Phase::Authorize,
-            Phase::Validate,
-            Phase::Apply,
-            // FIXME: Something else here, maybe more than one
-            Phase::Fired,
-        );
-    }
-
     public function __construct(Phase ...$phases)
     {
         $this->phases = $phases;

@@ -5,7 +5,7 @@ namespace Thunk\Verbs\Support\Normalization;
 use InvalidArgumentException;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
-use Thunk\Verbs\Lifecycle\StateManager;
+use Thunk\Verbs\Contracts\TracksState;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\Serializer;
 
@@ -23,7 +23,7 @@ class StateNormalizer implements DenormalizerInterface, NormalizerInterface
             return $data;
         }
 
-        return app(StateManager::class)->load($data, $type);
+        return app(TracksState::class)->load($data, $type);
     }
 
     public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool

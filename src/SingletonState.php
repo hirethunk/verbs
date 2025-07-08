@@ -4,7 +4,7 @@ namespace Thunk\Verbs;
 
 use BadMethodCallException;
 use RuntimeException;
-use Thunk\Verbs\Lifecycle\StateManager;
+use Thunk\Verbs\Contracts\TracksState;
 use Thunk\Verbs\Support\StateCollection;
 
 abstract class SingletonState extends State
@@ -36,7 +36,7 @@ abstract class SingletonState extends State
 
     public static function singleton(): static
     {
-        return app(StateManager::class)->singleton(static::class);
+        return app(TracksState::class)->singleton(static::class);
     }
 
     public function resolveRouteBinding($value, $field = null)
