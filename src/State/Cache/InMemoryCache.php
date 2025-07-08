@@ -83,7 +83,7 @@ class InMemoryCache implements ReadableCache, WritableCache
     protected function key(State|string $type, ?string $id = null): string
     {
         // Allow passing in state objects.
-        if ($type instanceof State)  {
+        if ($type instanceof State) {
             $id = $type instanceof SingletonState
                 ? null
                 : $type->id;
