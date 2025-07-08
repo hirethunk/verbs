@@ -2,9 +2,9 @@
 
 use Thunk\Verbs\Attributes\Autodiscovery\StateId;
 use Thunk\Verbs\Facades\Verbs;
-use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\Models\VerbSnapshot;
 use Thunk\Verbs\State;
+use Thunk\Verbs\State\StateManager;
 
 /*
  * The Problem(s)

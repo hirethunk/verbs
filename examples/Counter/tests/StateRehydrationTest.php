@@ -2,9 +2,9 @@
 
 use Thunk\Verbs\Examples\Counter\Events\IncrementCount;
 use Thunk\Verbs\Facades\Verbs;
-use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\Models\VerbEvent;
 use Thunk\Verbs\Models\VerbSnapshot;
+use Thunk\Verbs\State\StateManager;
 
 beforeEach(function () {
     Verbs::commitImmediately();

@@ -3,7 +3,7 @@
 use Thunk\Verbs\Lifecycle\AggregateStateSummary;
 use Thunk\Verbs\Models\VerbStateEvent;
 use Thunk\Verbs\State;
-use Thunk\Verbs\Support\StateIdentity;
+use Thunk\Verbs\State\StateIdentity;
 
 test('it finds the correct states and events for one state', function () {
     $matching_state_types = [

@@ -6,8 +6,8 @@ use Illuminate\Contracts\Container\Container;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Lifecycle\Dispatcher;
 use Thunk\Verbs\Lifecycle\NullSnapshotStore;
-use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\State;
+use Thunk\Verbs\State\StateManager;
 
 class StateReconstructor
 {

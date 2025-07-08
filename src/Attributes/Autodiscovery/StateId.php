@@ -6,8 +6,8 @@ use Attribute;
 use Illuminate\Support\Arr;
 use InvalidArgumentException;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\State;
+use Thunk\Verbs\State\StateManager;
 
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class StateId extends StateDiscoveryAttribute

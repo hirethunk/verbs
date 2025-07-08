@@ -3,8 +3,8 @@
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\Str;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\State;
+use Thunk\Verbs\State\StateManager;
 use Thunk\Verbs\Support\IdManager;
 
 use function Pest\Laravel\artisan;

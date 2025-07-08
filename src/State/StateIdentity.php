@@ -1,6 +1,6 @@
 <?php
 
-namespace Thunk\Verbs\Support;
+namespace Thunk\Verbs\State;
 
 use InvalidArgumentException;
 use Thunk\Verbs\State;

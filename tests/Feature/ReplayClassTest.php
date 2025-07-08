@@ -3,9 +3,9 @@
 use Thunk\Verbs\Attributes\Autodiscovery\StateId;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\Phases;
-use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\State;
 use Thunk\Verbs\State\Cache\InMemoryCache;
+use Thunk\Verbs\State\StateManager;
 use Thunk\Verbs\Support\Replay;
 
 it('can rebuild state from events', function () {

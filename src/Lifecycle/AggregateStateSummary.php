@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Thunk\Verbs\Models\VerbStateEvent;
 use Thunk\Verbs\State;
-use Thunk\Verbs\Support\StateIdentity;
+use Thunk\Verbs\State\StateIdentity;
 
 class AggregateStateSummary
 {

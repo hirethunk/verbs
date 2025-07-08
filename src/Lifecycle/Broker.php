@@ -8,6 +8,7 @@ use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\EventNotValid;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
+use Thunk\Verbs\State\StateManager;
 
 class Broker implements BrokersEvents
 {

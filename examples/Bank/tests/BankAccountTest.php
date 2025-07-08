@@ -11,8 +11,8 @@ use Thunk\Verbs\Examples\Bank\Mail\WelcomeEmail;
 use Thunk\Verbs\Examples\Bank\Models\User;
 use Thunk\Verbs\Examples\Bank\States\AccountState;
 use Thunk\Verbs\Facades\Verbs;
-use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\Models\VerbEvent;
+use Thunk\Verbs\State\StateManager;
 
 test('a bank account can be opened and interacted with', function () {
     Mail::fake();

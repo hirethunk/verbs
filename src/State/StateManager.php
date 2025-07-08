@@ -1,6 +1,6 @@
 <?php
 
-namespace Thunk\Verbs\Lifecycle;
+namespace Thunk\Verbs\State;
 
 use Glhd\Bits\Bits;
 use Ramsey\Uuid\UuidInterface;
@@ -42,7 +42,6 @@ class StateManager
      * @template TState of State
      *
      * @param  class-string<TState>  $type
-     * @return TState
      */
     public function make(string $type, Bits|UuidInterface|AbstractUid|int|string|null $id): State
     {
@@ -53,7 +52,7 @@ class StateManager
 
         // State::__construct() auto-registers the state with the StateManager,
         // so we need to skip the constructor until we've already set the ID.
-        /** @var TState $state */
+        /** @var State $state */
         $state = (new ReflectionClass($type))->newInstanceWithoutConstructor();
         $state->id = Id::tryFrom($id) ?? snowflake_id();
         $state->__construct();

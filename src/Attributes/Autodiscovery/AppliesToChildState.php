@@ -5,8 +5,8 @@ namespace Thunk\Verbs\Attributes\Autodiscovery;
 use Attribute;
 use InvalidArgumentException;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\State;
+use Thunk\Verbs\State\StateManager;
 
 #[Attribute(Attribute::TARGET_CLASS)]
 class AppliesToChildState extends StateDiscoveryAttribute

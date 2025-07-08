@@ -7,9 +7,9 @@ use Thunk\Verbs\Commands\ReplayCommand;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Facades\Verbs;
-use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\Models\VerbSnapshot;
 use Thunk\Verbs\State;
+use Thunk\Verbs\State\StateManager;
 
 beforeEach(function () {
     $GLOBALS['replay_test_counts'] = [];

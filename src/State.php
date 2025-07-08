@@ -10,7 +10,7 @@ use RuntimeException;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Exceptions\StateNotFoundException;
-use Thunk\Verbs\Lifecycle\StateManager;
+use Thunk\Verbs\State\StateManager;
 use Thunk\Verbs\Support\Serializer;
 use Thunk\Verbs\Support\StateCollection;
 

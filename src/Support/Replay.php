@@ -5,7 +5,7 @@ namespace Thunk\Verbs\Support;
 use Illuminate\Support\Enumerable;
 use Thunk\Verbs\Lifecycle\Lifecycle;
 use Thunk\Verbs\Lifecycle\Phases;
-use Thunk\Verbs\Lifecycle\StateManager;
+use Thunk\Verbs\State\StateManager;
 
 class Replay
 {
