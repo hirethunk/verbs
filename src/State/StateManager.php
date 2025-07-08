@@ -1,6 +1,6 @@
 <?php
 
-namespace Thunk\Verbs\Lifecycle;
+namespace Thunk\Verbs\State;
 
 use Glhd\Bits\Bits;
 use LogicException;
@@ -12,6 +12,7 @@ use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Contracts\TracksState;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Id;
+use Thunk\Verbs\Lifecycle\Dispatcher;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\StateCollection;
 use Thunk\Verbs\Support\StateInstanceCache;
