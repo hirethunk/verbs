@@ -52,8 +52,6 @@ it('can cache and retrieve state across events', function () {
     );
 });
 
-
-
 class TimelineTestEvent extends Event
 {
     #[StateId(TimelineTestState::class)] // FIXME: Breaks with State type hint
