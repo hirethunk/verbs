@@ -27,7 +27,7 @@ class StateNormalizer implements DenormalizerInterface, NormalizerInterface
         // $state->id = $data;
         // $state->__verbs_initialized = false;
 
-        return app(StateManager::class)->load($data, $type);
+        return app(StateManager::class)->load($type, $data);
     }
 
     public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool

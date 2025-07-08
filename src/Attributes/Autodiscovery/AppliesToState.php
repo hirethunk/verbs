@@ -43,13 +43,13 @@ class AppliesToState extends StateDiscoveryAttribute
             $id = snowflake_id();
             $event->{$property} = $id;
 
-            return $manager->make($id, $this->state_type);
+            return $manager->make($this->state_type, $id);
         }
 
         // TODO: Check type of data
 
         return collect(Arr::wrap($id))
-            ->map(fn ($id) => $manager->load($id, $this->state_type))
+            ->map(fn ($id) => $manager->load($this->state_type, $id))
             ->all();
     }
 

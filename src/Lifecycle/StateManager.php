@@ -31,22 +31,11 @@ class StateManager
      * @param  class-string<S>  $type
      * @return S|StateCollection<int,S>
      */
-    public function load(Bits|UuidInterface|AbstractUid|iterable|int|string $id, string $type): StateCollection|State
+    public function load(string $type, Bits|UuidInterface|AbstractUid|iterable|int|string|null $id): StateCollection|State
     {
         return is_iterable($id)
             ? $this->loadMany($id, $type)
             : $this->loadOne($id, $type);
-    }
-
-    /**
-     * @template TStateClass of State
-     *
-     * @param  class-string<TStateClass>  $type
-     * @return TStateClass
-     */
-    public function singleton(string $type): State
-    {
-        return $this->loadOne($type, null);
     }
 
     /**
@@ -94,7 +83,7 @@ class StateManager
             return $state;
         }
 
-        return $this->make($type, $id);
+        return $this->make($id, $type);
     }
 
     /** @param  class-string<State>  $type */

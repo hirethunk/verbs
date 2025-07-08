@@ -43,7 +43,7 @@ class StateReconstructor
             $this->container->instance(StateManager::class, $original_manager);
         }
 
-        return $original_manager->load($state->id, $state::class);
+        return $original_manager->load($state::class, $state->id);
     }
 
     protected function bindNewEmptyStateManager(StateManager $manager)

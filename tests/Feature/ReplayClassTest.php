@@ -23,7 +23,7 @@ it('can rebuild state from events', function () {
     expect($replay->states->cache)
         ->toHaveCount(1);
 
-    expect($replay->states->load(ReplayClassTestState::class, '1')->count)
+    expect($replay->states->load('1', ReplayClassTestState::class)->count)
         ->toBe(10);
 });
 

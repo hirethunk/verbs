@@ -76,13 +76,13 @@ it('reads and writes stateful events normally', function () {
     app()->instance(StoresEvents::class, $store = new EventStoreFake(app(MetadataManager::class)));
 
     $state1 = app(StateManager::class)->load(
-        1001,
         type: EventStoreFakeTestState::class,
+        id: 1001,
     );
 
     $state2 = app(StateManager::class)->load(
-        1002,
         type: EventStoreFakeTestState::class,
+        id: 1002,
     );
 
     // State IDs = 100X, Event IDs = X0Y (X = state, Y = event)

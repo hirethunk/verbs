@@ -35,6 +35,6 @@ class AppliesToChildState extends StateDiscoveryAttribute
     {
         $parent = $this->discovered->first(fn (State $state) => $state instanceof $this->parent_type);
 
-        return $manager->load($parent->{$this->id}, $this->state_type);
+        return $manager->load($this->state_type, $parent->{$this->id});
     }
 }
