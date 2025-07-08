@@ -34,34 +34,16 @@ class Broker implements BrokersEvents
     public function fire(Event $event): ?Event
     {
         if ($this->is_replaying) {
-            return null;
+            return null; // FIXME
         }
-
-        // $hooks = Dispatcher::fireHooks()->diff($disabled_hooks);
-        // $this->dispatcher->triggerHooks($event, $hooks);
-
-        // Lifecycle::for($event, Hooks::fire())->handle();
-
-        // NOTE: Any changes to how the dispatcher is called here
-        // should also be applied to the `replay` method
 
         Lifecycle::run(
             event: $event,
             phases: Phases::fire(),
-            // onHandle: fn() => $this->queue
         );
 
-        // $this->dispatcher->boot($event);
-        //
-        // Guards::for($event)->check();
-        //
-        // $this->dispatcher->apply($event);
-        //
-        // $this->queue->queue($event);
-        //
-        // $this->dispatcher->fired($event);
-
-        // FIXME
+        // FIXME: This is now in a slightly different execution order
+        $this->queue->queue($event);
         if ($this->commit_immediately || $event instanceof CommitsImmediately) {
             $this->commit();
         }
@@ -77,10 +59,9 @@ class Broker implements BrokersEvents
             return true;
         }
 
-        // FIXME: Only write changes + handle aggregate versioning
-
-        $this->states->writeSnapshots();
-        $this->states->prune();
+        // FIXME:
+        // $this->states->writeSnapshots();
+        // $this->states->prune();
 
         foreach ($events as $event) {
             $this->metadata->setLastResults($event, $this->dispatcher->handle($event));
