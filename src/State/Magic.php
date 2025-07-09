@@ -2,14 +2,54 @@
 
 namespace Thunk\Verbs\State;
 
+use Glhd\Bits\Bits;
 use Illuminate\Database\Query\Grammars\MySqlGrammar;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Ramsey\Uuid\UuidInterface;
+use Symfony\Component\Uid\AbstractUid;
+use Thunk\Verbs\Facades\Id;
+use Thunk\Verbs\Lifecycle\MetadataManager;
+use Thunk\Verbs\State;
+use Thunk\Verbs\Support\Serializer;
 
 class Magic
 {
-    public static function query(string $state_type, string $state_id)
+    protected Collection $data;
+
+    public function __construct(
+        protected string $state_type,
+        protected Bits|UuidInterface|AbstractUid|int|string $state_id,
+    ) {}
+
+    public function earliestEventId(): int|string
     {
+        return $this->data()->min('last_event_id') ?? 0;
+    }
+
+    /** @return Collection<int,State> */
+    public function states()
+    {
+        return $this->data()->map(function ($data) {
+            $state = app(Serializer::class)->deserialize($data->state_type, $data->data ?? []);
+            $state->id = $data->state_id;
+            $state->last_event_id = $data->last_event_id;
+
+            // TODO: app(MetadataManager::class)->setEphemeral($state, 'snapshot_id', $this->id);
+            return $state;
+        });
+    }
+
+    public function data(): Collection
+    {
+        return $this->data ??= $this->load();
+    }
+
+    protected function load(): Collection
+    {
+        $state_type = $this->state_type;
+        $state_id = (string) Id::from($this->state_id);
+
         $sql = <<<'SQL'
         select distinct
             cast(state_events.state_id as char /* char or text */) as state_id,
@@ -59,6 +99,6 @@ class Magic
 
         // fwrite(STDOUT, "\n{$sql}\n");
 
-        return new Collection(DB::select($sql, $bindings));
+        return Collection::make(DB::select($sql, $bindings))->sortBy('state_id')->values();
     }
 }
