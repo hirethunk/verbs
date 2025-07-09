@@ -47,10 +47,10 @@ it('is magic', function () {
         ->toHaveProperty('data', '{}')
         ->toHaveProperty('last_event_id', '2');
 
-    // CASE: All events have snapshots (different event IDs)
+    // CASE: All events have snapshots (different event IDs, queried state is earlier)
     VerbSnapshot::truncate();
-    VerbSnapshot::insert(['id' => 1, 'state_id' => 1, 'type' => 'S1', 'data' => '{}', 'last_event_id' => 2]);
-    VerbSnapshot::insert(['id' => 2, 'state_id' => 2, 'type' => 'S1', 'data' => '{}', 'last_event_id' => 5]);
+    VerbSnapshot::insert(['id' => 1, 'state_id' => 1, 'type' => 'S1', 'data' => '{}', 'last_event_id' => 4]);
+    VerbSnapshot::insert(['id' => 2, 'state_id' => 2, 'type' => 'S1', 'data' => '{}', 'last_event_id' => 2]);
 
     $results = Magic::query('S1', 2)->sortBy('state_id')->values();
 
@@ -60,15 +60,36 @@ it('is magic', function () {
         ->toHaveProperty('state_id', '1')
         ->toHaveProperty('state_type', 'S1')
         ->toHaveProperty('data', '{}')
-        ->toHaveProperty('last_event_id', '2');
+        ->toHaveProperty('last_event_id', '4');
 
     expect($results[1])
         ->toHaveProperty('state_id', '2')
         ->toHaveProperty('state_type', 'S1')
         ->toHaveProperty('data', '{}')
-        ->toHaveProperty('last_event_id', '5');
+        ->toHaveProperty('last_event_id', '2');
 
-    // CASE: One event has a snapshot, the other doesn't
+    // CASE: All events have snapshots (different event IDs, queried state is later)
+    VerbSnapshot::truncate();
+    VerbSnapshot::insert(['id' => 1, 'state_id' => 1, 'type' => 'S1', 'data' => '{}', 'last_event_id' => 1]);
+    VerbSnapshot::insert(['id' => 2, 'state_id' => 2, 'type' => 'S1', 'data' => '{}', 'last_event_id' => 2]);
+
+    $results = Magic::query('S1', 2)->sortBy('state_id')->values();
+
+    expect($results)->toHaveCount(2);
+
+    expect($results[0])
+        ->toHaveProperty('state_id', '1')
+        ->toHaveProperty('state_type', 'S1')
+        ->toHaveProperty('data', '{}')
+        ->toHaveProperty('last_event_id', '1');
+
+    expect($results[1])
+        ->toHaveProperty('state_id', '2')
+        ->toHaveProperty('state_type', 'S1')
+        ->toHaveProperty('data', '{}')
+        ->toHaveProperty('last_event_id', '2');
+
+    // CASE: One event has a snapshot, the other doesn't (queried state has snapshot)
     VerbSnapshot::truncate();
     VerbSnapshot::insert(['id' => 2, 'state_id' => 2, 'type' => 'S1', 'data' => '{}', 'last_event_id' => 3]);
 
@@ -82,11 +103,54 @@ it('is magic', function () {
         ->toHaveProperty('state_id', '1')
         ->toHaveProperty('state_type', 'S1')
         ->toHaveProperty('data', null)
-        ->toHaveProperty('last_event_id', null);
+        ->toHaveProperty('last_event_id', '0');
 
     expect($results[1])
         ->toHaveProperty('state_id', '2')
         ->toHaveProperty('state_type', 'S1')
         ->toHaveProperty('data', '{}')
         ->toHaveProperty('last_event_id', '3');
+
+    // CASE: One event has a snapshot, the other doesn't (non-queried state has snapshot)
+    VerbSnapshot::truncate();
+    VerbSnapshot::insert(['id' => 1, 'state_id' => 1, 'type' => 'S1', 'data' => '{}', 'last_event_id' => 2]);
+
+    $results = Magic::query('S1', 2)
+        ->sortBy('state_id')
+        ->values();
+
+    expect($results)->toHaveCount(2);
+
+    expect($results[0])
+        ->toHaveProperty('state_id', '1')
+        ->toHaveProperty('state_type', 'S1')
+        ->toHaveProperty('data', '{}')
+        ->toHaveProperty('last_event_id', '2');
+
+    expect($results[1])
+        ->toHaveProperty('state_id', '2')
+        ->toHaveProperty('state_type', 'S1')
+        ->toHaveProperty('data', null)
+        ->toHaveProperty('last_event_id', '0');
+
+    // CASE: Neither event has a snapshot
+    VerbSnapshot::truncate();
+
+    $results = Magic::query('S1', 2)
+        ->sortBy('state_id')
+        ->values();
+
+    expect($results)->toHaveCount(2);
+
+    expect($results[0])
+        ->toHaveProperty('state_id', '1')
+        ->toHaveProperty('state_type', 'S1')
+        ->toHaveProperty('data', null)
+        ->toHaveProperty('last_event_id', '0');
+
+    expect($results[1])
+        ->toHaveProperty('state_id', '2')
+        ->toHaveProperty('state_type', 'S1')
+        ->toHaveProperty('data', null)
+        ->toHaveProperty('last_event_id', '0');
 });
