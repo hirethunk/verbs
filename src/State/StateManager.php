@@ -20,6 +20,8 @@ use UnexpectedValueException;
 
 class StateManager implements TracksState
 {
+    use LooksUpStateByKey;
+
     protected bool $is_replaying = false;
 
     public function __construct(
@@ -66,7 +68,7 @@ class StateManager implements TracksState
     public function make(Bits|UuidInterface|AbstractUid|int|string $id, string $type): State
     {
         // If we've already instantiated this state, we'll load it
-        if ($existing = $this->states->get($this->key($id, $type))) {
+        if ($existing = $this->states->get($this->key($type, $id))) {
             return $existing;
         }
 
@@ -119,7 +121,7 @@ class StateManager implements TracksState
     protected function loadOne(Bits|UuidInterface|AbstractUid|int|string $id, string $type): State
     {
         $id = Id::from($id);
-        $key = $this->key($id, $type);
+        $key = $this->key($type, $id);
 
         // FIXME: If the state we're loading has a last_event_id that's ahead of the registry's last_event_id, we need to re-build the state
 
@@ -146,7 +148,7 @@ class StateManager implements TracksState
     {
         $ids = collect($ids)->map(Id::from(...));
 
-        $missing = $ids->reject(fn ($id) => $this->states->has($this->key($id, $type)));
+        $missing = $ids->reject(fn ($id) => $this->states->has($this->key($type, $id)));
 
         // Load all available snapshots for missing states
         $this->snapshots->load($missing, $type)->each(function (State $state) {
@@ -156,7 +158,7 @@ class StateManager implements TracksState
 
         // Then make any states that don't exist yet
         $missing
-            ->reject(fn ($id) => $this->states->has($this->key($id, $type)))
+            ->reject(fn ($id) => $this->states->has($this->key($type, $id)))
             ->each(function (string|int $id) use ($type) {
                 $state = $this->make($id, $type);
                 $this->remember($state);
@@ -165,7 +167,7 @@ class StateManager implements TracksState
 
         // At this point, all the states should be in our cache, so we can just load everything
         return StateCollection::make(
-            $ids->map(fn ($id) => $this->states->get($this->key($id, $type)))
+            $ids->map(fn ($id) => $this->states->get($this->key($type, $id)))
         );
     }
 
@@ -191,7 +193,7 @@ class StateManager implements TracksState
 
     protected function remember(State $state): State
     {
-        $key = $this->key($state->id, $state::class);
+        $key = $this->key($state);
 
         if ($this->states->get($key) === $state) {
             return $state;
@@ -204,10 +206,5 @@ class StateManager implements TracksState
         $this->states->put($key, $state);
 
         return $state;
-    }
-
-    protected function key(string|int $id, string $type): string
-    {
-        return "{$type}:{$id}";
     }
 }
