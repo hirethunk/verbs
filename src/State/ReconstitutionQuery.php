@@ -13,7 +13,7 @@ use Thunk\Verbs\Lifecycle\MetadataManager;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\Serializer;
 
-class Magic
+class ReconstitutionQuery
 {
     protected Collection $data;
 
@@ -28,7 +28,7 @@ class Magic
     }
 
     /** @return Collection<int,State> */
-    public function states()
+    public function states(): Collection
     {
         return $this->data()->map(function ($data) {
             $state = app(Serializer::class)->deserialize($data->state_type, $data->data ?? []);
@@ -40,7 +40,7 @@ class Magic
         });
     }
 
-    public function data(): Collection
+    protected function data(): Collection
     {
         return $this->data ??= $this->load();
     }
