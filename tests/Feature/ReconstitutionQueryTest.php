@@ -28,6 +28,13 @@ it('returns data as expected', function () {
     VerbStateEvent::insert(['id' => 7, 'event_id' => 5, 'state_id' => 2, 'state_type' => ReconstitutionQueryTestState::class]);
     VerbStateEvent::insert(['id' => 8, 'event_id' => 6, 'state_id' => 2, 'state_type' => ReconstitutionQueryTestState::class]);
 
+    // Red herring events
+    VerbEvent::insert(['id' => 7, 'type' => ReconstitutionQueryTestEvent::class, 'data' => '{}', 'metadata' => '{}']);
+    VerbEvent::insert(['id' => 8, 'type' => ReconstitutionQueryTestEvent::class, 'data' => '{}', 'metadata' => '{}']);
+    VerbStateEvent::insert(['id' => 9, 'event_id' => 7, 'state_id' => 3, 'state_type' => ReconstitutionQueryTestState::class]);
+    VerbStateEvent::insert(['id' => 10, 'event_id' => 8, 'state_id' => 3, 'state_type' => ReconstitutionQueryTestState::class]);
+    VerbStateEvent::insert(['id' => 11, 'event_id' => 8, 'state_id' => 4, 'state_type' => ReconstitutionQueryTestState::class]);
+
     // CASE: All events have snapshots (same event ID)
     VerbSnapshot::truncate();
     VerbSnapshot::insert(['id' => 1, 'state_id' => 1, 'type' => ReconstitutionQueryTestState::class, 'data' => '{}', 'last_event_id' => 2]);

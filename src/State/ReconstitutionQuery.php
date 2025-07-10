@@ -51,6 +51,23 @@ class ReconstitutionQuery
         $state_id = (string) Id::from($this->state_id);
 
         $sql = <<<'SQL'
+        with events_to_process as (
+            select distinct state_events.event_id
+            from `verb_state_events` state_events
+            where state_events.state_id = ?
+            and state_events.state_type = ?
+            and state_events.event_id > (
+                select coalesce(
+                    (
+                        select snapshots.last_event_id
+                        from `verb_snapshots` snapshots
+                        where snapshots.state_id = ?
+                        and snapshots.type = ?
+                    ),
+                    0 /* 0 or null UUID */
+                )
+            )
+        )
         select distinct
             cast(state_events.state_id as char /* char or text */) as state_id,
             state_events.state_type,
@@ -60,17 +77,7 @@ class ReconstitutionQuery
         left join `verb_snapshots` as snapshots
             on snapshots.state_id = state_events.state_id
             and snapshots.type = state_events.state_type
-        where state_events.event_id > (
-            select coalesce(
-                (
-                    select snapshots.last_event_id
-                    from `verb_snapshots` snapshots
-                    where snapshots.state_id = ?
-                    and snapshots.type = ?
-                ),
-                0 /* 0 or null UUID */
-            )
-        )
+        join events_to_process on events_to_process.event_id = state_events.event_id
         SQL;
 
         $grammar = DB::getQueryGrammar();
@@ -93,6 +100,8 @@ class ReconstitutionQuery
         ], $sql);
 
         $bindings = [
+            $state_id,
+            $state_type,
             $state_id,
             $state_type,
         ];
