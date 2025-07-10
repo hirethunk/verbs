@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\Mail;
+use Thunk\Verbs\Contracts\TracksState;
 use Thunk\Verbs\Examples\Bank\Events\AccountOpened;
 use Thunk\Verbs\Examples\Bank\Events\MoneyDeposited;
 use Thunk\Verbs\Examples\Bank\Events\MoneyWithdrawn;
@@ -11,7 +12,6 @@ use Thunk\Verbs\Examples\Bank\Mail\WelcomeEmail;
 use Thunk\Verbs\Examples\Bank\Models\User;
 use Thunk\Verbs\Examples\Bank\States\AccountState;
 use Thunk\Verbs\Facades\Verbs;
-use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\Models\VerbEvent;
 
 test('a bank account can be opened and interacted with', function () {
@@ -99,7 +99,7 @@ test('a bank account can be opened and interacted with', function () {
 
     // We'll also confirm that the state is correctly loaded without snapshots
 
-    app(StateManager::class)->reset(include_storage: true);
+    app(TracksState::class)->reset(include_storage: true);
 
     $account_state = AccountState::load($account->id);
     expect($account_state->balance_in_cents)->toBe(100_00);

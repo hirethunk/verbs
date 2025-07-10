@@ -4,8 +4,8 @@ namespace Thunk\Verbs\Attributes\Autodiscovery;
 
 use Attribute;
 use InvalidArgumentException;
+use Thunk\Verbs\Contracts\TracksState;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\State;
 
 #[Attribute(Attribute::TARGET_CLASS)]
@@ -31,7 +31,7 @@ class AppliesToChildState extends StateDiscoveryAttribute
         return [$this->parent_type];
     }
 
-    public function discoverState(Event $event, StateManager $manager): State
+    public function discoverState(Event $event, TracksState $manager): State
     {
         $parent = $this->discovered->first(fn (State $state) => $state instanceof $this->parent_type);
 

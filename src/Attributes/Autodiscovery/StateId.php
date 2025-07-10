@@ -5,8 +5,8 @@ namespace Thunk\Verbs\Attributes\Autodiscovery;
 use Attribute;
 use Illuminate\Support\Arr;
 use InvalidArgumentException;
+use Thunk\Verbs\Contracts\TracksState;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\State;
 
 #[Attribute(Attribute::TARGET_PROPERTY)]
@@ -23,7 +23,7 @@ class StateId extends StateDiscoveryAttribute
         }
     }
 
-    public function discoverState(Event $event, StateManager $manager): State|array
+    public function discoverState(Event $event, TracksState $manager): State|array
     {
         $id = $this->property->getValue($event);
         $property_name = $this->property->getName();
