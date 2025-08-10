@@ -25,7 +25,7 @@ return new class extends Migration
 
             $table->string('state_type')->index();
 
-            $table->timestamps();
+            $table->timestamp('created_at')->nullable();
         });
     }
 
