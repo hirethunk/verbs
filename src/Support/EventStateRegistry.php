@@ -12,8 +12,8 @@ use ReflectionNamedType;
 use ReflectionProperty;
 use ReflectionUnionType;
 use Thunk\Verbs\Attributes\Autodiscovery\StateDiscoveryAttribute;
+use Thunk\Verbs\Contracts\TracksState;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\State;
 
 class EventStateRegistry
@@ -23,7 +23,7 @@ class EventStateRegistry
     protected array $discovered_properties = [];
 
     public function __construct(
-        protected StateManager $manager,
+        protected TracksState $manager,
     ) {}
 
     public function getStates(Event $event): StateCollection
