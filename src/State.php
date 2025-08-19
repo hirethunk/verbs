@@ -11,6 +11,7 @@ use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Exceptions\StateNotFoundException;
 use Thunk\Verbs\Lifecycle\StateManager;
+use Thunk\Verbs\Support\IdManager;
 use Thunk\Verbs\Support\Serializer;
 use Thunk\Verbs\Support\StateCollection;
 
@@ -56,7 +57,7 @@ abstract class State implements UrlRoutable
 
     public static function new()
     {
-        return static::load(snowflake()->make());
+        return static::load(app(IdManager::class)->make());
     }
 
     public static function loadOrFail($from): static
