@@ -97,8 +97,16 @@ class VerbsServiceProvider extends PackageServiceProvider
         });
 
         $this->app->singleton(Serializer::class, function (Container $app) {
+            $config = $app->make(Repository::class);
+
             return new Serializer(
-                serializer: $app->make(SymfonySerializer::class),
+                serializer: new SymfonySerializer(
+                    normalizers: collect($config->get('verbs.normalizers'))
+                        ->map(fn ($class_name) => app($class_name))
+                        ->values()
+                        ->all(),
+                    encoders: [new JsonEncoder],
+                ),
                 context: $app->make(Repository::class)->get('verbs.serializer_context', []),
             );
         });
@@ -115,18 +123,6 @@ class VerbsServiceProvider extends PackageServiceProvider
                         new ReflectionExtractor,
                     ]),
                 classDiscriminatorResolver: new ClassDiscriminatorFromClassMetadata(new ClassMetadataFactory($loader)),
-            );
-        });
-
-        $this->app->singleton(SymfonySerializer::class, function (Container $app) {
-            $config = $app->make(Repository::class);
-
-            return new SymfonySerializer(
-                normalizers: collect($config->get('verbs.normalizers'))
-                    ->map(fn ($class_name) => app($class_name))
-                    ->values()
-                    ->all(),
-                encoders: [new JsonEncoder],
             );
         });
 
