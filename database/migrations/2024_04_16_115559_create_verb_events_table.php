@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Thunk\Verbs\Facades\Id;
 
 return new class extends Migration
 {
@@ -14,7 +15,7 @@ return new class extends Migration
         }
 
         Schema::connection($this->connectionName())->create($this->tableName(), function (Blueprint $table) {
-            $table->snowflakeId();
+            Id::createColumnDefinition($table)->primary();
 
             $table->string('type')->index();
             $table->json('data');

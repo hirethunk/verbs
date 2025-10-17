@@ -13,37 +13,20 @@ return new class extends Migration
 {
     public function up()
     {
-        // If we migrated before Verbs 0.5.0 we need to do a little extra work
-        $migrating = Schema::connection($this->connectionName())->hasTable($this->tableName());
-
-        if ($migrating) {
-            Schema::connection($this->connectionName())->rename($this->tableName(), '__verbs_snapshots_pre_050');
-        }
-
         Schema::connection($this->connectionName())->create($this->tableName(), function (Blueprint $table) {
-            $table->snowflakeId();
-
-            // The 'state_id' column needs to be set up differently depending on
-            // if you're using Snowflakes vs. ULIDs/etc.
+            Id::createColumnDefinition($table)->primary();
             Id::createColumnDefinition($table, 'state_id');
 
             $table->string('type')->index();
             $table->json('data');
 
-            $table->snowflake('last_event_id')->nullable();
+            Id::createColumnDefinition($table, 'last_event_id')->nullable();
 
             $table->timestamp('expires_at')->nullable()->index();
             $table->timestamps();
 
             $table->index(['state_id', 'type']);
         });
-
-        if ($migrating) {
-            DB::connection($this->connectionName())
-                ->table('__verbs_snapshots_pre_050')
-                ->select('*')
-                ->chunkById(100, $this->migrateChunk(...));
-        }
     }
 
     public function down()

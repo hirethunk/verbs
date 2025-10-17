@@ -15,13 +15,9 @@ return new class extends Migration
         }
 
         Schema::connection($this->connectionName())->create($this->tableName(), function (Blueprint $table) {
-            $table->snowflakeId();
-
-            $table->snowflake('event_id')->index();
-
-            // The 'state_id' column needs to be set up differently depending
-            // on if you're using Snowflakes vs. ULIDs/etc.
-            Id::createColumnDefinition($table, 'state_id')->index();
+            Id::createColumnDefinition($table)->primary();
+            Id::createColumnDefinition($table, 'event_id');
+            Id::createColumnDefinition($table, 'state_id');
 
             $table->string('state_type')->index();
 
