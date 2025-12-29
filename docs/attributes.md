@@ -15,7 +15,7 @@ class YourEvent extends Event
 
 The `StateId` attribute takes a `state_type`, an optional [
 `alias`](https://verbs.thunk.dev/docs/reference/states#content-aliasstring-alias-state-state) string, and by default
-can [automatically generate](/docs/technical/ids#content-automatically-generating-ids)(`autofill`) a `snowflake_id` for
+can [automatically generate](/docs/technical/ids#content-automatically-generate-snowflake-ids) (`autofill`) a `snowflake_id()` for
 you.
 
 ### `#[AppliesToState]`
