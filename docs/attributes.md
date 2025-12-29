@@ -168,7 +168,7 @@ in [one-time effects](/docs/reference/events/#content-one-time-effects))
 
 ### `#[On]`
 
-Used when projecting data to clarify on which [Phase](technical/event-lifecycle) the projection should occur.
+Used when [projecting](listeners) data to clarify on which [phase](event-lifecycle) the projection should occur.
 
 ```php
 class YourListener

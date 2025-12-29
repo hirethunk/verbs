@@ -48,7 +48,7 @@ class AnalyticsProjector
 ```
 
 > [!note]
-> You must tell Verbs when to project by adding the [`#[On]`](/technical/attributes#content-on) attribute, specifying the desired Lifecycle `Phase`
+> You must tell Verbs when to project by adding the [`#[On]`](attributes#content-on) attribute, specifying the desired [`phase`](event-lifecycle)
 <!--
 @todo listeners currently need a typed param like `Event $event` so that verbs knows what to inject; so using the #[Listen] attribute is redundant
 -->

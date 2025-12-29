@@ -116,7 +116,7 @@ side effects.
 #### Handle
 
 Use the `handle` hook to perform actions based on your event. This is often
-writing to the database (sometimes called a "[projection](/docs/technical/combating-jargon)"). You can
+writing to the database (sometimes called a "[projection](combating-jargon)"). You can
 [read more about the handle hook](/docs/reference/events#content-handle) in
 the Events docs.
 
@@ -130,5 +130,5 @@ hooks are called:
 2. [Handle](#content-handle)
 
 If you do not want your `handle` method to re-run during replay, you can either use the
-[`Once` attribute](/docs/technical/attributes#content-once), or use the
-[`Verbs::unlessReplaying` helper](/docs/reference/events/#content-verbsunlessreplaying).
+[`Once`](/docs/technical/attributes#content-once) attribute, or use the
+[`Verbs::unlessReplaying`](/docs/reference/events/#content-verbsunlessreplaying) helper.

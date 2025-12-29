@@ -31,7 +31,7 @@ Verbs::assertNotCommitted(...);
 
 ### Skipping Lifecycle Phases
 
-[Phases](technical/event-lifecycle)) may be skipped in testing with `Verbs::skipPhases()`.
+[Phases](/docs/technical/event-lifecycle) may be skipped in testing with `Verbs::skipPhases()`.
 
 ```php
 Verbs::skipPhases(Phase::Apply, Phase::Handle);
