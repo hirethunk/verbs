@@ -29,6 +29,14 @@ Verbs::assertCommitted(...);
 Verbs::assertNotCommitted(...);
 ```
 
+### Skipping Lifecycle Phases
+
+[Phases](technical/event-lifecycle)) may be skipped in testing with `Verbs::skipPhases()`.
+
+```php
+Verbs::skipPhases(Phase::Apply, Phase::Handle);
+```
+
 ## State Factories
 
 In tests, you may find yourself needing to fire and commit several events in order to bring your State to the point
