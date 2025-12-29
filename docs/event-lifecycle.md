@@ -19,6 +19,24 @@ again if the event is ever replayed or re-applied to State.
 By the time the constructor has finished, the event should have **all the data it needs** for the
 rest of the event lifecycle (you shouldn't do any data retrieval after this point).
 
+#### Boot
+
+Use the boot hook to modify props on events before they are authorized or validated. Especially useful for preparing common properties across events.
+
+```php
+abstract class BaseEvent extends Event
+{
+    public function boot()
+    {
+        $this->timestamp = now();
+        $this->user_id = auth()->id();
+    }
+}
+
+class UserCreated extends BaseEvent { }
+class UserUpdated extends BaseEvent { }
+```
+
 #### Authorize
 
 Use the `authorize` method on your Event to ensure that the current user is allowed to fire it. The

@@ -21,7 +21,7 @@ In many event sourcing system, you'll have dedicated Projectors that listen for 
 _project_ data in a convenient shape for your views. These are sometimes called _Projections_
 or maybe View Models.
 
-In Verbs, while it's possible to register dedicated Projectors, most projection is done in
+In Verbs, while it's possible to register [dedicated Projectors](/listeners), most projection is done in
 the `handle` method of an event. For example, an `AccountWasDeactivated` event may _project_
 a `cancelled_at` timestamp to the `Account` model.
 

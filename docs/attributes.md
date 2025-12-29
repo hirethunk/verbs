@@ -165,3 +165,18 @@ class YourEvent extends Event
 
 (You may also use `Verbs::unlessReplaying`, mentioned
 in [one-time effects](/docs/reference/events/#content-one-time-effects))
+
+### `#[On]`
+
+Used when projecting data to clarify on which [Phase](technical/event-lifecycle) the projection should occur.
+
+```php
+class YourListener
+{
+    #[On(Phase::Boot)]
+    public function setNameToLilWayne(YourEvent $event)
+    {
+        $event->name = 'Lil Wayne';
+    }
+}
+```
