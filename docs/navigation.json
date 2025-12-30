@@ -116,9 +116,9 @@
                 "icon": "chat-bubble-bottom-center-text"
             },
             {
-                "title": "Serialization",
-                "slug": "serialization",
-                "icon": "server-stack"
+                "title": "Storage",
+                "slug": "storage",
+                "icon": "circle-stack"
             }
         ]
     },
@@ -129,7 +129,7 @@
             {
                 "title": "State-first Development",
                 "slug": "state-first-development",
-                "icon": "circle-stack"
+                "icon": "building-library"
             }
         ]
     }
