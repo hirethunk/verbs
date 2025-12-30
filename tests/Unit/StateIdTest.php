@@ -1,5 +1,6 @@
 <?php
 
+use Glhd\Bits\Snowflake;
 use Thunk\Verbs\Attributes\Autodiscovery\StateId;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Verbs;
@@ -15,6 +16,26 @@ it('can find the state ID property', function () {
     $state = StateIdTestState::load($id);
 
     $this->assertTrue($state->acknowledged);
+});
+
+it('will autofill snowflake by default when state_id is nullable', function () {
+    $event = AutofillTestEvent::fire(
+        // pass no state_id
+    );
+
+    Verbs::commit();
+
+    // autofilled id is snowflake
+    expect(
+        strlen((string) $event->id)
+    )->toBe(
+        strlen((string) snowflake_id())
+    );
+
+    expect($event->id)->tobeInt();
+
+    expect($event->states())->toHaveCount(1);
+    expect($event->states()->get('foo')->acknowledged)->toBe(true);
 });
 
 it('can disable autofill for a state ID property and still load state if ID is supplied', function () {
@@ -69,5 +90,15 @@ class StateIdTestEvent extends Event
     {
         $state->acknowledged = true;
         $other_state->acknowledged = true;
+    }
+}
+class AutofillTestEvent extends Event
+{
+    #[StateId(StateIdTestState::class, 'foo')]
+    public ?int $state_id = null;
+
+    public function apply(StateIdTestState $state)
+    {
+        $state->acknowledged = true;
     }
 }

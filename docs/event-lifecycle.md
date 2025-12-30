@@ -7,8 +7,8 @@ fired, and committed) — each with its own individual steps.
 
 ### “Firing” Phase
 
-Before your event can be applied, we must make sure it has all the data necessary, and check to 
-see if it's valid. The entire Firing phase only happens when an event is first fired (not when 
+Before your event can be applied, we must make sure it has all the data necessary, and check to
+see if it's valid. The entire Firing phase only happens when an event is first fired (not when
 events are re-applied to State or replayed).
 
 #### `__construct()`
@@ -18,6 +18,24 @@ again if the event is ever replayed or re-applied to State.
 
 By the time the constructor has finished, the event should have **all the data it needs** for the
 rest of the event lifecycle (you shouldn't do any data retrieval after this point).
+
+#### Boot
+
+Use the boot hook to modify props on events before they are authorized or validated. Especially useful for preparing common properties across events.
+
+```php
+abstract class BaseEvent extends Event
+{
+    public function boot()
+    {
+        $this->timestamp = now();
+        $this->user_id = auth()->id();
+    }
+}
+
+class UserCreated extends BaseEvent { }
+class UserUpdated extends BaseEvent { }
+```
 
 #### Authorize
 
@@ -36,18 +54,22 @@ For example, an event that fires on two States might have two validation methods
 class UserJoinedTeam
 {
     // ...
-    
+
     public function validateUser(UserState $user)
     {
         $this->assert($user->can_join_teams, 'This user must upgrade before joining a team.');
     }
-    
+
     public function validateTeam(TeamState $team)
     {
         $this->assert($team->seats_available > 0, 'This team does not have any more seats available.');
     }
 }
 ```
+
+##### `fireIfValid()`
+
+By default, if an event fails validation it will throw an `EventNotValid` exception; if you want to fire ONLY if validation succeeds: instead of `fire()`, use `fireIfValid()`.
 
 ### “Fired” Phase
 
@@ -57,7 +79,7 @@ application is impacted.
 
 #### Apply
 
-Use the `apply` hook to update the state for the given event.  Any method on your event that starts with `apply` 
+Use the `apply` hook to update the state for the given event.  Any method on your event that starts with `apply`
 is considered an apply method, and may be called for each state the event is firing on (based on what you type-hint).
 Apply hooks happen immediately after the event is fired, and also any time that state needs to be re-built from
 existing events (i.e. if your snapshots are deleted for some reason).
@@ -68,12 +90,12 @@ For example, an event that fires on two States might have two apply methods:
 class UserJoinedTeam
 {
     // ...
-    
+
     public function applyToUser(UserState $user)
     {
         $user->team_id = $this->team_id;
     }
-    
+
     public function applyToTeam(TeamState $team)
     {
         $team->team_seats--;
@@ -94,9 +116,9 @@ side effects.
 #### Handle
 
 Use the `handle` hook to perform actions based on your event. This is often
-writing to the database (sometimes called a "[projection](/docs/technical/combating-jargon)"). You can 
-[read more about the handle hook](/docs/reference/events#content-handle) in 
-the Events docs. 
+writing to the database (sometimes called a "[projection](/docs/technical/combating-jargon#content-projectors)"). You can
+[read more about the handle hook](/docs/reference/events#content-handle) in
+the Events docs.
 
 ## Replaying Events
 
@@ -108,5 +130,5 @@ hooks are called:
 2. [Handle](#content-handle)
 
 If you do not want your `handle` method to re-run during replay, you can either use the
-[`Once` attribute](/docs/technical/attributes#content-once), or use the 
-[`Verbs::unlessReplaying` helper](/docs/reference/events/#content-verbsunlessreplaying).
+[`Once`](/docs/technical/attributes#content-once) attribute, or use the
+[`Verbs::unlessReplaying`](/docs/reference/events/#content-verbsunlessreplaying) helper.
