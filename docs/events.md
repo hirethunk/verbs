@@ -1,4 +1,4 @@
-In Verbs, Events are the source of your data changes. Before we fire an event, we give it all the data we need it to track, and we describe in the event exactly what it should do with that data once it's been fired.
+In Verbs, Events are the source of your data changes. Before we fire an event, we give it all the data we need it to track--including [state(s)](/docs/reference/states)--and we describe in the event exactly what it should do with that data once it's been fired.
 
 ## Generating an Event
 
@@ -76,6 +76,19 @@ class BallotCast extends Event
     $actor->has_cast_vote = true;
     $target->votes_received++;
   }
+}
+```
+
+Most of our example use the `#[StateId]` or `#[AppliesToState]` attributes on events to indicate which states should be tracking the event.
+
+You may also use State classes directly as properties:
+
+```php
+class BallotCast extends Event
+{
+  public UserState $actor;
+
+  public UserState $target;
 }
 ```
 
