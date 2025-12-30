@@ -47,6 +47,38 @@ public string $game_id;
 public string $player_id;
 ```
 
+### Typed Parameters
+
+Verbs builds on Laravel’s container, but adds event-aware resolution for States and Events.
+
+#### Non-Verbs Types
+
+Resolved through the container as usual.
+
+#### Single Candidate State
+
+Injected automatically, regardless of parameter name.
+
+#### Multiple Candidate States
+
+Parameter name is used to disambiguate. Ambiguous matches throw an exception.
+
+```php
+class BallotCast extends Event
+{
+  #[StateId(UserState::class)]
+  public int $actor_id;
+
+  #[StateId(UserState::class)]
+  public int $target_id;
+
+  public function apply(UserState $actor, UserState $target) {
+    $actor->has_cast_vote = true;
+    $target->votes_received++;
+  }
+}
+```
+
 ### Committing
 
 When you `fire()` an event, it gets pushed to an in-memory queue to be saved with all other Verbs events
@@ -71,19 +103,19 @@ the transaction commits so that your Verbs events are included in the transactio
 ```php
 DB::transaction(function() {
     // Some non-Verbs Eloquent calls
-    
+
     CustomerRegistered::fire(...);
     CustomerBeganTrial::fire(...);
-    
+
     // …some more non-Verbs Eloquent calls
-    
+
     Verbs::commit();
 });
 ```
 
 #### Committing & immediately accessing results
 
-You can also call `Event::commit()` (instead of `fire()`), which will both fire AND commit the event 
+You can also call `Event::commit()` (instead of `fire()`), which will both fire AND commit the event
 (and all events in the queue). `Event::commit()` also returns whatever your event’s `handle()` method
 returns, which is useful when you need to immediately use the result of an event, such as a store
 method on a controller.
@@ -222,7 +254,7 @@ You may also use `Verbs::replay()` in files.
 > Verbs does not reset any model data that might be created in your event handlers.
 > Be sure to either reset that data before replaying, or confirm that all `handle()` calls are idempotent.
 > Replaying events without thinking thru the consequences can have VERY negative side effects.
-> Because of this, upon executing the `verbs:replay` command we will make you confirm your choice, and 
+> Because of this, upon executing the `verbs:replay` command we will make you confirm your choice, and
 > confirm _again_ if you're in production.
 
 #### Preparing for a replay
