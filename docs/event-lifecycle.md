@@ -69,7 +69,7 @@ class UserJoinedTeam
 
 ##### `fireIfValid()`
 
-By default, if an event fails validation it will throw an `EventNotValid` exception; if you want to fire ONLY if validation succeeds: instead of `fire`, use `fireIfValid()`.
+By default, if an event fails validation it will throw an `EventNotValid` exception; if you want to fire ONLY if validation succeeds: instead of `fire()`, use `fireIfValid()`.
 
 ### “Fired” Phase
 
@@ -116,7 +116,7 @@ side effects.
 #### Handle
 
 Use the `handle` hook to perform actions based on your event. This is often
-writing to the database (sometimes called a "[projection](combating-jargon)"). You can
+writing to the database (sometimes called a "[projection](/docs/technical/combating-jargon#content-projectors)"). You can
 [read more about the handle hook](/docs/reference/events#content-handle) in
 the Events docs.
 
