@@ -15,6 +15,7 @@ use Throwable;
 use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\EventNotValid;
+use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Lifecycle\MetadataManager;
 
 /**
@@ -174,7 +175,7 @@ class PendingEvent
     protected function conditionallySetId(): void
     {
         if ($this->event instanceof Event) {
-            $this->event->id ??= snowflake_id();
+            $this->event->id ??= Id::make();
         }
     }
 }

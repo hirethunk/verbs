@@ -4,6 +4,7 @@ namespace Thunk\Verbs\Models;
 
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
+use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Lifecycle\MetadataManager;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\Serializer;
@@ -30,6 +31,11 @@ class VerbSnapshot extends Model
     public function getTable()
     {
         return $this->table ?? config('verbs.tables.snapshots', 'verb_snapshots');
+    }
+
+    public function getKeyType()
+    {
+        return Id::keyType();
     }
 
     public function state(): State
