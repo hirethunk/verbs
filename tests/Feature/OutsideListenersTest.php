@@ -16,6 +16,7 @@ it('can trigger listeners outside the event object', function () {
     OutsideListenersTestEvent2::fire(message: 'test 2');
     OutsideListenersTestEvent1::fire(message: 'test 1b');
 
+    // CASE:: Commit
     Verbs::commit();
 
     expect($GLOBALS['outside_listener_log'])->toBe([
@@ -51,6 +52,46 @@ it('can trigger listeners outside the event object', function () {
         // Event 3: 'test 1b' — handle
         'unionListenerWithExplicitHandlePhase with OutsideListenersTestEvent1 "test 1b"',
     ]);
+
+    // CASE:: Replay
+    $GLOBALS['outside_listener_log'] = [];
+    Verbs::replay();
+
+    expect($GLOBALS['outside_listener_log'])->toBe([
+        // Event 1: 'test 1a' — pre-commit & replay
+        'unionListenerWithExplicitApplyPhase with OutsideListenersTestEvent1 "test 1a"',
+        'unionListenerWithExplicitReplayPhase with OutsideListenersTestEvent1 "test 1a"',
+
+        // Event 3: 'test 1b' — pre-commit & replay
+        'unionListenerWithExplicitApplyPhase with OutsideListenersTestEvent1 "test 1b"',
+        'unionListenerWithExplicitReplayPhase with OutsideListenersTestEvent1 "test 1b"',
+
+        // Event 2: 'test 2' — pre-commit & replay
+        'singleListenerWithExplicitApplyPhase with OutsideListenersTestEvent2 "test 2"',
+        'unionListenerWithExplicitApplyPhase with OutsideListenersTestEvent2 "test 2"',
+        'singleListenerWithExplicitReplayPhase with OutsideListenersTestEvent2 "test 2"',
+        'unionListenerWithExplicitReplayPhase with OutsideListenersTestEvent2 "test 2"',
+    ]);
+});
+
+it('does not alter the original handle/commit return value when Phase::Handle hooks are registered', function () {
+
+    Verbs::listen(OutsideListenersTestListenerForEventWithHandleReturnValue::class);
+
+    // Commit event and remember the `handle` return value
+    $result = OutsideListenersTestEventWithHandleReturnValue::commit(
+        message: $expectedCommitReturnValue = 'commit return value'
+    );
+
+    // Confirm all expected hooks were called
+    expect(OutsideListenersTestListenerForEventWithHandleReturnValue::$calledHandlers)->toBe([
+        'hookWithImplicitReturn',
+        'hookWithExplicitNullReturn',
+        'hookWithExplicitStringReturn',
+    ]);
+
+    // Confirm none of the handle hook return values altered the original event's `handle` return value
+    expect($result)->toBe($expectedCommitReturnValue);
 });
 
 class OutsideListenersTestState extends State
@@ -66,6 +107,16 @@ class OutsideListenersTestEvent1 extends Event
 class OutsideListenersTestEvent2 extends Event
 {
     public function __construct(public string $message) {}
+}
+
+class OutsideListenersTestEventWithHandleReturnValue extends Event
+{
+    public function __construct(public string $message) {}
+
+    public function handle()
+    {
+        return $this->message;
+    }
 }
 
 class OutsideListenersTestListener
@@ -169,5 +220,38 @@ class OutsideListenersTestListener
         $message = property_exists($target, 'message') ? "\"{$target->message}\"" : '';
 
         $GLOBALS['outside_listener_log'][] = "{$caller} with {$target_class} $message";
+    }
+}
+
+/**
+ * This event listener covers several scenarios where the Phase::Handle hook
+ * is used for events that have a return value for their handle method.
+ *
+ * @see https://github.com/hirethunk/verbs/issues/213
+ */
+class OutsideListenersTestListenerForEventWithHandleReturnValue
+{
+    public static $calledHandlers = [];
+
+    #[On(Phase::Handle)]
+    public function hookWithImplicitReturn(OutsideListenersTestEventWithHandleReturnValue $event): void
+    {
+        self::$calledHandlers[] = __FUNCTION__;
+    }
+
+    #[On(Phase::Handle)]
+    public function hookWithExplicitNullReturn(OutsideListenersTestEventWithHandleReturnValue $event): mixed
+    {
+        self::$calledHandlers[] = __FUNCTION__;
+
+        return null;
+    }
+
+    #[On(Phase::Handle)]
+    public function hookWithExplicitStringReturn(OutsideListenersTestEventWithHandleReturnValue $event): mixed
+    {
+        self::$calledHandlers[] = __FUNCTION__;
+
+        return 'foo';
     }
 }
