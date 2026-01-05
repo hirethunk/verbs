@@ -8,6 +8,7 @@ use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\EventNotValid;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
+use Thunk\Verbs\State\StateManager;
 
 class Broker implements BrokersEvents
 {
@@ -34,22 +35,16 @@ class Broker implements BrokersEvents
     public function fire(Event $event): ?Event
     {
         if ($this->is_replaying) {
-            return null;
+            return null; // FIXME
         }
 
-        // NOTE: Any changes to how the dispatcher is called here
-        // should also be applied to the `replay` method
+        Lifecycle::run(
+            event: $event,
+            phases: Phases::fire(),
+        );
 
-        $this->dispatcher->boot($event);
-
-        Guards::for($event)->check();
-
-        $this->dispatcher->apply($event);
-
+        // FIXME: This is now in a slightly different execution order
         $this->queue->queue($event);
-
-        $this->dispatcher->fired($event);
-
         if ($this->commit_immediately || $event instanceof CommitsImmediately) {
             $this->commit();
         }
@@ -65,10 +60,9 @@ class Broker implements BrokersEvents
             return true;
         }
 
-        // FIXME: Only write changes + handle aggregate versioning
-
-        $this->states->writeSnapshots();
-        $this->states->prune();
+        // FIXME:
+        // $this->states->writeSnapshots();
+        // $this->states->prune();
 
         foreach ($events as $event) {
             $this->metadata->setLastResults($event, $this->dispatcher->handle($event));
@@ -82,7 +76,7 @@ class Broker implements BrokersEvents
         $this->is_replaying = true;
 
         try {
-            $this->states->reset(include_storage: true);
+            $this->states->reset();
 
             $iteration = 0;
 

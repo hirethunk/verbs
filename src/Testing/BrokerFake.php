@@ -8,7 +8,6 @@ use PHPUnit\Framework\Assert;
 use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Lifecycle\Broker;
 use Thunk\Verbs\Lifecycle\BrokerConvenienceMethods;
 use Thunk\Verbs\Lifecycle\Dispatcher;
 
@@ -21,7 +20,7 @@ class BrokerFake implements BrokersEvents
     public function __construct(
         Container $container,
         public EventStoreFake $store,
-        public Broker $broker,
+        public BrokersEvents $broker,
     ) {
         // Eventually this will swap out all the necessary fakes and implement
         // our own versions of fire/commit/replay, but for now this is just a
