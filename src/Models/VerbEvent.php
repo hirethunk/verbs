@@ -5,6 +5,7 @@ namespace Thunk\Verbs\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Lifecycle\MetadataManager;
 use Thunk\Verbs\Metadata;
 use Thunk\Verbs\State;
@@ -36,6 +37,11 @@ class VerbEvent extends Model
     public function getTable()
     {
         return $this->table ?? config('verbs.tables.events', 'verb_events');
+    }
+
+    public function getKeyType()
+    {
+        return Id::keyType();
     }
 
     public function event(): Event
