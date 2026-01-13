@@ -9,6 +9,7 @@ use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\Models\VerbSnapshot;
+use Thunk\Verbs\Models\VerbStateEvent;
 use Thunk\Verbs\State;
 
 beforeEach(function () {
@@ -134,6 +135,41 @@ it('creates new snapshots when replaying', function () {
 
     expect(json_decode($snapshot2->data)->count)->toBe(3);
     expect($snapshot2->created_at)->toEqual(CarbonImmutable::parse('2024-05-15 18:00:00'));
+});
+
+it('can reattach events to states when replaying', function () {
+    Carbon::setTestNow('2024-04-01 12:00:00');
+
+    $state1_id = Id::make();
+    $state2_id = Id::make();
+
+    $state1_event1 = ReplayCommandTestEvent::fire(state_id: $state1_id);
+    $state2_event1 = ReplayCommandTestEvent::fire(state_id: $state2_id);
+    $state1_event2 = ReplayCommandTestEvent::fire(state_id: $state1_id);
+    $state2_event2 = ReplayCommandTestEvent::fire(state_id: $state2_id);
+
+    Verbs::commit();
+
+    expect(VerbStateEvent::count())->toBe(4);
+
+    $this->artisan(ReplayCommand::class);
+
+    expect(VerbStateEvent::count())->toBe(4);
+
+    VerbStateEvent::truncate();
+
+    expect(VerbStateEvent::count())->toBe(0);
+
+    $this->artisan(ReplayCommand::class);
+
+    expect(VerbStateEvent::count())->toBe(0);
+
+    $this->artisan(ReplayCommand::class, ['--reattach' => true]);
+
+    expect(VerbStateEvent::where(['state_id' => $state1_id, 'event_id' => $state1_event1->id])->count())->toBe(1)
+        ->and(VerbStateEvent::where(['state_id' => $state1_id, 'event_id' => $state1_event2->id])->count())->toBe(1)
+        ->and(VerbStateEvent::where(['state_id' => $state2_id, 'event_id' => $state2_event1->id])->count())->toBe(1)
+        ->and(VerbStateEvent::where(['state_id' => $state2_id, 'event_id' => $state2_event2->id])->count())->toBe(1);
 });
 
 class ReplayCommandTestEvent extends Event
