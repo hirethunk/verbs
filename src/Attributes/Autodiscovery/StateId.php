@@ -6,8 +6,8 @@ use Attribute;
 use Illuminate\Support\Arr;
 use InvalidArgumentException;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\State;
+use Thunk\Verbs\State\StateManager;
 
 #[Attribute(Attribute::TARGET_PROPERTY)]
 class StateId extends StateDiscoveryAttribute
@@ -42,15 +42,15 @@ class StateId extends StateDiscoveryAttribute
             $autofilled[$property_name] = true;
             $meta->put('autofilled', $autofilled);
 
-            return $manager->make($id, $this->state_type);
+            return $manager->make($this->state_type, $id);
         }
 
         // If we autofilled the value when it first fired, then we know this is the
         // first event for that given state, and we don't need to try to load it
         if ($meta->get("autofilled.{$property_name}", false)) {
-            return $manager->make($id, $this->state_type);
+            return $manager->make($this->state_type, $id);
         }
 
-        return array_map(fn ($id) => $manager->load($id, $this->state_type), Arr::wrap($id));
+        return array_map(fn ($id) => $manager->load($this->state_type, $id), Arr::wrap($id));
     }
 }
