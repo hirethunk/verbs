@@ -1,6 +1,6 @@
 <?php
 
-namespace Thunk\Verbs\Lifecycle;
+namespace Thunk\Verbs\State;
 
 use Glhd\Bits\Bits;
 use LogicException;
@@ -9,15 +9,19 @@ use ReflectionClass;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Contracts\StoresSnapshots;
+use Thunk\Verbs\Contracts\TracksState;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Id;
+use Thunk\Verbs\Lifecycle\Dispatcher;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\StateCollection;
 use Thunk\Verbs\Support\StateInstanceCache;
 use UnexpectedValueException;
 
-class StateManager
+class StateManager implements TracksState
 {
+    use LooksUpStateByKey;
+
     protected bool $is_replaying = false;
 
     public function __construct(
@@ -34,12 +38,6 @@ class StateManager
         return $this->remember($state);
     }
 
-    /**
-     * @template S instanceof State
-     *
-     * @param  class-string<S>  $type
-     * @return S|StateCollection<int,S>
-     */
     public function load(Bits|UuidInterface|AbstractUid|iterable|int|string $id, string $type): StateCollection|State
     {
         return is_iterable($id)
@@ -47,12 +45,6 @@ class StateManager
             : $this->loadOne($id, $type);
     }
 
-    /**
-     * @template TStateClass of State
-     *
-     * @param  class-string<TStateClass>  $type
-     * @return TStateClass
-     */
     public function singleton(string $type): State
     {
         // FIXME: If the state we're loading has a last_event_id that's ahead of the registry's last_event_id, we need to re-build the state
@@ -73,16 +65,10 @@ class StateManager
         return $state;
     }
 
-    /**
-     * @template TState of State
-     *
-     * @param  class-string<TState>  $type
-     * @return TState
-     */
     public function make(Bits|UuidInterface|AbstractUid|int|string $id, string $type): State
     {
         // If we've already instantiated this state, we'll load it
-        if ($existing = $this->states->get($this->key($id, $type))) {
+        if ($existing = $this->states->get($this->key($type, $id))) {
             return $existing;
         }
 
@@ -135,7 +121,7 @@ class StateManager
     protected function loadOne(Bits|UuidInterface|AbstractUid|int|string $id, string $type): State
     {
         $id = Id::from($id);
-        $key = $this->key($id, $type);
+        $key = $this->key($type, $id);
 
         // FIXME: If the state we're loading has a last_event_id that's ahead of the registry's last_event_id, we need to re-build the state
 
@@ -162,7 +148,7 @@ class StateManager
     {
         $ids = collect($ids)->map(Id::from(...));
 
-        $missing = $ids->reject(fn ($id) => $this->states->has($this->key($id, $type)));
+        $missing = $ids->reject(fn ($id) => $this->states->has($this->key($type, $id)));
 
         // Load all available snapshots for missing states
         $this->snapshots->load($missing, $type)->each(function (State $state) {
@@ -172,7 +158,7 @@ class StateManager
 
         // Then make any states that don't exist yet
         $missing
-            ->reject(fn ($id) => $this->states->has($this->key($id, $type)))
+            ->reject(fn ($id) => $this->states->has($this->key($type, $id)))
             ->each(function (string|int $id) use ($type) {
                 $state = $this->make($id, $type);
                 $this->remember($state);
@@ -181,7 +167,7 @@ class StateManager
 
         // At this point, all the states should be in our cache, so we can just load everything
         return StateCollection::make(
-            $ids->map(fn ($id) => $this->states->get($this->key($id, $type)))
+            $ids->map(fn ($id) => $this->states->get($this->key($type, $id)))
         );
     }
 
@@ -207,7 +193,7 @@ class StateManager
 
     protected function remember(State $state): State
     {
-        $key = $this->key($state->id, $state::class);
+        $key = $this->key($state);
 
         if ($this->states->get($key) === $state) {
             return $state;
@@ -220,10 +206,5 @@ class StateManager
         $this->states->put($key, $state);
 
         return $state;
-    }
-
-    protected function key(string|int $id, string $type): string
-    {
-        return "{$type}:{$id}";
     }
 }

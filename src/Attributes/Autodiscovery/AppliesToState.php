@@ -6,8 +6,8 @@ use Attribute;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
+use Thunk\Verbs\Contracts\TracksState;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\State;
 
@@ -25,7 +25,7 @@ class AppliesToState extends StateDiscoveryAttribute
         }
     }
 
-    public function discoverState(Event $event, StateManager $manager): State|array
+    public function discoverState(Event $event, TracksState $manager): State|array
     {
         if (is_subclass_of($this->state_type, SingletonState::class)) {
             return $this->state_type::singleton();

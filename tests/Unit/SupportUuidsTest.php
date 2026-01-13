@@ -2,8 +2,8 @@
 
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\Str;
+use Thunk\Verbs\Contracts\TracksState;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\IdManager;
 
@@ -49,7 +49,7 @@ it('loads states correctly using uuids when the snapshots table has been removed
         state: $state,
     );
 
-    app(StateManager::class)->reset(include_storage: true);
+    app(TracksState::class)->reset(include_storage: true);
 
     $state = UuidState::load($uuid);
 
