@@ -55,7 +55,7 @@ The `snowflakeId()` method creates a new primary key column with a default name 
 
 ### Automatically generate snowflake ids
 
-Verbs allows for `snowflake_id` auto-generation by default when using most of our [attributes](/docs/technical/attributes).
+Verbs allows for `snowflake_id()` auto-generation by default when using most of our [attributes](/docs/technical/attributes).
 By setting your event's `state_id` property to null--
 
 ```php
@@ -71,7 +71,15 @@ class CustomerBeganTrial extends Event
 ```php
     $event = CustomerBeganTrial::fire() // no set customer_id
 
-    $event->customer_id; // = snowflake_id()
+    $event->customer_id; // = autofilled with `snowflake_id()` !
 ```
 
-If you wish to disable autofill for some reason, you may set it to `false` in your attributes.
+If you wish to disable `autofill` for some reason, you may set it to `false` in your attributes.
+
+```php
+class CustomerBeganTrial extends Event
+{
+    #[StateId(CustomerState::class, autofill: false)]
+    public ?int $customer_id = null;
+}
+```
