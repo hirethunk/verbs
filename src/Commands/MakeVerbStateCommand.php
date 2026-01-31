@@ -2,7 +2,7 @@
 
 namespace Thunk\Verbs\Commands;
 
-use InterNACHI\Modular\Console\Commands\Make\Modularize;
+use InterNACHI\Modularize\Modularize;
 use Symfony\Component\Console\Attribute\AsCommand;
 
 #[AsCommand(name: 'verbs:state')]
