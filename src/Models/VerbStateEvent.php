@@ -3,6 +3,7 @@
 namespace Thunk\Verbs\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\State;
 
 class VerbStateEvent extends Model
@@ -17,6 +18,11 @@ class VerbStateEvent extends Model
     public function getTable()
     {
         return $this->table ?? config('verbs.tables.state_events', 'verb_state_events');
+    }
+
+    public function getKeyType()
+    {
+        return Id::keyType();
     }
 
     public function event()

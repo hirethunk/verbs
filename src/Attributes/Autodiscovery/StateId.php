@@ -6,6 +6,7 @@ use Attribute;
 use Illuminate\Support\Arr;
 use InvalidArgumentException;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\State;
 
@@ -35,7 +36,7 @@ class StateId extends StateDiscoveryAttribute
 
         // If the ID hasn't been set yet, we'll automatically set one
         if ($id === null && $this->autofill) {
-            $id = snowflake_id();
+            $id = Id::make();
             $this->property->setValue($event, $id);
 
             $autofilled = $meta->get('autofilled', []);
