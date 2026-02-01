@@ -20,7 +20,7 @@ return new class extends Migration
             $table->json('data');
             $table->json('metadata');
 
-            $table->timestamps();
+            $table->timestamp('created_at')->nullable();
         });
     }
 
