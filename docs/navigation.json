@@ -106,14 +106,19 @@
                 "icon": "arrow-path"
             },
             {
+                "title": "Listeners",
+                "slug": "listeners",
+                "icon": "megaphone"
+            },
+            {
                 "title": "Combating Jargon",
                 "slug": "combating-jargon",
                 "icon": "chat-bubble-bottom-center-text"
             },
             {
-                "title": "Serialization",
-                "slug": "serialization",
-                "icon": "server-stack"
+                "title": "Storage",
+                "slug": "storage",
+                "icon": "circle-stack"
             }
         ]
     },
@@ -124,7 +129,7 @@
             {
                 "title": "State-first Development",
                 "slug": "state-first-development",
-                "icon": "circle-stack"
+                "icon": "building-library"
             }
         ]
     }
