@@ -2,13 +2,13 @@
 
 namespace Thunk\Verbs\Commands;
 
-use InterNACHI\Modularize\Modularize;
+use InterNACHI\Modularize\ModularizeGeneratorCommand;
 use Symfony\Component\Console\Attribute\AsCommand;
 
 #[AsCommand(name: 'verbs:state')]
 class MakeVerbStateCommand extends VerbGeneratorCommand
 {
-    use Modularize {
+    use ModularizeGeneratorCommand {
         getDefaultNamespace as getModularizedNamespace;
     }
 
