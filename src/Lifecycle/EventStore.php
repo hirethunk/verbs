@@ -47,6 +47,15 @@ class EventStore implements StoresEvents
             && VerbStateEvent::insert($this->formatRelationshipsForWrite($events));
     }
 
+    public function reattach(array $events): bool
+    {
+        if (empty($events)) {
+            return true;
+        }
+
+        return VerbStateEvent::insertOrIgnore($this->formatRelationshipsForWrite($events));
+    }
+
     protected function readEvents(
         ?State $state,
         Bits|UuidInterface|AbstractUid|int|string|null $after_id,
