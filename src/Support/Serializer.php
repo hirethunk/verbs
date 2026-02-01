@@ -41,6 +41,7 @@ class Serializer
         string|array $data,
         bool $call_constructor = false,
     ) {
+        $target = is_string($target) ? (Event::getMappedEvent($target) ?? $target) : $target;
         $type = $target;
         $context = $this->context;
 
