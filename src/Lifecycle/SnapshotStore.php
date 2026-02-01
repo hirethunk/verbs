@@ -64,6 +64,13 @@ class SnapshotStore implements StoresSnapshots
         return true;
     }
 
+    public function delete(Bits|UuidInterface|AbstractUid|int|string ...$ids): bool
+    {
+        $ids = array_map(Id::from(...), $ids);
+
+        return VerbSnapshot::whereIn('state_id', $ids)->delete() === true;
+    }
+
     public function reset(): bool
     {
         VerbSnapshot::truncate();

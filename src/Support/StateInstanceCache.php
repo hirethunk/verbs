@@ -6,7 +6,7 @@ class StateInstanceCache
 {
     public function __construct(
         protected int $capacity = 100,
-        protected array $cache = [],
+        public array $cache = [],
     ) {}
 
     public function get(string|int $key, mixed $default = null): mixed

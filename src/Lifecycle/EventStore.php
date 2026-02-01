@@ -5,6 +5,7 @@ namespace Thunk\Verbs\Lifecycle;
 use Glhd\Bits\Bits;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Builder as BaseBuilder;
+use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\LazyCollection;
@@ -35,6 +36,15 @@ class EventStore implements StoresEvents
             ->map(fn (VerbEvent $model) => $model->event());
     }
 
+    public function get(iterable $ids): LazyCollection
+    {
+        return VerbEvent::query()
+            ->whereIn('id', collect($ids))
+            ->lazyById()
+            ->each(fn (VerbEvent $model) => $this->metadata->set($model->event(), $model->metadata()))
+            ->map(fn (VerbEvent $model) => $model->event());
+    }
+
     public function write(array $events): bool
     {
         if (empty($events)) {
@@ -45,6 +55,11 @@ class EventStore implements StoresEvents
 
         return VerbEvent::insert($this->formatForWrite($events))
             && VerbStateEvent::insert($this->formatRelationshipsForWrite($events));
+    }
+
+    public function summarize(State ...$states): AggregateStateSummary
+    {
+        return AggregateStateSummary::summarize(...$states);
     }
 
     protected function readEvents(
@@ -78,11 +93,7 @@ class EventStore implements StoresEvents
         $query->select([
             'state_type',
             'state_id',
-            DB::raw(sprintf(
-                'max(%s) as %s',
-                $query->getGrammar()->wrap('event_id'),
-                $query->getGrammar()->wrapTable('max_event_id')
-            )),
+            $this->aggregateExpression($query, 'event_id', 'max'),
         ]);
 
         $query->groupBy('state_type', 'state_id');
@@ -147,5 +158,15 @@ class EventStore implements StoresEvents
             ]))
             ->values()
             ->all();
+    }
+
+    protected function aggregateExpression(BaseBuilder $query, string $column, string $function): Expression
+    {
+        return DB::raw(sprintf(
+            '%s(%s) as %s',
+            $function,
+            $query->getGrammar()->wrap($column),
+            $query->getGrammar()->wrapTable("{$function}_{$column}")
+        ));
     }
 }

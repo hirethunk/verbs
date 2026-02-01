@@ -2,6 +2,7 @@
 
 namespace Thunk\Verbs\Support;
 
+use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use InvalidArgumentException;
@@ -13,8 +14,9 @@ use ReflectionProperty;
 use ReflectionUnionType;
 use Thunk\Verbs\Attributes\Autodiscovery\StateDiscoveryAttribute;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\State;
+use Thunk\Verbs\State\StateManager;
+use WeakMap;
 
 class EventStateRegistry
 {
@@ -22,11 +24,27 @@ class EventStateRegistry
 
     protected array $discovered_properties = [];
 
+    protected WeakMap $discovered_states;
+
     public function __construct(
-        protected StateManager $manager,
-    ) {}
+        protected Container $container,
+    ) {
+        $this->discovered_states = new WeakMap;
+    }
+
+    public function reset(): static
+    {
+        $this->discovered_states = new WeakMap;
+
+        return $this;
+    }
 
     public function getStates(Event $event): StateCollection
+    {
+        return $this->discovered_states[$event] ??= $this->discoverStates($event);
+    }
+
+    protected function discoverStates(Event $event): StateCollection
     {
         $discovered = new StateCollection;
         $deferred = new StateCollection;
@@ -57,7 +75,7 @@ class EventStateRegistry
         $states = Arr::wrap(
             $attribute
                 ->setDiscoveredState($discovered)
-                ->discoverState($target, $this->manager),
+                ->discoverState($target, $this->container->make(StateManager::class)),
         );
 
         $discovered->push(...$states);

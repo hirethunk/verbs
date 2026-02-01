@@ -60,6 +60,21 @@ class SnapshotStoreFake implements StoresSnapshots
         return true;
     }
 
+    public function delete(Bits|UuidInterface|AbstractUid|int|string ...$ids): bool
+    {
+        $ids = array_map(Id::from(...), $ids);
+
+        foreach ($this->states as $type => $states) {
+            foreach ($states as $id => $state) {
+                if (in_array($id, $ids)) {
+                    uniqid($this->states[$type][$id]);
+                }
+            }
+        }
+
+        return true;
+    }
+
     public function assertWritten(string|Closure $state, Closure|int|null $callback = null): static
     {
         if ($state instanceof Closure) {
