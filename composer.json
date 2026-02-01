@@ -29,7 +29,6 @@
     "require-dev": {
         "brick/money": "^0.8.1|^0.10",
         "laravel/pint": "^1.13",
-        "laravel/serializable-closure": "^1.3.7|^2.0",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^7.10|^8.1",
         "orchestra/testbench": "^8.14|^9.1.0|^10.0",
