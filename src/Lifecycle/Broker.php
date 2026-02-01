@@ -2,12 +2,14 @@
 
 namespace Thunk\Verbs\Lifecycle;
 
+use Illuminate\Support\Enumerable;
 use Thunk\Verbs\CommitsImmediately;
 use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\EventNotValid;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
+use Thunk\Verbs\Support\EagerLoader;
 
 class Broker implements BrokersEvents
 {
@@ -70,6 +72,8 @@ class Broker implements BrokersEvents
         $this->states->writeSnapshots();
         $this->states->prune();
 
+        EagerLoader::load(...$events);
+
         foreach ($events as $event) {
             $this->metadata->setLastResults($event, $this->dispatcher->handle($event));
         }
@@ -84,24 +88,27 @@ class Broker implements BrokersEvents
         try {
             $this->states->reset(include_storage: true);
 
-            $iteration = 0;
-
             app(StoresEvents::class)->read()
-                ->each(function (Event $event) use ($beforeEach, $afterEach, &$iteration) {
-                    $this->states->setReplaying(true);
+                ->chunk(500)
+                ->each(function (Enumerable $events) use ($beforeEach, $afterEach) {
+                    EagerLoader::load(...$events);
 
-                    if ($beforeEach) {
-                        $beforeEach($event);
-                    }
+                    $events->each(function (Event $event) use ($beforeEach, $afterEach) {
+                        $this->states->setReplaying(true);
 
-                    $this->dispatcher->apply($event);
-                    $this->dispatcher->replay($event);
+                        if ($beforeEach) {
+                            $beforeEach($event);
+                        }
 
-                    if ($afterEach) {
-                        $afterEach($event);
-                    }
+                        $this->dispatcher->apply($event);
+                        $this->dispatcher->replay($event);
 
-                    if ($iteration++ % 500 === 0 && $this->states->willPrune()) {
+                        if ($afterEach) {
+                            $afterEach($event);
+                        }
+                    });
+
+                    if ($this->states->willPrune()) {
                         $this->states->writeSnapshots();
                         $this->states->prune();
                     }
