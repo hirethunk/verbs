@@ -19,6 +19,7 @@ jobs:
         php: [ 8.4, 8.3, 8.2 ]
         laravel: [ 12.*, 11.*, 10.* ]
         stability: [ stable, lowest ]
+        exclude: [ { php: 8.4, laravel: 10.* } ]
 
     name: ${{ matrix.os }}/sqlite P${{ matrix.php }}:L${{ matrix.laravel }} (${{ matrix.stability }})
 
@@ -58,6 +59,7 @@ jobs:
         php: [ 8.4, 8.3, 8.2 ]
         laravel: [ 12.*, 11.*, 10.* ]
         stability: [ stable, lowest ]
+        exclude: [ { php: 8.4, laravel: 10.* } ]
 
     name: ${{ matrix.os }}/mysql P${{ matrix.php }}:L${{ matrix.laravel }} (${{ matrix.stability }})
 
@@ -110,6 +112,7 @@ jobs:
         php: [ 8.4, 8.3, 8.2 ]
         laravel: [ 12.*, 11.*, 10.* ]
         stability: [ stable, lowest ]
+        exclude: [ { php: 8.4, laravel: 10.* } ]
 
     name: ${{ matrix.os }}/pgsql P${{ matrix.php }}:L${{ matrix.laravel }} (${{ matrix.stability }})
 
