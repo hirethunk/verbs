@@ -5,8 +5,8 @@ namespace Thunk\Verbs\Attributes\Autodiscovery;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use ReflectionProperty;
+use Thunk\Verbs\Contracts\TracksState;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\State;
 
 abstract class StateDiscoveryAttribute
@@ -18,7 +18,7 @@ abstract class StateDiscoveryAttribute
     /** @var Collection<string, State> */
     protected Collection $discovered;
 
-    abstract public function discoverState(Event $event, StateManager $manager): State|array;
+    abstract public function discoverState(Event $event, TracksState $manager): State|array;
 
     public function setProperty(ReflectionProperty $property): static
     {

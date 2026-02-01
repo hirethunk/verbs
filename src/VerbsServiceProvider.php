@@ -25,6 +25,7 @@ use Thunk\Verbs\Commands\ReplayCommand;
 use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Contracts\StoresSnapshots;
+use Thunk\Verbs\Contracts\TracksState;
 use Thunk\Verbs\Lifecycle\AutoCommitManager;
 use Thunk\Verbs\Lifecycle\Broker;
 use Thunk\Verbs\Lifecycle\Dispatcher;
@@ -32,8 +33,8 @@ use Thunk\Verbs\Lifecycle\EventStore;
 use Thunk\Verbs\Lifecycle\MetadataManager;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 use Thunk\Verbs\Lifecycle\SnapshotStore;
-use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\Livewire\SupportVerbs;
+use Thunk\Verbs\State\StateManager;
 use Thunk\Verbs\Support\EventStateRegistry;
 use Thunk\Verbs\Support\IdManager;
 use Thunk\Verbs\Support\Serializer;
@@ -69,7 +70,7 @@ class VerbsServiceProvider extends PackageServiceProvider
         $this->app->scoped(EventStateRegistry::class);
         $this->app->singleton(MetadataManager::class);
 
-        $this->app->scoped(StateManager::class, function (Container $app) {
+        $this->app->scoped(TracksState::class, function (Container $app) {
             return new StateManager(
                 dispatcher: $app->make(Dispatcher::class),
                 snapshots: $app->make(StoresSnapshots::class),
