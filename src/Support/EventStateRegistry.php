@@ -57,7 +57,7 @@ class EventStateRegistry
         $states = Arr::wrap(
             $attribute
                 ->setDiscoveredState($discovered)
-                ->discoverState($target, $this->manager)
+                ->discoverState($target, $this->manager),
         );
 
         $discovered->push(...$states);
@@ -126,15 +126,10 @@ class EventStateRegistry
                 $property_type = $property->getType();
 
                 if (
-                    $property_type
-                    && $property_type instanceof ReflectionNamedType
+                    $property_type instanceof ReflectionNamedType
                     && $property_type->allowsNull()
                     && $property->getValue($target) === null
                 ) {
-                    return false;
-                }
-
-                if ($property_type === null) {
                     return false;
                 }
 

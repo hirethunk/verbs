@@ -6,7 +6,6 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use InvalidArgumentException;
 use ReflectionClass;
-use ReflectionNamedType;
 use ReflectionProperty;
 use RuntimeException;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
@@ -54,13 +53,8 @@ trait NormalizeToPropertiesAndClassName
         foreach (Arr::except($data, ['fqcn']) as $key => $value) {
             $property = $reflect->getProperty($key);
 
-            $type = $property->getType();
-            if ($type instanceof ReflectionNamedType && ! $type->isBuiltin() && $value !== null) {
-                $typeName = $type->getName();
-                // Skip denormalization when value is already the correct type (e.g. Carbon for DateTimeInterface)
-                if (! (is_object($value) && $value instanceof $typeName)) {
-                    $value = $denormalizer->denormalize($value, $typeName);
-                }
+            if ($property->hasType() && ! $property->getType()->isBuiltin() && $value !== null) {
+                $value = $denormalizer->denormalize($value, $property->getType()->getName());
             }
 
             $property->setValue($instance, $value);
