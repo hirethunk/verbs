@@ -56,7 +56,11 @@ trait NormalizeToPropertiesAndClassName
 
             $type = $property->getType();
             if ($type instanceof ReflectionNamedType && ! $type->isBuiltin() && $value !== null) {
-                $value = $denormalizer->denormalize($value, $type->getName());
+                $typeName = $type->getName();
+                // Skip denormalization when value is already the correct type (e.g. Carbon for DateTimeInterface)
+                if (! (is_object($value) && $value instanceof $typeName)) {
+                    $value = $denormalizer->denormalize($value, $typeName);
+                }
             }
 
             $property->setValue($instance, $value);
