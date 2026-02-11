@@ -6,6 +6,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use InvalidArgumentException;
 use ReflectionClass;
+use ReflectionNamedType;
 use ReflectionProperty;
 use RuntimeException;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
@@ -53,8 +54,9 @@ trait NormalizeToPropertiesAndClassName
         foreach (Arr::except($data, ['fqcn']) as $key => $value) {
             $property = $reflect->getProperty($key);
 
-            if ($property->hasType() && ! $property->getType()->isBuiltin() && $value !== null) {
-                $value = $denormalizer->denormalize($value, $property->getType()->getName());
+            $type = $property->getType();
+            if ($type instanceof ReflectionNamedType && ! $type->isBuiltin() && $value !== null) {
+                $value = $denormalizer->denormalize($value, $type->getName());
             }
 
             $property->setValue($instance, $value);
