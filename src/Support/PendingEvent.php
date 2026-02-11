@@ -92,6 +92,14 @@ class PendingEvent
 
     public function hydrate(array $data): static
     {
+        // When firing with args, we deserialize from the passed data. Events require an id,
+        // but we don't have one yet when creating fresh. Inject it before deserializing.
+        $target = $this->event;
+        $targetClass = is_string($target) ? $target : $target::class;
+        if (is_subclass_of($targetClass, Event::class) && ! array_key_exists('id', $data)) {
+            $data = array_merge($data, ['id' => snowflake_id()]);
+        }
+
         $this->event = app(Serializer::class)->deserialize($this->event, $data, call_constructor: true);
 
         app(MetadataManager::class)->initialize($this->event);
