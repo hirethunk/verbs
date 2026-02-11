@@ -30,6 +30,22 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Serialize Event ID
+    |--------------------------------------------------------------------------
+    |
+    | By default, the Event's `id` is excluded from the serialized JSON stored
+    | in verb_events.data (it's redundant with the row's primary key). Some
+    | event types (e.g. SerializedByVerbs) require `id` for deserialization.
+    | VerbEvent injects the row id when loading in that case.
+    |
+    | Set to true to include `id` in stored data so events deserialize without
+    | injection. Useful for new installations or after replaying events.
+    |
+    */
+    'serialize_event_id' => env('VERBS_SERIALIZE_EVENT_ID', false),
+
+    /*
+    |--------------------------------------------------------------------------
     | Normalizers
     |--------------------------------------------------------------------------
     |
@@ -116,7 +132,7 @@ return [
     |
     | By default, Verbs will auto-commit events to the event store for you:
     |
-    |   - at the end of every request (before returning a response)
+    |   - at the end of every request (before returning the response)
     |   - at the end of every console command
     |   - at the end of every queued job
     |
