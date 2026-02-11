@@ -21,14 +21,11 @@ class Dispatcher
         protected Container $container
     ) {}
 
-    public function register(object $target): void
+    public function register(string|object $target): void
     {
         foreach (Reflector::getHooks($target) as $hook) {
-            foreach ($hook->events as $event_type) {
-                $this->hooks[$event_type][] = $hook;
-            }
-            foreach ($hook->states as $state_type) {
-                $this->hooks[$state_type][] = $hook;
+            foreach ($hook->targets as $fqcn) {
+                $this->hooks[$fqcn][] = $hook;
             }
         }
     }
@@ -36,6 +33,13 @@ class Dispatcher
     public function skipPhases(Phase ...$phases): void
     {
         $this->skipped_phases = $phases;
+    }
+
+    public function boot(Event $event): void
+    {
+        if ($this->shouldDispatchPhase(Phase::Boot)) {
+            $this->getBootHooks($event)->each(fn (Hook $hook) => $hook->boot($this->container, $event));
+        }
     }
 
     public function validate(Event $event): bool
@@ -83,6 +87,18 @@ class Dispatcher
         if ($this->shouldDispatchPhase(Phase::Replay)) {
             $this->getReplayHooks($event)->each(fn (Hook $hook) => $hook->replay($this->container, $event));
         }
+    }
+
+    /** @return Collection<int, Hook> */
+    protected function getBootHooks(Event $event): Collection
+    {
+        $hooks = $this->hooksFor($event, Phase::Boot);
+
+        if (method_exists($event, 'boot')) {
+            $hooks->prepend(Hook::fromClassMethod($event, 'boot')->forcePhases(Phase::Boot));
+        }
+
+        return $hooks;
     }
 
     /** @return Collection<int, Hook> */
@@ -166,7 +182,9 @@ class Dispatcher
     /** @return Collection<int, Hook> */
     protected function hooksFor(Event|State $target, ?Phase $phase = null): Collection
     {
-        return Collection::make($this->hooks[$target::class] ?? [])
+        return Collection::make($this->hooks)
+            ->only(Reflector::getClassInstanceOf($target))
+            ->flatten()
             ->when($phase, fn (Collection $hooks) => $hooks->filter(fn (Hook $hook) => $hook->runsInPhase($phase)));
     }
 

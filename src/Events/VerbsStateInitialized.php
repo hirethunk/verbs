@@ -4,6 +4,7 @@ namespace Thunk\Verbs\Events;
 
 use Thunk\Verbs\CommitsImmediately;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\Support\StateCollection;
 
 /** @template TStateType */
@@ -14,15 +15,18 @@ class VerbsStateInitialized extends Event implements CommitsImmediately
         public int|string $state_id,
         public string $state_class,
         public array $state_data,
-        public bool $singleton = false,
     ) {}
 
     /** @return StateCollection<int, TStateType> */
     public function states(): StateCollection
     {
-        return StateCollection::make([
-            $this->singleton ? $this->state_class::singleton() : $this->state_class::load($this->state_id),
-        ]);
+        $state = is_subclass_of($this->state_class, SingletonState::class)
+            ? $this->state_class::singleton()
+            : $this->state_class::load($this->state_id);
+
+        $state->id = $this->state_id;
+
+        return StateCollection::make([$state]);
     }
 
     public function validate()

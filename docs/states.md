@@ -24,7 +24,7 @@ happened.
 To generate a state, use the built-in artisan command:
 
 ```shell
-php artisan verbs:state GameState
+php artisan verbs:state ExampleState
 ```
 
 When you create your first state, it will generate in a fresh `app/States` directory.
@@ -56,7 +56,7 @@ to track:
 
 ```php
 // CountIncremented.php
-class CountIncremented class extends Event
+class CountIncremented extends Event
 {
     #[StateId(CountState::class)]
     public int $example_id;
@@ -118,9 +118,6 @@ in [event lifecycle](/docs/technical/event-lifecycle).
 
 ## Loading a State
 
-All state instances are singletons, scoped to an [id](/docs/technical/ids). i.e. say we had a Card Game app--if we apply
-a `CardDiscarded` event, we make sure only the `CardState` state with its globablly unique `card_id` is affected.
-
 To retrieve the State, simply call load:
 
 ```php
@@ -148,29 +145,19 @@ Route::get('/users/{user_state}', function(UserState $user_state) {
 
 ## Singleton States
 
-You may want a state that only needs one iteration across the entire application--this is called a singleton state.
-Singleton states require no id, since there is no need to differentiate among state instances.
+You may want a state that only needs one iteration across the entire application—this is called a singleton state.
+Singleton states require no ID because there is only ever one copy in existence across your entire app.
 
-In our events that apply to a singleton state, we simply need to use the
-`AppliesToSingletonState` [attribute](/docs/technical/attributes#content-appliestosingletonstate).
+To tell Verbs to treat a State as a singleton, extend the `SingletonState` class, rather than `State`.
 
 ```php
-#[AppliesToSingletonState(CountState::class)]
-class IncrementCount extends Event
-{
-    public function apply(CountState $state)
-    {
-        $state->count++;
-    }
-}
+class CountState extends SingletonState {}
 ```
-
-This event uses `AppliesToSingletonState` to tell Verbs that it should always be applied to a single `CountState` across
-the entire application (as opposed to having different counts for different situations).
 
 ### Loading the singleton state
 
-Since singleton's require no IDs, simply call the `singleton()` method.
+Since singletons require no IDs, simply call the `singleton()` method. Trying to load a singleton state in any
+other way will result in a `BadMethodCall` exception.
 
 ```php
 YourState::singleton();
@@ -251,7 +238,7 @@ which frees up your models to better serve your frontfacing UI needs. Once you'v
 your state instance's id to correspond directly to a model instance.
 
 ```php
-class FooCreated class
+class FooCreated
 {
     #[StateId(FooState::class)]
     public int $foo_id;

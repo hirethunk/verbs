@@ -40,6 +40,8 @@ class Broker implements BrokersEvents
         // NOTE: Any changes to how the dispatcher is called here
         // should also be applied to the `replay` method
 
+        $this->dispatcher->boot($event);
+
         Guards::for($event)->check();
 
         $this->dispatcher->apply($event);
@@ -110,6 +112,11 @@ class Broker implements BrokersEvents
             $this->states->setReplaying(false);
             $this->is_replaying = false;
         }
+    }
+
+    public function listen(object|string $listener)
+    {
+        $this->dispatcher->register($listener);
     }
 
     public function commitImmediately(bool $commit_immediately = true): void

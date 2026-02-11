@@ -14,7 +14,6 @@ interface StoresEvents
     public function read(
         ?State $state = null,
         Bits|UuidInterface|AbstractUid|int|string|null $after_id = null,
-        bool $singleton = false
     ): LazyCollection;
 
     /** @param  Event[]  $events */

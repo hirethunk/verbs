@@ -23,7 +23,7 @@ class EventStateRegistry
     protected array $discovered_properties = [];
 
     public function __construct(
-        protected StateManager $manager
+        protected StateManager $manager,
     ) {}
 
     public function getStates(Event $event): StateCollection

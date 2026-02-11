@@ -1,6 +1,7 @@
 <?php
 
 use Thunk\Verbs\Event;
+use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\StateCollection;
 
@@ -25,9 +26,9 @@ it('accepts an id and loads the state', function () {
 });
 
 it('supports singleton states', function () {
-    $user_request = UserRequestState::singleton();
+    $user_request = UserRequestSingletonState::singleton();
 
-    UserRequestAcknowledged::commit(
+    SingletonUserRequestAcknowledged::commit(
         user_request: $user_request
     );
 
@@ -101,6 +102,24 @@ it('loads the correct state when multiple are used', function () {
     $this->assertEquals($event2->id, $user_request2->last_event_id);
 });
 
+it('supports union typed properties in events', function () {
+    $user_request = UserRequestState::new();
+
+    UserRequestsWithUnionTypes::commit(
+        user_request: $user_request,
+        value: 'foo'
+    );
+
+    $this->assertEquals($user_request->unionTypedValue, 'foo');
+
+    UserRequestsWithUnionTypes::commit(
+        user_request: $user_request,
+        value: 12
+    );
+
+    $this->assertEquals($user_request->unionTypedValue, 12);
+});
+
 class UserRequestState extends State
 {
     public bool $acknowledged = false;
@@ -108,12 +127,33 @@ class UserRequestState extends State
     public bool $processed = false;
 
     public bool $nullable = false;
+
+    public string|int $unionTypedValue = '';
+}
+
+class UserRequestSingletonState extends SingletonState
+{
+    public bool $acknowledged = false;
+
+    public bool $processed = false;
 }
 
 class UserRequestAcknowledged extends Event
 {
     public function __construct(
         public UserRequestState $user_request
+    ) {}
+
+    public function apply()
+    {
+        $this->user_request->acknowledged = true;
+    }
+}
+
+class SingletonUserRequestAcknowledged extends Event
+{
+    public function __construct(
+        public UserRequestSingletonState $user_request
     ) {}
 
     public function apply()
@@ -146,6 +186,19 @@ class UserRequestsWithNullable extends Event
     public function apply()
     {
         $this->user_request1->nullable = true;
+    }
+}
+
+class UserRequestsWithUnionTypes extends Event
+{
+    public function __construct(
+        public UserRequestState $user_request,
+        public string|int $value
+    ) {}
+
+    public function apply()
+    {
+        $this->user_request->unionTypedValue = $this->value;
     }
 }
 

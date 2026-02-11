@@ -4,6 +4,8 @@ namespace Thunk\Verbs\Lifecycle;
 
 use Closure;
 use Illuminate\Contracts\Container\Container;
+use InvalidArgumentException;
+use ReflectionFunctionAbstract;
 use ReflectionMethod;
 use RuntimeException;
 use SplObjectStorage;
@@ -14,17 +16,23 @@ use Thunk\Verbs\Support\Wormhole;
 
 class Hook
 {
-    public static function fromClassMethod(object $target, ReflectionMethod|string $method): static
+    public static function fromClassMethod(string|object $target, ReflectionMethod|string $method): static
     {
+        if (is_string($target) && ! class_exists($target)) {
+            throw new InvalidArgumentException('Hooks can only be registered for objects or classes.');
+        }
+
         if (is_string($method)) {
             $method = new ReflectionMethod($target, $method);
         }
 
         $hook = new static(
-            callback: Closure::fromCallable([$target, $method->getName()]),
-            events: Reflector::getEventParameters($method),
-            states: Reflector::getStateParameters($method),
+            callback: is_string($target)
+                ? fn (...$args) => $method->invokeArgs(app($target), $args)
+                : Closure::fromCallable([$target, $method->getName()]),
+            targets: Reflector::getParameterTypes($method),
             name: $method->getName(),
+            reflection: $method,
         );
 
         return Reflector::applyHookAttributes($method, $hook);
@@ -34,8 +42,7 @@ class Hook
     {
         $hook = new static(
             callback: $callback,
-            events: Reflector::getEventParameters($callback),
-            states: Reflector::getStateParameters($callback),
+            targets: Reflector::getParameterTypes($callback),
         );
 
         return Reflector::applyHookAttributes($callback, $hook);
@@ -43,10 +50,10 @@ class Hook
 
     public function __construct(
         public Closure $callback,
-        public array $events = [],
-        public array $states = [],
+        public array $targets = [],
         public SplObjectStorage $phases = new SplObjectStorage,
         public ?string $name = null,
+        public ?ReflectionFunctionAbstract $reflection = null,
     ) {}
 
     public function forcePhases(Phase ...$phases): static
@@ -70,6 +77,15 @@ class Hook
     public function runsInPhase(Phase $phase): bool
     {
         return isset($this->phases[$phase]) && $this->phases[$phase] === true;
+    }
+
+    public function boot(Container $container, Event $event): bool
+    {
+        if ($this->runsInPhase(Phase::Boot)) {
+            return $this->execute($container, $event) ?? true;
+        }
+
+        throw new RuntimeException('Hook::boot called on a non-boot hook.');
     }
 
     public function validate(Container $container, Event $event): bool
@@ -113,7 +129,12 @@ class Hook
 
     protected function execute(Container $container, Event $event): mixed
     {
-        $resolver = DependencyResolver::for($this->callback, container: $container, event: $event);
+        $resolver = DependencyResolver::for(
+            callback: $this->callback,
+            container: $container,
+            event: $event,
+            reflection: $this->reflection,
+        );
 
         return call_user_func_array($this->callback, $resolver());
     }

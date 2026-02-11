@@ -42,9 +42,31 @@
         ]
     },
     {
+        "title": "Resources",
+        "slug": "resources",
+        "items": [
+            {
+                "title": "Videos",
+                "slug": "videos",
+                "icon": "tv"
+            },
+            {
+                "title": "Articles",
+                "slug": "articles",
+                "icon": "newspaper"
+            }
+        ]
+    },
+    {
         "title": "Examples",
         "slug": "examples",
         "items": [
+            {
+                "title": "Shopping Cart",
+                "slug": "cart",
+                "icon": "shopping-cart",
+                "url": "/examples/cart"
+            },
             {
                 "title": "Board Game",
                 "slug": "monopoly",
@@ -103,27 +125,6 @@
                 "title": "State-first Development",
                 "slug": "state-first-development",
                 "icon": "circle-stack"
-            }
-        ]
-    },
-    {
-        "title": "Packages",
-        "slug": "verbs-packages",
-        "items": [
-            {
-                "title": "Verbs Commands",
-                "slug": "verbs-commands",
-                "icon": "window"
-            },
-            {
-                "title": "Verbs History",
-                "slug": "verbs-history",
-                "icon": "book-open"
-            },
-            {
-                "title": "Verbs Livewire",
-                "slug": "verbs-livewire",
-                "icon": "bolt"
             }
         ]
     }

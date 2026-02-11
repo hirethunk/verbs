@@ -16,6 +16,7 @@ use Thunk\Verbs\Exceptions\ConcurrencyException;
 use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Models\VerbEvent;
 use Thunk\Verbs\Models\VerbStateEvent;
+use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\Serializer;
 
@@ -28,9 +29,8 @@ class EventStore implements StoresEvents
     public function read(
         ?State $state = null,
         Bits|UuidInterface|AbstractUid|int|string|null $after_id = null,
-        bool $singleton = false,
     ): LazyCollection {
-        return $this->readEvents($state, $after_id, $singleton)
+        return $this->readEvents($state, $after_id)
             ->each(fn (VerbEvent $model) => $this->metadata->set($model->event(), $model->metadata()))
             ->map(fn (VerbEvent $model) => $model->event());
     }
@@ -50,12 +50,11 @@ class EventStore implements StoresEvents
     protected function readEvents(
         ?State $state,
         Bits|UuidInterface|AbstractUid|int|string|null $after_id,
-        bool $singleton,
     ): LazyCollection {
         if ($state) {
             return VerbStateEvent::query()
                 ->with('event')
-                ->unless($singleton, fn (Builder $query) => $query->where('state_id', $state->id))
+                ->unless($state instanceof SingletonState, fn (Builder $query) => $query->where('state_id', $state->id))
                 ->where('state_type', $state::class)
                 ->when($after_id, fn (Builder $query) => $query->whereRelation('event', 'id', '>', Id::from($after_id)))
                 ->lazyById()
@@ -146,6 +145,7 @@ class EventStore implements StoresEvents
                 'created_at' => now(),
                 'updated_at' => now(),
             ]))
+            ->values()
             ->all();
     }
 }
