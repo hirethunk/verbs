@@ -79,7 +79,8 @@ class Serializer
         $context = [...$this->context];
 
         if ($target instanceof Event) {
-            $context[AbstractNormalizer::IGNORED_ATTRIBUTES] = ['id'];
+            $ignored = config('verbs.serialize_event_id', false) ? [] : ['id'];
+            $context[AbstractNormalizer::IGNORED_ATTRIBUTES] = $ignored;
         }
 
         if ($target instanceof State) {
