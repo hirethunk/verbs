@@ -30,15 +30,15 @@ it('deserializes event correctly when stored data lacks id by injecting row id',
         ->and($event->id)->toBe($rowId);
 });
 
-it('uses existing id in data when present without overwriting with row id', function () {
+it('overwrites id in data with row id so row remains source of truth', function () {
     $rowId = snowflake_id();
-    $existingId = snowflake_id() + 1; // Different from row
+    $staleIdInData = snowflake_id() + 1;
     $eventType = VerbEventDeserializesWithoutIdInDataTestEvent::class;
 
     VerbEvent::insert([
         'id' => $rowId,
         'type' => $eventType,
-        'data' => ['id' => $existingId], // Data already has id
+        'data' => ['id' => $staleIdInData],
         'metadata' => '{}',
         'created_at' => now(),
     ]);
@@ -46,8 +46,6 @@ it('uses existing id in data when present without overwriting with row id', func
     $verbEvent = VerbEvent::find($rowId);
     $event = $verbEvent->event();
 
-    // array_merge puts our 'id' second, so row id overwrites. The fix uses array_merge($data, ['id' => $this->id])
-    // so we intentionally overwrite any id in data with the row id - the row id is the source of truth.
     expect($event->id)->toBe($rowId);
 });
 
