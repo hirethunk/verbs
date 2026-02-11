@@ -7,6 +7,7 @@ use Illuminate\Support\Collection;
 use InvalidArgumentException;
 use ReflectionAttribute;
 use ReflectionClass;
+use ReflectionNamedType;
 use ReflectionProperty;
 use Thunk\Verbs\Attributes\Autodiscovery\StateDiscoveryAttribute;
 use Thunk\Verbs\Event;
@@ -121,9 +122,9 @@ class EventStateRegistry
         return collect($reflect->getProperties(ReflectionProperty::IS_PUBLIC))
             ->filter(function (ReflectionProperty $property) use ($target) {
                 $propertyType = $property->getType();
-                $propertyTypeName = $propertyType?->getName();
+                $propertyTypeName = $propertyType instanceof ReflectionNamedType ? $propertyType->getName() : null;
 
-                if ($propertyType->allowsNull() && $property->getValue($target) === null) {
+                if ($propertyType && $propertyType->allowsNull() && $property->getValue($target) === null) {
                     return false;
                 }
 
