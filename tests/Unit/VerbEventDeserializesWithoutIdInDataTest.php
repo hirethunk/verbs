@@ -15,7 +15,7 @@ it('deserializes event correctly when stored data lacks id by injecting row id',
     VerbEvent::insert([
         'id' => $rowId,
         'type' => $eventType,
-        'data' => [], // Simulates serialized payload without id (Serializer excludes it)
+        'data' => json_encode([]), // Simulates serialized payload without id (Serializer excludes it)
         'metadata' => '{}',
         'created_at' => now(),
     ]);
@@ -38,7 +38,7 @@ it('overwrites id in data with row id so row remains source of truth', function 
     VerbEvent::insert([
         'id' => $rowId,
         'type' => $eventType,
-        'data' => ['id' => $staleIdInData],
+        'data' => json_encode(['id' => $staleIdInData]),
         'metadata' => '{}',
         'created_at' => now(),
     ]);
