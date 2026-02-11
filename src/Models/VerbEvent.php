@@ -44,9 +44,12 @@ class VerbEvent extends Model
             return $this->event;
         }
 
-        // Serializer excludes Event::id during serialization, but SerializedByVerbs events
-        // require it for deserialization. Inject the row id so the event reconstructs correctly.
-        $data = array_merge($this->data ?? [], ['id' => $this->id]);
+        // When serialize_event_id is false, stored data lacks id but some event types require it.
+        // Inject the row id when missing so those events deserialize correctly (backward compat).
+        $data = $this->data ?? [];
+        if (! array_key_exists('id', $data)) {
+            $data['id'] = $this->id;
+        }
         $this->event = app(Serializer::class)->deserialize($this->type, $data);
 
         app(MetadataManager::class)->setEphemeral($this->event, 'created_at', $this->created_at);
