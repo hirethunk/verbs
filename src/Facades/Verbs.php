@@ -18,6 +18,7 @@ use Thunk\Verbs\Testing\EventStoreFake;
  * @method static Event fire(Event $event)
  * @method static void listen(string|object $listener)
  * @method static void createMetadataUsing(callable $callback)
+ * @method static void resolveHandleReturnUsing(?callable $callback = null)
  * @method static void commitImmediately(bool $commit_immediately = true)
  * @method static EventStoreFake assertCommitted(string|Closure $event, Closure|int|null $callback = null)
  * @method static EventStoreFake assertNotCommitted(string|Closure $event, ?Closure $callback = null)
