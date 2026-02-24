@@ -110,10 +110,8 @@ class VerbsServiceProvider extends PackageServiceProvider
 
             return new PropertyNormalizer(
                 propertyTypeExtractor: new PropertyInfoExtractor(
-                    typeExtractors: [
-                        new PhpDocExtractor,
-                        new ReflectionExtractor,
-                    ]),
+                    typeExtractors: $this->getPropertyTypeExtractors(),
+                ),
                 classDiscriminatorResolver: new ClassDiscriminatorFromClassMetadata(new ClassMetadataFactory($loader)),
             );
         });
@@ -180,5 +178,18 @@ class VerbsServiceProvider extends PackageServiceProvider
         if ($event instanceof JobProcessed) {
             app(AutoCommitManager::class)->commitIfAutoCommitting();
         }
+    }
+
+    protected function getPropertyTypeExtractors(): array
+    {
+        return [
+            ...$this->hasPhpDocExtractorDependency() ? [new PhpDocExtractor] : [],
+            new ReflectionExtractor,
+        ];
+    }
+
+    protected function hasPhpDocExtractorDependency(): bool
+    {
+        return class_exists(PhpDocExtractor::class);
     }
 }

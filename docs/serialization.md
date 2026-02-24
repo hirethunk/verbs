@@ -8,3 +8,9 @@ application. If you need to store more complex data, you may need to add your ow
 which you can do in `config/verbs.php` file. You may also change the
 [default serializer context](https://symfony.com/doc/current/components/serializer.html#context)
 there as well.
+
+For PhpDoc-based type inference (for example `/** @var MyDto[] */` on array properties),
+install `phpdocumentor/reflection-docblock`. Verbs will still work without it, but serializer
+type extraction falls back to reflection-only behavior and PhpDoc collection element types are
+not inferred during deserialization. See also [this PR](https://github.com/hirethunk/verbs/pull/125#issuecomment-2359638427),
+that introduced the PhpDoc-based type inference feature.
