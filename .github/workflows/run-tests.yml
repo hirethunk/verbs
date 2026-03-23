@@ -15,7 +15,7 @@ jobs:
       fail-fast: true
       matrix:
         os: [ ubuntu, windows ]
-        php: [ 8.2, 8.3, 8.4, 8.5 ]
+        php: [ 8.2, 8.3, 8.4 ]
         laravel: [ 13.*, 12.*, 11.*, 10.* ]
         stability: [ stable, lowest ]
         exclude:
@@ -60,7 +60,7 @@ jobs:
       fail-fast: true
       matrix:
         os: [ ubuntu ]
-        php: [ 8.2, 8.3, 8.4, 8.5 ]
+        php: [ 8.2, 8.3, 8.4 ]
         laravel: [ 13.*, 12.*, 11.*, 10.* ]
         stability: [ stable, lowest ]
         exclude:
@@ -118,7 +118,7 @@ jobs:
       fail-fast: true
       matrix:
         os: [ ubuntu ]
-        php: [ 8.2, 8.3, 8.4, 8.5 ]
+        php: [ 8.2, 8.3, 8.4 ]
         laravel: [ 13.*, 12.*, 11.*, 10.* ]
         stability: [ stable, lowest ]
         exclude:
