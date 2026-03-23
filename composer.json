@@ -28,7 +28,7 @@
     },
     "require-dev": {
         "brick/money": ">=0.8.1",
-        "internachi/modular": "^3.0.2",
+        "internachi/modular": "^2.3.0|^3.0.2",
         "laravel/pint": "^1.13",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^7.10|^8.1",
