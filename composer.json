@@ -37,7 +37,6 @@
         "pestphp/pest": "^2.24|^3.7|^4.4",
         "pestphp/pest-plugin-arch": "^2.4|^3.0|^v4.0",
         "pestphp/pest-plugin-laravel": "^2.2|^3.1|^4.1",
-        "pestphp/pest-plugin-watch": "^2.0|^3.0",
         "phpunit/phpunit": "^10.5|^11.5.3|^12.5",
         "projektgopher/whisky": "^0.5.1|^0.7"
     },
