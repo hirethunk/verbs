@@ -40,7 +40,7 @@ class InMemoryCache implements ReadableCache, WritableCache
         return $state;
     }
 
-    public function has(string $class, string $id): bool
+    public function has(string $class, ?string $id = null): bool
     {
         $key = $this->key($class, $id);
 

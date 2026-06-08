@@ -5,13 +5,13 @@ use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\Phases;
 use Thunk\Verbs\State;
 use Thunk\Verbs\State\Cache\InMemoryCache;
-use Thunk\Verbs\State\StateManager;
+use Thunk\Verbs\State\Scope;
 use Thunk\Verbs\Support\Replay;
 
 it('can rebuild state from events', function () {
     $events = collect(array_fill(0, 10, ReplayClassTestEvent::make(state: 1)->event));
     $replay = new Replay(
-        states: new StateManager(
+        states: new Scope(
             cache: new InMemoryCache
         ),
         events: $events,
@@ -23,7 +23,7 @@ it('can rebuild state from events', function () {
     expect($replay->states->cache->values())
         ->toHaveCount(1);
 
-    expect($replay->states->load('1', ReplayClassTestState::class)->count)
+    expect($replay->states->load(ReplayClassTestState::class, '1')->count)
         ->toBe(10);
 });
 
@@ -31,7 +31,7 @@ it('can cache and retrieve state across events', function () {
     $events = collect(array_fill(0, 10, ReplayClassTestEvent::make(state: 1)->event));
 
     $replay = new Replay(
-        states: new StateManager(
+        states: new Scope(
             cache: new InMemoryCache
         ),
         events: $events,

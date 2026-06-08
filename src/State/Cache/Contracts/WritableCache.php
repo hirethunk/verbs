@@ -8,5 +8,9 @@ interface WritableCache
 {
     public function put(State $state): State;
 
+    public function willPrune(): bool;
+
+    public function prune(): static;
+
     public function reset(): static;
 }

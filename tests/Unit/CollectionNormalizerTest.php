@@ -9,7 +9,7 @@ use Symfony\Component\Serializer\Normalizer\PropertyNormalizer;
 use Symfony\Component\Serializer\Serializer as SymfonySerializer;
 use Thunk\Verbs\SerializedByVerbs;
 use Thunk\Verbs\State;
-use Thunk\Verbs\State\StateManager;
+use Thunk\Verbs\State\Scope;
 use Thunk\Verbs\Support\Normalization\CarbonNormalizer;
 use Thunk\Verbs\Support\Normalization\CollectionNormalizer;
 use Thunk\Verbs\Support\Normalization\NormalizeToPropertiesAndClassName;
@@ -130,7 +130,7 @@ it('can normalize a collection with keys and restore key order', function () {
 });
 
 it('can normalize a collection all of states', function () {
-    $manager = app(StateManager::class);
+    $manager = app(Scope::class);
 
     $serializer = new SymfonySerializer(
         normalizers: [

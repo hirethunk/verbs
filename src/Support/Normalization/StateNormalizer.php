@@ -6,7 +6,7 @@ use InvalidArgumentException;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Thunk\Verbs\State;
-use Thunk\Verbs\State\StateManager;
+use Thunk\Verbs\State\Scope;
 use Thunk\Verbs\Support\Serializer;
 
 class StateNormalizer implements DenormalizerInterface, NormalizerInterface
@@ -27,7 +27,7 @@ class StateNormalizer implements DenormalizerInterface, NormalizerInterface
         // $state->id = $data;
         // $state->__verbs_initialized = false;
 
-        return app(StateManager::class)->load($type, $data);
+        return app(Scope::class)->load($type, $data);
     }
 
     public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool

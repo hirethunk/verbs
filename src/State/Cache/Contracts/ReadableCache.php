@@ -8,5 +8,8 @@ interface ReadableCache
 {
     public function get(string $class, ?string $id = null): ?State;
 
-    public function has(string $class, string $id): bool;
+    public function has(string $class, ?string $id = null): bool;
+
+    /** @return State[] */
+    public function values(): array;
 }

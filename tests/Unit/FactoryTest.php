@@ -3,7 +3,7 @@
 use Illuminate\Support\Collection;
 use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\State;
-use Thunk\Verbs\State\StateManager;
+use Thunk\Verbs\State\Scope;
 use Thunk\Verbs\StateFactory;
 
 test('a factory can create a state', function () {
@@ -61,7 +61,7 @@ test('it can create a singleton state', function () {
 
     expect($singleton_state->id)->not->toBeNull();
 
-    $retreived_state = app(StateManager::class)->singleton(FactoryTestSingletonState::class);
+    $retreived_state = app(Scope::class)->singleton(FactoryTestSingletonState::class);
 
     expect($retreived_state)->toBe($singleton_state);
 });

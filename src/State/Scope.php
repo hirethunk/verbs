@@ -12,11 +12,33 @@ use Thunk\Verbs\State\Cache\Contracts\ReadableCache;
 use Thunk\Verbs\State\Cache\Contracts\WritableCache;
 use Thunk\Verbs\Support\StateCollection;
 
-class StateManager
+class Scope
 {
+    public bool $replaying = false;
+
     public function __construct(
         public ReadableCache&WritableCache $cache,
     ) {}
+
+    /**
+     * Run the given callback with this scope bound as the "current" scope, so
+     * that any states loaded during the callback resolve against it. The prior
+     * scope is restored afterward, even if the callback throws. Because each
+     * call captures the scope it replaced, nesting is handled by the call
+     * stack—no separate scope manager is required.
+     */
+    public function run(callable $callback): mixed
+    {
+        $previous = app(Scope::class);
+
+        try {
+            app()->instance(Scope::class, $this);
+
+            return $callback();
+        } finally {
+            app()->instance(Scope::class, $previous);
+        }
+    }
 
     public function register(State $state): State
     {
@@ -35,7 +57,17 @@ class StateManager
     {
         return is_iterable($id)
             ? $this->loadMany($id, $type)
-            : $this->loadOne($id, $type);
+            : $this->loadOne($type, $id);
+    }
+
+    /**
+     * @template TState of State
+     *
+     * @param  class-string<TState>  $type
+     */
+    public function singleton(string $type): State
+    {
+        return $this->load($type, null);
     }
 
     /**
@@ -50,7 +82,7 @@ class StateManager
             return $existing;
         }
 
-        // State::__construct() auto-registers the state with the StateManager,
+        // State::__construct() auto-registers the state with the Scope,
         // so we need to skip the constructor until we've already set the ID.
         /** @var State $state */
         $state = (new ReflectionClass($type))->newInstanceWithoutConstructor();
@@ -60,15 +92,35 @@ class StateManager
         return $this->cache->put($state);
     }
 
-    // @todo - make persistent caches
-    // public function persist(): bool
-    // {
-    //     return $this->cache->persist($this->states->values());
-    // }
+    public function setReplaying(bool $replaying): static
+    {
+        $this->replaying = $replaying;
+
+        return $this;
+    }
+
+    /** @return State[] */
+    public function all(): array
+    {
+        return array_values($this->cache->values());
+    }
+
+    public function willPrune(): bool
+    {
+        return $this->cache->willPrune();
+    }
+
+    public function prune(): static
+    {
+        $this->cache->prune();
+
+        return $this;
+    }
 
     public function reset(): static
     {
         $this->cache->reset();
+        $this->replaying = false;
 
         return $this;
     }
@@ -82,7 +134,7 @@ class StateManager
             return $state;
         }
 
-        return $this->make($id, $type);
+        return $this->make($type, $id);
     }
 
     /** @param  class-string<State>  $type */
@@ -92,7 +144,7 @@ class StateManager
 
         return StateCollection::make(
             // @todo - add support for getMany() in caches for perf
-            $ids->map(fn ($id) => $this->cache->get($type, $id)),
+            $ids->map(fn ($id) => $this->loadOne($type, $id)),
         );
     }
 }

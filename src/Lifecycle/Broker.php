@@ -5,10 +5,11 @@ namespace Thunk\Verbs\Lifecycle;
 use Thunk\Verbs\CommitsImmediately;
 use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Contracts\StoresEvents;
+use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\EventNotValid;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
-use Thunk\Verbs\State\StateManager;
+use Thunk\Verbs\State\Scope;
 
 class Broker implements BrokersEvents
 {
@@ -20,7 +21,8 @@ class Broker implements BrokersEvents
         protected Dispatcher $dispatcher,
         protected MetadataManager $metadata,
         protected EventQueue $queue,
-        protected StateManager $states,
+        protected Scope $states,
+        protected StoresSnapshots $snapshots,
     ) {}
 
     public function fireIfValid(Event $event): ?Event
@@ -60,9 +62,8 @@ class Broker implements BrokersEvents
             return true;
         }
 
-        // FIXME:
-        // $this->states->writeSnapshots();
-        // $this->states->prune();
+        $this->writeSnapshots();
+        $this->states->prune();
 
         foreach ($events as $event) {
             $this->metadata->setLastResults($event, $this->dispatcher->handle($event));
@@ -77,6 +78,7 @@ class Broker implements BrokersEvents
 
         try {
             $this->states->reset();
+            $this->snapshots->reset();
 
             $iteration = 0;
 
@@ -96,16 +98,21 @@ class Broker implements BrokersEvents
                     }
 
                     if ($iteration++ % 500 === 0 && $this->states->willPrune()) {
-                        $this->states->writeSnapshots();
+                        $this->writeSnapshots();
                         $this->states->prune();
                     }
                 });
         } finally {
-            $this->states->writeSnapshots();
+            $this->writeSnapshots();
             $this->states->prune();
             $this->states->setReplaying(false);
             $this->is_replaying = false;
         }
+    }
+
+    protected function writeSnapshots(): bool
+    {
+        return $this->snapshots->write($this->states->all());
     }
 
     public function listen(object|string $listener)

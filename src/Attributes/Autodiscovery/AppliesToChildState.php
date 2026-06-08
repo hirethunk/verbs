@@ -6,7 +6,7 @@ use Attribute;
 use InvalidArgumentException;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\State;
-use Thunk\Verbs\State\StateManager;
+use Thunk\Verbs\State\Scope;
 
 #[Attribute(Attribute::TARGET_CLASS)]
 class AppliesToChildState extends StateDiscoveryAttribute
@@ -31,7 +31,7 @@ class AppliesToChildState extends StateDiscoveryAttribute
         return [$this->parent_type];
     }
 
-    public function discoverState(Event $event, StateManager $manager): State
+    public function discoverState(Event $event, Scope $manager): State
     {
         $parent = $this->discovered->first(fn (State $state) => $state instanceof $this->parent_type);
 

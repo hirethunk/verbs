@@ -4,14 +4,14 @@ use Thunk\Verbs\Attributes\Autodiscovery\StateId;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Models\VerbSnapshot;
 use Thunk\Verbs\State;
-use Thunk\Verbs\State\StateManager;
+use Thunk\Verbs\State\Scope;
 
 /*
  * The Problem(s)
  *
  * FIRST PROBLEM:
  * - We try to load state1, but we don't have an up-to-date snapshot
- * - StateManager::load tries to reconstitute state from events
+ * - Scope::load tries to reconstitute state from events
  * - One of those Event::apply methods load state2
  * - Best case scenario: we reconstitute state2 before continuing
  * - Worst case scenario: reconstituting state2 tries to reconstitute state1, and we're in an infinite loop
@@ -24,7 +24,7 @@ use Thunk\Verbs\State\StateManager;
  *
  * SECOND PROBLEM:
  * - We try to load state1, but we don't have an up-to-date snapshot
- * - StateManager::load tries to reconstitute state from events
+ * - Scope::load tries to reconstitute state from events
  * - One of those Event::apply methods requires state1 and state2, so we need to load state2
  * - Reconstituting state2 re-runs the same apply method on state2 before also running it on state1
  * - Double-apply happens
@@ -56,7 +56,7 @@ test('scenario 1', function () {
         ->and($state2->counter)->toBe(3);
 
     Verbs::commit();
-    app(StateManager::class)->reset();
+    app(Scope::class)->reset();
 
     $state1 = StateReconstitutionTestState1::load($state1_id);
     $state2 = StateReconstitutionTestState2::load($state2_id);
@@ -74,8 +74,6 @@ test('partially up-to-date snapshots', function () {
     $event3 = StateReconstitutionTestEvent1::fire(state1_id: 1, state2_id: 2); // 1=2, 2=3
     $event4 = StateReconstitutionTestEvent2::fire(state2_id: 2);               // 1=2, 2=4
     $event5 = StateReconstitutionTestEvent1::fire(state1_id: 1, state2_id: 2); // 1=6, 2=5
-
-    dump([$event1->id, $event2->id, $event3->id, $event4->id, $event5->id]);
 
     Verbs::commit();
 
@@ -99,13 +97,10 @@ test('partially up-to-date snapshots', function () {
         'last_event_id' => $event3->id,
     ]);
 
-    app(StateManager::class)->reset();
+    app(Scope::class)->reset();
 
     $state1 = StateReconstitutionTestState1::load(1);
     $state2 = StateReconstitutionTestState2::load(2);
-
-    dump($state1);
-    dump(VerbSnapshot::all()->toArray());
 
     expect($state1->counter)->toBe(6);
     expect($state2->counter)->toBe(5);
@@ -128,7 +123,7 @@ test('partially deleted snapshots', function () {
 
     VerbSnapshot::query()->where('state_id', 1)->delete();
 
-    app(StateManager::class)->reset();
+    app(Scope::class)->reset();
 
     $state1 = StateReconstitutionTestState1::load(1);
     $state2 = StateReconstitutionTestState2::load(2);
@@ -164,14 +159,10 @@ test('partially up-to-date, but out of sync snapshots', function () {
         'last_event_id' => $event2->id,
     ]);
 
-    app(StateManager::class)->reset();
-
-    // dump('---- RESET ----');
+    app(Scope::class)->reset();
 
     $state1 = StateReconstitutionTestState1::load(1);
     $state2 = StateReconstitutionTestState2::load(2);
-
-    dump(app(StateManager::class));
 
     expect($state1->counter)->toBe(6);
     expect($state2->counter)->toBe(5);
@@ -197,9 +188,7 @@ class StateReconstitutionTestEvent1 extends \Thunk\Verbs\Event
 
     public function apply(StateReconstitutionTestState1 $state1, StateReconstitutionTestState2 $state2): void
     {
-        dump("[event 1] incrementing \$state1->counter from {$state1->counter} to ({$state1->counter} + {$state2->counter})");
         $state1->counter = $state1->counter + $state2->counter;
-        dump("[event 1] incrementing \$state2->counter from {$state2->counter} to \$state2->counter++");
         $state2->counter++;
     }
 }
@@ -211,7 +200,6 @@ class StateReconstitutionTestEvent2 extends \Thunk\Verbs\Event
 
     public function apply(StateReconstitutionTestState2 $state2): void
     {
-        dump("[event 2] incrementing \$state2->counter from {$state2->counter} to \$state2->counter++");
         $state2->counter++;
     }
 }

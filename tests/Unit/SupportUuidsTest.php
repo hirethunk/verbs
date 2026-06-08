@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\Str;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\State;
-use Thunk\Verbs\State\StateManager;
+use Thunk\Verbs\State\Scope;
 use Thunk\Verbs\Support\IdManager;
 
 use function Pest\Laravel\artisan;
@@ -49,7 +49,7 @@ it('loads states correctly using uuids when the snapshots table has been removed
         state: $state,
     );
 
-    app(StateManager::class)->reset();
+    app(Scope::class)->reset();
 
     $state = UuidState::load($uuid);
 

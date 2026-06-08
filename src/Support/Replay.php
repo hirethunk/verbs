@@ -5,29 +5,23 @@ namespace Thunk\Verbs\Support;
 use Illuminate\Support\Enumerable;
 use Thunk\Verbs\Lifecycle\Lifecycle;
 use Thunk\Verbs\Lifecycle\Phases;
-use Thunk\Verbs\State\StateManager;
+use Thunk\Verbs\State\Scope;
 
 class Replay
 {
     public function __construct(
-        public StateManager $states,
+        public Scope $states,
         public Enumerable $events,
         public Phases $phases,
     ) {}
 
     public function handle(): static
     {
-        $global_registry = app(StateManager::class);
-
-        try {
-            app()->instance(StateManager::class, $this->states);
-
+        $this->states->run(function () {
             foreach ($this->events as $event) {
                 Lifecycle::run($event, $this->phases);
             }
-        } finally {
-            app()->instance(StateManager::class, $global_registry);
-        }
+        });
 
         return $this;
     }

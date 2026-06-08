@@ -15,28 +15,28 @@ beforeEach(function () {
 });
 
 test('loadOrFail triggers an exception if state does not exist', function () {
-    StateManagerTestState::loadOrFail(1);
+    ScopeTestState::loadOrFail(1);
 })->throws(StateNotFoundException::class);
 
 test('load does not trigger an exception if state does not exist', function () {
-    expect(StateManagerTestState::load(1))
-        ->toBeInstanceOf(StateManagerTestState::class)
+    expect(ScopeTestState::load(1))
+        ->toBeInstanceOf(ScopeTestState::class)
         ->last_event_id->toBeNull();
 });
 
 test('snapshots are not stored for states that have no events', function () {
-    StateManagerTestState::load(1);
+    ScopeTestState::load(1);
     Verbs::commit();
 
     app(StoresSnapshots::class)->assertNothingWritten();
 });
 
 test('it calls the state constructor on make', function () {
-    $state = StateManagerTestState::make();
+    $state = ScopeTestState::make();
     expect($state->constructed)->toBeTrue();
 });
 
-class StateManagerTestState extends State
+class ScopeTestState extends State
 {
     public bool $constructed = false;
 
