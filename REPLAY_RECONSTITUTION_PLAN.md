@@ -1,8 +1,94 @@
 # Replay & State Reconstitution — Investigation and Refactor Plan
 
-_Branch: `state-reconstructor`. Investigation only — no production code was changed. Every claim is grounded in code on this branch (file:line). Where the analysis is uncertain it says so and defers to you as an open question._
+_Branch: `state-reconstructor`. **This refactor has now been implemented — see "✅ Implementation outcome (completed)" immediately below for what was actually built and how it diverged from the original plan.** The original investigation and staged plan are retained beneath the outcome for traceability; every claim in them is grounded in code as it stood at investigation time (file:line)._
 
 > **Verified baseline (run during this investigation):** `vendor/bin/pest` over the four pinning test files reports **7 failed, 1 risky, 3 passed**. The replay path fatals at `src/Lifecycle/Broker.php:85` — `Call to undefined method Thunk\Verbs\State\StateManager::writeSnapshots()` (also `setReplaying()`) — because `Broker::replay()` still calls methods that lived on the deleted `Lifecycle/StateManager` and were not re-implemented on the new `State/StateManager`. `StateReconstitutionTest` and `ReplayCommandTest` fail; `AggregateStateSummaryTest` and `ReplayClassTest` pass. The branch is mid-surgery and does not currently run reconstitution or replay end-to-end. This is the starting point Stage 1 restores.
+
+---
+
+## ✅ Implementation outcome (completed)
+
+_This section reconciles the plan below with what was actually built on `state-reconstructor`. The investigation and staged plan are retained beneath it for traceability. Where the implementation diverged from the plan, the divergence and its rationale are called out._
+
+**Status:** The reconstitution issue is resolved. The full suite is **139 passing / 1 risky** (the risky test is the pre-existing assertion-less `ReplayClassTest > it can cache and retrieve state across events`). The four `StateReconstitutionTest` scenarios, all three `ReplayCommandTest` cases, `ReplayClassTest`, `ScopeTest`, and `FactoryTest` (singletons) are green. One example test (`CartTest > it does not allow checking out if there is no stock`) is **pre-existing flaky** — see the note at the end.
+
+### The core design: a first-class, windowed `Scope`
+
+The biggest divergence from the plan is conceptual and was decided with the owner. Rather than keep the implicit "whichever `StateManager` is bound" identity space, the manager **was renamed to `Scope`** and the two-identity-space idea was made first-class but lightweight:
+
+- **`State\Scope`** (was `State\StateManager`) — a pure identity space: a cache, a `replaying` flag, and a `run(callable)` helper that binds itself as the current scope for a dynamic extent and restores the prior binding in a `finally`. **Nesting rides the PHP call stack**, so there is deliberately **no `ScopeManager` and no scope stack object** — the "reentrancy bug" the plan worried about was really just `StateReconstructor` hand-rolling an incomplete version of this dance. `Replay` now delegates to `Scope::run()`.
+- **`State\ReconstitutingScope`** (was `ReconstitutingStateManager`) — `extends Scope`; the request-bound scope. On a cache miss it hydrates from snapshot (or blank), checks staleness, and if stale rebuilds the connected component. Bound as `Scope::class` in the container (the binding regression is fixed).
+- The **singleton invariant was relaxed to "one instance per `(class,id)` _per scope_."** "GameState 1 as of now" and "GameState 1 as of E" are different scopes, so they no longer collide.
+
+### How point-in-time correctness is actually achieved (divergence from INV-1 plan)
+
+The plan's headline fix was to thread an `event_id <= ceiling` upper bound through `AggregateStateSummary` (Stage 3). **That turned out to be unnecessary for the load path and was not implemented.** Reconstitution replays the *entire connected component in id order from a common blank baseline* into an isolated ephemeral `Scope` (`Phases(Apply)` only). Because every related state advances **in lockstep from the same baseline**, a state read inside another state's `apply()` is never ahead of the event being applied — point-in-time correctness falls out **structurally**, with no per-event ceiling and no `EventStore` "as-of" read. This is a strictly smaller, cleaner change than the plan anticipated. (A ceiling/`asOf` would only be needed for *single-state* time-travel queries, which are out of scope; the `Scope` is the natural future home for a `[earliest, latest]` window if that is ever wanted.)
+
+### Harvest / merge-back policy (resolves Q1)
+
+Chosen: **update the explicitly-requested states in place** (preserving the exact instance returned to the caller) and **insert incidentally-discovered related states only if absent** — a live singleton the caller already holds is **never clobbered**. Implemented in `ReconstitutingScope::reconstitute()`/`merge()`.
+
+### Durability re-homed to the `Broker` (pulled forward from Stage 6)
+
+Snapshot writing had to be restored earlier than the plan staged it, because `StateReconstitutionTest` queries `VerbSnapshot` immediately after `Verbs::commit()`. The base `Scope` stays a pure cache facade; **the `Broker` now owns the snapshot/prune cadence** (it injects `StoresSnapshots`, writes + prunes on `commit()` after the empty-queue early return, and writes/truncates/prunes around `replay()`). `setReplaying`/`prune`/`willPrune`/`all`/`singleton` were re-homed onto `Scope`.
+
+### Invariant status
+
+| ID | Plan status | Now | How |
+|----|-------------|-----|-----|
+| INV-1 temporal bound | violated | **held (structurally)** | lockstep component replay from a blank baseline — no ceiling needed |
+| INV-2 ordering | partial | **held** | `AggregateStateSummary` sorts ascending; events materialized via `lazyById` |
+| INV-3 singleton identity | partial | **held (per scope)** | invariant relaxed to per-scope; harvest never clobbers a live singleton |
+| INV-4 identity-space separation | violated | **held** | ephemeral `Scope` + defined absent-only/update-in-place harvest |
+| INV-5 reconstitution completeness | violated | **held** | `ReconstitutingScope` bound; hydrate → staleness check → component replay |
+| INV-6 replay/reconstitution coordination | violated | **held** | `replaying` flag skips reconstitution during replay; `Broker.is_replaying` drives `unlessReplaying()` |
+| INV-7 in-flight pin | unguarded | **deferred** | see follow-ups |
+| INV-8 durability-before-eviction | violated | **held for replay** | `Broker` writes snapshots before `prune()`; evicted states reload from snapshot (incl. during replay) |
+| INV-9 bounded memory | violated | **held for replay** | `prune()`/`willPrune()` cadence restored in `Broker` |
+| INV-10 stale-snapshot detection | TODO | **held** | `ReconstitutingScope::isStale()` (`max(event_id)` vs `last_event_id`, singleton-aware) |
+| INV-11 validate-on-fire | violated | **n/a (already enforced)** | validation runs via `Guards` (verified by passing `CartTest` limit case); `Phases`/`Lifecycle` left untouched |
+
+### Stage status
+
+- **Stage 1 (run again + mechanical):** done — arg-order transposition fixed; `Broker` no longer calls deleted methods; dead `StateReconstructor` deleted; `singleton()` restored.
+- **Stage 2 (cheap invariants):** ordering held via discovery; the **double-registration guard was intentionally not added** — the harvest copies in place and never re-`put`s a different instance under a live key, so the guard isn't needed and adding the throw risked latent flows. Noted as an optional hardening.
+- **Stage 3 (temporal ceiling + as-of read):** **not needed** — superseded by the structural lockstep approach (see above).
+- **Stage 4 (wire reconstitution + harvest + bind):** done — this is the heart; all four scenarios pass.
+- **Stage 5 (replay coordination + Validate):** done for INV-6; `verbs:replay` continues to drive `Broker::replay` (kept as a second caller of the same engine, per Q3 option a) — not re-routed through `Replay`, since it already works and re-routing changed snapshot/time-sensitive ordering for no benefit. Validate is already enforced via `Guards` (INV-11).
+- **Stage 6 (memory/durability tier):** partially done — `prune()`/`writeSnapshots()` cadence and snapshot-reload-on-eviction are restored (bounded replay memory). The full `MultiCache` persistent tier with **in-flight pin/refcount and write-before-evict at capacity (INV-7) is deferred** as a clean follow-up; it is not required to fix reconstitution.
+
+### Adversarial review (multi-agent) — fixes applied
+
+A 4-dimension find-then-verify review surfaced these real issues, all fixed:
+1. **Replay eviction reloaded a blank state** instead of the pre-prune snapshot (regression vs `main`). Fixed: the replay load path now hydrates from snapshots on a miss (skipping only reconstitution). Pinned by new `tests/Feature/ReplayEvictionTest.php`.
+2. **Harvest could return a stale instance / merge into null.** Fixed: harvest now merges into the exact requested instances via a keyed map.
+3. **`isStale()` was not singleton-aware.** Fixed: singletons matched by type only, mirroring `EventStore::readEvents`.
+4. **`setReplaying(true)` redundantly inside the replay loop.** Fixed: hoisted before the loop.
+
+Dismissed (verified non-issues / unchanged from `main`): commit writes snapshots before handlers (matches `main`; recursion re-writes after handler-fired events), `SnapshotStore::write` transaction atomicity (pre-existing, unchanged).
+
+### Open questions resolved
+
+- **Q1 harvest policy:** (a) absent-only + update-requested-in-place. ✅
+- **Q2 ceiling off-by-one:** moot — no ceiling; lockstep replay from a shared blank baseline applies each event once to each of its states. ✅
+- **Q3 replay path:** (a) two callers of the shared engine; cadence stays in `Broker`. ✅
+- **Q4 in-flight pin:** deferred (INV-7) — not required for reconstitution. ⏳
+- **Q5 Validate phase:** validation already runs via `Guards`; no change needed. ✅
+- **Q6 `StateInstanceCache`:** now dead (its only user, `StateReconstructor`, was deleted) but **left in place with its test** to minimize churn; safe to delete in a follow-up. ⏳
+
+### Follow-ups (deliberately out of scope here)
+
+- Full `MultiCache` persistent tier: in-flight pin/refcount + write-before-evict at capacity (INV-7), for the 10M-event goal.
+- Optional: restore the different-instance double-registration guard in the cache (INV-3 hardening).
+- Singleton reconstitution when a singleton has events but **no** snapshot (rebuild-from-events): `isStale` is now singleton-aware, but `AggregateStateSummary` discovery still matches by `state_id`; this edge has no test and singletons are snapshotted on every commit.
+- Delete the now-dead `Support\StateInstanceCache` + `StateCacheTest`.
+- Pre-existing flaky `CartTest` (below).
+
+### Note on the pre-existing flaky Cart test
+
+`CartTest > it does not allow checking out if there is no stock` intermittently fails with a `verb_events.id`/`verb_state_events.id` unique-constraint violation. This is **not** a reconstitution regression — it reproduces on `main`. Root cause: the test mixes **real** wall-clock time for early events (`Date::setTestNow()` with no argument clears the mock) with a frozen `+11s` for the last event; the `glhd/bits` snowflake sequence resolver derives its sequence from a mockable-time-TTL'd array-cache key, so the forward time jump expires the real-millisecond sequence bucket and a post-jump event landing in the same real millisecond gets its sequence reset → a duplicate snowflake. The reconstitution work is simply *faster* (fewer queries for cache-fresh states), which widened the timing window. The three affected Cart tests were given a fixed start time (`Date::setTestNow('2024-01-01 12:00:00')`), which preserves the hold-expiry intent and reduced the flake rate to `main`'s baseline; a complete fix requires wiring the `glhd/bits` clock to Carbon's mockable clock, which is out of scope for this refactor.
+
+---
 
 ## Table of contents
 1. Problem statement

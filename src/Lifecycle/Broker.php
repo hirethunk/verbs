@@ -78,14 +78,13 @@ class Broker implements BrokersEvents
 
         try {
             $this->states->reset();
+            $this->states->setReplaying(true);
             $this->snapshots->reset();
 
             $iteration = 0;
 
             app(StoresEvents::class)->read()
                 ->each(function (Event $event) use ($beforeEach, $afterEach, &$iteration) {
-                    $this->states->setReplaying(true);
-
                     if ($beforeEach) {
                         $beforeEach($event);
                     }
