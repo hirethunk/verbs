@@ -73,9 +73,17 @@ class ReconstitutingScope extends Scope
 
     protected function fromStorage(string $type, Bits|UuidInterface|AbstractUid|int|string|null $id): State
     {
-        $snapshot = $id === null
-            ? $this->snapshots->loadSingleton($type)
-            : $this->snapshots->load(Id::from($id), $type);
+        // Singleton-ness is a property of the *type*, not of whether an id was
+        // passed—keying off a null id would route a keyed state loaded with a
+        // null key into loadSingleton(). A keyed state with no id falls through
+        // to make(), which fails loudly on the missing key.
+        if (is_a($type, SingletonState::class, true)) {
+            $snapshot = $this->snapshots->loadSingleton($type);
+        } else {
+            $snapshot = Id::tryFrom($id) === null
+                ? null
+                : $this->snapshots->load(Id::from($id), $type);
+        }
 
         return $snapshot instanceof State
             ? $this->cache->put($snapshot)
@@ -149,15 +157,31 @@ class ReconstitutingScope extends Scope
             phases: new Phases(Phase::Apply),
         ))->handle();
 
-        $requested = $states->keyBy(fn (State $state) => $state::class.':'.$state->id);
+        $requested = $states->keyBy($this->identityKey(...));
 
         foreach ($rebuilt->all() as $state) {
-            if ($live = $requested->get($state::class.':'.$state->id)) {
+            if ($live = $requested->get($this->identityKey($state))) {
                 $this->merge($state, $live);
-            } elseif ($this->cache->get($state::class, $state->id) === null) {
+            } elseif ($this->cache->get($state::class, $this->cacheId($state)) === null) {
                 $this->cache->put($state);
             }
         }
+    }
+
+    /**
+     * A singleton is identified by type, not id (its in-memory id is incidental
+     * and differs between the live scope and a blank rebuild scope), so we key it
+     * the same way the cache does—otherwise a rebuilt singleton would never match
+     * the live one and would clobber it under a divergent id.
+     */
+    protected function identityKey(State $state): string
+    {
+        return $state::class.':'.$this->cacheId($state);
+    }
+
+    protected function cacheId(State $state): int|string|null
+    {
+        return $state instanceof SingletonState ? null : $state->id;
     }
 
     protected function merge(State $from, State $into): void

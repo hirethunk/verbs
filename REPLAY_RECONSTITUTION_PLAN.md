@@ -67,6 +67,18 @@ A 4-dimension find-then-verify review surfaced these real issues, all fixed:
 
 Dismissed (verified non-issues / unchanged from `main`): commit writes snapshots before handlers (matches `main`; recursion re-writes after handler-fired events), `SnapshotStore::write` transaction atomicity (pre-existing, unchanged).
 
+### Second adversarial pass (6-dimension) — singleton reconstitution fixed
+
+A second, deeper find-then-verify review (6 probe dimensions, each independently reproducing with a throwaway test, then independently refuted) **confirmed INV-1 / lockstep is structurally solid** (verified with 3-state chains and read-before-write probes) and that the replay/eviction, ordering, durability, and Validate-via-`Guards` claims all hold. It found **one untested root cause with three faces — singleton reconstitution** — now fixed:
+
+1. **A blank singleton is created with a *random* snowflake id** (`Scope::make` → `Id::tryFrom(null) ?? snowflake_id()`), but a singleton's identity is its *type*. Two places still keyed off the id:
+   - `AggregateStateSummary::addConstraint` pinned exact `state_id` → a singleton with **no snapshot** discovered zero events and reconstituted to a blank `0`. **Fixed:** match singletons by type only, mirroring `EventStore::readEvents`.
+   - The harvest in `ReconstitutingScope::reconstitute()` keyed by `class:id` → the rebuilt singleton (fresh random id) never matched the requested/live singleton, so it returned the **stale** value and then **clobbered the live singleton under a divergent id** → a second `verb_snapshots` row on the next commit → permanent `StateIsNotSingletonException`. **Fixed:** harvest keys singletons by type (`class:null`), so the rebuild merges in place and the absent-only guard correctly recognises a live singleton.
+2. **`ReconstitutingScope::fromStorage` used `$id === null` as a proxy for "is singleton."** **Fixed:** detect singleton-ness by type; a keyed state loaded with a null id now falls through to `make()`.
+3. **`Scope::make` silently fabricated a random-id state for a null non-singleton id** (lost guard vs `main`, which threw). **Fixed:** `make()` throws `InvalidArgumentException` for a null id unless the type is a `SingletonState`.
+
+Pinned by new `tests/Unit/SingletonReconstitutionTest.php` (stale-snapshot, no-snapshot, and incidental-component-never-clobbers-a-live-singleton) and a null-id guard case in `ScopeTest`. Full suite: **143 passing / 1 risky**.
+
 ### Open questions resolved
 
 - **Q1 harvest policy:** (a) absent-only + update-requested-in-place. ✅
@@ -80,7 +92,7 @@ Dismissed (verified non-issues / unchanged from `main`): commit writes snapshots
 
 - Full `MultiCache` persistent tier: in-flight pin/refcount + write-before-evict at capacity (INV-7), for the 10M-event goal.
 - Optional: restore the different-instance double-registration guard in the cache (INV-3 hardening).
-- Singleton reconstitution when a singleton has events but **no** snapshot (rebuild-from-events): `isStale` is now singleton-aware, but `AggregateStateSummary` discovery still matches by `state_id`; this edge has no test and singletons are snapshotted on every commit.
+- ~~Singleton reconstitution when a singleton has events but **no** snapshot~~ — **done** (see "Second adversarial pass" above): `AggregateStateSummary` discovery and the harvest are now singleton-aware, pinned by `SingletonReconstitutionTest`.
 - Delete the now-dead `Support\StateInstanceCache` + `StateCacheTest`.
 - Pre-existing flaky `CartTest` (below).
 

@@ -7,6 +7,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Enumerable;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Models\VerbStateEvent;
+use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\State;
 use Thunk\Verbs\State\StateIdentity;
 
@@ -91,7 +92,14 @@ class AggregateStateSummary
     protected function addConstraint(StateIdentity $state, Builder $query): Builder
     {
         $query->where('state_type', '=', $state->state_type);
-        $query->where('state_id', '=', $state->state_id);
+
+        // A singleton's identity is its type—its events are stored and read by
+        // type alone (see EventStore::readEvents), so constraining by a specific
+        // state_id here would miss them (e.g. when the seed is a blank singleton
+        // with a freshly-minted id and no snapshot to anchor the real one).
+        if (! is_a($state->state_type, SingletonState::class, true)) {
+            $query->where('state_id', '=', $state->state_id);
+        }
 
         return $query;
     }

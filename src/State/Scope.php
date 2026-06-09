@@ -3,10 +3,12 @@
 namespace Thunk\Verbs\State;
 
 use Glhd\Bits\Bits;
+use InvalidArgumentException;
 use Ramsey\Uuid\UuidInterface;
 use ReflectionClass;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Facades\Id;
+use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\State;
 use Thunk\Verbs\State\Cache\Contracts\ReadableCache;
 use Thunk\Verbs\State\Cache\Contracts\WritableCache;
@@ -82,11 +84,21 @@ class Scope
             return $existing;
         }
 
+        $resolved_id = Id::tryFrom($id);
+
+        // A null id is only meaningful for singletons (there is exactly one of
+        // them). For a keyed state it almost always signals an accidental null
+        // key—a missing route binding, a null foreign key—so we fail loudly
+        // rather than silently minting an orphan state under a random id.
+        if ($resolved_id === null && ! is_a($type, SingletonState::class, true)) {
+            throw new InvalidArgumentException("Cannot load a [{$type}] state without an id.");
+        }
+
         // State::__construct() auto-registers the state with the Scope,
         // so we need to skip the constructor until we've already set the ID.
         /** @var State $state */
         $state = (new ReflectionClass($type))->newInstanceWithoutConstructor();
-        $state->id = Id::tryFrom($id) ?? snowflake_id();
+        $state->id = $resolved_id ?? snowflake_id();
         $state->__construct();
 
         return $this->cache->put($state);
