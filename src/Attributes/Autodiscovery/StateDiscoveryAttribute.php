@@ -7,7 +7,7 @@ use Illuminate\Support\Str;
 use ReflectionProperty;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\State;
-use Thunk\Verbs\State\Scope;
+use Thunk\Verbs\State\StateManager;
 
 abstract class StateDiscoveryAttribute
 {
@@ -18,7 +18,7 @@ abstract class StateDiscoveryAttribute
     /** @var Collection<string, State> */
     protected Collection $discovered;
 
-    abstract public function discoverState(Event $event, Scope $manager): State|array;
+    abstract public function discoverState(Event $event, StateManager $manager): State|array;
 
     public function setProperty(ReflectionProperty $property): static
     {

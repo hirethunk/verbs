@@ -28,7 +28,7 @@ use Thunk\Verbs\Support\StateCollection;
  * are read by one another's apply() methods always advance in lockstep from a
  * common baseline, rather than each racing independently to "now."
  */
-class ReconstitutingScope extends Scope
+class ReconstitutingStateManager extends StateManager
 {
     public function __construct(
         protected StoresEvents $events,
@@ -149,7 +149,7 @@ class ReconstitutingScope extends Scope
     {
         $summary = AggregateStateSummary::summarize(...$states->all());
 
-        $rebuilt = new Scope(new InMemoryCache);
+        $rebuilt = new StateManager(new InMemoryCache);
 
         (new Replay(
             states: $rebuilt,

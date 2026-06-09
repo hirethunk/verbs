@@ -6,7 +6,7 @@ use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Models\VerbSnapshot;
 use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\State;
-use Thunk\Verbs\State\Scope;
+use Thunk\Verbs\State\StateManager;
 
 /*
  * A singleton's identity is its *type*, not its id—its in-memory id is an
@@ -29,7 +29,7 @@ test('a singleton reconstitutes from a stale snapshot without corrupting its ide
         ->where('type', SingletonReconState::class)
         ->update(['data' => '{"count":1}', 'last_event_id' => $first->id]);
 
-    app(Scope::class)->reset();
+    app(StateManager::class)->reset();
 
     // The stale snapshot must be brought up to date, not returned as-is.
     expect(SingletonReconState::singleton()->count)->toBe(3);
@@ -51,7 +51,7 @@ test('a singleton reconstitutes from events when its snapshot is gone', function
     Verbs::commit();
 
     VerbSnapshot::query()->where('type', SingletonReconState::class)->delete();
-    app(Scope::class)->reset();
+    app(StateManager::class)->reset();
 
     expect(SingletonReconState::singleton()->count)->toBe(3);
 });
@@ -66,7 +66,7 @@ test('reconstituting a sibling state never clobbers a live singleton', function 
     // Drop only the account snapshot so loading it forces reconstitution of the
     // whole connected component (which includes the singleton).
     VerbSnapshot::query()->where('state_id', $account_id)->delete();
-    app(Scope::class)->reset();
+    app(StateManager::class)->reset();
 
     // The singleton is live (and up to date) before the sibling reconstitutes.
     $live = SingletonReconGlobalState::singleton();

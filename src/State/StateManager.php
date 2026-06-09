@@ -14,7 +14,7 @@ use Thunk\Verbs\State\Cache\Contracts\ReadableCache;
 use Thunk\Verbs\State\Cache\Contracts\WritableCache;
 use Thunk\Verbs\Support\StateCollection;
 
-class Scope
+class StateManager
 {
     public bool $replaying = false;
 
@@ -31,14 +31,14 @@ class Scope
      */
     public function run(callable $callback): mixed
     {
-        $previous = app(Scope::class);
+        $previous = app(StateManager::class);
 
         try {
-            app()->instance(Scope::class, $this);
+            app()->instance(StateManager::class, $this);
 
             return $callback();
         } finally {
-            app()->instance(Scope::class, $previous);
+            app()->instance(StateManager::class, $previous);
         }
     }
 

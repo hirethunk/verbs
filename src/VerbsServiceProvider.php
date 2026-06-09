@@ -34,8 +34,8 @@ use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 use Thunk\Verbs\Lifecycle\SnapshotStore;
 use Thunk\Verbs\Livewire\SupportVerbs;
 use Thunk\Verbs\State\Cache\MultiCache;
-use Thunk\Verbs\State\ReconstitutingScope;
-use Thunk\Verbs\State\Scope;
+use Thunk\Verbs\State\ReconstitutingStateManager;
+use Thunk\Verbs\State\StateManager;
 use Thunk\Verbs\Support\EventStateRegistry;
 use Thunk\Verbs\Support\IdManager;
 use Thunk\Verbs\Support\Serializer;
@@ -70,8 +70,8 @@ class VerbsServiceProvider extends PackageServiceProvider
         $this->app->scoped(EventStateRegistry::class); // FIXME: Pretty sure this should be hidden behind the Scope
         $this->app->singleton(MetadataManager::class);
 
-        $this->app->scoped(Scope::class, function (Container $app) {
-            return new ReconstitutingScope(
+        $this->app->scoped(StateManager::class, function (Container $app) {
+            return new ReconstitutingStateManager(
                 events: $app->make(StoresEvents::class),
                 snapshots: $app->make(StoresSnapshots::class),
                 cache: new MultiCache,

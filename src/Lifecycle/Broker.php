@@ -9,7 +9,7 @@ use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\EventNotValid;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
-use Thunk\Verbs\State\Scope;
+use Thunk\Verbs\State\StateManager;
 
 class Broker implements BrokersEvents
 {
@@ -21,7 +21,7 @@ class Broker implements BrokersEvents
         protected Dispatcher $dispatcher,
         protected MetadataManager $metadata,
         protected EventQueue $queue,
-        protected Scope $states,
+        protected StateManager $states,
         protected StoresSnapshots $snapshots,
     ) {}
 

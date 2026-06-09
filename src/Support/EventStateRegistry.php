@@ -15,7 +15,7 @@ use ReflectionUnionType;
 use Thunk\Verbs\Attributes\Autodiscovery\StateDiscoveryAttribute;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\State;
-use Thunk\Verbs\State\Scope;
+use Thunk\Verbs\State\StateManager;
 use WeakMap;
 
 class EventStateRegistry
@@ -75,7 +75,7 @@ class EventStateRegistry
         $states = Arr::wrap(
             $attribute
                 ->setDiscoveredState($discovered)
-                ->discoverState($target, $this->container->make(Scope::class)),
+                ->discoverState($target, $this->container->make(StateManager::class)),
         );
 
         $discovered->push(...$states);

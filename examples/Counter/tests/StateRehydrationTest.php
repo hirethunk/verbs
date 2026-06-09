@@ -4,7 +4,7 @@ use Thunk\Verbs\Examples\Counter\Events\IncrementCount;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Models\VerbEvent;
 use Thunk\Verbs\Models\VerbSnapshot;
-use Thunk\Verbs\State\Scope;
+use Thunk\Verbs\State\StateManager;
 
 beforeEach(function () {
     Verbs::commitImmediately();
@@ -31,7 +31,7 @@ it('supports rehydrating a state from events', function () {
 
     expect(VerbEvent::query()->count())->toBe(1);
 
-    app(Scope::class)->reset();
+    app(StateManager::class)->reset();
 
     $state = IncrementCount::fire()->state();
 

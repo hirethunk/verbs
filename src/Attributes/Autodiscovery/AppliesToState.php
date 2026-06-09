@@ -9,7 +9,7 @@ use InvalidArgumentException;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\State;
-use Thunk\Verbs\State\Scope;
+use Thunk\Verbs\State\StateManager;
 
 #[Attribute(Attribute::TARGET_CLASS | Attribute::IS_REPEATABLE)]
 class AppliesToState extends StateDiscoveryAttribute
@@ -25,7 +25,7 @@ class AppliesToState extends StateDiscoveryAttribute
         }
     }
 
-    public function discoverState(Event $event, Scope $manager): State|array
+    public function discoverState(Event $event, StateManager $manager): State|array
     {
         if (is_subclass_of($this->state_type, SingletonState::class)) {
             return $this->state_type::singleton();

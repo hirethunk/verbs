@@ -4,7 +4,7 @@ use Thunk\Verbs\Attributes\Autodiscovery\StateId;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Models\VerbSnapshot;
 use Thunk\Verbs\State;
-use Thunk\Verbs\State\Scope;
+use Thunk\Verbs\State\StateManager;
 
 /*
  * The Problem(s)
@@ -56,7 +56,7 @@ test('scenario 1', function () {
         ->and($state2->counter)->toBe(3);
 
     Verbs::commit();
-    app(Scope::class)->reset();
+    app(StateManager::class)->reset();
 
     $state1 = StateReconstitutionTestState1::load($state1_id);
     $state2 = StateReconstitutionTestState2::load($state2_id);
@@ -97,7 +97,7 @@ test('partially up-to-date snapshots', function () {
         'last_event_id' => $event3->id,
     ]);
 
-    app(Scope::class)->reset();
+    app(StateManager::class)->reset();
 
     $state1 = StateReconstitutionTestState1::load(1);
     $state2 = StateReconstitutionTestState2::load(2);
@@ -123,7 +123,7 @@ test('partially deleted snapshots', function () {
 
     VerbSnapshot::query()->where('state_id', 1)->delete();
 
-    app(Scope::class)->reset();
+    app(StateManager::class)->reset();
 
     $state1 = StateReconstitutionTestState1::load(1);
     $state2 = StateReconstitutionTestState2::load(2);
@@ -159,7 +159,7 @@ test('partially up-to-date, but out of sync snapshots', function () {
         'last_event_id' => $event2->id,
     ]);
 
-    app(Scope::class)->reset();
+    app(StateManager::class)->reset();
 
     $state1 = StateReconstitutionTestState1::load(1);
     $state2 = StateReconstitutionTestState2::load(2);

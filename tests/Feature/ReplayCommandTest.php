@@ -9,7 +9,7 @@ use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Models\VerbSnapshot;
 use Thunk\Verbs\State;
-use Thunk\Verbs\State\Scope;
+use Thunk\Verbs\State\StateManager;
 
 beforeEach(function () {
     $GLOBALS['replay_test_counts'] = [];
@@ -37,11 +37,11 @@ it('can replay events', function () {
 
     Verbs::commit();
 
-    expect(app(Scope::class)->load(ReplayCommandTestState::class, $state1_id)->count)
+    expect(app(StateManager::class)->load(ReplayCommandTestState::class, $state1_id)->count)
         ->toBe(2)
         ->and($GLOBALS['replay_test_counts'][$state1_id])
         ->toBe(2)
-        ->and(app(Scope::class)->load(ReplayCommandTestState::class, $state2_id)->count)
+        ->and(app(StateManager::class)->load(ReplayCommandTestState::class, $state2_id)->count)
         ->toBe(4)
         ->and($GLOBALS['replay_test_counts'][$state2_id])
         ->toBe(4)
@@ -54,11 +54,11 @@ it('can replay events', function () {
     config(['app.env' => 'testing']);
     $this->artisan(ReplayCommand::class);
 
-    expect(app(Scope::class)->load(ReplayCommandTestState::class, $state1_id)->count)
+    expect(app(StateManager::class)->load(ReplayCommandTestState::class, $state1_id)->count)
         ->toBe(2)
         ->and($GLOBALS['replay_test_counts'][$state1_id])
         ->toBe(2)
-        ->and(app(Scope::class)->load(ReplayCommandTestState::class, $state2_id)->count)
+        ->and(app(StateManager::class)->load(ReplayCommandTestState::class, $state2_id)->count)
         ->toBe(4)
         ->and($GLOBALS['replay_test_counts'][$state2_id])
         ->toBe(4)
@@ -72,7 +72,7 @@ it('uses the original event times when replaying', function () {
 
     Verbs::commit();
 
-    expect(app(Scope::class)->load(ReplayCommandTestWormholeState::class, $state_id)->time->unix())
+    expect(app(StateManager::class)->load(ReplayCommandTestWormholeState::class, $state_id)->time->unix())
         ->toBe(CarbonImmutable::parse('2024-04-01 12:00:00')->unix())
         ->and($GLOBALS['time'][$state_id]->unix())
         ->toBe(CarbonImmutable::parse('2024-04-01 12:00:00')->unix());
@@ -83,7 +83,7 @@ it('uses the original event times when replaying', function () {
     config(['app.env' => 'testing']);
     $this->artisan(ReplayCommand::class);
 
-    expect(app(Scope::class)->load(ReplayCommandTestWormholeState::class, $state_id)->time->unix())
+    expect(app(StateManager::class)->load(ReplayCommandTestWormholeState::class, $state_id)->time->unix())
         ->toBe(CarbonImmutable::parse('2024-04-01 12:00:00')->unix())
         ->and($GLOBALS['time'][$state_id]->unix())
         ->toBe(CarbonImmutable::parse('2024-04-01 12:00:00')->unix());

@@ -4,7 +4,7 @@ use Thunk\Verbs\Attributes\Autodiscovery\StateId;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\State;
-use Thunk\Verbs\State\Scope;
+use Thunk\Verbs\State\StateManager;
 
 /*
  * During a long replay the cache is pruned to bound memory. A state that was
@@ -19,7 +19,7 @@ it('reloads an evicted state from its snapshot during replay', function () {
     ReplayEvictionTestEvent::fire(state_id: $id); // count => 1
     Verbs::commit();                              // snapshot written
 
-    $scope = app(Scope::class);
+    $scope = app(StateManager::class);
     $scope->reset();            // simulate the state being evicted from the cache
     $scope->setReplaying(true); // simulate being mid-replay
 

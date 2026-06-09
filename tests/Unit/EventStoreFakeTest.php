@@ -5,7 +5,7 @@ use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\MetadataManager;
 use Thunk\Verbs\State;
-use Thunk\Verbs\State\Scope;
+use Thunk\Verbs\State\StateManager;
 use Thunk\Verbs\Testing\EventStoreFake;
 
 it('performs assertions', function () {
@@ -75,12 +75,12 @@ it('reads and writes stateless events normally', function () {
 it('reads and writes stateful events normally', function () {
     app()->instance(StoresEvents::class, $store = new EventStoreFake(app(MetadataManager::class)));
 
-    $state1 = app(Scope::class)->load(
+    $state1 = app(StateManager::class)->load(
         type: EventStoreFakeTestState::class,
         id: 1001,
     );
 
-    $state2 = app(Scope::class)->load(
+    $state2 = app(StateManager::class)->load(
         type: EventStoreFakeTestState::class,
         id: 1002,
     );

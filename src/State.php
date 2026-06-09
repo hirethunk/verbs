@@ -10,7 +10,7 @@ use RuntimeException;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Exceptions\StateNotFoundException;
-use Thunk\Verbs\State\Scope;
+use Thunk\Verbs\State\StateManager;
 use Thunk\Verbs\Support\Serializer;
 use Thunk\Verbs\Support\StateCollection;
 
@@ -22,7 +22,7 @@ abstract class State implements UrlRoutable
 
     public function __construct()
     {
-        app(Scope::class)->register($this);
+        app(StateManager::class)->register($this);
     }
 
     public static function make(...$args): static
@@ -77,7 +77,7 @@ abstract class State implements UrlRoutable
 
     public static function loadByKey($from): static|StateCollection
     {
-        return app(Scope::class)->load(static::class, $from);
+        return app(StateManager::class)->load(static::class, $from);
     }
 
     protected static function normalizeKey(mixed $from)
@@ -96,7 +96,7 @@ abstract class State implements UrlRoutable
 
     public function fresh(): static
     {
-        return app(Scope::class)->load(static::class, $this->id);
+        return app(StateManager::class)->load(static::class, $this->id);
     }
 
     public function getRouteKey()
