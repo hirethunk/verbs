@@ -1,6 +1,7 @@
 <?php
 
 use Thunk\Verbs\Attributes\Autodiscovery\StateId;
+use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Models\VerbSnapshot;
 use Thunk\Verbs\State;
@@ -178,7 +179,7 @@ class StateReconstitutionTestState2 extends State
     public int $counter = 0;
 }
 
-class StateReconstitutionTestEvent1 extends \Thunk\Verbs\Event
+class StateReconstitutionTestEvent1 extends Event
 {
     #[StateId(StateReconstitutionTestState1::class)]
     public int $state1_id;
@@ -193,7 +194,7 @@ class StateReconstitutionTestEvent1 extends \Thunk\Verbs\Event
     }
 }
 
-class StateReconstitutionTestEvent2 extends \Thunk\Verbs\Event
+class StateReconstitutionTestEvent2 extends Event
 {
     #[StateId(StateReconstitutionTestState2::class)]
     public int $state2_id;
