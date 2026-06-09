@@ -20,11 +20,6 @@ class Guards
         public Event $event
     ) {}
 
-    public function check(): static
-    {
-        return $this->authorize()->validate();
-    }
-
     public function authorize(): static
     {
         if ($this->passesAuthorization()) {

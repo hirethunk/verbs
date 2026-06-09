@@ -34,9 +34,14 @@ use Thunk\Verbs\State\StateManager;
  *
  * - LeftState and RightState
  * - IncrementLeftByRight and IncrementRightByLeft
+ *
+ * Both problems are solved structurally: reconstitution replays the entire
+ * connected component of events from a blank baseline (see
+ * ReconstitutingStateManager), so related states always advance in lockstep and
+ * are never seen "ahead" of the event being applied. The "partially up-to-date"
+ * and "out of sync" snapshot cases below pin that this holds regardless of where
+ * each snapshot happened to be left.
  */
-
-// FIXME: We need to account for partially up-to-date snapshots that only need *some* events applied but not all
 
 test('scenario 1', function () {
     $state1_id = snowflake_id();
@@ -154,9 +159,13 @@ test('partially up-to-date, but out of sync snapshots', function () {
         'last_event_id' => $event3->id,
     ]);
 
+    // Deliberately leave state 2's snapshot at an *earlier* point than state 1's
+    // (counter 2 as of event 2, while state 1 is as of event 3). Snapshots are
+    // normally written together so this is contrived, but reconstitution must be
+    // robust to it: replaying the component from blank ignores the stale data.
     $snapshot2 = VerbSnapshot::query()->where('state_id', 2)->sole();
     $snapshot2->update([
-        'data' => '{"counter":2}', // FIXME: This maybe can't happen?
+        'data' => '{"counter":2}',
         'last_event_id' => $event2->id,
     ]);
 

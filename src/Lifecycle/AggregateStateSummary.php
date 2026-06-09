@@ -13,7 +13,6 @@ use Thunk\Verbs\State\StateIdentity;
 
 class AggregateStateSummary
 {
-    // FIXME: Maybe pass in all known states AND events
     public static function summarize(State ...$states): static
     {
         $summary = new static(

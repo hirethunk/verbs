@@ -28,20 +28,23 @@ it('can rebuild state from events', function () {
 });
 
 it('can cache and retrieve state across events', function () {
+    $states = new StateManager(cache: new InMemoryCache);
     $events = collect(array_fill(0, 10, ReplayClassTestEvent::make(state: 1)->event));
 
-    $replay = new Replay(
-        states: new StateManager(
-            cache: new InMemoryCache
-        ),
-        events: $events,
-        phases: Phases::all()
-    );
+    (new Replay(states: $states, events: $events, phases: Phases::all()))->handle();
+
+    // The same cached instance is reused for every event (rather than rebuilt
+    // each time), so all ten increments land on one state...
+    $state = $states->load(ReplayClassTestState::class, '1');
+
+    expect($state->count)->toBe(10)
+        // ...and retrieving it again returns that very same instance.
+        ->and($states->load(ReplayClassTestState::class, '1'))->toBe($state);
 });
 
 class ReplayClassTestEvent extends Event
 {
-    #[StateId(ReplayClassTestState::class)] // FIXME: Breaks with State type hint
+    #[StateId(ReplayClassTestState::class)]
     public int $state;
 
     public function apply(ReplayClassTestState $state)

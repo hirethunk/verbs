@@ -9,6 +9,7 @@ use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\EventNotValid;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
+use Thunk\Verbs\State;
 use Thunk\Verbs\State\StateManager;
 
 class Broker implements BrokersEvents
@@ -36,8 +37,11 @@ class Broker implements BrokersEvents
 
     public function fire(Event $event): ?Event
     {
+        // Events fired from within a handler while we're replaying are ignored:
+        // the originals are already in the stream being replayed, so re-firing
+        // them would duplicate. (See Counter's FireOnReplayTest.)
         if ($this->is_replaying) {
-            return null; // FIXME
+            return null;
         }
 
         Lifecycle::run(
@@ -45,8 +49,12 @@ class Broker implements BrokersEvents
             phases: Phases::fire(),
         );
 
-        // FIXME: This is now in a slightly different execution order
         $this->queue->queue($event);
+
+        // Pin the states this event touches so a prune triggered before we
+        // commit can't evict them and silently reload a divergent instance.
+        $event->states()->each(fn (State $state) => $this->states->pin($state));
+
         if ($this->commit_immediately || $event instanceof CommitsImmediately) {
             $this->commit();
         }
@@ -63,10 +71,21 @@ class Broker implements BrokersEvents
         }
 
         $this->writeSnapshots();
+
+        // Bound the working set. The batch's states are still pinned here, so
+        // they survive the prune and stay resident while their handlers run—a
+        // handler that re-loads one gets the same live instance, not a divergent
+        // reload of the snapshot we just wrote.
         $this->states->prune();
 
         foreach ($events as $event) {
             $this->metadata->setLastResults($event, $this->dispatcher->handle($event));
+        }
+
+        // Handlers have run, so the batch is fully settled—release the pins so
+        // these states become evictable on the next prune.
+        foreach ($events as $event) {
+            $event->states()->each(fn (State $state) => $this->states->unpin($state));
         }
 
         return $this->commit();

@@ -19,8 +19,9 @@ class Queue
     {
         $events = $this->event_queue;
 
-        // TODO: Concurrency check
-
+        // Concurrency is guarded at the storage layer: EventStore::write() runs
+        // guardAgainstConcurrentWrites() against the persisted max event id per
+        // state before inserting, throwing a ConcurrencyException on a conflict.
         if (! app(StoresEvents::class)->write($events)) {
             throw new UnableToStoreEventsException($events);
         }

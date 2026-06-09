@@ -21,7 +21,10 @@ class StateIdentity
         $state_id = data_get($source, 'state_id');
         $state_type = data_get($source, 'state_type');
 
-        if (is_int($state_id) && is_string($state_type)) {
+        // state_id may be an int (snowflake) or a string (a UUID, or a bigint that
+        // the database driver returned as a string—e.g. MySQL/Postgres via PDO),
+        // mirroring State::$id's int|string type.
+        if ((is_int($state_id) || is_string($state_id)) && is_string($state_type)) {
             return new static(state_type: $state_type, state_id: $state_id);
         }
 
@@ -29,7 +32,7 @@ class StateIdentity
     }
 
     public function __construct(
-        public readonly string $state_type,
-        public readonly int|string $state_id,
+        public string $state_type,
+        public int|string $state_id,
     ) {}
 }

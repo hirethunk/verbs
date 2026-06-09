@@ -14,12 +14,14 @@ class Phases
 
     public static function fire(): static
     {
+        // The Handle phase is intentionally absent here: handlers run at commit
+        // time (Broker::commit), not during fire, so their side effects only
+        // happen once events are durably stored.
         return new static(
             Phase::Boot,
             Phase::Authorize,
             Phase::Validate,
             Phase::Apply,
-            // FIXME: Something else here, maybe more than one
             Phase::Fired,
         );
     }

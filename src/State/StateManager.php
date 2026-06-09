@@ -12,6 +12,7 @@ use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\State;
 use Thunk\Verbs\State\Cache\Contracts\ReadableCache;
 use Thunk\Verbs\State\Cache\Contracts\WritableCache;
+use Thunk\Verbs\Support\EventStateRegistry;
 use Thunk\Verbs\Support\StateCollection;
 
 class StateManager
@@ -129,10 +130,33 @@ class StateManager
         return $this;
     }
 
+    /**
+     * Protect a state from eviction (prune) while it has queued-but-uncommitted
+     * events—reloading it as a fresh instance mid-batch would fork its identity.
+     */
+    public function pin(State $state): static
+    {
+        $this->cache->pin($state);
+
+        return $this;
+    }
+
+    public function unpin(State $state): static
+    {
+        $this->cache->unpin($state);
+
+        return $this;
+    }
+
     public function reset(): static
     {
         $this->cache->reset();
         $this->replaying = false;
+
+        // The registry caches the state instances it resolved for each event;
+        // once we've cleared the cache those instances belong to a scope that no
+        // longer exists, so we invalidate them in lockstep.
+        app(EventStateRegistry::class)->reset();
 
         return $this;
     }

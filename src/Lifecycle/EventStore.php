@@ -57,11 +57,6 @@ class EventStore implements StoresEvents
             && VerbStateEvent::insert($this->formatRelationshipsForWrite($events));
     }
 
-    public function summarize(State ...$states): AggregateStateSummary
-    {
-        return AggregateStateSummary::summarize(...$states);
-    }
-
     protected function readEvents(
         ?State $state,
         Bits|UuidInterface|AbstractUid|int|string|null $after_id,

@@ -23,9 +23,12 @@ class Lifecycle
             $this->dispatcher->boot($this->event);
         }
 
-        // FIXME: This is actually two phases
         if ($this->phases->has(Phase::Authorize)) {
-            Guards::for($this->event)->check();
+            Guards::for($this->event)->authorize();
+        }
+
+        if ($this->phases->has(Phase::Validate)) {
+            Guards::for($this->event)->validate();
         }
 
         if ($this->phases->has(Phase::Apply)) {
@@ -33,8 +36,6 @@ class Lifecycle
         }
 
         if ($this->phases->has(Phase::Handle)) {
-            // FIXME
-            // $this->queue->queue($this->event);
             $this->dispatcher->handle($this->event);
         }
 

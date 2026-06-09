@@ -2,6 +2,7 @@
 
 namespace Thunk\Verbs\State\Cache;
 
+use LogicException;
 use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\State;
 use Thunk\Verbs\State\Cache\Contracts\ReadableCache;
@@ -9,6 +10,9 @@ use Thunk\Verbs\State\Cache\Contracts\WritableCache;
 
 class InMemoryCache implements ReadableCache, WritableCache
 {
+    /** @var array<string, true> */
+    protected array $pinned = [];
+
     public function __construct(
         protected int $capacity = 100,
         public array $cache = [],
@@ -31,9 +35,17 @@ class InMemoryCache implements ReadableCache, WritableCache
     {
         $key = $this->key($state);
 
-        if (isset($this->cache[$key])) {
-            unset($this->cache[$key]);
+        // One live instance per (class, id) within a scope. Re-putting the same
+        // instance just refreshes its recency; putting a *different* instance
+        // under a key that's already live would silently fork the state, so we
+        // fail loudly rather than overwrite.
+        if (isset($this->cache[$key]) && $this->cache[$key] !== $state) {
+            $class = $state::class;
+
+            throw new LogicException("Cannot register two different [{$class}] instances for the same identity [{$key}].");
         }
+
+        unset($this->cache[$key]);
 
         $this->cache[$key] = $state;
 
@@ -47,9 +59,34 @@ class InMemoryCache implements ReadableCache, WritableCache
         return isset($this->cache[$key]);
     }
 
+    public function pin(State|string $type, ?string $id = null): static
+    {
+        $this->pinned[$this->key($type, $id)] = true;
+
+        return $this;
+    }
+
+    public function unpin(State|string $type, ?string $id = null): static
+    {
+        unset($this->pinned[$this->key($type, $id)]);
+
+        return $this;
+    }
+
     public function prune(): static
     {
-        $this->cache = array_slice($this->cache, offset: -1 * $this->capacity, preserve_keys: true);
+        // Evict least-recently-used entries until we're back under capacity,
+        // but never drop a pinned (in-flight) state—if the working set of pinned
+        // states alone exceeds capacity, correctness wins over the memory bound.
+        foreach (array_keys($this->cache) as $key) {
+            if (count($this->cache) <= $this->capacity) {
+                break;
+            }
+
+            if (! isset($this->pinned[$key])) {
+                unset($this->cache[$key]);
+            }
+        }
 
         return $this;
     }
@@ -67,6 +104,7 @@ class InMemoryCache implements ReadableCache, WritableCache
     public function reset(): static
     {
         $this->cache = [];
+        $this->pinned = [];
 
         return $this;
     }

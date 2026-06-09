@@ -34,7 +34,11 @@ class EventStateRegistry
 
     public function reset(): static
     {
+        // Both caches hold State instances resolved against a particular scope, so
+        // they must be cleared together when that scope is reset. The reflection
+        // metadata in $discovered_attributes is scope-independent and is kept.
         $this->discovered_states = new WeakMap;
+        $this->discovered_properties = [];
 
         return $this;
     }

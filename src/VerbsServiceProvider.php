@@ -67,7 +67,7 @@ class VerbsServiceProvider extends PackageServiceProvider
         $this->app->scoped(EventStore::class);
         $this->app->singleton(SnapshotStore::class);
         $this->app->scoped(EventQueue::class);
-        $this->app->scoped(EventStateRegistry::class); // FIXME: Pretty sure this should be hidden behind the Scope
+        $this->app->scoped(EventStateRegistry::class);
         $this->app->singleton(MetadataManager::class);
 
         $this->app->scoped(StateManager::class, function (Container $app) {
