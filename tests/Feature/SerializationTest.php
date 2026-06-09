@@ -148,12 +148,10 @@ it('does not include the state ID or last_event_id in its payload', function () 
 
         public Bits|UuidInterface|AbstractUid|int|string|null $last_event_id = 123;
 
-        public bool $__verbs_initialized = false;
-
         public string $name = 'Demo';
     });
 
-    expect($result)->toBe('{"__verbs_initialized":false,"name":"Demo"}');
+    expect($result)->toBe('{"name":"Demo"}');
 });
 
 it('allows us to store a serializable class(es) as a property', function () {

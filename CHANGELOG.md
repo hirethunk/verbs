@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to `:package_name` will be documented in this file.
+See [Releases](https://github.com/hirethunk/verbs/releases) for an up-to-date changelog.
 
 ## 0.0.9 - 2024-02-15
 
@@ -8,7 +8,8 @@ All notable changes to `:package_name` will be documented in this file.
 
 * make pending event macroable by @jdiddydave in https://github.com/hirethunk/verbs/pull/55
 * Add `for` method to factory by @joshhanley in https://github.com/hirethunk/verbs/pull/56
-* Change state factory to not require an array to be passed in by @joshhanley in https://github.com/hirethunk/verbs/pull/57
+* Change state factory to not require an array to be passed in by @joshhanley
+  in https://github.com/hirethunk/verbs/pull/57
 * adding missing inheritance from docs by @da-mask in https://github.com/hirethunk/verbs/pull/58
 * Fix the stupidest type check ever. by @DanielCoulbourne in https://github.com/hirethunk/verbs/pull/59
 * Use "historical" `now()` when replaying events by @inxilpro in https://github.com/hirethunk/verbs/pull/29
@@ -34,19 +35,22 @@ All notable changes to `:package_name` will be documented in this file.
 
 ### What's Changed
 
-* Refactor event/pending event, and add a way to immediately commit an event by @inxilpro in https://github.com/hirethunk/verbs/pull/27
+* Refactor event/pending event, and add a way to immediately commit an event by @inxilpro
+  in https://github.com/hirethunk/verbs/pull/27
 * Add ability to include metadata on every event by @skylerkatz in https://github.com/hirethunk/verbs/pull/14
 * Make `fire` do nothing while replaying by @jdiddydave in https://github.com/hirethunk/verbs/pull/35
 * Fix typo in ids.md by @morpheus7CS in https://github.com/hirethunk/verbs/pull/39
 * Clean up serialization by @inxilpro in https://github.com/hirethunk/verbs/pull/45
 * Add id_type config by @jdiddydave in https://github.com/hirethunk/verbs/pull/44
 * Prevent model serialization by @inxilpro in https://github.com/hirethunk/verbs/pull/47
-* When deserializing, skip deserializing if source is already the destination type. by @DanielCoulbourne in https://github.com/hirethunk/verbs/pull/50
+* When deserializing, skip deserializing if source is already the destination type. by @DanielCoulbourne
+  in https://github.com/hirethunk/verbs/pull/50
 * Test Affordances by @DanielCoulbourne in https://github.com/hirethunk/verbs/pull/41
 * State aliases by @inxilpro in https://github.com/hirethunk/verbs/pull/48
 * Fix auto-discovery exception messages by @matthewpaulking in https://github.com/hirethunk/verbs/pull/49
 * Bump aglipanci/laravel-pint-action from 2.3.0 to 2.3.1 by @dependabot in https://github.com/hirethunk/verbs/pull/51
-* Add isAllowed() and isValid() methods for PendingEvent by @DanielCoulbourne in https://github.com/hirethunk/verbs/pull/52
+* Add isAllowed() and isValid() methods for PendingEvent by @DanielCoulbourne
+  in https://github.com/hirethunk/verbs/pull/52
 
 ### New Contributors
 
@@ -61,7 +65,8 @@ All notable changes to `:package_name` will be documented in this file.
 ### What's Changed
 
 * fix typo by @gpibarra in https://github.com/hirethunk/verbs/pull/18
-* Stop examples and workbench dirs being in the packagist repo by @morrislaptop in https://github.com/hirethunk/verbs/pull/23
+* Stop examples and workbench dirs being in the packagist repo by @morrislaptop
+  in https://github.com/hirethunk/verbs/pull/23
 * Add Livewire support to commit Verbs just before render by @joshhanley in https://github.com/hirethunk/verbs/pull/20
 * Remove redundant "it it" from unit tests by @markjaquith in https://github.com/hirethunk/verbs/pull/30
 * Remove phases from events by @inxilpro in https://github.com/hirethunk/verbs/pull/33
@@ -82,7 +87,8 @@ All notable changes to `:package_name` will be documented in this file.
 
 ### What's Changed
 
-- Add support for interfaces in the expectsParameters check on MethodFi… by @DanielCoulbourne in https://github.com/hirethunk/verbs/pull/19
+- Add support for interfaces in the expectsParameters check on MethodFi… by @DanielCoulbourne
+  in https://github.com/hirethunk/verbs/pull/19
 
 **Full Changelog**: https://github.com/hirethunk/verbs/compare/0.0.5...v0.0.6
 

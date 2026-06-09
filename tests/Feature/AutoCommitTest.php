@@ -11,10 +11,10 @@ it('auto-commits after a job is processed', function () {
     Verbs::assertNothingCommitted();
 
     dispatch(function () {
-        AutoCommitTestEvent::fire(message: 'auto-commit job test');
+        \AutoCommitTestEvent::fire(message: 'auto-commit job test');
     });
 
-    Verbs::assertCommitted(function (AutoCommitTestEvent $event) {
+    Verbs::assertCommitted(function (\AutoCommitTestEvent $event) {
         return $event->message === 'auto-commit job test';
     });
 });
@@ -49,7 +49,7 @@ it('does not auto-commit if an UnableToStoreEventsException exception is thrown'
 it('auto-commits if an event does not throw an exception', function () {
     Verbs::fake();
 
-    verb(new AutoCommitTestEvent('should auto-commit'));
+    verb(new \AutoCommitTestEvent('should auto-commit'));
 
     app(AutoCommitManager::class)->commitIfAutoCommitting();
 
@@ -61,7 +61,7 @@ it('does not auto-commits disabled by configuration', function () {
 
     config(['verbs.autocommit' => false]);
 
-    verb(new AutoCommitTestEvent('should not auto-commit'));
+    verb(new \AutoCommitTestEvent('should not auto-commit'));
 
     app(AutoCommitManager::class)->commitIfAutoCommitting();
 
