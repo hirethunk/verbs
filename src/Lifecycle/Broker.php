@@ -101,14 +101,17 @@ class Broker implements BrokersEvents
         // reload of the snapshot we just wrote.
         $this->states->prune();
 
-        foreach ($events as $event) {
-            $this->metadata->setLastResults($event, $this->dispatcher->handle($event));
-        }
-
-        // Handlers have run, so the batch is fully settled—release the pins so
-        // these states become evictable on the next prune.
-        foreach ($events as $event) {
-            $event->states()->each(fn (State $state) => $this->states->unpin($state));
+        try {
+            foreach ($events as $event) {
+                $this->metadata->setLastResults($event, $this->dispatcher->handle($event));
+            }
+        } finally {
+            // The batch is durably stored by now, so the pins release even if
+            // a handler throws—a leaked refcount would leave these states
+            // unprunable for the rest of the request.
+            foreach ($events as $event) {
+                $event->states()->each(fn (State $state) => $this->states->unpin($state));
+            }
         }
 
         return $this->commit();

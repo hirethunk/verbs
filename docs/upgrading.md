@@ -30,6 +30,12 @@ php artisan verbs:verify
 | `StateManager::reset(include_storage: true)` | `app(StoresSnapshots::class)->reset()` | Old form still works + deprecation warning |
 | `Guards::check()` | `Guards::for($event)->authorize()->validate()` | Old form still works + deprecation warning |
 
+One case the argument-order shim *cannot* rescue: passing an **array/collection of ids** in the
+old first position (`load($ids, $type)`) fails with a `TypeError` rather than a deprecation
+warning, because an iterable can't pass through the new `string $type` parameter. Swap those call
+sites to `load($type, $ids)` when upgrading. (Calls that go through `YourState::load(...)` are
+unaffected—only direct `StateManager` calls.)
+
 If you've implemented a custom `StoresEvents` or `StoresSnapshots`, note that
 `StoresEvents::read()` must now return a genuinely lazy stream (it is no longer safe to
 materialize everything), and `StoresSnapshots` no longer declares `delete()`.

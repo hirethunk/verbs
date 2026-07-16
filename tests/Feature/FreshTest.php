@@ -120,6 +120,44 @@ test('a reference held across a manual reset recovers via fresh()', function () 
         ->and(FreshTestState::load($id))->toBe($state);
 });
 
+test('property-discovered states resolve against the current rebuild on repeat reconstitutions', function () {
+    $id = snowflake_id();
+    $now = now()->format('Y-m-d H:i:s');
+
+    $insert = function () use ($id, $now) {
+        $event_id = snowflake_id();
+
+        DB::table('verb_events')->insert([
+            'id' => $event_id,
+            'type' => FreshPropertyEvent::class,
+            'data' => json_encode(['state' => (string) $id]),
+            'metadata' => '{}',
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+
+        DB::table('verb_state_events')->insert([
+            'id' => snowflake_id(),
+            'event_id' => $event_id,
+            'state_id' => $id,
+            'state_type' => FreshPropertyState::class,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+    };
+
+    // First rebuild happens on load; the second (via fresh) re-deserializes
+    // the same stored event, whose State-typed property must resolve into the
+    // *new* rebuild scope—not a memoized instance from the discarded one.
+    $insert();
+    $state = FreshPropertyState::load($id);
+    expect($state->count)->toBe(1);
+
+    $insert();
+
+    expect($state->fresh()->count)->toBe(2);
+});
+
 test('fresh() works on singletons', function () {
     FreshTestSingletonEvent::fire();
     Verbs::commit();
@@ -187,6 +225,21 @@ class FreshTestEvent extends Event
     public int $state_id;
 
     public function apply(FreshTestState $state): void
+    {
+        $state->count++;
+    }
+}
+
+class FreshPropertyState extends State
+{
+    public int $count = 0;
+}
+
+class FreshPropertyEvent extends Event
+{
+    public FreshPropertyState $state;
+
+    public function apply(FreshPropertyState $state): void
     {
         $state->count++;
     }

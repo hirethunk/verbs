@@ -66,9 +66,25 @@ return new class extends Migration
                 $table->dropIndex(['expires_at']);
             });
 
-            Schema::connection($this->connectionName())->table($this->tableName(), function (Blueprint $table) {
-                $table->dropColumn('expires_at');
-            });
+            // A raw statement instead of Blueprint::dropColumn(): on Laravel 10,
+            // dropping a SQLite column routes through doctrine/dbal (which apps
+            // may not have installed), while ALTER TABLE ... DROP COLUMN is
+            // native everywhere except SQLite older than 3.35—there we leave
+            // the (nullable, never-read) column behind rather than fail.
+            $connection = Schema::connection($this->connectionName())->getConnection();
+            $grammar = $connection->getQueryGrammar();
+
+            $sqlite_version = $connection->getDriverName() === 'sqlite'
+                ? $connection->getPdo()->getAttribute(PDO::ATTR_SERVER_VERSION)
+                : null;
+
+            if ($sqlite_version === null || version_compare($sqlite_version, '3.35.0', '>=')) {
+                $connection->statement(sprintf(
+                    'alter table %s drop column %s',
+                    $grammar->wrapTable($this->tableName()),
+                    $grammar->wrap('expires_at'),
+                ));
+            }
         }
     }
 
