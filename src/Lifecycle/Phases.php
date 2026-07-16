@@ -12,18 +12,23 @@ class Phases
         return new static(...Phase::cases());
     }
 
-    public static function fire(): static
+    public static function firing(): static
     {
-        // The Handle phase is intentionally absent here: handlers run at commit
-        // time (Broker::commit), not during fire, so their side effects only
-        // happen once events are durably stored.
+        // Fired is intentionally absent here: it runs in its own pass after the
+        // event is queued (see Broker::fire). Handle is also absent: handlers
+        // run at commit time (Broker::commit), not during fire, so their side
+        // effects only happen once events are durably stored.
         return new static(
             Phase::Boot,
             Phase::Authorize,
             Phase::Validate,
             Phase::Apply,
-            Phase::Fired,
         );
+    }
+
+    public static function fired(): static
+    {
+        return new static(Phase::Fired);
     }
 
     public function __construct(Phase ...$phases)

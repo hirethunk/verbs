@@ -49,7 +49,7 @@ class Broker implements BrokersEvents
 
         Lifecycle::run(
             event: $event,
-            phases: Phases::fire(),
+            phases: Phases::firing(),
         );
 
         $this->queue->queue($event);
@@ -57,6 +57,15 @@ class Broker implements BrokersEvents
         // Pin the states this event touches so a prune triggered before we
         // commit can't evict them and silently reload a divergent instance.
         $event->states()->each(fn (State $state) => $this->states->pin($state));
+
+        // Fired hooks only run once the event is queued and its states are
+        // pinned: a child event fired from a hook then queues (and commits)
+        // behind its parent, and a nested commit's prune can't evict the
+        // parent's states mid-fire.
+        Lifecycle::run(
+            event: $event,
+            phases: Phases::fired(),
+        );
 
         if ($this->commit_immediately || $event instanceof CommitsImmediately) {
             $this->commit();

@@ -4,9 +4,9 @@ use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
 
 /*
- * Phases::fire() runs Boot → Authorize → Validate → Apply → Fired, and the
- * Lifecycle dispatches Authorize and Validate as two distinct phases. These pin
- * that validation actually executes when an event is fired.
+ * Phases::firing() runs Boot → Authorize → Validate → Apply, and the Lifecycle
+ * dispatches Authorize and Validate as two distinct phases. These pin that
+ * validation actually executes when an event is fired.
  */
 it('rejects an event on fire when validation fails', function () {
     ValidatePhaseTestEvent::fire(allowed: false);
