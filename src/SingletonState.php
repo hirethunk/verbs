@@ -36,7 +36,7 @@ abstract class SingletonState extends State
 
     public static function singleton(): static
     {
-        return app(StateManager::class)->load(static::class, null);
+        return app(StateManager::class)->singleton(static::class);
     }
 
     public function resolveRouteBinding($value, $field = null)

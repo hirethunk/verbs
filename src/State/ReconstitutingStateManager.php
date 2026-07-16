@@ -224,9 +224,11 @@ class ReconstitutingStateManager extends StateManager
                 continue;
             }
 
-            $applied = $state->last_event_id ? (int) Id::from($state->last_event_id) : 0;
+            // No int casts: snowflake positions compare numerically either way,
+            // and ULID/UUIDv7 positions compare lexicographically-by-time.
+            $applied = $state->last_event_id ? Id::from($state->last_event_id) : 0;
 
-            if ((int) $max > $applied) {
+            if ($max > $applied) {
                 return true;
             }
         }

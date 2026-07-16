@@ -61,6 +61,14 @@ materialize everything), and `StoresSnapshots` no longer declares `delete()`.
   past `verbs.state_cache_size`, but any state you still hold a reference to keeps its identity—
   a later load returns the same instance.
 
+### New config keys
+
+Republish the config file (or add these by hand) if you want to tune them:
+
+- `state_cache_size` (default `100`) — how many states stay resident before LRU eviction kicks in
+- `reconstitution_uses_snapshots` (default `true`) — set to `false` to force every rebuild to
+  replay from a blank baseline, as a diagnostic lever if you ever suspect snapshot drift
+
 ## Upgrading to `v0.5.1`
 
 The structure of the `verbs_snapshots` table changed after version `0.4.5` to better account for
