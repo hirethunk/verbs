@@ -113,6 +113,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Snapshot-Seeded Reconstitution
+    |--------------------------------------------------------------------------
+    |
+    | When a state is loaded and newer events exist for it, Verbs rebuilds it
+    | (and any related states) by replaying events. By default the rebuild is
+    | seeded from snapshots whenever that is provably exact, so only events
+    | newer than the snapshots replay. Setting this to false forces every
+    | rebuild to start from a blank slate and replay the full history—slower,
+    | but a useful diagnostic if you ever suspect snapshot drift.
+    |
+    */
+    'reconstitution_uses_snapshots' => env('VERBS_RECONSTITUTION_USES_SNAPSHOTS', true),
+
+    /*
+    |--------------------------------------------------------------------------
     | State Cache Size
     |--------------------------------------------------------------------------
     |

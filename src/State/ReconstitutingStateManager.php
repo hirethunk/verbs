@@ -10,8 +10,10 @@ use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Contracts\StoresSnapshots;
+use Thunk\Verbs\Event;
+use Thunk\Verbs\Exceptions\SeedInvariantViolation;
 use Thunk\Verbs\Facades\Id;
-use Thunk\Verbs\Lifecycle\AggregateStateSummary;
+use Thunk\Verbs\Lifecycle\Lifecycle;
 use Thunk\Verbs\Lifecycle\Phase;
 use Thunk\Verbs\Lifecycle\Phases;
 use Thunk\Verbs\Models\VerbStateEvent;
@@ -20,7 +22,6 @@ use Thunk\Verbs\State;
 use Thunk\Verbs\State\Cache\Contracts\ReadableCache;
 use Thunk\Verbs\State\Cache\Contracts\WritableCache;
 use Thunk\Verbs\State\Cache\InMemoryCache;
-use Thunk\Verbs\Support\Replay;
 use Thunk\Verbs\Support\StateCollection;
 
 /**
@@ -234,28 +235,106 @@ class ReconstitutingStateManager extends StateManager
     }
 
     /**
-     * Rebuild the connected component of the requested states inside an isolated
-     * scope, then merge the results back: the states the caller asked for are
-     * updated in place (preserving the very instance we return), and any related
-     * states are inserted only if absent—never overwriting a live singleton.
+     * Bring the requested states up to date by replaying their connected
+     * component inside an isolated scope. When every member's snapshot sits at
+     * the window floor, members are seeded from their snapshots and only the
+     * window replays—exactly equivalent to (and much cheaper than) rebuilding
+     * the whole component from blank, which remains the fallback whenever
+     * anything about the snapshots is murky.
      *
      * @param  Collection<int, State>  $states
      */
     protected function reconstitute(Collection $states): void
     {
-        $summary = AggregateStateSummary::summarize(...$states->all());
+        $started_at = microtime(true);
+
+        $plan = ReconstitutionPlan::plan($states, use_snapshots: config('verbs.reconstitution_uses_snapshots', true));
+
+        if (! $this->rebuild($states, $plan)) {
+            // The seeded attempt met something unexpected (a seed vanished, or
+            // a window event was already absorbed by a seed). Degrade to the
+            // always-correct blank baseline rather than ever double-applying.
+            $plan = ReconstitutionPlan::plan($states, use_snapshots: false);
+
+            $this->rebuild($states, $plan);
+        }
+
+        $this->diagnostics($plan, $states, $started_at);
+    }
+
+    protected function rebuild(Collection $states, ReconstitutionPlan $plan): bool
+    {
+        $seeds = $plan->seeded ? $plan->seeds() : new Collection;
+
+        if ($seeds === null) {
+            Log::warning('Verbs: a snapshot disappeared between planning and seeding; rebuilding from a blank baseline.', [
+                'requested' => $states->map($this->identityKey(...))->all(),
+            ]);
+
+            return false;
+        }
 
         // The rebuild scope is never pruned (capacity: null): evicting a state
         // mid-rebuild would reload it blank and corrupt the replay. Its real
-        // memory bound is the size of the component being rebuilt.
+        // memory bound is the size of the window being replayed.
         $rebuilt = new StateManager(new InMemoryCache(capacity: null));
 
-        (new Replay(
-            states: $rebuilt,
-            events: $summary->events(),
-            phases: new Phases(Phase::Apply),
-        ))->handle();
+        foreach ($seeds as $seed) {
+            $rebuilt->cache->put($seed);
+        }
 
+        try {
+            $rebuilt->run(function () use ($plan) {
+                foreach ($plan->events() as $event) {
+                    if ($plan->seeded) {
+                        $this->guardSeedInvariant($event);
+                    }
+
+                    Lifecycle::run($event, new Phases(Phase::Apply));
+                }
+            });
+        } catch (SeedInvariantViolation $violation) {
+            // Belt and braces: a probe bug (or a snapshot that advanced under
+            // us) must degrade to slow-and-correct, never to double-apply.
+            Log::warning('Verbs: seeded rebuild met an already-absorbed event; rebuilding from a blank baseline.', [
+                'event_id' => $violation->event->id,
+                'state' => $this->identityKey($violation->state),
+            ]);
+
+            return false;
+        }
+
+        $this->harvest($states, $rebuilt);
+
+        return true;
+    }
+
+    /**
+     * In a seeded rebuild, every state an event touches must still be *behind*
+     * that event—a state at or past it means its seed already absorbed the
+     * event, and applying it again would double-apply.
+     */
+    protected function guardSeedInvariant(Event $event): void
+    {
+        foreach ($event->states() as $state) {
+            $position = Id::tryFrom($state->last_event_id);
+
+            if ($position !== null && $position >= Id::from($event->id)) {
+                throw new SeedInvariantViolation($event, $state);
+            }
+        }
+    }
+
+    /**
+     * Merge the rebuilt results back: the states the caller asked for are
+     * updated in place (preserving the very instance we return), and any
+     * related states are inserted only if absent—never overwriting a live
+     * singleton.
+     *
+     * @param  Collection<int, State>  $states
+     */
+    protected function harvest(Collection $states, StateManager $rebuilt): void
+    {
         $requested = $states->keyBy($this->identityKey(...));
 
         foreach ($rebuilt->all() as $state) {
@@ -264,6 +343,24 @@ class ReconstitutingStateManager extends StateManager
             } elseif ($this->cache->get($state::class, $this->cacheId($state)) === null) {
                 $this->cache->put($state);
             }
+        }
+    }
+
+    protected function diagnostics(ReconstitutionPlan $plan, Collection $states, float $started_at): void
+    {
+        $context = [
+            'mode' => $plan->seeded ? 'seeded' : 'blank',
+            'members' => $plan->members->count(),
+            'window' => $plan->window->count(),
+            'floor' => $plan->floor,
+            'duration_ms' => round((microtime(true) - $started_at) * 1000, 2),
+            'requested' => $states->map($this->identityKey(...))->all(),
+        ];
+
+        Log::debug('Verbs: reconstituted state component.', $context);
+
+        if ($plan->window->count() > 10_000) {
+            Log::warning('Verbs: reconstitution replayed a very large event window.', $context);
         }
     }
 
