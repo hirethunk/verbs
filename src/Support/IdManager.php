@@ -57,6 +57,25 @@ class IdManager
     }
 
     /**
+     * Event positions must always compare as scalars: snowflakes numerically
+     * (drivers often hand bigints back as strings), ULID/UUIDv7 strings
+     * lexicographically-by-time—and never as objects, where comparison
+     * operators stop meaning "before/after".
+     */
+    public function normalizePosition(mixed $value): int|string|null
+    {
+        if ($value instanceof Bits || $value instanceof UuidInterface || $value instanceof AbstractUid) {
+            $value = $this->tryFrom($value);
+        }
+
+        return match (true) {
+            $value === null => null,
+            is_numeric($value) => (int) $value,
+            default => (string) $value,
+        };
+    }
+
+    /**
      * The sentinel used where "no id" must still occupy an id-typed column
      * (e.g. singleton snapshots, whose identity is their type alone). It has
      * to be a valid value for the column type, so it varies by id_type.

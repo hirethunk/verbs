@@ -80,7 +80,7 @@ class SnapshotStore implements StoresSnapshots
             ->map(fn ($row) => new StateIdentity(
                 state_type: $row->type,
                 state_id: $row->state_id,
-                position: $this->normalizePosition($row->last_event_id),
+                position: Id::normalizePosition($row->last_event_id),
             ))
             ->values();
     }
@@ -178,20 +178,6 @@ class SnapshotStore implements StoresSnapshots
 
             return null;
         }
-    }
-
-    /**
-     * Drivers disagree on how they return id columns (MySQL and Postgres often
-     * hand bigints back as strings), so positions normalize before they are
-     * ever compared or used as a floor.
-     */
-    protected function normalizePosition(mixed $value): int|string|null
-    {
-        return match (true) {
-            $value === null => null,
-            is_numeric($value) => (int) $value,
-            default => (string) $value,
-        };
     }
 
     protected function formatForWrite(State $state): array

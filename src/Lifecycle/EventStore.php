@@ -259,7 +259,7 @@ class EventStore implements StoresEvents
                             $query->where('state_type', $state::class);
                             $query->where('state_id', $state->id);
                         });
-                        $max_event_ids->put($key, $state->last_event_id);
+                        $max_event_ids->put($key, Id::normalizePosition($state->last_event_id));
                     }
                 }
             }
@@ -274,7 +274,10 @@ class EventStore implements StoresEvents
         $query->each(function ($result) use ($max_event_ids) {
             $state_type = data_get($result, 'state_type');
             $state_id = data_get($result, 'state_id');
-            $max_written_id = (int) data_get($result, 'max_event_id');
+
+            // No int casts: snowflake positions compare numerically either way,
+            // and ULID/UUIDv7 positions compare lexicographically-by-time.
+            $max_written_id = Id::normalizePosition(data_get($result, 'max_event_id'));
             $max_expected_id = $max_event_ids->get($state_type.$state_id, 0);
 
             if ($max_written_id > $max_expected_id) {
