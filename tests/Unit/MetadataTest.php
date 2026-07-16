@@ -1,5 +1,6 @@
 <?php
 
+use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Metadata;
@@ -78,6 +79,27 @@ it('exposes metadata via multiple apis', function () {
         ->get('virtual')->toBe('also set via put function')
         ->and($meta['custom'])->toBe('set via put function')
         ->and($meta['virtual'])->toBe('also set via put function');
+});
+
+it('round-trips metadata through the event store', function () {
+    Verbs::createMetadataUsing(fn () => [
+        'int' => 1337,
+        'string' => 'Hello world',
+        'array' => ['one', 'two'],
+    ]);
+
+    MetadataTestEvent::fire(name: 'Verbs');
+    Verbs::commit();
+
+    // Drop the callbacks so nothing can regenerate metadata in-process:
+    // whatever we read back must have come from the database.
+    Verbs::createMetadataUsing(null);
+
+    $event = app(StoresEvents::class)->read()->first();
+
+    expect($event->metadata('int'))->toBe(1337)
+        ->and($event->metadata('string'))->toBe('Hello world')
+        ->and($event->metadata('array'))->toBe(['one', 'two']);
 });
 
 it('lets you set metadata on an event', function () {

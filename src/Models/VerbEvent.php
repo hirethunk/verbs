@@ -50,7 +50,11 @@ class VerbEvent extends Model
 
     public function metadata(): Metadata
     {
-        $this->meta ??= app(Serializer::class)->deserialize(Metadata::class, $this->metadata);
+        // Not deserialized through the Serializer: Metadata keeps its values in
+        // a magic $extra collection, which Symfony's property-based normalizer
+        // can't populate (it would silently return an empty instance). The
+        // constructor merges the stored key/value pairs directly.
+        $this->meta ??= new Metadata((array) $this->metadata);
 
         return $this->meta;
     }

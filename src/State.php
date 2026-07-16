@@ -4,6 +4,7 @@ namespace Thunk\Verbs;
 
 use Glhd\Bits\Bits;
 use Illuminate\Contracts\Routing\UrlRoutable;
+use Illuminate\Support\Collection;
 use InvalidArgumentException;
 use Ramsey\Uuid\UuidInterface;
 use RuntimeException;
@@ -87,6 +88,7 @@ abstract class State implements UrlRoutable
             : $from;
     }
 
+    /** @return Collection<int, Event> */
     public function storedEvents()
     {
         return app(StoresEvents::class)
