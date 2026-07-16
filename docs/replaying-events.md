@@ -26,7 +26,7 @@ the things that should *not* happen twice:
 
 ### The `#[Once]` attribute
 
-Mark any hook that must only ever run on the original fire—sending mail, charging a card, calling
+Mark a hook that must only ever run on the original fire—sending mail, charging a card, calling
 an external API—with the `#[Once]` attribute, and Verbs will skip it during replays:
 
 ```php
@@ -36,20 +36,18 @@ class CustomerRegistered extends Event
 {
     // ...
 
-    public function handle()
-    {
-        Customer::create([...]); // re-runs on replay, rebuilding the table
-
-        $this->sendWelcomeEmail();
-    }
-
     #[Once]
-    public function sendWelcomeEmail()
+    public function handle()
     {
         Mail::to($this->email)->send(new WelcomeEmail);
     }
 }
 ```
+
+`#[Once]` only applies to methods that *Verbs* invokes, like `handle()`. A helper method you call
+yourself from inside `handle()` runs every time you call it, no matter what attributes it has—so
+if only part of your `handle()` logic should be skipped on replay, split that part into its own
+event or listener hook, or guard it with `Verbs::unlessReplaying()`.
 
 ### `Verbs::unlessReplaying()`
 
