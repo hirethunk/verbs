@@ -72,7 +72,9 @@ Republish the config file (or add these by hand) if you want to tune them:
 
 - `state_cache_size` (default `100`) — how many states stay resident before LRU eviction kicks in
 - `reconstitution_uses_snapshots` (default `true`) — set to `false` to force every rebuild to
-  replay from a blank baseline, as a diagnostic lever if you ever suspect snapshot drift
+  replay from a blank baseline, as a diagnostic lever if you ever suspect snapshot drift. This
+  option is temporary (it exists to de-risk the new snapshot seeding) and will be removed in 1.0—
+  don't build on it.
 
 ## Upgrading to `v0.5.1`
 

@@ -123,6 +123,9 @@ return [
     | rebuild to start from a blank slate and replay the full history—slower,
     | but a useful diagnostic if you ever suspect snapshot drift.
     |
+    | NOTE: This option exists for diagnostics while snapshot seeding is new,
+    |       and will be removed in 1.0. Don't build on it.
+    |
     */
     'reconstitution_uses_snapshots' => env('VERBS_RECONSTITUTION_USES_SNAPSHOTS', true),
 
