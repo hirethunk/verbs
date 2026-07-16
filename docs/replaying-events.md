@@ -36,8 +36,15 @@ class CustomerRegistered extends Event
 {
     // ...
 
-    #[Once]
     public function handle()
+    {
+        Customer::create([...]); // re-runs on replay, rebuilding the table
+
+        $this->sendWelcomeEmail();
+    }
+
+    #[Once]
+    public function sendWelcomeEmail()
     {
         Mail::to($this->email)->send(new WelcomeEmail);
     }
