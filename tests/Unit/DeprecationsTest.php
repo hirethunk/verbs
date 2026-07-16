@@ -81,6 +81,20 @@ test('reset(include_storage: true) still clears snapshot storage with a deprecat
     expect($deprecations)->toHaveCount(1);
 });
 
+test('State::fresh() is a deprecated alias for refresh()', function () {
+    $state = DeprecationsTestState::load(7);
+
+    $result = null;
+
+    $deprecations = captureDeprecations(function () use ($state, &$result) {
+        $result = $state->fresh();
+    });
+
+    expect($result)->toBe($state)
+        ->and($deprecations)->toHaveCount(1)
+        ->and($deprecations[0])->toContain('refresh()');
+});
+
 test('Guards::check() still authorizes and validates with a deprecation', function () {
     $guards = null;
 

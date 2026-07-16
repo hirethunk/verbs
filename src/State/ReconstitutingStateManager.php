@@ -85,8 +85,8 @@ class ReconstitutingStateManager extends StateManager
 
     /**
      * Cache hits are request-stable by design: within a request you compute
-     * against one consistent view of each state. fresh() is the explicit "ask
-     * otherwise"—it always runs the staleness check and brings the *same
+     * against one consistent view of each state. refresh() is the explicit
+     * "ask otherwise"—it always runs the staleness check and brings the *same
      * instance* up to date, even if the identity map was reset (e.g. by a
      * replay) since the caller got its reference.
      */
@@ -103,7 +103,7 @@ class ReconstitutingStateManager extends StateManager
         if ($canonical !== $state) {
             // Another instance owns this identity (the cache was reset and the
             // identity reloaded behind this reference). Sync the caller's
-            // instance from it rather than ever throwing from fresh().
+            // instance from it rather than ever throwing from refresh().
             $this->merge($canonical, $state);
 
             Log::debug('Verbs: refreshed a state whose identity is now owned by a different instance.', [

@@ -11,20 +11,20 @@ use Thunk\Verbs\State\StateManager;
 
 /*
  * The identity & freshness contract: cache hits are request-stable (you
- * compute against one consistent view), and fresh() is the explicit "ask
+ * compute against one consistent view), and refresh() is the explicit "ask
  * otherwise"—it must return the *same instance*, brought up to date, in every
  * situation: up to date already, stale, or orphaned by a replay reset (#178).
  */
 
 // Simulates another process committing an event this scope hasn't seen.
-function commitFreshTestEventBehindTheScenes(int $state_id): void
+function commitRefreshTestEventBehindTheScenes(int $state_id): void
 {
     $event_id = snowflake_id();
     $now = now()->format('Y-m-d H:i:s');
 
     DB::table('verb_events')->insert([
         'id' => $event_id,
-        'type' => FreshTestEvent::class,
+        'type' => RefreshTestEvent::class,
         'data' => json_encode(['state_id' => $state_id]),
         'metadata' => '{}',
         'created_at' => $now,
@@ -35,7 +35,7 @@ function commitFreshTestEventBehindTheScenes(int $state_id): void
         'id' => snowflake_id(),
         'event_id' => $event_id,
         'state_id' => $state_id,
-        'state_type' => FreshTestState::class,
+        'state_type' => RefreshTestState::class,
         'created_at' => $now,
         'updated_at' => $now,
     ]);
@@ -44,47 +44,47 @@ function commitFreshTestEventBehindTheScenes(int $state_id): void
 test('cache hits are request-stable: loading never re-checks staleness', function () {
     $id = snowflake_id();
 
-    FreshTestEvent::fire(state_id: $id);
+    RefreshTestEvent::fire(state_id: $id);
     Verbs::commit();
 
-    $state = FreshTestState::load($id);
+    $state = RefreshTestState::load($id);
 
-    commitFreshTestEventBehindTheScenes($id);
+    commitRefreshTestEventBehindTheScenes($id);
 
     // A plain re-load returns the same, unchanged view of the world...
-    expect(FreshTestState::load($id))->toBe($state)
+    expect(RefreshTestState::load($id))->toBe($state)
         ->and($state->count)->toBe(1);
 
-    // ...until fresh() explicitly asks for the latest.
-    expect($state->fresh())->toBe($state)
+    // ...until refresh() explicitly asks for the latest.
+    expect($state->refresh())->toBe($state)
         ->and($state->count)->toBe(2);
 });
 
-test('fresh() on an up-to-date state runs one staleness query and no rebuild', function () {
+test('refresh() on an up-to-date state runs one staleness query and no rebuild', function () {
     $id = snowflake_id();
 
-    FreshTestEvent::fire(state_id: $id);
+    RefreshTestEvent::fire(state_id: $id);
     Verbs::commit();
 
-    $state = FreshTestState::load($id);
+    $state = RefreshTestState::load($id);
 
     $queries = 0;
     DB::listen(function () use (&$queries) {
         $queries++;
     });
 
-    expect($state->fresh())->toBe($state)
+    expect($state->refresh())->toBe($state)
         ->and($queries)->toBe(1);
 });
 
-test('a reference held across a replay recovers via fresh()', function () {
+test('a reference held across a replay recovers via refresh()', function () {
     $id = snowflake_id();
 
-    FreshTestEvent::fire(state_id: $id);
-    FreshTestEvent::fire(state_id: $id);
+    RefreshTestEvent::fire(state_id: $id);
+    RefreshTestEvent::fire(state_id: $id);
     Verbs::commit();
 
-    $state = FreshTestState::load($id);
+    $state = RefreshTestState::load($id);
 
     expect($state->count)->toBe(2);
 
@@ -92,32 +92,32 @@ test('a reference held across a replay recovers via fresh()', function () {
     // this state's identity—but the held reference must still recover.
     Verbs::replay();
 
-    expect($state->fresh())->toBe($state)
+    expect($state->refresh())->toBe($state)
         ->and($state->count)->toBe(2);
 
     // And it keeps recovering as new events arrive post-replay.
-    commitFreshTestEventBehindTheScenes($id);
+    commitRefreshTestEventBehindTheScenes($id);
 
-    expect($state->fresh()->count)->toBe(3);
+    expect($state->refresh()->count)->toBe(3);
 });
 
-test('a reference held across a manual reset recovers via fresh()', function () {
+test('a reference held across a manual reset recovers via refresh()', function () {
     $id = snowflake_id();
 
-    FreshTestEvent::fire(state_id: $id);
+    RefreshTestEvent::fire(state_id: $id);
     Verbs::commit();
 
-    $state = FreshTestState::load($id);
+    $state = RefreshTestState::load($id);
 
     app(StateManager::class)->reset();
 
-    commitFreshTestEventBehindTheScenes($id);
+    commitRefreshTestEventBehindTheScenes($id);
 
-    // The cache has no entry at all now, so fresh() re-adopts this instance
+    // The cache has no entry at all now, so refresh() re-adopts this instance
     // as canonical and brings it up to date.
-    expect($state->fresh())->toBe($state)
+    expect($state->refresh())->toBe($state)
         ->and($state->count)->toBe(2)
-        ->and(FreshTestState::load($id))->toBe($state);
+        ->and(RefreshTestState::load($id))->toBe($state);
 });
 
 test('property-discovered states resolve against the current rebuild on repeat reconstitutions', function () {
@@ -129,7 +129,7 @@ test('property-discovered states resolve against the current rebuild on repeat r
 
         DB::table('verb_events')->insert([
             'id' => $event_id,
-            'type' => FreshPropertyEvent::class,
+            'type' => RefreshPropertyEvent::class,
             'data' => json_encode(['state' => (string) $id]),
             'metadata' => '{}',
             'created_at' => $now,
@@ -140,29 +140,29 @@ test('property-discovered states resolve against the current rebuild on repeat r
             'id' => snowflake_id(),
             'event_id' => $event_id,
             'state_id' => $id,
-            'state_type' => FreshPropertyState::class,
+            'state_type' => RefreshPropertyState::class,
             'created_at' => $now,
             'updated_at' => $now,
         ]);
     };
 
-    // First rebuild happens on load; the second (via fresh) re-deserializes
+    // First rebuild happens on load; the second (via refresh) re-deserializes
     // the same stored event, whose State-typed property must resolve into the
     // *new* rebuild scope—not a memoized instance from the discarded one.
     $insert();
-    $state = FreshPropertyState::load($id);
+    $state = RefreshPropertyState::load($id);
     expect($state->count)->toBe(1);
 
     $insert();
 
-    expect($state->fresh()->count)->toBe(2);
+    expect($state->refresh()->count)->toBe(2);
 });
 
-test('fresh() works on singletons', function () {
-    FreshTestSingletonEvent::fire();
+test('refresh() works on singletons', function () {
+    RefreshTestSingletonEvent::fire();
     Verbs::commit();
 
-    $singleton = FreshTestSingletonState::singleton();
+    $singleton = RefreshTestSingletonState::singleton();
 
     expect($singleton->total)->toBe(1);
 
@@ -172,7 +172,7 @@ test('fresh() works on singletons', function () {
 
     DB::table('verb_events')->insert([
         'id' => $event_id,
-        'type' => FreshTestSingletonEvent::class,
+        'type' => RefreshTestSingletonEvent::class,
         'data' => '{}',
         'metadata' => '{}',
         'created_at' => $now,
@@ -183,72 +183,72 @@ test('fresh() works on singletons', function () {
         'id' => snowflake_id(),
         'event_id' => $event_id,
         'state_id' => snowflake_id(), // singleton pivots carry an incidental id
-        'state_type' => FreshTestSingletonState::class,
+        'state_type' => RefreshTestSingletonState::class,
         'created_at' => $now,
         'updated_at' => $now,
     ]);
 
-    expect($singleton->fresh())->toBe($singleton)
+    expect($singleton->refresh())->toBe($singleton)
         ->and($singleton->total)->toBe(2);
 });
 
 test('the identity space resets at request/job boundaries', function () {
     $id = snowflake_id();
 
-    FreshTestEvent::fire(state_id: $id);
+    RefreshTestEvent::fire(state_id: $id);
     Verbs::commit();
 
-    $state = FreshTestState::load($id);
+    $state = RefreshTestState::load($id);
     $manager = app(StateManager::class);
 
     // Octane and queue workers flush scoped bindings between requests/jobs.
     app()->forgetScopedInstances();
 
     expect(app(StateManager::class))->not->toBe($manager)
-        ->and(FreshTestState::load($id))->not->toBe($state)
-        ->and(FreshTestState::load($id)->count)->toBe(1);
+        ->and(RefreshTestState::load($id))->not->toBe($state)
+        ->and(RefreshTestState::load($id)->count)->toBe(1);
 });
 
-class FreshTestState extends State
+class RefreshTestState extends State
 {
     public int $count = 0;
 }
 
-class FreshTestSingletonState extends SingletonState
+class RefreshTestSingletonState extends SingletonState
 {
     public int $total = 0;
 }
 
-class FreshTestEvent extends Event
+class RefreshTestEvent extends Event
 {
-    #[StateId(FreshTestState::class)]
+    #[StateId(RefreshTestState::class)]
     public int $state_id;
 
-    public function apply(FreshTestState $state): void
+    public function apply(RefreshTestState $state): void
     {
         $state->count++;
     }
 }
 
-class FreshPropertyState extends State
+class RefreshPropertyState extends State
 {
     public int $count = 0;
 }
 
-class FreshPropertyEvent extends Event
+class RefreshPropertyEvent extends Event
 {
-    public FreshPropertyState $state;
+    public RefreshPropertyState $state;
 
-    public function apply(FreshPropertyState $state): void
+    public function apply(RefreshPropertyState $state): void
     {
         $state->count++;
     }
 }
 
-#[AppliesToState(FreshTestSingletonState::class)]
-class FreshTestSingletonEvent extends Event
+#[AppliesToState(RefreshTestSingletonState::class)]
+class RefreshTestSingletonEvent extends Event
 {
-    public function apply(FreshTestSingletonState $state): void
+    public function apply(RefreshTestSingletonState $state): void
     {
         $state->total++;
     }

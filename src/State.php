@@ -96,13 +96,26 @@ abstract class State implements UrlRoutable
 
     /**
      * Bring this instance up to date with the latest events and return it.
-     * Like an Eloquent model, a loaded state doesn't self-update—fresh() is
-     * how you explicitly ask for the current view. The same instance is
-     * always returned, so held references stay valid.
+     * Mirrors Eloquent's refresh(): the same instance is updated in place,
+     * so every reference you're holding sees the update. (There's no
+     * Eloquent-style fresh() by design—states are identity-mapped to one
+     * live instance per request, so handing out a second, divergent copy
+     * would fork exactly the identity this package works to protect.)
      */
-    public function fresh(): static
+    public function refresh(): static
     {
         return app(StateManager::class)->refresh($this);
+    }
+
+    /** @deprecated Use refresh() instead—same behavior, and the name matches Eloquent's in-place semantics. */
+    public function fresh(): static
+    {
+        trigger_error(
+            'State::fresh() is deprecated — use refresh() instead (it updates the same instance in place, like Eloquent\'s refresh()).',
+            E_USER_DEPRECATED,
+        );
+
+        return $this->refresh();
     }
 
     public function getRouteKey()

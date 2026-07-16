@@ -29,6 +29,7 @@ php artisan verbs:verify
 | `StateManager::make($id, $type)` | `make($type, $id)` | Old order detected + deprecation warning |
 | `StateManager::reset(include_storage: true)` | `app(StoresSnapshots::class)->reset()` | Old form still works + deprecation warning |
 | `Guards::check()` | `Guards::for($event)->authorize()->validate()` | Old form still works + deprecation warning |
+| `$state->fresh()` | `$state->refresh()` | Old name still works + deprecation warning; removed at 1.0 |
 
 One case the argument-order shim *cannot* rescue: passing an **array/collection of ids** in the
 old first position (`load($ids, $type)`) fails with a `TypeError` rather than a deprecation
@@ -46,8 +47,12 @@ materialize everything), and `StoresSnapshots` no longer declares `delete()`.
   Verbs replays the state's connected component—seeded from snapshots when that's provably exact,
   from a blank baseline otherwise. Latency is typically proportional to the new events since your
   snapshots. Watch the `Verbs: reconstituted state component` debug logs to observe it.
-- **`fresh()` actually refreshes now.** It used to be a no-op on cache hits; it now checks for
-  newer events and brings *the same instance* up to date, even across a replay.
+- **`refresh()` replaces `fresh()`—and it actually refreshes now.** On 0.8, `fresh()` was
+  effectively a no-op on cache hits. The working behavior lives on `refresh()`, named to match
+  Eloquent's in-place semantics: the *same instance* is brought up to date, even across a replay.
+  There's deliberately no Eloquent-style `fresh()` returning a second instance—states are
+  identity-mapped to one live instance per request, so a divergent copy would be a footgun.
+  `$state->fresh()` remains as a deprecated alias of `refresh()` and will be removed at 1.0.
 - **Snapshots are written only for changed states.** The snapshot table no longer re-writes
   untouched rows on every commit—if anything external watched `verb_snapshots.updated_at`, take
   note. Blank loads no longer create snapshot rows at all.
