@@ -148,7 +148,7 @@ class ReconstitutingStateManager extends StateManager
 
     protected function fromCache(string $type, Bits|UuidInterface|AbstractUid|int|string|null $id): ?State
     {
-        return $this->cache->get($type, Id::tryFrom($id));
+        return $this->cache->get($type, $this->cacheId($type, $id));
     }
 
     /** @return Collection<string, State> */

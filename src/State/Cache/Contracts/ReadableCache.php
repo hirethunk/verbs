@@ -6,9 +6,9 @@ use Thunk\Verbs\State;
 
 interface ReadableCache
 {
-    public function get(string $class, ?string $id = null): ?State;
+    public function get(string $class, int|string|null $id = null): ?State;
 
-    public function has(string $class, ?string $id = null): bool;
+    public function has(string $class, int|string|null $id = null): bool;
 
     /** @return State[] */
     public function values(): array;

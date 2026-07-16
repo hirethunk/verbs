@@ -86,7 +86,7 @@ class StateManager
         [$type, $id] = $this->normalizeLoadArguments($type, $id);
 
         // If we've already instantiated this state, we'll load it
-        if ($existing = $this->cache->get($type, $id)) {
+        if ($existing = $this->cache->get($type, $this->cacheId($type, $id))) {
             return $existing;
         }
 
@@ -217,9 +217,18 @@ class StateManager
         return [$type, $id];
     }
 
-    protected function cacheId(State $state): int|string|null
+    /**
+     * A singleton's cache identity is its type alone—its in-memory id is
+     * incidental (and serialized event data may carry one), so lookups must
+     * force it to null or they'd never match the one live instance.
+     */
+    protected function cacheId(State|string $type, Bits|UuidInterface|AbstractUid|int|string|null $id = null): int|string|null
     {
-        return $state instanceof SingletonState ? null : $state->id;
+        if ($type instanceof State) {
+            [$type, $id] = [$type::class, $type->id];
+        }
+
+        return is_a($type, SingletonState::class, true) ? null : Id::tryFrom($id);
     }
 
     protected function merge(State $from, State $into): void
@@ -234,9 +243,7 @@ class StateManager
     /** @param  class-string<State>  $type */
     protected function loadOne(string $type, Bits|UuidInterface|AbstractUid|int|string|null $id = null): State
     {
-        $id = Id::tryFrom($id);
-
-        if ($state = $this->cache->get($type, $id)) {
+        if ($state = $this->cache->get($type, $this->cacheId($type, $id))) {
             return $state;
         }
 

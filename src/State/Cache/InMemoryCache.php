@@ -31,7 +31,7 @@ class InMemoryCache implements ReadableCache, WritableCache
         protected ?int $capacity = 100,
     ) {}
 
-    public function get(string $class, ?string $id = null): ?State
+    public function get(string $class, int|string|null $id = null): ?State
     {
         $key = $this->key($class, $id);
 
@@ -74,14 +74,14 @@ class InMemoryCache implements ReadableCache, WritableCache
         return $state;
     }
 
-    public function has(string $class, ?string $id = null): bool
+    public function has(string $class, int|string|null $id = null): bool
     {
         $key = $this->key($class, $id);
 
         return isset($this->strong[$key]) || $this->live($key) !== null;
     }
 
-    public function pin(State|string $type, ?string $id = null): static
+    public function pin(State|string $type, int|string|null $id = null): static
     {
         $key = $this->key($type, $id);
 
@@ -93,7 +93,7 @@ class InMemoryCache implements ReadableCache, WritableCache
         return $this;
     }
 
-    public function unpin(State|string $type, ?string $id = null): static
+    public function unpin(State|string $type, int|string|null $id = null): static
     {
         $key = $this->key($type, $id);
 
@@ -176,15 +176,17 @@ class InMemoryCache implements ReadableCache, WritableCache
         $this->strong[$key] = $value;
     }
 
-    protected function key(State|string $type, ?string $id = null): string
+    protected function key(State|string $type, int|string|null $id = null): string
     {
         // Allow passing in state objects.
         if ($type instanceof State) {
-            $id = $type instanceof SingletonState
-                ? null
-                : $type->id;
+            [$type, $id] = [$type::class, $type->id];
+        }
 
-            $type = $type::class;
+        // A singleton is keyed by type alone: its in-memory id is incidental,
+        // so an id passed with a singleton type must never fork the key space.
+        if (is_a($type, SingletonState::class, true)) {
+            $id = null;
         }
 
         return "{$type}:{$id}";
