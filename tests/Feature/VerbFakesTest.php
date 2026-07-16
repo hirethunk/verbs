@@ -45,6 +45,19 @@ it('performs event store assertions', function () {
     Verbs::assertNotCommitted(UncommittedVerbFakesTestEvent::class, fn ($event) => $event->id === 0);
 });
 
+it('serves fired events back through the storage contract', function () {
+    Verbs::fake();
+
+    $first = VerbFakesTestEvent::fire();
+    $second = VerbFakesTestEvent::fire();
+    Verbs::commit();
+
+    // A reconstitution under Verbs::fake() streams events from the fake store,
+    // so get() returning nothing would silently rebuild states as blanks.
+    expect(app(StoresEvents::class)->get([$second->id, $first->id])->map(fn (Event $event) => $event->id)->all())
+        ->toBe([$first->id, $second->id]);
+});
+
 class VerbFakesTestEvent extends Event
 {
     public function __construct(?int $id = null)

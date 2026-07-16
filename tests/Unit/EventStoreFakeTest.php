@@ -5,6 +5,7 @@ use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\MetadataManager;
 use Thunk\Verbs\State;
+use Thunk\Verbs\State\StateIdentity;
 use Thunk\Verbs\State\StateManager;
 use Thunk\Verbs\Testing\EventStoreFake;
 
@@ -102,6 +103,54 @@ it('reads and writes stateful events normally', function () {
         ->toBe([201, 202, 203])
         ->and($store->read(state: $state2, after_id: 201)->map(fn (Event $event) => $event->id)->all())
         ->toBe([202, 203]);
+});
+
+it('gets written events by id, in id order', function () {
+    $store = new EventStoreFake(app(MetadataManager::class));
+
+    $store->write([
+        new EventStoreFakeTestEvent(3),
+        new EventStoreFakeTestEvent(1),
+        new EventStoreFakeTestEvent(2),
+    ]);
+
+    expect($store->get([2, 3])->map(fn (Event $event) => $event->id)->all())
+        ->toBe([2, 3])
+        ->and($store->get([3, 1])->map(fn (Event $event) => $event->id)->all())
+        ->toBe([1, 3])
+        ->and($store->get([snowflake_id()])->all())
+        ->toBe([]);
+});
+
+it('answers position and discovery queries from in-memory events', function () {
+    app()->instance(StoresEvents::class, $store = new EventStoreFake(app(MetadataManager::class)));
+
+    app(StateManager::class)->load(
+        type: EventStoreFakeTestState::class,
+        id: 1001,
+    );
+
+    $store->write([
+        new EventStoreFakeTestStatefulEvent(state_id: 1001, id: 101),
+        new EventStoreFakeTestStatefulEvent(state_id: 1001, id: 102),
+    ]);
+
+    $blank = new StateIdentity(EventStoreFakeTestState::class, 1001);
+    $behind = new StateIdentity(EventStoreFakeTestState::class, 1001, position: 101);
+    $current = new StateIdentity(EventStoreFakeTestState::class, 1001, position: 102);
+    $unrelated = new StateIdentity(EventStoreFakeTestState::class, 2002, position: 101);
+
+    expect($store->hasEventsBeyondPositions([$blank]))->toBeTrue()
+        ->and($store->hasEventsBeyondPositions([$behind]))->toBeTrue()
+        ->and($store->hasEventsBeyondPositions([$current]))->toBeFalse()
+        ->and($store->hasEventsBeyondPositions([$unrelated]))->toBeFalse()
+        ->and($store->hasEventsWithinPositions([$behind], after: 100))->toBeTrue()
+        ->and($store->hasEventsWithinPositions([$behind], after: 101))->toBeFalse()
+        ->and($store->hasEventsWithinPositions([$blank], after: 100))->toBeFalse()
+        ->and($store->eventIdsForStates([$current])->all())->toBe([101, 102])
+        ->and($store->eventIdsForStates([$current], after: 101)->all())->toBe([102])
+        ->and($store->statesForEvents([101])->sole()->state_id)->toBe(1001)
+        ->and($store->statesForEvents([snowflake_id()])->all())->toBe([]);
 });
 
 class EventStoreFakeTestEvent extends Event
