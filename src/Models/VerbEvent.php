@@ -8,6 +8,7 @@ use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\MetadataManager;
 use Thunk\Verbs\Metadata;
 use Thunk\Verbs\State;
+use Thunk\Verbs\Support\MetadataSerializer;
 use Thunk\Verbs\Support\Serializer;
 
 class VerbEvent extends Model
@@ -50,11 +51,7 @@ class VerbEvent extends Model
 
     public function metadata(): Metadata
     {
-        // Not deserialized through the Serializer: Metadata keeps its values in
-        // a magic $extra collection, which Symfony's property-based normalizer
-        // can't populate (it would silently return an empty instance). The
-        // constructor merges the stored key/value pairs directly.
-        $this->meta ??= new Metadata((array) $this->metadata);
+        $this->meta ??= app(MetadataSerializer::class)->deserialize((array) $this->metadata);
 
         return $this->meta;
     }

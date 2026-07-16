@@ -63,11 +63,12 @@ class Metadata implements ArrayAccess
         $this->extra->forget($name);
     }
 
-    public function __sleep(): array
+    /** @return array<string, mixed> */
+    public function all(): array
     {
         $this->extra ??= new Collection;
 
-        return $this->extra->toArray();
+        return $this->extra->all();
     }
 
     public function offsetExists($offset): bool
