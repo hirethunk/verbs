@@ -63,8 +63,11 @@ loop (a custom daemon, a `while (true)` command), call `fresh()`—or re-`load()
 
 ## Dehydration
 
-When `Verbs::commit()` is called, the event queue is processed and all affected state values are serialized and written
-to the `VerbSnapshot` table in the database.
+When `Verbs::commit()` is called, the event queue is processed and every *affected* state is serialized and written to
+the `VerbSnapshot` table in the database—a state is written only when new events actually advanced it past what was
+last persisted, so untouched states never get re-written (and a state that never saw an event at all never creates a
+snapshot row). The event and snapshot writes happen in a single database transaction, so they persist (or fail)
+together.
 
 ## Serialization
 

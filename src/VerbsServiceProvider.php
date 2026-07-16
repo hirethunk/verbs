@@ -22,6 +22,7 @@ use Symfony\Component\Serializer\Serializer as SymfonySerializer;
 use Thunk\Verbs\Commands\MakeVerbEventCommand;
 use Thunk\Verbs\Commands\MakeVerbStateCommand;
 use Thunk\Verbs\Commands\ReplayCommand;
+use Thunk\Verbs\Commands\VerifyCommand;
 use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Contracts\StoresSnapshots;
@@ -53,6 +54,7 @@ class VerbsServiceProvider extends PackageServiceProvider
                 MakeVerbEventCommand::class,
                 MakeVerbStateCommand::class,
                 ReplayCommand::class,
+                VerifyCommand::class,
             );
     }
 
