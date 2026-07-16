@@ -2,9 +2,6 @@
 
 use Thunk\Verbs\State;
 use Thunk\Verbs\State\Cache\InMemoryCache;
-use Thunk\Verbs\State\Cache\MultiCache;
-use Thunk\Verbs\State\Cache\ReadOnlyCache;
-use Thunk\Verbs\State\Cache\WriteOnlyCache;
 
 // Instantiated without the constructor so the instance isn't auto-registered
 // with the app's StateManager—these tests need full control over what holds a
@@ -144,69 +141,6 @@ test('values() includes evicted-but-still-referenced states', function () {
     $cache->prune();
 
     expect($cache->values())->toHaveCount(2);
-});
-
-test('MultiCache with no layers behaves like a single in-memory cache', function () {
-    $cache = new MultiCache;
-    $state = cacheState(1);
-
-    $cache->put($state);
-
-    expect($cache->get(CacheLayerTestState::class, '1'))->toBe($state)
-        ->and($cache->values())->toHaveCount(1);
-});
-
-test('MultiCache reads fall through layers and back-fill the hotter ones', function () {
-    $hot = new InMemoryCache;
-    $cold = new InMemoryCache;
-    $cache = new MultiCache($hot, $cold);
-
-    // The state only lives in the cold tier to begin with.
-    $cold->put($state = cacheState(1));
-    expect($hot->has(CacheLayerTestState::class, '1'))->toBeFalse();
-
-    // Reading through the MultiCache finds it in the cold tier and warms the hot one.
-    expect($cache->get(CacheLayerTestState::class, '1'))->toBe($state)
-        ->and($hot->has(CacheLayerTestState::class, '1'))->toBeTrue();
-});
-
-test('MultiCache writes fan out to every writable layer', function () {
-    $hot = new InMemoryCache;
-    $cold = new InMemoryCache;
-    $cache = new MultiCache($hot, $cold);
-
-    $cache->put($state = cacheState(1));
-
-    expect($hot->has(CacheLayerTestState::class, '1'))->toBeTrue()
-        ->and($cold->has(CacheLayerTestState::class, '1'))->toBeTrue();
-});
-
-test('a ReadOnlyCache layer serves reads but never receives writes', function () {
-    $shared = new InMemoryCache;
-    $shared->put($existing = cacheState(1));
-
-    $cache = new MultiCache(new InMemoryCache, new ReadOnlyCache($shared));
-
-    // It contributes to reads...
-    expect($cache->get(CacheLayerTestState::class, '1'))->not->toBeNull();
-
-    // ...but writes skip it.
-    $cache->put($new = cacheState(2));
-    expect($shared->has(CacheLayerTestState::class, '2'))->toBeFalse();
-});
-
-test('a WriteOnlyCache layer receives writes but never serves reads', function () {
-    $sink = new InMemoryCache;
-    $cache = new MultiCache(new InMemoryCache, new WriteOnlyCache($sink));
-
-    // Writes reach the sink...
-    $cache->put($written = cacheState(1));
-    expect($sink->has(CacheLayerTestState::class, '1'))->toBeTrue();
-
-    // ...but its contents are never read back through the MultiCache.
-    $sink->put($hidden = cacheState(2));
-    expect($cache->get(CacheLayerTestState::class, '2'))->toBeNull()
-        ->and($cache->values())->toHaveCount(1);
 });
 
 class CacheLayerTestState extends State

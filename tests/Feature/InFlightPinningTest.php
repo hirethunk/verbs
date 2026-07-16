@@ -7,7 +7,6 @@ use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\State;
 use Thunk\Verbs\State\Cache\InMemoryCache;
-use Thunk\Verbs\State\Cache\MultiCache;
 use Thunk\Verbs\State\ReconstitutingStateManager;
 use Thunk\Verbs\State\StateManager;
 
@@ -22,7 +21,7 @@ it('keeps queued-but-uncommitted states pinned through a prune', function () {
     app()->instance(StateManager::class, new ReconstitutingStateManager(
         events: app(StoresEvents::class),
         snapshots: app(StoresSnapshots::class),
-        cache: new MultiCache(new InMemoryCache(capacity: 2)),
+        cache: new InMemoryCache(capacity: 2),
     ));
 
     $ids = [snowflake_id(), snowflake_id(), snowflake_id()];
@@ -61,7 +60,7 @@ it('keeps a state consistent through a nested commit batch under cache pressure'
     app()->instance(StateManager::class, new ReconstitutingStateManager(
         events: app(StoresEvents::class),
         snapshots: app(StoresSnapshots::class),
-        cache: new MultiCache(new InMemoryCache(capacity: 1)),
+        cache: new InMemoryCache(capacity: 1),
     ));
 
     $id = snowflake_id();
