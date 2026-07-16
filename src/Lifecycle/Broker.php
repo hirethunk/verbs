@@ -2,12 +2,15 @@
 
 namespace Thunk\Verbs\Lifecycle;
 
+use Illuminate\Support\Facades\DB;
+use Throwable;
 use Thunk\Verbs\CommitsImmediately;
 use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\EventNotValid;
+use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 use Thunk\Verbs\State;
 use Thunk\Verbs\State\StateManager;
@@ -64,13 +67,33 @@ class Broker implements BrokersEvents
 
     public function commit(): bool
     {
-        $events = $this->queue->flush();
+        $events = $this->queue->getEvents();
 
         if (empty($events)) {
             return true;
         }
 
-        $this->writeSnapshots();
+        // Events and snapshots persist (or fail) together: a failed snapshot
+        // write can no longer leave events behind, and vice versa. Handlers
+        // run *after* the transaction commits, so their side effects only ever
+        // observe durably-stored events—and a handler exception can never
+        // un-write them.
+        try {
+            $this->transaction(function () {
+                $this->queue->flush();
+                $this->writeSnapshots();
+            });
+        } catch (Throwable $exception) {
+            // flush() empties the queue once the event write succeeds, so if
+            // the transaction failed after that point (e.g. in the snapshot
+            // write), put the batch back—a failed commit must never silently
+            // drop events.
+            if (empty($this->queue->getEvents())) {
+                $this->queue->restore($events);
+            }
+
+            throw $exception;
+        }
 
         // Bound the working set. The batch's states are still pinned here, so
         // they survive the prune and stay resident while their handlers run—a
@@ -128,9 +151,58 @@ class Broker implements BrokersEvents
         }
     }
 
+    /**
+     * When the two stores share a database connection (the default), the
+     * callback runs in a single atomic transaction. When they don't, each
+     * store's writes still get their own transaction, but cross-store
+     * atomicity requires a shared connection.
+     */
+    protected function transaction(callable $callback): void
+    {
+        $events_connection = config('verbs.connections.events');
+        $snapshots_connection = config('verbs.connections.snapshots');
+
+        if ($events_connection === $snapshots_connection) {
+            DB::connection($events_connection)->transaction($callback);
+
+            return;
+        }
+
+        DB::connection($events_connection)->transaction(
+            fn () => DB::connection($snapshots_connection)->transaction($callback),
+        );
+    }
+
+    /**
+     * Only dirty states are written: a state is dirty when its position has
+     * advanced past whatever was last persisted for it, and a state that never
+     * saw an event at all (a blank load) never creates a snapshot row.
+     */
     protected function writeSnapshots(): bool
     {
-        return $this->snapshots->write($this->states->all());
+        $dirty = array_filter(
+            $this->states->all(),
+            function (State $state) {
+                $position = Id::tryFrom($state->last_event_id);
+
+                return $position !== null
+                    && $position !== $this->metadata->getEphemeral($state, 'last_written_event_id');
+            },
+        );
+
+        if (empty($dirty)) {
+            return true;
+        }
+
+        if (! $this->snapshots->write(array_values($dirty))) {
+            return false;
+        }
+
+        foreach ($dirty as $state) {
+            $this->metadata->setEphemeral($state, 'last_written_event_id', Id::tryFrom($state->last_event_id));
+        }
+
+        return true;
     }
 
     public function listen(object|string $listener)

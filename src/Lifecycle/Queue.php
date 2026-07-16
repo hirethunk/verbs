@@ -35,4 +35,10 @@ class Queue
     {
         return $this->event_queue;
     }
+
+    /** @param  Event[]  $events */
+    public function restore(array $events): void
+    {
+        $this->event_queue = array_merge($events, $this->event_queue);
+    }
 }

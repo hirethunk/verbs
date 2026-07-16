@@ -5,12 +5,15 @@ namespace Thunk\Verbs\Lifecycle;
 use Glhd\Bits\Bits;
 use Illuminate\Database\MultipleRecordsFoundException;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
+use Throwable;
 use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Exceptions\StateIsNotSingletonException;
 use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Models\VerbSnapshot;
+use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\Serializer;
 use Thunk\Verbs\Support\StateCollection;
@@ -40,7 +43,7 @@ class SnapshotStore implements StoresSnapshots
             throw new StateIsNotSingletonException($type);
         }
 
-        return $snapshots->first()?->state();
+        return $snapshots->isEmpty() ? null : $this->stateFromSnapshot($snapshots->first());
     }
 
     public function write(array $states): bool
@@ -51,8 +54,11 @@ class SnapshotStore implements StoresSnapshots
 
         foreach (array_chunk($states, 20) as $chunk) {
             $upserted = VerbSnapshot::upsert(
-                values: collect($chunk)->map($this->formatForWrite(...))->unique('id')->all(),
-                uniqueBy: ['id'],
+                values: collect($chunk)
+                    ->map($this->formatForWrite(...))
+                    ->unique(fn (array $row) => $row['type'].':'.$row['state_id'])
+                    ->all(),
+                uniqueBy: ['type', 'state_id'],
                 update: ['data', 'last_event_id', 'updated_at'],
             );
 
@@ -85,7 +91,7 @@ class SnapshotStore implements StoresSnapshots
 
         return match ($count) {
             0 => null,
-            1 => $snapshots->first()->state(),
+            1 => $this->stateFromSnapshot($snapshots->first()),
             default => throw new MultipleRecordsFoundException($count),
         };
     }
@@ -98,16 +104,48 @@ class SnapshotStore implements StoresSnapshots
             ->where('type', '=', $type)
             ->whereIn('state_id', $ids)
             ->get()
-            ->map(fn (VerbSnapshot $snapshot) => $snapshot->state());
+            ->map(fn (VerbSnapshot $snapshot) => $this->stateFromSnapshot($snapshot))
+            ->filter();
 
-        return StateCollection::make($states);
+        return StateCollection::make($states->values());
+    }
+
+    /**
+     * A snapshot that can't be trusted—undeserializable data, or data with no
+     * position—is treated as absent so the state transparently rebuilds from
+     * its events, rather than wedging every request that touches it.
+     */
+    protected function stateFromSnapshot(VerbSnapshot $snapshot): ?State
+    {
+        if ($snapshot->last_event_id === null) {
+            Log::warning('Verbs: snapshot has data but no position; rebuilding from events.', [
+                'type' => $snapshot->type,
+                'state_id' => $snapshot->state_id,
+            ]);
+
+            return null;
+        }
+
+        try {
+            return $snapshot->state();
+        } catch (Throwable $exception) {
+            Log::warning('Verbs: failed to deserialize snapshot; rebuilding from events.', [
+                'type' => $snapshot->type,
+                'state_id' => $snapshot->state_id,
+                'exception' => $exception->getMessage(),
+            ]);
+
+            return null;
+        }
     }
 
     protected function formatForWrite(State $state): array
     {
         return [
-            'id' => $this->metadata->getEphemeral($state, 'snapshot_id', snowflake_id()),
-            'state_id' => Id::from($state->id),
+            'id' => snowflake_id(),
+            // A singleton's identity is its type, so its row gets the sentinel
+            // id—giving every singleton exactly one row under the natural key.
+            'state_id' => $state instanceof SingletonState ? Id::nil() : Id::from($state->id),
             'type' => $state::class,
             'data' => $this->serializer->serialize($state),
             'last_event_id' => Id::tryFrom($state->last_event_id),

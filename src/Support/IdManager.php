@@ -56,6 +56,20 @@ class IdManager
         };
     }
 
+    /**
+     * The sentinel used where "no id" must still occupy an id-typed column
+     * (e.g. singleton snapshots, whose identity is their type alone). It has
+     * to be a valid value for the column type, so it varies by id_type.
+     */
+    public function nil(): int|string
+    {
+        return match ($this->id_type) {
+            self::TYPE_SNOWFLAKE => 0,
+            self::TYPE_ULID => '00000000000000000000000000',
+            self::TYPE_UUID => '00000000-0000-0000-0000-000000000000',
+        };
+    }
+
     public function createColumnDefinition(Blueprint $table, string $name = 'id'): ColumnDefinition
     {
         return match ($this->id_type) {

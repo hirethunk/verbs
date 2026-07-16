@@ -12,6 +12,7 @@ use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Facades\Id;
+use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\StateCollection;
 
@@ -31,7 +32,12 @@ class SnapshotStoreFake implements StoresSnapshots
     {
         foreach ($states as $state) {
             $this->states[$state::class] ??= new Collection;
-            $this->states[$state::class]->put(Id::from($state->id), $state);
+
+            // Mirror the real store: singletons are keyed by type alone, so a
+            // singleton only ever occupies one slot no matter its incidental id.
+            $key = $state instanceof SingletonState ? Id::nil() : Id::from($state->id);
+
+            $this->states[$state::class]->put($key, $state);
         }
 
         return true;
