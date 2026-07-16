@@ -22,6 +22,15 @@ it('normalizes id objects to their scalar event ids', function () {
         ->and(Id::normalizeEventId($uuid))->toBe($uuid->toString());
 });
 
+it('keeps an all-digit ULID as a string instead of overflowing the int cast', function () {
+    $all_digit_ulid = '01234567890123456789012345';
+
+    // (int) on a 26-digit string saturates at PHP_INT_MAX, which would then
+    // compare *above* every normal ULID—corrupting before/after ordering.
+    expect(Id::normalizeEventId($all_digit_ulid))->toBe($all_digit_ulid)
+        ->and(Id::normalizeEventId($all_digit_ulid) < Id::normalizeEventId('01ARZ3NDEKTSV4RRFFQ69G5FAV'))->toBeTrue();
+});
+
 it('normalizes event ids so they compare chronologically', function () {
     $earlier_snowflake = snowflake_id();
     $later_snowflake = snowflake_id();

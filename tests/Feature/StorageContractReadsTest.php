@@ -132,7 +132,9 @@ test('discovery reads return distinct event ids and state identities', function 
 
     $events = app(StoresEvents::class);
 
-    expect($events->eventIdsFor([new StateIdentity(ContractReadsState::class, $a)])->all())
+    // The contract promises distinct ids, not ordered ones (the plan sorts its
+    // own window), so sort before asserting—DISTINCT return order is driver-specific.
+    expect($events->eventIdsFor([new StateIdentity(ContractReadsState::class, $a)])->sort()->values()->all())
         ->toBe([$e1, $e2])
         ->and($events->eventIdsFor([new StateIdentity(ContractReadsState::class, $a)], after_id: $e1)->all())
         ->toBe([$e2]);

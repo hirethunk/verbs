@@ -70,7 +70,12 @@ class IdManager
 
         return match (true) {
             $value === null => null,
-            is_numeric($value) => (int) $value,
+            is_int($value) => $value,
+            // Drivers hand bigints back as decimal strings, which must compare
+            // numerically—but only strings that fit in an int are snowflakes
+            // in disguise. A 26-char all-digit ULID (rare, but legal) must stay
+            // a string, or the cast overflows and corrupts ordering.
+            is_string($value) && ctype_digit($value) && strlen($value) <= 19 => (int) $value,
             default => (string) $value,
         };
     }
