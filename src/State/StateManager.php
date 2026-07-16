@@ -7,6 +7,7 @@ use InvalidArgumentException;
 use Ramsey\Uuid\UuidInterface;
 use ReflectionClass;
 use Symfony\Component\Uid\AbstractUid;
+use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\State;
@@ -58,6 +59,8 @@ class StateManager
      */
     public function load(string $type, Bits|UuidInterface|AbstractUid|iterable|int|string|null $id): StateCollection|State
     {
+        [$type, $id] = $this->normalizeLoadArguments($type, $id);
+
         return is_iterable($id)
             ? $this->loadMany($id, $type)
             : $this->loadOne($type, $id);
@@ -80,6 +83,8 @@ class StateManager
      */
     public function make(string $type, Bits|UuidInterface|AbstractUid|int|string|null $id): State
     {
+        [$type, $id] = $this->normalizeLoadArguments($type, $id);
+
         // If we've already instantiated this state, we'll load it
         if ($existing = $this->cache->get($type, $id)) {
             return $existing;
@@ -95,7 +100,7 @@ class StateManager
             throw new InvalidArgumentException("Cannot load a [{$type}] state without an id.");
         }
 
-        // State::__construct() auto-registers the state with the Scope,
+        // State::__construct() auto-registers the state with the StateManager,
         // so we need to skip the constructor until we've already set the ID.
         /** @var State $state */
         $state = (new ReflectionClass($type))->newInstanceWithoutConstructor();
@@ -148,7 +153,7 @@ class StateManager
         return $this;
     }
 
-    public function reset(): static
+    public function reset(bool $include_storage = false): static
     {
         $this->cache->reset();
         $this->replaying = false;
@@ -158,7 +163,37 @@ class StateManager
         // longer exists, so we invalidate them in lockstep.
         app(EventStateRegistry::class)->reset();
 
+        if ($include_storage) {
+            trigger_error(
+                'Passing $include_storage to StateManager::reset() is deprecated — call app(StoresSnapshots::class)->reset() directly instead.',
+                E_USER_DEPRECATED,
+            );
+
+            app(StoresSnapshots::class)->reset();
+        }
+
         return $this;
+    }
+
+    /**
+     * Verbs 0.x took ($id, $type); load() and make() now take ($type, $id).
+     * The old order is cheap to detect (the type is always a State class-string,
+     * and an id never is), so we swap and warn for one release instead of breaking.
+     */
+    protected function normalizeLoadArguments(mixed $type, mixed $id): array
+    {
+        if (is_string($id) && is_a($id, State::class, true) && ! is_a((string) $type, State::class, true)) {
+            trigger_error(
+                'Passing ($id, $type) to StateManager::load()/make() is deprecated — pass ($type, $id) instead.',
+                E_USER_DEPRECATED,
+            );
+
+            // An integer id was cast to a string on its way through the
+            // string-typed $type parameter, so restore it as we swap back.
+            return [$id, is_string($type) && ctype_digit($type) ? (int) $type : $type];
+        }
+
+        return [$type, $id];
     }
 
     /** @param  class-string<State>  $type */

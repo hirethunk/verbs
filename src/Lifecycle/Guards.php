@@ -20,6 +20,17 @@ class Guards
         public Event $event
     ) {}
 
+    /** @deprecated Call authorize()->validate() instead. */
+    public function check(): static
+    {
+        trigger_error(
+            'Guards::check() is deprecated — call authorize()->validate() instead.',
+            E_USER_DEPRECATED,
+        );
+
+        return $this->authorize()->validate();
+    }
+
     public function authorize(): static
     {
         if ($this->passesAuthorization()) {
@@ -27,7 +38,7 @@ class Guards
         }
 
         if (method_exists($this->event, 'failedAuthorization')) {
-            $this->event->failedAuthorization($this->state);
+            $this->event->failedAuthorization(null);
         }
 
         throw new AuthorizationException;

@@ -29,7 +29,7 @@ class BrokerFake implements BrokersEvents
         //  - [x] EventStore
         //  - [ ] EventQueue
         //  - [ ] SnapshotStore
-        //  - [ ] Scope (might only need to fake this instead of snapshot store)
+        //  - [ ] StateManager (might only need to fake this instead of snapshot store)
 
         $container->instance(StoresEvents::class, $this->store);
     }

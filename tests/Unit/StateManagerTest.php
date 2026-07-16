@@ -15,32 +15,32 @@ beforeEach(function () {
 });
 
 test('loadOrFail triggers an exception if state does not exist', function () {
-    ScopeTestState::loadOrFail(1);
+    StateManagerTestState::loadOrFail(1);
 })->throws(StateNotFoundException::class);
 
 test('load does not trigger an exception if state does not exist', function () {
-    expect(ScopeTestState::load(1))
-        ->toBeInstanceOf(ScopeTestState::class)
+    expect(StateManagerTestState::load(1))
+        ->toBeInstanceOf(StateManagerTestState::class)
         ->last_event_id->toBeNull();
 });
 
 test('snapshots are not stored for states that have no events', function () {
-    ScopeTestState::load(1);
+    StateManagerTestState::load(1);
     Verbs::commit();
 
     app(StoresSnapshots::class)->assertNothingWritten();
 });
 
 test('it calls the state constructor on make', function () {
-    $state = ScopeTestState::make();
+    $state = StateManagerTestState::make();
     expect($state->constructed)->toBeTrue();
 });
 
 test('loading a keyed state with a null id fails loudly instead of fabricating one', function () {
-    ScopeTestState::load(null);
+    StateManagerTestState::load(null);
 })->throws(InvalidArgumentException::class);
 
-class ScopeTestState extends State
+class StateManagerTestState extends State
 {
     public bool $constructed = false;
 

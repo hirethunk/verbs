@@ -40,15 +40,30 @@ class ReconstitutingStateManager extends StateManager
 
     public function load(string $type, Bits|UuidInterface|AbstractUid|iterable|int|string|null $id): StateCollection|State
     {
+        [$type, $id] = $this->normalizeLoadArguments($type, $id);
+
         $any_miss = false;
 
+        // For a many-state load, hydrate every missing snapshot in one query up
+        // front rather than one query per state below. Singletons never take
+        // this path—their snapshot is keyed by type, not id.
+        $snapshots = is_iterable($id) && ! is_a($type, SingletonState::class, true)
+            ? $this->snapshotsForMisses($type, $id)
+            : null;
+
         $states = collect(is_iterable($id) ? $id : [$id])
-            ->map(function ($one) use ($type, &$any_miss) {
+            ->map(function ($one) use ($type, &$any_miss, $snapshots) {
                 if ($cached = $this->fromCache($type, $one)) {
                     return $cached;
                 }
 
                 $any_miss = true;
+
+                if ($snapshots !== null) {
+                    $snapshot = $snapshots->get((string) Id::tryFrom($one));
+
+                    return $snapshot ? $this->cache->put($snapshot) : $this->make($type, $one);
+                }
 
                 return $this->fromStorage($type, $one);
             });
@@ -69,6 +84,23 @@ class ReconstitutingStateManager extends StateManager
     protected function fromCache(string $type, Bits|UuidInterface|AbstractUid|int|string|null $id): ?State
     {
         return $this->cache->get($type, Id::tryFrom($id));
+    }
+
+    /** @return Collection<string, State> */
+    protected function snapshotsForMisses(string $type, iterable $ids): Collection
+    {
+        $missing = collect($ids)
+            ->map(fn ($id) => Id::tryFrom($id))
+            ->filter(fn ($id) => $id !== null && ! $this->cache->has($type, $id))
+            ->unique()
+            ->values();
+
+        if ($missing->isEmpty()) {
+            return new Collection;
+        }
+
+        return collect($this->snapshots->load($missing->all(), $type))
+            ->keyBy(fn (State $state) => (string) $state->id);
     }
 
     protected function fromStorage(string $type, Bits|UuidInterface|AbstractUid|int|string|null $id): State

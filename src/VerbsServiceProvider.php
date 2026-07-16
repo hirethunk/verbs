@@ -138,6 +138,9 @@ class VerbsServiceProvider extends PackageServiceProvider
         $this->app->alias(Broker::class, BrokersEvents::class);
         $this->app->alias(EventStore::class, StoresEvents::class);
         $this->app->alias(SnapshotStore::class, StoresSnapshots::class);
+
+        // Deprecated: resolves the pre-0.9 class name to the current binding.
+        $this->app->alias(StateManager::class, Lifecycle\StateManager::class);
     }
 
     public function packageBooted()

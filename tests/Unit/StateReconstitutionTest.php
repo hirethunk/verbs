@@ -12,7 +12,7 @@ use Thunk\Verbs\State\StateManager;
  *
  * FIRST PROBLEM:
  * - We try to load state1, but we don't have an up-to-date snapshot
- * - Scope::load tries to reconstitute state from events
+ * - StateManager::load tries to reconstitute state from events
  * - One of those Event::apply methods load state2
  * - Best case scenario: we reconstitute state2 before continuing
  * - Worst case scenario: reconstituting state2 tries to reconstitute state1, and we're in an infinite loop
@@ -25,7 +25,7 @@ use Thunk\Verbs\State\StateManager;
  *
  * SECOND PROBLEM:
  * - We try to load state1, but we don't have an up-to-date snapshot
- * - Scope::load tries to reconstitute state from events
+ * - StateManager::load tries to reconstitute state from events
  * - One of those Event::apply methods requires state1 and state2, so we need to load state2
  * - Reconstituting state2 re-runs the same apply method on state2 before also running it on state1
  * - Double-apply happens

@@ -23,10 +23,6 @@ class StateNormalizer implements DenormalizerInterface, NormalizerInterface
             return $data;
         }
 
-        // $state = new $type;
-        // $state->id = $data;
-        // $state->__verbs_initialized = false;
-
         return app(StateManager::class)->load($type, $data);
     }
 
