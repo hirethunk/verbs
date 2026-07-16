@@ -91,9 +91,13 @@ Eloquent snapshot storage.
 - **Snapshots are written only for changed states.** The snapshot table no longer re-writes
   untouched rows on every commit—if anything external watched `verb_snapshots.updated_at`, take
   note. Blank loads no longer create snapshot rows at all.
-- **Commit is transactional.** Events and snapshots persist (or roll back) together, and handlers
-  run only after the transaction commits. Wrapping `fire()` + `Verbs::commit()` in your own
-  `DB::transaction()` now rolls back both stores together.
+- **Commit is transactional.** Events, state-event mappings, and snapshots persist (or roll back)
+  together, and handlers run only after the transaction commits. Wrapping `fire()` +
+  `Verbs::commit()` in your own `DB::transaction()` now rolls back the stores together. If you've
+  pointed `verbs.connections.*` at more than one connection, each distinct connection gets its own
+  transaction (best-effort—cross-connection atomicity needs a shared connection), and note that
+  `state_events` must share the `events` connection regardless: the event read path queries across
+  both tables on one connection.
 - **Registering a second instance for a live state identity throws.** A `LogicException` here is
   a bug-finder: it means something constructed a state directly instead of loading it. Use
   `YourState::load($id)` (or `::singleton()`), never `new YourState`.

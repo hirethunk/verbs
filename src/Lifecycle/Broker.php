@@ -164,25 +164,26 @@ class Broker implements BrokersEvents
     }
 
     /**
-     * When the two stores share a database connection (the default), the
-     * callback runs in a single atomic transaction. When they don't, each
-     * store's writes still get their own transaction, but cross-store
-     * atomicity requires a shared connection.
+     * When all three Verbs stores share a database connection (the default),
+     * the callback runs in a single atomic transaction. When they don't, each
+     * distinct connection gets its own nested transaction—best-effort, since
+     * true cross-connection atomicity isn't possible without two-phase commit.
      */
     protected function transaction(callable $callback): void
     {
-        $events_connection = config('verbs.connections.events');
-        $snapshots_connection = config('verbs.connections.snapshots');
+        $connections = array_unique([
+            config('verbs.connections.events'),
+            config('verbs.connections.state_events'),
+            config('verbs.connections.snapshots'),
+        ]);
 
-        if ($events_connection === $snapshots_connection) {
-            DB::connection($events_connection)->transaction($callback);
+        $transaction = $callback;
 
-            return;
+        foreach (array_reverse($connections) as $connection) {
+            $transaction = fn () => DB::connection($connection)->transaction($transaction);
         }
 
-        DB::connection($events_connection)->transaction(
-            fn () => DB::connection($snapshots_connection)->transaction($callback),
-        );
+        $transaction();
     }
 
     /**

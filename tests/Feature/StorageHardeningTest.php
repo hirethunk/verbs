@@ -12,6 +12,7 @@ use Thunk\Verbs\Attributes\Autodiscovery\StateId;
 use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Verbs;
+use Thunk\Verbs\Lifecycle\Broker;
 use Thunk\Verbs\Lifecycle\SnapshotStore;
 use Thunk\Verbs\Models\VerbEvent;
 use Thunk\Verbs\Models\VerbSnapshot;
@@ -231,6 +232,42 @@ test('the natural-key migration dedupes, normalizes singletons, and drops dead r
         ->and(Schema::hasColumn('verb_snapshots_migration_test', 'expires_at'))->toBeFalse();
 
     Schema::drop('verb_snapshots_migration_test');
+});
+
+test('the commit transaction spans every configured verbs connection', function () {
+    config()->set('database.connections.verbs_secondary', [
+        'driver' => 'sqlite',
+        'database' => ':memory:',
+        'prefix' => '',
+    ]);
+    config()->set('verbs.connections.state_events', 'verbs_secondary');
+
+    $levels = [];
+
+    // transaction() is protected, so bind into the broker to exercise the
+    // connection nesting directly without faking a cross-database write.
+    (function () use (&$levels) {
+        $this->transaction(function () use (&$levels) {
+            $levels['events'] = DB::connection(config('verbs.connections.events'))->transactionLevel();
+            $levels['state_events'] = DB::connection('verbs_secondary')->transactionLevel();
+        });
+    })->call(app(Broker::class));
+
+    expect($levels)->toBe(['events' => 1, 'state_events' => 1])
+        ->and(DB::connection(config('verbs.connections.events'))->transactionLevel())->toBe(0)
+        ->and(DB::connection('verbs_secondary')->transactionLevel())->toBe(0);
+});
+
+test('shared connections get a single commit transaction, not savepoints', function () {
+    $level = null;
+
+    (function () use (&$level) {
+        $this->transaction(function () use (&$level) {
+            $level = DB::connection(config('verbs.connections.events'))->transactionLevel();
+        });
+    })->call(app(Broker::class));
+
+    expect($level)->toBe(1);
 });
 
 class HardeningTestState extends State

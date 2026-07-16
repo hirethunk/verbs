@@ -76,6 +76,10 @@ return [
    | By default, Verbs will use your default database connection, However, you may
    | wish to customize these connection names to better fit your application.
    |
+   | Note: `state_events` should share the `events` connection. Verbs reads
+   | events and their state mappings in a single query across both tables,
+   | which requires them to live in the same database.
+   |
    */
     'connections' => [
         'events' => env('VERBS_EVENTS_CONNECTION'),
