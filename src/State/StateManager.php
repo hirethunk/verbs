@@ -110,6 +110,27 @@ class StateManager
         return $this->cache->put($state);
     }
 
+    /**
+     * Bring a state up to date and return the *same instance*. In this base
+     * scope there is no storage to consult, so refreshing only re-adopts the
+     * instance as canonical if the cache lost track of it (or syncs it from
+     * whichever instance is canonical, if the two ever diverged).
+     */
+    public function refresh(State $state): State
+    {
+        $cached = $this->cache->get($state::class, $this->cacheId($state));
+
+        if ($cached === null) {
+            return $this->cache->put($state);
+        }
+
+        if ($cached !== $state) {
+            $this->merge($cached, $state);
+        }
+
+        return $state;
+    }
+
     public function setReplaying(bool $replaying): static
     {
         $this->replaying = $replaying;
@@ -194,6 +215,20 @@ class StateManager
         }
 
         return [$type, $id];
+    }
+
+    protected function cacheId(State $state): int|string|null
+    {
+        return $state instanceof SingletonState ? null : $state->id;
+    }
+
+    protected function merge(State $from, State $into): void
+    {
+        foreach (get_object_vars($from) as $property => $value) {
+            if ($property !== 'id') {
+                $into->{$property} = $value;
+            }
+        }
     }
 
     /** @param  class-string<State>  $type */

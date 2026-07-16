@@ -5,6 +5,7 @@ namespace Thunk\Verbs\State;
 use Glhd\Bits\Bits;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Contracts\StoresEvents;
@@ -79,6 +80,69 @@ class ReconstitutingStateManager extends StateManager
         return is_iterable($id)
             ? StateCollection::make($states)
             : $states->first();
+    }
+
+    /**
+     * Cache hits are request-stable by design: within a request you compute
+     * against one consistent view of each state. fresh() is the explicit "ask
+     * otherwise"—it always runs the staleness check and brings the *same
+     * instance* up to date, even if the identity map was reset (e.g. by a
+     * replay) since the caller got its reference.
+     */
+    public function refresh(State $state): State
+    {
+        $canonical = $this->adopt($state);
+
+        $states = collect([$canonical]);
+
+        if (! $this->replaying && $this->isStale($states)) {
+            $this->reconstitute($states);
+        }
+
+        if ($canonical !== $state) {
+            // Another instance owns this identity (the cache was reset and the
+            // identity reloaded behind this reference). Sync the caller's
+            // instance from it rather than ever throwing from fresh().
+            $this->merge($canonical, $state);
+
+            Log::debug('Verbs: refreshed a state whose identity is now owned by a different instance.', [
+                'state_type' => $state::class,
+                'state_id' => $state->id,
+            ]);
+        }
+
+        return $state;
+    }
+
+    /**
+     * Resolve which instance canonically owns this state's identity, re-adopting
+     * the given instance (seeded from its latest snapshot) if the cache has no
+     * entry—which is what happens after a replay reset clears the scope.
+     */
+    protected function adopt(State $state): State
+    {
+        $cached = $this->cache->get($state::class, $this->cacheId($state));
+
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        if ($snapshot = $this->latestSnapshotFor($state)) {
+            $this->merge($snapshot, $state);
+        }
+
+        return $this->cache->put($state);
+    }
+
+    protected function latestSnapshotFor(State $state): ?State
+    {
+        if ($state instanceof SingletonState) {
+            return $this->snapshots->loadSingleton($state::class);
+        }
+
+        return Id::tryFrom($state->id) === null
+            ? null
+            : $this->snapshots->load(Id::from($state->id), $state::class);
     }
 
     protected function fromCache(string $type, Bits|UuidInterface|AbstractUid|int|string|null $id): ?State
@@ -212,19 +276,5 @@ class ReconstitutingStateManager extends StateManager
     protected function identityKey(State $state): string
     {
         return $state::class.':'.$this->cacheId($state);
-    }
-
-    protected function cacheId(State $state): int|string|null
-    {
-        return $state instanceof SingletonState ? null : $state->id;
-    }
-
-    protected function merge(State $from, State $into): void
-    {
-        foreach (get_object_vars($from) as $property => $value) {
-            if ($property !== 'id') {
-                $into->{$property} = $value;
-            }
-        }
     }
 }

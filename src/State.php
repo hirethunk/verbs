@@ -94,9 +94,15 @@ abstract class State implements UrlRoutable
             ->collect();
     }
 
+    /**
+     * Bring this instance up to date with the latest events and return it.
+     * Like an Eloquent model, a loaded state doesn't self-update—fresh() is
+     * how you explicitly ask for the current view. The same instance is
+     * always returned, so held references stay valid.
+     */
     public function fresh(): static
     {
-        return app(StateManager::class)->load(static::class, $this->id);
+        return app(StateManager::class)->refresh($this);
     }
 
     public function getRouteKey()
