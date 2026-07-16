@@ -76,6 +76,7 @@ class VerbsServiceProvider extends PackageServiceProvider
             return new ReconstitutingStateManager(
                 events: $app->make(StoresEvents::class),
                 snapshots: $app->make(StoresSnapshots::class),
+                queue: $app->make(EventQueue::class),
                 cache: new InMemoryCache(
                     capacity: $app->make(Repository::class)->get('verbs.state_cache_size', 100),
                 ),

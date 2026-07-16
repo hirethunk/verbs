@@ -16,6 +16,7 @@ use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Lifecycle\Lifecycle;
 use Thunk\Verbs\Lifecycle\Phase;
 use Thunk\Verbs\Lifecycle\Phases;
+use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 use Thunk\Verbs\Models\VerbStateEvent;
 use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\State;
@@ -35,6 +36,7 @@ class ReconstitutingStateManager extends StateManager
     public function __construct(
         protected StoresEvents $events,
         protected StoresSnapshots $snapshots,
+        protected EventQueue $queue,
         WritableCache&ReadableCache $cache,
     ) {
         parent::__construct($cache);
@@ -88,7 +90,11 @@ class ReconstitutingStateManager extends StateManager
      * against one consistent view of each state. refresh() is the explicit
      * "ask otherwise"—it always runs the staleness check and brings the *same
      * instance* up to date, even if the identity map was reset (e.g. by a
-     * replay) since the caller got its reference.
+     * replay) since the caller got its reference. The one exception is a state
+     * with queued-but-uncommitted events: its in-memory view already includes
+     * applies that storage doesn't, so refresh() never overwrites it (see
+     * harvest()) and a genuine conflict with another writer surfaces at commit
+     * as a ConcurrencyException.
      */
     public function refresh(State $state): State
     {
@@ -341,6 +347,21 @@ class ReconstitutingStateManager extends StateManager
 
         foreach ($rebuilt->all() as $state) {
             if ($live = $requested->get($this->identityKey($state))) {
+                // A rebuild only sees committed events, so a live state with
+                // queued-but-uncommitted events already reflects applies the
+                // rebuilt value can't—merging would silently discard them
+                // (and could advance last_event_id past a foreign write,
+                // defeating the commit-time concurrency guard). Keep the live
+                // view; a real conflict surfaces as a ConcurrencyException.
+                if ($this->queue->hasEventsFor($live)) {
+                    Log::debug('Verbs: skipped merging reconstituted data over a state with uncommitted events.', [
+                        'state_type' => $live::class,
+                        'state_id' => $live->id,
+                    ]);
+
+                    continue;
+                }
+
                 $this->merge($state, $live);
             } elseif ($this->cache->get($state::class, $this->cacheId($state)) === null) {
                 $this->cache->put($state);

@@ -42,8 +42,15 @@ Holding a state works like holding an Eloquent model:
 
 - **One instance per state, per request.** Every `load()` of the same state returns the same object, for as long as
   you hold a reference to it anywhere in your code. Two parts of your request can never see two divergent copies.
-- **Loads are request-stable.** Once a state is in memory, loading it again returns it as-is—Verbs doesn't re-check
-  the database on every access, so you compute against one consistent view of the world within a request.
+- **Loads are cache-first, and co-loads advance in lockstep.** Once a state is in memory, loading it again on its own
+  returns it as-is—Verbs doesn't re-check the database on every access. The one exception is a multi-state `load()`
+  that has to hit storage for *some* of the requested states: everything a single `load()` returns reflects the same
+  moment in the event stream, so a state you already had in memory can be advanced in place (same instance, newer
+  data) when it's co-loaded with a miss whose rebuild includes it.
+- **States with uncommitted events are never touched.** A state whose events have been fired but not yet committed
+  always keeps its in-memory view—no co-load or `refresh()` will ever overwrite it, because the database can't yet
+  know about those applies. `refresh()` on such an in-flight state is a no-op for that state, and a genuine conflict
+  with another writer surfaces at commit as a `ConcurrencyException`.
 - **`refresh()` is how you ask for the latest.** Just like an Eloquent model doesn't self-update, a loaded state
   doesn't either. Calling `$state->refresh()` checks for newer events and brings the state up to date if there are
   any—and, exactly like Eloquent's `refresh()`, it updates the *same instance* in place, so every reference you're
