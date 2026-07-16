@@ -20,6 +20,7 @@ class BrokerFake implements BrokersEvents
     public function __construct(
         Container $container,
         public EventStoreFake $store,
+        public SnapshotStoreFake $snapshots,
         public BrokersEvents $broker,
     ) {
         // Eventually this will swap out all the necessary fakes and implement
@@ -28,10 +29,11 @@ class BrokerFake implements BrokersEvents
         //
         //  - [x] EventStore
         //  - [ ] EventQueue
-        //  - [ ] SnapshotStore
-        //  - [ ] StateManager (might only need to fake this instead of snapshot store)
+        //  - [x] SnapshotStore
+        //  - [ ] StateManager
 
         $container->instance(StoresEvents::class, $this->store);
+        $container->instance(StoresSnapshots::class, $this->snapshots);
     }
 
     public function assertCommitted(string|Closure $event, Closure|int|null $callback = null): EventStoreFake

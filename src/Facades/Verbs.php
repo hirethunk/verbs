@@ -10,6 +10,7 @@ use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\Phase;
 use Thunk\Verbs\Testing\BrokerFake;
 use Thunk\Verbs\Testing\EventStoreFake;
+use Thunk\Verbs\Testing\SnapshotStoreFake;
 
 /**
  * @method static bool commit()
@@ -36,6 +37,7 @@ class Verbs extends Facade
         $fake_broker = new BrokerFake(
             static::getFacadeApplication(),
             static::getFacadeApplication()->make(EventStoreFake::class),
+            static::getFacadeApplication()->make(SnapshotStoreFake::class),
             $real_broker
         );
 
