@@ -101,6 +101,10 @@ Eloquent snapshot storage.
 - **Registering a second instance for a live state identity throws.** A `LogicException` here is
   a bug-finder: it means something constructed a state directly instead of loading it. Use
   `YourState::load($id)` (or `::singleton()`), never `new YourState`.
+- **Loading a keyed state with a `null` id fails loudly.** `YourState::load(null)` used to fail
+  with an opaque `TypeError`; it now throws `InvalidArgumentException` ("Cannot load a [YourState]
+  state without an id."), so a missing route parameter or null foreign key surfaces clearly. Only
+  singletons load without an id.
 - **Event metadata actually round-trips now.** Reading stored metadata used to silently return
   an empty bag; it now returns what was written, and *object* values (like Carbon instances) are
   stored with a small type envelope so they come back as real objects. Scalars and arrays are
