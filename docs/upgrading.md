@@ -13,7 +13,7 @@ php artisan migrate
 
 The migration adds a unique index on `verb_snapshots (type, state_id)`, dedupes any existing
 duplicate rows (keeping the most advanced one), normalizes singleton snapshot rows to a sentinel
-`state_id`, deletes rows that had data but no position, and drops the never-used `expires_at`
+`state_id`, deletes rows that had data but no `last_event_id`, and drops the never-used `expires_at`
 column. After migrating, you can confirm your snapshots match your events:
 
 ```sh
@@ -41,20 +41,20 @@ unaffected—only direct `StateManager` calls.)
 
 Verbs now routes *every* reconstitution read through the storage contracts, so a custom store
 has more surface to implement. Several methods traffic in `Thunk\Verbs\State\StateIdentity`—a
-small `(state_type, state_id, position)` value object, where `position` is the last event id the
-state is known to have applied. A custom `StoresEvents` must implement:
+small `(state_type, state_id, last_event_id)` value object, where `last_event_id` is the id of
+the last event the state is known to have applied. A custom `StoresEvents` must implement:
 
 - `read(?State $state = null, $after_id = null): LazyCollection` — must now return a genuinely
   lazy stream (it is no longer safe to materialize everything)
 - `get(iterable $ids): LazyCollection` — stream the events with the given ids, in id order
-- `hasEventsBeyondPositions(iterable $states): bool` — whether any event exists for any of the
-  given identities *beyond* that identity's `position` (an event it hasn't applied yet)
-- `hasEventsWithinPositions(iterable $states, int|string|null $after = null): bool` — whether any
-  event exists at or below an identity's `position` but after `$after` (an already-absorbed
-  window event)
-- `eventIdsForStates(iterable $states, int|string|null $after = null): Collection` — the distinct
-  ids of every event associated with any of the given identities
-- `statesForEvents(iterable $event_ids): Collection` — the distinct identities of every state
+- `hasUnappliedEvents(iterable $identities): bool` — whether any event exists for any of the
+  given identities *beyond* that identity's `last_event_id` (an event it hasn't applied yet)
+- `hasAppliedEventsAfter(iterable $identities, int|string|null $after_id = null): bool` — whether
+  any event exists at or below an identity's `last_event_id` but after `$after_id` (an
+  already-applied window event)
+- `eventIdsFor(iterable $identities, int|string|null $after_id = null): Collection` — the
+  distinct ids of every event associated with any of the given identities
+- `stateIdentitiesFor(iterable $event_ids): Collection` — the distinct identities of every state
   associated with any of the given events
 - `write(array $events): bool`
 
@@ -62,8 +62,8 @@ A custom `StoresSnapshots` must implement:
 
 - `load($id, string $type): State|StateCollection|null`
 - `loadSingleton(string $type): ?State`
-- `positions(iterable $states): Collection` — one identity (with `position` filled) per given
-  state that has a snapshot
+- `lastEventIdsFor(iterable $identities): Collection` — one identity (with `last_event_id`
+  filled) per given identity that has a snapshot
 - `write(array $states): bool`
 - `reset(): bool` — and note that the contract no longer declares `delete()`
 

@@ -57,12 +57,12 @@ class IdManager
     }
 
     /**
-     * Event positions must always compare as scalars: snowflakes numerically
+     * Event ids must always compare as scalars: snowflakes numerically
      * (drivers often hand bigints back as strings), ULID/UUIDv7 strings
      * lexicographically-by-time—and never as objects, where comparison
      * operators stop meaning "before/after".
      */
-    public function normalizePosition(mixed $value): int|string|null
+    public function normalizeEventId(mixed $value): int|string|null
     {
         if ($value instanceof Bits || $value instanceof UuidInterface || $value instanceof AbstractUid) {
             $value = $this->tryFrom($value);

@@ -68,29 +68,29 @@ class EventStore implements StoresEvents
         );
     }
 
-    public function hasEventsBeyondPositions(iterable $states): bool
+    public function hasUnappliedEvents(iterable $identities): bool
     {
-        return collect($states)
+        return collect($identities)
             ->chunk(static::STATE_CHUNK)
-            ->contains(fn (Collection $chunk) => $this->anyBeyondPosition($chunk));
+            ->contains(fn (Collection $chunk) => $this->anyUnappliedEvents($chunk));
     }
 
-    public function hasEventsWithinPositions(iterable $states, int|string|null $after = null): bool
+    public function hasAppliedEventsAfter(iterable $identities, int|string|null $after_id = null): bool
     {
-        return collect($states)
-            // A state with no position has absorbed nothing, so no row can
-            // ever fall inside its (floor, position] window.
-            ->filter(fn (StateIdentity $state) => $state->position !== null)
+        return collect($identities)
+            // An identity with no last_event_id has applied nothing, so no row
+            // can ever fall inside its (after_id, last_event_id] window.
+            ->filter(fn (StateIdentity $identity) => $identity->last_event_id !== null)
             ->chunk(static::STATE_CHUNK)
-            ->contains(function (Collection $chunk) use ($after) {
+            ->contains(function (Collection $chunk) use ($after_id) {
                 return VerbStateEvent::query()
                     ->toBase()
-                    ->when($after !== null, fn (BaseBuilder $query) => $query->where('event_id', '>', $after))
+                    ->when($after_id !== null, fn (BaseBuilder $query) => $query->where('event_id', '>', $after_id))
                     ->where(function (BaseBuilder $query) use ($chunk) {
-                        foreach ($chunk as $state) {
-                            $query->orWhere(function (BaseBuilder $query) use ($state) {
-                                $this->constrainToState($query, $state);
-                                $query->where('event_id', '<=', $state->position);
+                        foreach ($chunk as $identity) {
+                            $query->orWhere(function (BaseBuilder $query) use ($identity) {
+                                $this->constrainToIdentity($query, $identity);
+                                $query->where('event_id', '<=', $identity->last_event_id);
                             });
                         }
                     })
@@ -98,19 +98,19 @@ class EventStore implements StoresEvents
             });
     }
 
-    public function eventIdsForStates(iterable $states, int|string|null $after = null): Collection
+    public function eventIdsFor(iterable $identities, int|string|null $after_id = null): Collection
     {
-        return collect($states)
+        return collect($identities)
             ->chunk(static::STATE_CHUNK)
-            ->flatMap(function (Collection $chunk) use ($after) {
+            ->flatMap(function (Collection $chunk) use ($after_id) {
                 return VerbStateEvent::query()
                     ->toBase()
                     ->distinct()
                     ->select('event_id')
-                    ->when($after !== null, fn (BaseBuilder $query) => $query->where('event_id', '>', $after))
+                    ->when($after_id !== null, fn (BaseBuilder $query) => $query->where('event_id', '>', $after_id))
                     ->where(function (BaseBuilder $query) use ($chunk) {
-                        foreach ($chunk as $state) {
-                            $query->orWhere(fn (BaseBuilder $query) => $this->constrainToState($query, $state));
+                        foreach ($chunk as $identity) {
+                            $query->orWhere(fn (BaseBuilder $query) => $this->constrainToIdentity($query, $identity));
                         }
                     })
                     ->pluck('event_id');
@@ -119,7 +119,7 @@ class EventStore implements StoresEvents
             ->values();
     }
 
-    public function statesForEvents(iterable $event_ids): Collection
+    public function stateIdentitiesFor(iterable $event_ids): Collection
     {
         return collect($event_ids)
             ->chunk(static::EVENT_CHUNK)
@@ -132,7 +132,7 @@ class EventStore implements StoresEvents
                     ->get()
                     ->map(StateIdentity::from(...));
             })
-            ->unique(fn (StateIdentity $state) => $state->state_type.':'.$state->state_id)
+            ->unique(fn (StateIdentity $identity) => $identity->state_type.':'.$identity->state_id)
             ->values();
     }
 
@@ -148,8 +148,8 @@ class EventStore implements StoresEvents
             && VerbStateEvent::insert($this->formatRelationshipsForWrite($events));
     }
 
-    /** @param  Collection<int, StateIdentity>  $states */
-    protected function anyBeyondPosition(Collection $states): bool
+    /** @param  Collection<int, StateIdentity>  $identities */
+    protected function anyUnappliedEvents(Collection $identities): bool
     {
         $query = VerbStateEvent::query()->toBase();
 
@@ -161,32 +161,32 @@ class EventStore implements StoresEvents
 
         $query->groupBy('state_type', 'state_id');
 
-        $query->where(function (BaseBuilder $query) use ($states) {
-            foreach ($states as $state) {
-                $query->orWhere(fn (BaseBuilder $query) => $this->constrainToState($query, $state));
+        $query->where(function (BaseBuilder $query) use ($identities) {
+            foreach ($identities as $identity) {
+                $query->orWhere(fn (BaseBuilder $query) => $this->constrainToIdentity($query, $identity));
             }
         });
 
         $latest = $query->get();
 
-        foreach ($states as $state) {
-            $rows = $latest->where('state_type', $state->state_type);
+        foreach ($identities as $identity) {
+            $rows = $latest->where('state_type', $identity->state_type);
 
-            if (! is_a($state->state_type, SingletonState::class, true)) {
-                $rows = $rows->where('state_id', $state->state_id);
+            if (! is_a($identity->state_type, SingletonState::class, true)) {
+                $rows = $rows->where('state_id', $identity->state_id);
             }
 
             // A singleton's events may be recorded under several incidental
-            // state_id rows, so its true position is the max across all of them.
+            // state_id rows, so its true last event id is the max across all of them.
             $max = $rows->max('max_event_id');
 
             if (! $max) {
                 continue;
             }
 
-            // No int casts: snowflake positions compare numerically either way,
-            // and ULID/UUIDv7 positions compare lexicographically-by-time.
-            $applied = $state->position ? Id::from($state->position) : 0;
+            // No int casts: snowflake ids compare numerically either way,
+            // and ULID/UUIDv7 ids compare lexicographically-by-time.
+            $applied = $identity->last_event_id ? Id::from($identity->last_event_id) : 0;
 
             if ($max > $applied) {
                 return true;
@@ -196,15 +196,15 @@ class EventStore implements StoresEvents
         return false;
     }
 
-    protected function constrainToState(BaseBuilder $query, StateIdentity $state): BaseBuilder
+    protected function constrainToIdentity(BaseBuilder $query, StateIdentity $identity): BaseBuilder
     {
-        $query->where('state_type', '=', $state->state_type);
+        $query->where('state_type', '=', $identity->state_type);
 
         // A singleton's identity is its type—its events are stored and read by
         // type alone (see readEvents), so constraining by a specific state_id
         // here would miss rows written under other incidental ids.
-        if (! is_a($state->state_type, SingletonState::class, true)) {
-            $query->where('state_id', '=', $state->state_id);
+        if (! is_a($identity->state_type, SingletonState::class, true)) {
+            $query->where('state_id', '=', $identity->state_id);
         }
 
         return $query;
@@ -259,7 +259,7 @@ class EventStore implements StoresEvents
                             $query->where('state_type', $state::class);
                             $query->where('state_id', $state->id);
                         });
-                        $max_event_ids->put($key, Id::normalizePosition($state->last_event_id));
+                        $max_event_ids->put($key, Id::normalizeEventId($state->last_event_id));
                     }
                 }
             }
@@ -275,9 +275,9 @@ class EventStore implements StoresEvents
             $state_type = data_get($result, 'state_type');
             $state_id = data_get($result, 'state_id');
 
-            // No int casts: snowflake positions compare numerically either way,
-            // and ULID/UUIDv7 positions compare lexicographically-by-time.
-            $max_written_id = Id::normalizePosition(data_get($result, 'max_event_id'));
+            // No int casts: snowflake ids compare numerically either way,
+            // and ULID/UUIDv7 ids compare lexicographically-by-time.
+            $max_written_id = Id::normalizeEventId(data_get($result, 'max_event_id'));
             $max_expected_id = $max_event_ids->get($state_type.$state_id, 0);
 
             if ($max_written_id > $max_expected_id) {

@@ -36,7 +36,7 @@ class ReconstitutionPlan
     public bool $seeded = false;
 
     /** @var array<string, int|string|null> */
-    protected array $positions = [];
+    protected array $last_event_ids = [];
 
     public static function plan(Collection $states, bool $use_snapshots = true): static
     {
@@ -67,14 +67,14 @@ class ReconstitutionPlan
      */
     public function seeds(): ?Collection
     {
-        $positioned = $this->members->filter(
-            fn (StateIdentity $member) => $this->positions[$this->stateKey($member)] !== null,
+        $snapshotted = $this->members->filter(
+            fn (StateIdentity $member) => $this->last_event_ids[$this->stateKey($member)] !== null,
         );
 
         $snapshots = app(StoresSnapshots::class);
         $seeds = new Collection;
 
-        foreach ($positioned->groupBy(fn (StateIdentity $member) => $member->state_type) as $type => $members) {
+        foreach ($snapshotted->groupBy(fn (StateIdentity $member) => $member->state_type) as $type => $members) {
             if (is_a($type, SingletonState::class, true)) {
                 $seeds->push($snapshots->loadSingleton($type));
 
@@ -86,14 +86,14 @@ class ReconstitutionPlan
             );
         }
 
-        return $seeds->contains(null) || $seeds->count() !== $positioned->count()
+        return $seeds->contains(null) || $seeds->count() !== $snapshotted->count()
             ? null
             : $seeds->values();
     }
 
     /**
      * Breadth-first search over the bipartite state↔event graph, restricted to
-     * events after the floor (the lowest member snapshot position). The
+     * events after the floor (the lowest member snapshot last_event_id). The
      * visited sets live in PHP and each round only queries the *newly
      * discovered* frontier—and the stores chunk those lookups—so no query
      * ever embeds the full known set as bound parameters. When a new member
@@ -113,7 +113,7 @@ class ReconstitutionPlan
             ->values();
 
         $this->members = $frontier->collect();
-        $this->rememberPositions($frontier);
+        $this->rememberLastEventIds($frontier);
         $this->floor = $this->currentFloor();
 
         $pending = $frontier;
@@ -140,7 +140,7 @@ class ReconstitutionPlan
                 ->values();
 
             $this->members = $this->members->merge($found);
-            $this->rememberPositions($found);
+            $this->rememberLastEventIds($found);
 
             $floor = $this->currentFloor();
 
@@ -171,7 +171,7 @@ class ReconstitutionPlan
         }
 
         $misaligned = $this->members->filter(
-            fn (StateIdentity $member) => $this->positions[$this->stateKey($member)] !== $this->floor,
+            fn (StateIdentity $member) => $this->last_event_ids[$this->stateKey($member)] !== $this->floor,
         );
 
         if ($misaligned->isEmpty()) {
@@ -180,13 +180,13 @@ class ReconstitutionPlan
             return $this;
         }
 
-        $absorbed_window_rows = app(StoresEvents::class)->hasEventsWithinPositions(
+        $absorbed_window_rows = app(StoresEvents::class)->hasAppliedEventsAfter(
             $misaligned->map(fn (StateIdentity $member) => new StateIdentity(
                 state_type: $member->state_type,
                 state_id: $member->state_id,
-                position: $this->positions[$this->stateKey($member)],
+                last_event_id: $this->last_event_ids[$this->stateKey($member)],
             )),
-            after: $this->floor,
+            after_id: $this->floor,
         );
 
         if ($absorbed_window_rows) {
@@ -199,7 +199,7 @@ class ReconstitutionPlan
     }
 
     /**
-     * A blank-baseline plan is the same fixpoint with no positions at all:
+     * A blank-baseline plan is the same fixpoint with no known last_event_ids at all:
      * floor drops away and discovery covers the entire connected component.
      */
     protected function rediscoverBlank(): void
@@ -208,17 +208,17 @@ class ReconstitutionPlan
         $this->seeded = false;
         $this->members = new Collection;
         $this->window = new Collection;
-        $this->positions = [];
+        $this->last_event_ids = [];
         $this->floor = null;
 
         $this->discover();
     }
 
     /** @param  Collection<int, StateIdentity>  $identities */
-    protected function rememberPositions(Collection $identities): void
+    protected function rememberLastEventIds(Collection $identities): void
     {
         foreach ($identities as $identity) {
-            $this->positions[$this->stateKey($identity)] = null;
+            $this->last_event_ids[$this->stateKey($identity)] = null;
         }
 
         if (! $this->use_snapshots || $identities->isEmpty()) {
@@ -226,29 +226,29 @@ class ReconstitutionPlan
         }
 
         app(StoresSnapshots::class)
-            ->positions($identities)
-            ->each(function (StateIdentity $positioned) {
-                $this->positions[$this->stateKey($positioned)] = $positioned->position;
+            ->lastEventIdsFor($identities)
+            ->each(function (StateIdentity $found) {
+                $this->last_event_ids[$this->stateKey($found)] = $found->last_event_id;
             });
     }
 
     protected function currentFloor(): int|string|null
     {
-        $positions = array_values($this->positions);
+        $last_event_ids = array_values($this->last_event_ids);
 
-        return in_array(null, $positions, true) ? null : min($positions);
+        return in_array(null, $last_event_ids, true) ? null : min($last_event_ids);
     }
 
     /** @param  Collection<int, StateIdentity>  $states */
     protected function eventIdsFor(Collection $states): Collection
     {
-        return app(StoresEvents::class)->eventIdsForStates($states, after: $this->floor);
+        return app(StoresEvents::class)->eventIdsFor($states, after_id: $this->floor);
     }
 
     /** @return Collection<int, StateIdentity> */
     protected function statesFor(Collection $event_ids): Collection
     {
-        return app(StoresEvents::class)->statesForEvents($event_ids);
+        return app(StoresEvents::class)->stateIdentitiesFor($event_ids);
     }
 
     protected function markSeen(array &$seen, int|string $key): bool

@@ -187,8 +187,8 @@ test('a newly discovered member drags the floor down and expands the window', fu
     $plan = ReconstitutionPlan::plan(collect([planState(ReconstitutionPlanTestState1::class, 10)]));
 
     // Discovery starts at floor 103 (only member: 10), finds event 104, which
-    // adds member 11 at position 100 and drops the floor—re-querying every
-    // member picks up 101, 102, and 103. The misaligned positions then route
+    // adds member 11 at last_event_id 100 and drops the floor—re-querying every
+    // member picks up 101, 102, and 103. The misaligned last-event-ids then route
     // to blank (state 10 absorbed 102/103, which are inside the window).
     expect($plan->members)->toHaveCount(2)
         ->and($plan->seeded)->toBeFalse()

@@ -12,7 +12,7 @@ return new class extends Migration
 {
     public function up()
     {
-        // Rows with data but no position can't be trusted (and blank loads no
+        // Rows with data but no last_event_id can't be trusted (and blank loads no
         // longer create them)—their states rebuild from events on next load.
         $this->table()->whereNull('last_event_id')->delete();
 

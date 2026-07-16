@@ -60,20 +60,20 @@ class SnapshotStoreFake implements StoresSnapshots
         return Arr::first($this->states[$type]);
     }
 
-    public function positions(iterable $states): Collection
+    public function lastEventIdsFor(iterable $identities): Collection
     {
-        return collect($states)
-            ->map(function (StateIdentity $state) {
-                $snapshots = $this->states->get($state->state_type, new Collection);
+        return collect($identities)
+            ->map(function (StateIdentity $identity) {
+                $snapshots = $this->states->get($identity->state_type, new Collection);
 
-                $snapshot = is_a($state->state_type, SingletonState::class, true)
+                $snapshot = is_a($identity->state_type, SingletonState::class, true)
                     ? $snapshots->first()
-                    : $snapshots->get(Id::from($state->state_id));
+                    : $snapshots->get(Id::from($identity->state_id));
 
                 return $snapshot ? new StateIdentity(
                     state_type: $snapshot::class,
                     state_id: $snapshot instanceof SingletonState ? Id::nil() : Id::from($snapshot->id),
-                    position: Id::tryFrom($snapshot->last_event_id),
+                    last_event_id: Id::tryFrom($snapshot->last_event_id),
                 ) : null;
             })
             ->filter()

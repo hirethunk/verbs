@@ -100,7 +100,7 @@ class VerifyCommand extends Command
 
     /**
      * Rebuild the state from a blank baseline—the exactness reference—by
-     * replaying its connected component up to the snapshot's own position,
+     * replaying its connected component up to the snapshot's own last_event_id,
      * so a snapshot is verified against what it *claims* to represent.
      */
     protected function rebuild(VerbSnapshot $snapshot): ?array

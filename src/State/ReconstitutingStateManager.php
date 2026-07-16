@@ -193,18 +193,18 @@ class ReconstitutingStateManager extends StateManager
 
     /**
      * A requested state is stale when an event exists for it that is newer than
-     * the position its snapshot (or blank state) was last advanced to. Singletons
+     * the last event id its snapshot (or blank baseline) had applied. Singletons
      * are matched by type only, mirroring how their events are stored and read.
      *
      * @param  Collection<int, State>  $states
      */
     protected function isStale(Collection $states): bool
     {
-        return $this->events->hasEventsBeyondPositions(
+        return $this->events->hasUnappliedEvents(
             $states->map(fn (State $state) => new StateIdentity(
                 state_type: $state::class,
                 state_id: $state->id,
-                position: Id::tryFrom($state->last_event_id),
+                last_event_id: Id::tryFrom($state->last_event_id),
             )),
         );
     }
@@ -292,9 +292,9 @@ class ReconstitutingStateManager extends StateManager
     protected function guardSeedInvariant(Event $event): void
     {
         foreach ($event->states() as $state) {
-            $position = Id::tryFrom($state->last_event_id);
+            $last_event_id = Id::tryFrom($state->last_event_id);
 
-            if ($position !== null && $position >= Id::from($event->id)) {
+            if ($last_event_id !== null && $last_event_id >= Id::from($event->id)) {
                 throw new SeedInvariantViolation($event, $state);
             }
         }

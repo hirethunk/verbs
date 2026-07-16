@@ -42,11 +42,11 @@ it('throws on non-sequential events', function () {
     $store->write([$event2]);
 })->throws(ConcurrencyException::class);
 
-// Event ids are snowflake ints today, but the guard's position comparison
+// Event ids are snowflake ints today, but the guard's event-id comparison
 // must already be safe for the planned move to string ids (UUIDv7): drivers
 // hand id columns back as strings, and an int cast would reduce every ULID
 // to its leading digits.
-it('does not throw on sequential events with string positions', function () {
+it('does not throw on sequential events with string event ids', function () {
     $store = app(EventStore::class);
     $state = ConcurrencyUlidTestState::singleton();
 
@@ -61,7 +61,7 @@ it('does not throw on sequential events with string positions', function () {
     expect(VerbEvent::count())->toBe(1);
 });
 
-it('throws on non-sequential events with string positions', function () {
+it('throws on non-sequential events with string event ids', function () {
     $store = app(EventStore::class);
     $state = ConcurrencyUlidTestState::singleton();
 

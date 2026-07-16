@@ -28,33 +28,33 @@ interface StoresEvents
     public function get(iterable $ids): LazyCollection;
 
     /**
-     * Whether any event exists for any of the given states *beyond* that
-     * state's own position—i.e. an event the state has not applied yet.
-     * Singletons match on type alone, and their events may be recorded under
-     * multiple incidental state ids, so their position aggregates across all
-     * of them.
+     * Whether any event exists for any of the given identities *beyond* that
+     * identity's own `last_event_id`—i.e. an event the state has not applied
+     * yet. Singletons match on type alone, and their events may be recorded
+     * under multiple incidental state ids, so their last event id aggregates
+     * across all of them.
      *
-     * @param  iterable<int, StateIdentity>  $states
+     * @param  iterable<int, StateIdentity>  $identities
      */
-    public function hasEventsBeyondPositions(iterable $states): bool;
+    public function hasUnappliedEvents(iterable $identities): bool;
 
     /**
-     * Whether any event exists for any of the given states at or below that
-     * state's own position but after the given floor—i.e. an event inside
-     * the (floor, position] window that the state has already absorbed.
+     * Whether any event exists for any of the given identities at or below
+     * that identity's own `last_event_id` but after `$after_id`—i.e. an
+     * already-applied event inside the (after_id, last_event_id] window.
      *
-     * @param  iterable<int, StateIdentity>  $states
+     * @param  iterable<int, StateIdentity>  $identities
      */
-    public function hasEventsWithinPositions(iterable $states, int|string|null $after = null): bool;
+    public function hasAppliedEventsAfter(iterable $identities, int|string|null $after_id = null): bool;
 
     /**
      * The distinct ids of every event associated with any of the given
-     * states, optionally restricted to events after the given position.
+     * identities, optionally restricted to events after `$after_id`.
      *
-     * @param  iterable<int, StateIdentity>  $states
+     * @param  iterable<int, StateIdentity>  $identities
      * @return Collection<int, int|string>
      */
-    public function eventIdsForStates(iterable $states, int|string|null $after = null): Collection;
+    public function eventIdsFor(iterable $identities, int|string|null $after_id = null): Collection;
 
     /**
      * The distinct identities of every state associated with any of the
@@ -63,7 +63,7 @@ interface StoresEvents
      * @param  iterable<int, int|string>  $event_ids
      * @return Collection<int, StateIdentity>
      */
-    public function statesForEvents(iterable $event_ids): Collection;
+    public function stateIdentitiesFor(iterable $event_ids): Collection;
 
     /** @param  Event[]  $events */
     public function write(array $events): bool;

@@ -33,14 +33,14 @@ it('detects a snapshot that drifted from its events', function () {
         ->assertExitCode(1);
 });
 
-it('verifies a stale-but-consistent snapshot against its own position', function () {
+it('verifies a stale-but-consistent snapshot against its own last_event_id', function () {
     $id = snowflake_id();
 
     $first = VerifyCommandTestEvent::fire(state_id: $id, amount: 3);
     Verbs::commit();
 
     // A second event arrives, but the snapshot legitimately lags at the
-    // first event—verify must compare against position, not head.
+    // first event—verify must compare against the snapshot last_event_id, not head.
     VerifyCommandTestEvent::fire(state_id: $id, amount: 5);
     Verbs::commit();
 

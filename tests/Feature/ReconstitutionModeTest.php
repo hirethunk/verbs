@@ -19,7 +19,7 @@ use Thunk\Verbs\Support\StateCollection;
 /*
  * Reconstitution mode routing: rebuilds are seeded from snapshots only when
  * that is provably exact (every member's snapshot at the window floor);
- * anything murkier—staggered positions, missing snapshots, or a seed that
+ * anything murkier—staggered last-event-ids, missing snapshots, or a seed that
  * changed under us—falls back to a blank baseline. Either way the resulting
  * values are identical; these tests pin both the values and the routing.
  */
@@ -74,7 +74,7 @@ test('aligned stale snapshots reconstitute through the seeded window', function 
         ->and($context['floor'])->toBe($e1->id);
 });
 
-test('staggered snapshot positions fall back to a blank baseline', function () {
+test('staggered snapshot last-event-ids fall back to a blank baseline', function () {
     $e1 = ReconModeCombineEvent::fire(a_id: 1, b_id: 2);
     $a_at_e1 = ReconModeStateA::load(1)->value;
 
@@ -198,7 +198,7 @@ test('a hub state connected to everything stays fast when snapshots are aligned'
     $truth = ReconModeHubAccountState::load($tail_accounts[0])->total;
     $hub_truth = ReconModeHubState::load(1_000_000)->total;
 
-    // Freeze every snapshot at the common floor: data-as-of-floor, position=floor.
+    // Freeze every snapshot at the common floor: data-as-of-floor, last_event_id=floor.
     foreach ($accounts as $account_id) {
         VerbSnapshot::query()->where('state_id', $account_id)->update([
             'data' => json_encode(['total' => $values[$account_id]]),
@@ -291,7 +291,7 @@ class TamperingSnapshotStore implements StoresSnapshots
 {
     public function __construct(
         public StoresSnapshots $inner,
-        public int|string $tampered_position,
+        public int|string $tampered_last_event_id,
     ) {}
 
     public function load(Bits|UuidInterface|AbstractUid|iterable|int|string $id, string $type): State|StateCollection|null
@@ -300,7 +300,7 @@ class TamperingSnapshotStore implements StoresSnapshots
 
         // Seed loads pass iterable ids; initial hydration passes scalars.
         if (is_iterable($id) && $result instanceof StateCollection) {
-            $result->each(fn (State $state) => $state->last_event_id = $this->tampered_position);
+            $result->each(fn (State $state) => $state->last_event_id = $this->tampered_last_event_id);
         }
 
         return $result;
@@ -311,9 +311,9 @@ class TamperingSnapshotStore implements StoresSnapshots
         return $this->inner->loadSingleton($type);
     }
 
-    public function positions(iterable $states): Collection
+    public function lastEventIdsFor(iterable $states): Collection
     {
-        return $this->inner->positions($states);
+        return $this->inner->lastEventIdsFor($states);
     }
 
     public function write(array $states): bool

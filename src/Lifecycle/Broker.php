@@ -187,7 +187,7 @@ class Broker implements BrokersEvents
     }
 
     /**
-     * Only dirty states are written: a state is dirty when its position has
+     * Only dirty states are written: a state is dirty when its last event id has
      * advanced past whatever was last persisted for it, and a state that never
      * saw an event at all (a blank load) never creates a snapshot row.
      */
@@ -196,10 +196,10 @@ class Broker implements BrokersEvents
         $dirty = array_filter(
             $this->states->all(),
             function (State $state) {
-                $position = Id::tryFrom($state->last_event_id);
+                $last_event_id = Id::tryFrom($state->last_event_id);
 
-                return $position !== null
-                    && $position !== $this->metadata->getEphemeral($state, 'last_written_event_id');
+                return $last_event_id !== null
+                    && $last_event_id !== $this->metadata->getEphemeral($state, 'last_written_event_id');
             },
         );
 

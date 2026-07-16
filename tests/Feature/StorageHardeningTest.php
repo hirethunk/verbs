@@ -109,7 +109,7 @@ test('a state hydrated from a snapshot is not re-written on the next commit', fu
 
     app(StateManager::class)->reset();
 
-    // Hydrates A from its snapshot (still at the persisted position)...
+    // Hydrates A from its snapshot (still at the persisted last_event_id)...
     HardeningTestState::load($a);
 
     // ...so committing an unrelated event must not re-serialize A.
@@ -142,7 +142,7 @@ test('a corrupt snapshot falls back to rebuilding from events', function () {
     expect(HardeningTestState::load($id)->count)->toBe(2);
 });
 
-test('a snapshot with data but no position falls back to rebuilding from events', function () {
+test('a snapshot with data but no last_event_id falls back to rebuilding from events', function () {
     $id = snowflake_id();
 
     HardeningTestEvent::fire(state_id: $id);
@@ -207,7 +207,7 @@ test('the natural-key migration dedupes, normalizes singletons, and drops dead r
     $insert(HardeningSingletonState::class, snowflake_id(), 5, '{"count":1}');
     $insert(HardeningSingletonState::class, snowflake_id(), 15, '{"count":3}');
 
-    // A blank-load row (no position): deleted.
+    // A blank-load row (no last_event_id): deleted.
     $insert(HardeningTestState::class, 6, null);
 
     // A type that no longer exists: left untouched.
@@ -330,7 +330,7 @@ class ExplodingSnapshotStore implements StoresSnapshots
         return null;
     }
 
-    public function positions(iterable $states): Collection
+    public function lastEventIdsFor(iterable $states): Collection
     {
         return new Collection;
     }
@@ -373,9 +373,9 @@ class SnapshotStoreSpy implements StoresSnapshots
         return $this->inner->loadSingleton($type);
     }
 
-    public function positions(iterable $states): Collection
+    public function lastEventIdsFor(iterable $states): Collection
     {
-        return $this->inner->positions($states);
+        return $this->inner->lastEventIdsFor($states);
     }
 
     public function write(array $states): bool

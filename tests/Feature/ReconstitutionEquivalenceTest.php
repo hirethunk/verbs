@@ -48,7 +48,7 @@ test('reconstitution reproduces full-history values under randomized snapshot ma
 
         $checkpoints[$step] = collect($tracked())->map(fn (State $state) => [
             'value' => $state->value,
-            'position' => $state->last_event_id,
+            'last_event_id' => $state->last_event_id,
         ])->all();
     }
 
@@ -72,7 +72,7 @@ test('reconstitution reproduces full-history values under randomized snapshot ma
             mt_rand(0, 5) === 0 => $query->delete(),
             $rewind_all || mt_rand(0, 1) === 1 => $query->update([
                 'data' => json_encode(['value' => $checkpoint[$key]['value']]),
-                'last_event_id' => $checkpoint[$key]['position'],
+                'last_event_id' => $checkpoint[$key]['last_event_id'],
             ]),
             default => null,
         };

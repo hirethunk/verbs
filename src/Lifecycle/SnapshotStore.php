@@ -56,21 +56,21 @@ class SnapshotStore implements StoresSnapshots
         return $snapshots->isEmpty() ? null : $this->stateFromSnapshot($snapshots->first());
     }
 
-    public function positions(iterable $states): Collection
+    public function lastEventIdsFor(iterable $identities): Collection
     {
-        return collect($states)
+        return collect($identities)
             ->chunk(static::STATE_CHUNK)
             ->flatMap(function (Collection $chunk) {
                 return VerbSnapshot::query()
                     ->toBase()
                     ->select(['type', 'state_id', 'last_event_id'])
                     ->where(function ($query) use ($chunk) {
-                        foreach ($chunk as $state) {
-                            $query->orWhere(function ($query) use ($state) {
-                                $query->where('type', $state->state_type);
+                        foreach ($chunk as $identity) {
+                            $query->orWhere(function ($query) use ($identity) {
+                                $query->where('type', $identity->state_type);
 
-                                if (! is_a($state->state_type, SingletonState::class, true)) {
-                                    $query->where('state_id', $state->state_id);
+                                if (! is_a($identity->state_type, SingletonState::class, true)) {
+                                    $query->where('state_id', $identity->state_id);
                                 }
                             });
                         }
@@ -80,7 +80,7 @@ class SnapshotStore implements StoresSnapshots
             ->map(fn ($row) => new StateIdentity(
                 state_type: $row->type,
                 state_id: $row->state_id,
-                position: Id::normalizePosition($row->last_event_id),
+                last_event_id: Id::normalizeEventId($row->last_event_id),
             ))
             ->values();
     }
@@ -153,13 +153,13 @@ class SnapshotStore implements StoresSnapshots
 
     /**
      * A snapshot that can't be trusted—undeserializable data, or data with no
-     * position—is treated as absent so the state transparently rebuilds from
-     * its events, rather than wedging every request that touches it.
+     * last_event_id—is treated as absent so the state transparently rebuilds
+     * from its events, rather than wedging every request that touches it.
      */
     protected function stateFromSnapshot(VerbSnapshot $snapshot): ?State
     {
         if ($snapshot->last_event_id === null) {
-            Log::warning('Verbs: snapshot has data but no position; rebuilding from events.', [
+            Log::warning('Verbs: snapshot has data but no last_event_id; rebuilding from events.', [
                 'type' => $snapshot->type,
                 'state_id' => $snapshot->state_id,
             ]);
