@@ -147,6 +147,30 @@ it('still refreshes a stale cache hit in lockstep with a co-loaded miss', functi
         ->and(Id::from($state_a->last_event_id))->toBe($foreign_id);
 });
 
+it('preserves queued applies when refreshing after a scope reset', function () {
+    $id = snowflake_id();
+
+    InFlightReconEvent::fire(state_id: $id, amount: 10);
+    Verbs::commit();
+
+    $state = InFlightReconState::load($id);
+    InFlightReconEvent::fire(state_id: $id, amount: 20);
+
+    expect($state->total)->toBe(30);
+
+    // A reset (e.g. by a replay) empties the identity map but not the queue,
+    // so adopt() must not seed this instance back from its older snapshot.
+    app(StateManager::class)->reset();
+
+    $state->refresh();
+
+    expect($state->total)->toBe(30);
+
+    Verbs::commit();
+
+    expect(InFlightReconLog::$handled_totals)->toBe([10, 30]);
+});
+
 it('never reconstitutes a plain single-id load of a cached state', function () {
     $id = snowflake_id();
 

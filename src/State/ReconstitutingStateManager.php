@@ -104,8 +104,8 @@ class ReconstitutingStateManager extends StateManager
      * replay) since the caller got its reference. The one exception is a state
      * with queued-but-uncommitted events: its in-memory view already includes
      * applies that storage doesn't, so refresh() never overwrites it (see
-     * harvest()) and a genuine conflict with another writer surfaces at commit
-     * as a ConcurrencyException.
+     * harvest() and adopt()) and a conflicting newer write by someone else
+     * surfaces at commit as a ConcurrencyException.
      */
     public function refresh(State $state): State
     {
@@ -118,15 +118,25 @@ class ReconstitutingStateManager extends StateManager
         }
 
         if ($canonical !== $state) {
-            // Another instance owns this identity (the cache was reset and the
-            // identity reloaded behind this reference). Sync the caller's
-            // instance from it rather than ever throwing from refresh().
-            $this->merge($canonical, $state);
+            if ($this->queue->hasEventsFor($state)) {
+                // The caller's instance carries queued-but-uncommitted applies
+                // that the canonical instance doesn't—syncing would silently
+                // revert them (same rule as harvest()).
+                Log::debug('Verbs: skipped syncing a state with uncommitted events from its canonical instance.', [
+                    'state_type' => $state::class,
+                    'state_id' => $state->id,
+                ]);
+            } else {
+                // Another instance owns this identity (the cache was reset and
+                // the identity reloaded behind this reference). Sync the
+                // caller's instance from it rather than ever throwing.
+                $this->merge($canonical, $state);
 
-            Log::debug('Verbs: refreshed a state whose identity is now owned by a different instance.', [
-                'state_type' => $state::class,
-                'state_id' => $state->id,
-            ]);
+                Log::debug('Verbs: refreshed a state whose identity is now owned by a different instance.', [
+                    'state_type' => $state::class,
+                    'state_id' => $state->id,
+                ]);
+            }
         }
 
         return $state;
@@ -145,7 +155,10 @@ class ReconstitutingStateManager extends StateManager
             return $cached;
         }
 
-        if ($snapshot = $this->latestSnapshotFor($state)) {
+        // A state with queued-but-uncommitted events keeps its in-memory view:
+        // seeding it from the (necessarily older) snapshot would silently
+        // revert applies that are still on their way to storage.
+        if (! $this->queue->hasEventsFor($state) && ($snapshot = $this->latestSnapshotFor($state))) {
             $this->merge($snapshot, $state);
         }
 

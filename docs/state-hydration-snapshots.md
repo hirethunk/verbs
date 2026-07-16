@@ -49,8 +49,8 @@ Holding a state works like holding an Eloquent model:
   data) when it's co-loaded with a miss whose rebuild includes it.
 - **States with uncommitted events are never touched.** A state whose events have been fired but not yet committed
   always keeps its in-memory view—no co-load or `refresh()` will ever overwrite it, because the database can't yet
-  know about those applies. `refresh()` on such an in-flight state is a no-op for that state, and a genuine conflict
-  with another writer surfaces at commit as a `ConcurrencyException`.
+  know about those applies. `refresh()` on such an in-flight state is a no-op for that state, and a conflicting
+  *newer* write by someone else surfaces at commit as a `ConcurrencyException`.
 - **`refresh()` is how you ask for the latest.** Just like an Eloquent model doesn't self-update, a loaded state
   doesn't either. Calling `$state->refresh()` checks for newer events and brings the state up to date if there are
   any—and, exactly like Eloquent's `refresh()`, it updates the *same instance* in place, so every reference you're
