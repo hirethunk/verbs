@@ -105,6 +105,11 @@ Eloquent snapshot storage.
   with an opaque `TypeError`; it now throws `InvalidArgumentException` ("Cannot load a [YourState]
   state without an id."), so a missing route parameter or null foreign key surfaces clearly. Only
   singletons load without an id.
+- **Hooks may only type-hint states the event fires on.** An `apply()`/`handle()` that type-hints
+  a state the event doesn't declare (no `#[StateId]`/`#[AppliesToState]` attribute, no state-typed
+  property) now throws `CannotResolveParameter` with instructions. Previously Verbs silently
+  constructed a *fresh* instance—mutations landed on a state that was never associated with the
+  event, so they were never actually event-sourced.
 - **Event metadata actually round-trips now.** Reading stored metadata used to silently return
   an empty bag; it now returns what was written, and *object* values (like Carbon instances) are
   stored with a small type envelope so they come back as real objects. Scalars and arrays are
