@@ -52,6 +52,36 @@ it('keeps queued-but-uncommitted states pinned through a prune', function () {
     }
 });
 
+/*
+ * Pins are refcounts: an event fired from a handler mid-commit re-pins states
+ * the outer batch already pinned, and releasing the outer batch's pins must
+ * not expose the still-in-flight inner batch to eviction.
+ */
+it('keeps a state consistent through a nested commit batch under cache pressure', function () {
+    app()->instance(StateManager::class, new ReconstitutingStateManager(
+        events: app(StoresEvents::class),
+        snapshots: app(StoresSnapshots::class),
+        cache: new MultiCache(new InMemoryCache(capacity: 1)),
+    ));
+
+    $id = snowflake_id();
+
+    NestedCommitPinEvent::fire(state_id: $id);
+
+    $held = NestedCommitPinState::load($id);
+
+    Verbs::commit();
+
+    // The outer event and the handler-fired inner event both applied to the
+    // same live instance, and the persisted snapshot agrees.
+    expect($held->count)->toBe(2)
+        ->and(NestedCommitPinState::load($id))->toBe($held);
+
+    app(StateManager::class)->reset();
+
+    expect(NestedCommitPinState::load($id)->count)->toBe(2);
+});
+
 class InFlightPinningTestState extends State
 {
     public int $count = 0;
@@ -63,6 +93,48 @@ class InFlightPinningTestEvent extends Event
     public int $state_id;
 
     public function apply(InFlightPinningTestState $state): void
+    {
+        $state->count++;
+    }
+}
+
+class NestedCommitPinState extends State
+{
+    public int $count = 0;
+}
+
+class NestedCommitFillerState extends State
+{
+    public int $noise = 0;
+}
+
+class NestedCommitPinEvent extends Event
+{
+    #[StateId(NestedCommitPinState::class)]
+    public int $state_id;
+
+    public function apply(NestedCommitPinState $state): void
+    {
+        $state->count++;
+    }
+
+    public function handle(): void
+    {
+        NestedCommitPinInnerEvent::fire(state_id: $this->state_id);
+
+        // Load unrelated states to push the (capacity: 1) cache over its limit,
+        // so the recursive commit's prune has real eviction pressure.
+        NestedCommitFillerState::load(snowflake_id());
+        NestedCommitFillerState::load(snowflake_id());
+    }
+}
+
+class NestedCommitPinInnerEvent extends Event
+{
+    #[StateId(NestedCommitPinState::class)]
+    public int $state_id;
+
+    public function apply(NestedCommitPinState $state): void
     {
         $state->count++;
     }

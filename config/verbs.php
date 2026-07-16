@@ -113,6 +113,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | State Cache Size
+    |--------------------------------------------------------------------------
+    |
+    | Verbs keeps every state it loads in an in-memory identity map so that all
+    | reads within a request see the same instance. Once more than this many
+    | states are resident, the least-recently-used ones become eligible for
+    | eviction (any state you still hold a reference to keeps its identity).
+    | Raise this if your requests or jobs work with many states at once.
+    |
+    */
+    'state_cache_size' => env('VERBS_STATE_CACHE_SIZE', 100),
+
+    /*
+    |--------------------------------------------------------------------------
     | Auto-Commit
     |--------------------------------------------------------------------------
     |

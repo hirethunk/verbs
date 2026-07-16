@@ -181,7 +181,10 @@ class ReconstitutingStateManager extends StateManager
     {
         $summary = AggregateStateSummary::summarize(...$states->all());
 
-        $rebuilt = new StateManager(new InMemoryCache);
+        // The rebuild scope is never pruned (capacity: null): evicting a state
+        // mid-rebuild would reload it blank and corrupt the replay. Its real
+        // memory bound is the size of the component being rebuilt.
+        $rebuilt = new StateManager(new InMemoryCache(capacity: null));
 
         (new Replay(
             states: $rebuilt,

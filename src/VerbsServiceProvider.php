@@ -33,6 +33,7 @@ use Thunk\Verbs\Lifecycle\MetadataManager;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 use Thunk\Verbs\Lifecycle\SnapshotStore;
 use Thunk\Verbs\Livewire\SupportVerbs;
+use Thunk\Verbs\State\Cache\InMemoryCache;
 use Thunk\Verbs\State\Cache\MultiCache;
 use Thunk\Verbs\State\ReconstitutingStateManager;
 use Thunk\Verbs\State\StateManager;
@@ -74,7 +75,9 @@ class VerbsServiceProvider extends PackageServiceProvider
             return new ReconstitutingStateManager(
                 events: $app->make(StoresEvents::class),
                 snapshots: $app->make(StoresSnapshots::class),
-                cache: new MultiCache,
+                cache: new MultiCache(new InMemoryCache(
+                    capacity: $app->make(Repository::class)->get('verbs.state_cache_size', 100),
+                )),
             );
         });
 

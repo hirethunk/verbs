@@ -31,17 +31,33 @@ class EventStore implements StoresEvents
         ?State $state = null,
         Bits|UuidInterface|AbstractUid|int|string|null $after_id = null,
     ): LazyCollection {
+        // tapEach (not each) keeps this fully lazy: each() would iterate the
+        // entire stream up front, holding every event in memory at once.
         return $this->readEvents($state, $after_id)
-            ->each(fn (VerbEvent $model) => $this->metadata->set($model->event(), $model->metadata()))
+            ->tapEach(fn (VerbEvent $model) => $this->metadata->set($model->event(), $model->metadata()))
             ->map(fn (VerbEvent $model) => $model->event());
     }
 
     public function get(iterable $ids): LazyCollection
     {
-        return VerbEvent::query()
-            ->whereIn('id', collect($ids))
-            ->lazyById()
-            ->each(fn (VerbEvent $model) => $this->metadata->set($model->event(), $model->metadata()))
+        // Chunking bounds the number of bound parameters per query (SQLite in
+        // particular caps them), no matter how many ids the caller passes. The
+        // ids are sorted first so the concatenated chunks stream in id order.
+        $ids = collect($ids)->map(Id::from(...))->unique()->sort()->values();
+
+        return LazyCollection::make(function () use ($ids) {
+            foreach ($ids->chunk(500) as $chunk) {
+                $models = VerbEvent::query()
+                    ->whereIn('id', $chunk)
+                    ->orderBy('id')
+                    ->get();
+
+                foreach ($models as $model) {
+                    yield $model;
+                }
+            }
+        })
+            ->tapEach(fn (VerbEvent $model) => $this->metadata->set($model->event(), $model->metadata()))
             ->map(fn (VerbEvent $model) => $model->event());
     }
 
@@ -68,14 +84,12 @@ class EventStore implements StoresEvents
                 ->where('state_type', $state::class)
                 ->when($after_id, fn (Builder $query) => $query->whereRelation('event', 'id', '>', Id::from($after_id)))
                 ->lazyById()
-                ->remember()
                 ->map(fn (VerbStateEvent $pivot) => $pivot->event);
         }
 
         return VerbEvent::query()
             ->when($after_id, fn (Builder $query) => $query->where('id', '>', Id::from($after_id)))
-            ->lazyById()
-            ->remember();
+            ->lazyById();
     }
 
     /** @param  Event[]  $events */

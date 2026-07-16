@@ -13,6 +13,15 @@ use Thunk\Verbs\State\StateIdentity;
 
 class AggregateStateSummary
 {
+    /**
+     * How many states may appear in a single discovery query's WHERE clause
+     * (each contributes up to two bound parameters), and how many event ids in
+     * a single WHERE IN. Both stay well under every driver's parameter cap.
+     */
+    const STATE_CHUNK = 100;
+
+    const EVENT_CHUNK = 500;
+
     public static function summarize(State ...$states): static
     {
         $summary = new static(
@@ -40,52 +49,111 @@ class AggregateStateSummary
         return app(StoresEvents::class)->get($this->related_event_ids);
     }
 
+    /**
+     * Breadth-first search over the bipartite state↔event graph. The visited
+     * sets live in PHP and each round only queries the *newly discovered*
+     * frontier in bounded chunks, so no query ever embeds the full known set
+     * as bound parameters—a component of any size stays under driver limits.
+     */
     protected function discover(): static
     {
-        $this->discoverNewEventIds();
+        $seen_states = [];
+        $seen_events = [];
 
-        do {
-            $continue = $this->discoverNewStates() && $this->discoverNewEventIds();
-        } while ($continue);
+        $frontier = $this->related_states
+            ->filter(function (StateIdentity $state) use (&$seen_states) {
+                return $this->markSeen($seen_states, $this->stateKey($state));
+            })
+            ->values();
 
-        $this->related_event_ids = $this->related_event_ids->sort();
+        $this->related_states = $frontier->collect();
+
+        while ($frontier->isNotEmpty()) {
+            $new_event_ids = $this
+                ->eventIdsFor($frontier)
+                ->filter(function ($id) use (&$seen_events) {
+                    return $this->markSeen($seen_events, $id);
+                })
+                ->values();
+
+            if ($new_event_ids->isEmpty()) {
+                break;
+            }
+
+            $this->related_event_ids = $this->related_event_ids->merge($new_event_ids);
+
+            $frontier = $this
+                ->statesFor($new_event_ids)
+                ->filter(function (StateIdentity $state) use (&$seen_states) {
+                    return $this->markSeen($seen_states, $this->stateKey($state));
+                })
+                ->values();
+
+            $this->related_states = $this->related_states->merge($frontier);
+        }
+
+        $this->related_event_ids = $this->related_event_ids->sort()->values();
 
         return $this;
     }
 
-    protected function discoverNewEventIds(): bool
+    /** @param  Collection<int, StateIdentity>  $states */
+    protected function eventIdsFor(Collection $states): Collection
     {
-        $new_event_ids = VerbStateEvent::query()
-            ->distinct()
-            ->select('event_id')
-            ->whereNotIn('event_id', $this->related_event_ids)
-            ->where(fn (Builder $query) => $this->related_states->each(
-                fn ($state) => $query->orWhere(fn (Builder $query) => $this->addConstraint($state, $query))),
-            )
-            ->toBase()
-            ->pluck('event_id');
-
-        $this->related_event_ids = $this->related_event_ids->merge($new_event_ids);
-
-        return $new_event_ids->isNotEmpty();
+        return $states
+            ->chunk(static::STATE_CHUNK)
+            ->flatMap(function (Collection $chunk) {
+                return VerbStateEvent::query()
+                    ->distinct()
+                    ->select('event_id')
+                    ->where(fn (Builder $query) => $chunk->each(
+                        fn ($state) => $query->orWhere(fn (Builder $query) => $this->addConstraint($state, $query))),
+                    )
+                    ->toBase()
+                    ->pluck('event_id');
+            })
+            ->unique()
+            ->values();
     }
 
-    protected function discoverNewStates(): bool
+    /** @return Collection<int, StateIdentity> */
+    protected function statesFor(Collection $event_ids): Collection
     {
-        $discovered_states = VerbStateEvent::query()
-            ->orderBy('id')
-            ->distinct()
-            ->select(['state_id', 'state_type'])
-            ->whereIn('event_id', $this->related_event_ids)
-            ->where(fn (Builder $query) => $this->related_states->each(
-                fn ($state) => $query->whereNot(fn (Builder $query) => $this->addConstraint($state, $query))),
-            )
-            ->toBase()
-            ->chunkMap(StateIdentity::from(...));
+        return $event_ids
+            ->chunk(static::EVENT_CHUNK)
+            ->flatMap(function (Collection $chunk) {
+                return VerbStateEvent::query()
+                    ->distinct()
+                    ->select(['state_id', 'state_type'])
+                    ->whereIn('event_id', $chunk->values()->all())
+                    ->toBase()
+                    ->get()
+                    ->map(StateIdentity::from(...));
+            })
+            ->values();
+    }
 
-        $this->related_states = $this->related_states->merge($discovered_states);
+    protected function markSeen(array &$seen, int|string $key): bool
+    {
+        if (isset($seen[$key])) {
+            return false;
+        }
 
-        return $discovered_states->isNotEmpty();
+        $seen[$key] = true;
+
+        return true;
+    }
+
+    /**
+     * A singleton's identity is its type—its events are stored under whatever
+     * incidental id the in-memory instance happened to have at write time—so
+     * two rows for the same singleton type must collapse to one identity here.
+     */
+    protected function stateKey(StateIdentity $state): string
+    {
+        return is_a($state->state_type, SingletonState::class, true)
+            ? $state->state_type
+            : $state->state_type.':'.$state->state_id;
     }
 
     protected function addConstraint(StateIdentity $state, Builder $query): Builder

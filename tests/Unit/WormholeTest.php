@@ -33,3 +33,25 @@ test('a callback can be run for a past timestamp with "test now" set', function 
             ->and(Verbs::realNow()->format('Y-m-d'))->toBe('2023-06-02');
     });
 });
+
+test('nested warps preserve the outer realNow and restore it afterward', function () {
+    Date::setTestNow('2023-06-02 00:00:00');
+
+    $outer = new class extends Event {};
+    $inner = new class extends Event {};
+
+    app(MetadataManager::class)->setEphemeral($outer, 'created_at', Date::parse('2023-01-02 00:00:00'));
+    app(MetadataManager::class)->setEphemeral($inner, 'created_at', Date::parse('2022-05-05 00:00:00'));
+
+    app(Wormhole::class)->warp($outer, function () use ($inner) {
+        app(Wormhole::class)->warp($inner, function () {
+            // The inner warp must not mistake the outer warp's time for the "real" now.
+            expect(now()->format('Y-m-d'))->toBe('2022-05-05')
+                ->and(app(Wormhole::class)->realNow()->format('Y-m-d'))->toBe('2023-06-02');
+        });
+
+        // Back in the outer warp: both the warped now and the real now are intact.
+        expect(now()->format('Y-m-d'))->toBe('2023-01-02')
+            ->and(app(Wormhole::class)->realNow()->format('Y-m-d'))->toBe('2023-06-02');
+    });
+});
