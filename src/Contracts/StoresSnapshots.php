@@ -3,9 +3,11 @@
 namespace Thunk\Verbs\Contracts;
 
 use Glhd\Bits\Bits;
+use Illuminate\Support\Collection;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\State;
+use Thunk\Verbs\State\StateIdentity;
 use Thunk\Verbs\Support\StateCollection;
 
 interface StoresSnapshots
@@ -13,6 +15,16 @@ interface StoresSnapshots
     public function load(Bits|UuidInterface|AbstractUid|iterable|int|string $id, string $type): State|StateCollection|null;
 
     public function loadSingleton(string $type): ?State;
+
+    /**
+     * The stored position (last applied event id) of each of the given states,
+     * returned as one identity-with-position per snapshot that exists.
+     * Singletons match on type alone.
+     *
+     * @param  iterable<int, StateIdentity>  $states
+     * @return Collection<int, StateIdentity>
+     */
+    public function positions(iterable $states): Collection;
 
     public function write(array $states): bool;
 

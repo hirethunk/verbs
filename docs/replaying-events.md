@@ -84,4 +84,5 @@ php artisan verbs:verify
 `verbs:verify` rebuilds each state from its events—from a blank slate, the same way a replay
 would—and compares the result to the stored snapshot, reporting any drift (and exiting non-zero,
 so you can use it in CI or a deploy pipeline). Use `--type=`, `--id=`, or `--sample=100` to scope
-the check on large tables.
+the check on large tables. Because it enumerates the snapshot table directly, `verbs:verify`
+requires the default Eloquent snapshot storage.

@@ -14,6 +14,7 @@ use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\State;
+use Thunk\Verbs\State\StateIdentity;
 use Thunk\Verbs\Support\StateCollection;
 
 class SnapshotStoreFake implements StoresSnapshots
@@ -57,6 +58,26 @@ class SnapshotStoreFake implements StoresSnapshots
     public function loadSingleton(string $type): ?State
     {
         return Arr::first($this->states[$type]);
+    }
+
+    public function positions(iterable $states): Collection
+    {
+        return collect($states)
+            ->map(function (StateIdentity $state) {
+                $snapshots = $this->states->get($state->state_type, new Collection);
+
+                $snapshot = is_a($state->state_type, SingletonState::class, true)
+                    ? $snapshots->first()
+                    : $snapshots->get(Id::from($state->state_id));
+
+                return $snapshot ? new StateIdentity(
+                    state_type: $snapshot::class,
+                    state_id: $snapshot instanceof SingletonState ? Id::nil() : Id::from($snapshot->id),
+                    position: Id::tryFrom($snapshot->last_event_id),
+                ) : null;
+            })
+            ->filter()
+            ->values();
     }
 
     public function reset(): bool

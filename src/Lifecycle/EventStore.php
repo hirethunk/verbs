@@ -19,11 +19,21 @@ use Thunk\Verbs\Models\VerbEvent;
 use Thunk\Verbs\Models\VerbStateEvent;
 use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\State;
+use Thunk\Verbs\State\StateIdentity;
 use Thunk\Verbs\Support\MetadataSerializer;
 use Thunk\Verbs\Support\Serializer;
 
 class EventStore implements StoresEvents
 {
+    /**
+     * How many states may appear in a single query's WHERE clause (each
+     * contributes a few bound parameters), and how many event ids in a single
+     * WHERE IN. Both stay well under every database driver's parameter cap.
+     */
+    const STATE_CHUNK = 100;
+
+    const EVENT_CHUNK = 500;
+
     public function __construct(
         protected MetadataManager $metadata,
     ) {}
@@ -44,7 +54,7 @@ class EventStore implements StoresEvents
 
         return $this->toEventsWithMetadata(
             LazyCollection::make(function () use ($ids) {
-                foreach ($ids->chunk(500) as $chunk) {
+                foreach ($ids->chunk(static::EVENT_CHUNK) as $chunk) {
                     $models = VerbEvent::query()
                         ->whereIn('id', $chunk)
                         ->orderBy('id')
@@ -58,6 +68,74 @@ class EventStore implements StoresEvents
         );
     }
 
+    public function hasEventsBeyondPositions(iterable $states): bool
+    {
+        return collect($states)
+            ->chunk(static::STATE_CHUNK)
+            ->contains(fn (Collection $chunk) => $this->anyBeyondPosition($chunk));
+    }
+
+    public function hasEventsWithinPositions(iterable $states, int|string|null $after = null): bool
+    {
+        return collect($states)
+            // A state with no position has absorbed nothing, so no row can
+            // ever fall inside its (floor, position] window.
+            ->filter(fn (StateIdentity $state) => $state->position !== null)
+            ->chunk(static::STATE_CHUNK)
+            ->contains(function (Collection $chunk) use ($after) {
+                return VerbStateEvent::query()
+                    ->toBase()
+                    ->when($after !== null, fn (BaseBuilder $query) => $query->where('event_id', '>', $after))
+                    ->where(function (BaseBuilder $query) use ($chunk) {
+                        foreach ($chunk as $state) {
+                            $query->orWhere(function (BaseBuilder $query) use ($state) {
+                                $this->constrainToState($query, $state);
+                                $query->where('event_id', '<=', $state->position);
+                            });
+                        }
+                    })
+                    ->exists();
+            });
+    }
+
+    public function eventIdsForStates(iterable $states, int|string|null $after = null): Collection
+    {
+        return collect($states)
+            ->chunk(static::STATE_CHUNK)
+            ->flatMap(function (Collection $chunk) use ($after) {
+                return VerbStateEvent::query()
+                    ->toBase()
+                    ->distinct()
+                    ->select('event_id')
+                    ->when($after !== null, fn (BaseBuilder $query) => $query->where('event_id', '>', $after))
+                    ->where(function (BaseBuilder $query) use ($chunk) {
+                        foreach ($chunk as $state) {
+                            $query->orWhere(fn (BaseBuilder $query) => $this->constrainToState($query, $state));
+                        }
+                    })
+                    ->pluck('event_id');
+            })
+            ->unique()
+            ->values();
+    }
+
+    public function statesForEvents(iterable $event_ids): Collection
+    {
+        return collect($event_ids)
+            ->chunk(static::EVENT_CHUNK)
+            ->flatMap(function (Collection $chunk) {
+                return VerbStateEvent::query()
+                    ->toBase()
+                    ->distinct()
+                    ->select(['state_id', 'state_type'])
+                    ->whereIn('event_id', $chunk->values()->all())
+                    ->get()
+                    ->map(StateIdentity::from(...));
+            })
+            ->unique(fn (StateIdentity $state) => $state->state_type.':'.$state->state_id)
+            ->values();
+    }
+
     public function write(array $events): bool
     {
         if (empty($events)) {
@@ -68,6 +146,68 @@ class EventStore implements StoresEvents
 
         return VerbEvent::insert($this->formatForWrite($events))
             && VerbStateEvent::insert($this->formatRelationshipsForWrite($events));
+    }
+
+    /** @param  Collection<int, StateIdentity>  $states */
+    protected function anyBeyondPosition(Collection $states): bool
+    {
+        $query = VerbStateEvent::query()->toBase();
+
+        $query->select([
+            'state_type',
+            'state_id',
+            $this->aggregateExpression($query, 'event_id', 'max'),
+        ]);
+
+        $query->groupBy('state_type', 'state_id');
+
+        $query->where(function (BaseBuilder $query) use ($states) {
+            foreach ($states as $state) {
+                $query->orWhere(fn (BaseBuilder $query) => $this->constrainToState($query, $state));
+            }
+        });
+
+        $latest = $query->get();
+
+        foreach ($states as $state) {
+            $rows = $latest->where('state_type', $state->state_type);
+
+            if (! is_a($state->state_type, SingletonState::class, true)) {
+                $rows = $rows->where('state_id', $state->state_id);
+            }
+
+            // A singleton's events may be recorded under several incidental
+            // state_id rows, so its true position is the max across all of them.
+            $max = $rows->max('max_event_id');
+
+            if (! $max) {
+                continue;
+            }
+
+            // No int casts: snowflake positions compare numerically either way,
+            // and ULID/UUIDv7 positions compare lexicographically-by-time.
+            $applied = $state->position ? Id::from($state->position) : 0;
+
+            if ($max > $applied) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    protected function constrainToState(BaseBuilder $query, StateIdentity $state): BaseBuilder
+    {
+        $query->where('state_type', '=', $state->state_type);
+
+        // A singleton's identity is its type—its events are stored and read by
+        // type alone (see readEvents), so constraining by a specific state_id
+        // here would miss rows written under other incidental ids.
+        if (! is_a($state->state_type, SingletonState::class, true)) {
+            $query->where('state_id', '=', $state->state_id);
+        }
+
+        return $query;
     }
 
     protected function toEventsWithMetadata(LazyCollection $models): LazyCollection

@@ -2,13 +2,10 @@
 
 namespace Thunk\Verbs\State;
 
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\LazyCollection;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Contracts\StoresSnapshots;
-use Thunk\Verbs\Models\VerbSnapshot;
-use Thunk\Verbs\Models\VerbStateEvent;
 use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\State;
 
@@ -25,15 +22,6 @@ use Thunk\Verbs\State;
  */
 class ReconstitutionPlan
 {
-    /**
-     * How many states may appear in a single discovery query's WHERE clause
-     * (each contributes a few bound parameters), and how many event ids in a
-     * single WHERE IN. Both stay well under every driver's parameter cap.
-     */
-    const STATE_CHUNK = 100;
-
-    const EVENT_CHUNK = 500;
-
     /** @var Collection<int, State> */
     public Collection $original_states;
 
@@ -93,11 +81,9 @@ class ReconstitutionPlan
                 continue;
             }
 
-            foreach ($members->chunk(static::EVENT_CHUNK) as $chunk) {
-                $seeds = $seeds->merge(
-                    $snapshots->load($chunk->map(fn (StateIdentity $member) => $member->state_id)->all(), $type),
-                );
-            }
+            $seeds = $seeds->merge(
+                $snapshots->load($members->map(fn (StateIdentity $member) => $member->state_id)->all(), $type),
+            );
         }
 
         return $seeds->contains(null) || $seeds->count() !== $positioned->count()
@@ -109,9 +95,10 @@ class ReconstitutionPlan
      * Breadth-first search over the bipartite state↔event graph, restricted to
      * events after the floor (the lowest member snapshot position). The
      * visited sets live in PHP and each round only queries the *newly
-     * discovered* frontier in bounded chunks, so no query ever embeds the full
-     * known set as bound parameters. When a new member drags the floor lower,
-     * every member goes back into the pool so the expanded window is covered.
+     * discovered* frontier—and the stores chunk those lookups—so no query
+     * ever embeds the full known set as bound parameters. When a new member
+     * drags the floor lower, every member goes back into the pool so the
+     * expanded window is covered.
      */
     protected function discover(): static
     {
@@ -193,21 +180,14 @@ class ReconstitutionPlan
             return $this;
         }
 
-        $absorbed_window_rows = $misaligned
-            ->chunk(static::STATE_CHUNK)
-            ->contains(function (Collection $chunk) {
-                return VerbStateEvent::query()
-                    ->when($this->floor !== null, fn (Builder $query) => $query->where('event_id', '>', $this->floor))
-                    ->where(function (Builder $query) use ($chunk) {
-                        foreach ($chunk as $member) {
-                            $query->orWhere(function (Builder $query) use ($member) {
-                                $this->addConstraint($member, $query);
-                                $query->where('event_id', '<=', $this->positions[$this->stateKey($member)]);
-                            });
-                        }
-                    })
-                    ->exists();
-            });
+        $absorbed_window_rows = app(StoresEvents::class)->hasEventsWithinPositions(
+            $misaligned->map(fn (StateIdentity $member) => new StateIdentity(
+                state_type: $member->state_type,
+                state_id: $member->state_id,
+                position: $this->positions[$this->stateKey($member)],
+            )),
+            after: $this->floor,
+        );
 
         if ($absorbed_window_rows) {
             $this->rediscoverBlank();
@@ -245,31 +225,10 @@ class ReconstitutionPlan
             return;
         }
 
-        $identities
-            ->chunk(static::STATE_CHUNK)
-            ->each(function (Collection $chunk) {
-                VerbSnapshot::query()
-                    ->toBase()
-                    ->select(['type', 'state_id', 'last_event_id'])
-                    ->where(function ($query) use ($chunk) {
-                        foreach ($chunk as $identity) {
-                            $query->orWhere(function ($query) use ($identity) {
-                                $query->where('type', $identity->state_type);
-
-                                if (! is_a($identity->state_type, SingletonState::class, true)) {
-                                    $query->where('state_id', $identity->state_id);
-                                }
-                            });
-                        }
-                    })
-                    ->get()
-                    ->each(function ($row) {
-                        $key = is_a($row->type, SingletonState::class, true)
-                            ? $row->type
-                            : $row->type.':'.$row->state_id;
-
-                        $this->positions[$key] = $this->normalizePosition($row->last_event_id);
-                    });
+        app(StoresSnapshots::class)
+            ->positions($identities)
+            ->each(function (StateIdentity $positioned) {
+                $this->positions[$this->stateKey($positioned)] = $positioned->position;
             });
     }
 
@@ -283,38 +242,13 @@ class ReconstitutionPlan
     /** @param  Collection<int, StateIdentity>  $states */
     protected function eventIdsFor(Collection $states): Collection
     {
-        return $states
-            ->chunk(static::STATE_CHUNK)
-            ->flatMap(function (Collection $chunk) {
-                return VerbStateEvent::query()
-                    ->distinct()
-                    ->select('event_id')
-                    ->when($this->floor !== null, fn (Builder $query) => $query->where('event_id', '>', $this->floor))
-                    ->where(fn (Builder $query) => $chunk->each(
-                        fn ($state) => $query->orWhere(fn (Builder $query) => $this->addConstraint($state, $query))),
-                    )
-                    ->toBase()
-                    ->pluck('event_id');
-            })
-            ->unique()
-            ->values();
+        return app(StoresEvents::class)->eventIdsForStates($states, after: $this->floor);
     }
 
     /** @return Collection<int, StateIdentity> */
     protected function statesFor(Collection $event_ids): Collection
     {
-        return $event_ids
-            ->chunk(static::EVENT_CHUNK)
-            ->flatMap(function (Collection $chunk) {
-                return VerbStateEvent::query()
-                    ->distinct()
-                    ->select(['state_id', 'state_type'])
-                    ->whereIn('event_id', $chunk->values()->all())
-                    ->toBase()
-                    ->get()
-                    ->map(StateIdentity::from(...));
-            })
-            ->values();
+        return app(StoresEvents::class)->statesForEvents($event_ids);
     }
 
     protected function markSeen(array &$seen, int|string $key): bool
@@ -338,29 +272,5 @@ class ReconstitutionPlan
         return is_a($state->state_type, SingletonState::class, true)
             ? $state->state_type
             : $state->state_type.':'.$state->state_id;
-    }
-
-    protected function addConstraint(StateIdentity $state, Builder $query): Builder
-    {
-        $query->where('state_type', '=', $state->state_type);
-
-        // A singleton's identity is its type—its events are stored and read by
-        // type alone (see EventStore::readEvents), so constraining by a specific
-        // state_id here would miss them (e.g. when the seed is a blank singleton
-        // with a freshly-minted id and no snapshot to anchor the real one).
-        if (! is_a($state->state_type, SingletonState::class, true)) {
-            $query->where('state_id', '=', $state->state_id);
-        }
-
-        return $query;
-    }
-
-    protected function normalizePosition(mixed $value): int|string|null
-    {
-        return match (true) {
-            $value === null => null,
-            is_numeric($value) => (int) $value,
-            default => (string) $value,
-        };
     }
 }

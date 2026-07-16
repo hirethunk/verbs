@@ -16,6 +16,7 @@ use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Lifecycle\MetadataManager;
 use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\State;
+use Thunk\Verbs\State\StateIdentity;
 
 class EventStoreFake implements StoresEvents
 {
@@ -59,7 +60,64 @@ class EventStoreFake implements StoresEvents
 
     public function get(iterable $ids): LazyCollection
     {
-        return new LazyCollection;
+        $ids = collect($ids)->map(Id::from(...))->flip();
+
+        return LazyCollection::make(
+            $this->events
+                ->flatten()
+                ->filter(fn (Event $event) => $ids->has($event->id))
+                ->sortBy(fn (Event $event) => $event->id)
+                ->values()
+        );
+    }
+
+    public function hasEventsBeyondPositions(iterable $states): bool
+    {
+        return collect($states)->contains(function (StateIdentity $state) {
+            $max = $this->eventsFor($state)->max(fn (Event $event) => $event->id);
+
+            if (! $max) {
+                return false;
+            }
+
+            return $max > ($state->position ? Id::from($state->position) : 0);
+        });
+    }
+
+    public function hasEventsWithinPositions(iterable $states, int|string|null $after = null): bool
+    {
+        return collect($states)->contains(function (StateIdentity $state) use ($after) {
+            return $state->position !== null && $this->eventsFor($state)->contains(
+                fn (Event $event) => ($after === null || $event->id > $after) && $event->id <= $state->position,
+            );
+        });
+    }
+
+    public function eventIdsForStates(iterable $states, int|string|null $after = null): Collection
+    {
+        $states = collect($states);
+
+        return $this->events
+            ->flatten()
+            ->filter(fn (Event $event) => $after === null || $event->id > $after)
+            ->filter(fn (Event $event) => $states->contains(
+                fn (StateIdentity $state) => $this->touches($event, $state),
+            ))
+            ->map(fn (Event $event) => $event->id)
+            ->unique()
+            ->values();
+    }
+
+    public function statesForEvents(iterable $event_ids): Collection
+    {
+        $ids = collect($event_ids)->map(Id::from(...))->flip();
+
+        return $this->events
+            ->flatten()
+            ->filter(fn (Event $event) => $ids->has($event->id))
+            ->flatMap(fn (Event $event) => $event->states()->map(StateIdentity::from(...)))
+            ->unique(fn (StateIdentity $state) => $state->state_type.':'.$state->state_id)
+            ->values();
     }
 
     /** @return Collection<int, Event> */
@@ -130,5 +188,29 @@ class EventStoreFake implements StoresEvents
         );
 
         return $this;
+    }
+
+    /** @return Collection<int, Event> */
+    protected function eventsFor(StateIdentity $state): Collection
+    {
+        return $this->events
+            ->flatten()
+            ->filter(fn (Event $event) => $this->touches($event, $state))
+            ->values();
+    }
+
+    protected function touches(Event $event, StateIdentity $state): bool
+    {
+        return $event->states()->contains(function (State $touched) use ($state) {
+            if ($touched::class !== $state->state_type) {
+                return false;
+            }
+
+            // Singletons match on type alone (their in-memory ids are
+            // incidental), and ids compare in normalized string form to
+            // mirror how the real store's queries match them.
+            return is_a($state->state_type, SingletonState::class, true)
+                || (string) Id::from($touched->id) === (string) $state->state_id;
+        });
     }
 }

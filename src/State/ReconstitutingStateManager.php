@@ -4,7 +4,6 @@ namespace Thunk\Verbs\State;
 
 use Glhd\Bits\Bits;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
@@ -17,7 +16,6 @@ use Thunk\Verbs\Lifecycle\Lifecycle;
 use Thunk\Verbs\Lifecycle\Phase;
 use Thunk\Verbs\Lifecycle\Phases;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
-use Thunk\Verbs\Models\VerbStateEvent;
 use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\State;
 use Thunk\Verbs\State\Cache\Contracts\ReadableCache;
@@ -202,44 +200,13 @@ class ReconstitutingStateManager extends StateManager
      */
     protected function isStale(Collection $states): bool
     {
-        $latest = VerbStateEvent::query()
-            ->toBase()
-            ->select(['state_type', 'state_id', DB::raw('max(event_id) as max_event_id')])
-            ->where(function ($query) use ($states) {
-                foreach ($states as $state) {
-                    $query->orWhere(function ($query) use ($state) {
-                        $query->where('state_type', $state::class);
-
-                        if (! $state instanceof SingletonState) {
-                            $query->where('state_id', $state->id);
-                        }
-                    });
-                }
-            })
-            ->groupBy('state_type', 'state_id')
-            ->get();
-
-        foreach ($states as $state) {
-            $rows = $state instanceof SingletonState
-                ? $latest->where('state_type', $state::class)
-                : $latest->where('state_type', $state::class)->where('state_id', $state->id);
-
-            $max = $rows->max('max_event_id');
-
-            if (! $max) {
-                continue;
-            }
-
-            // No int casts: snowflake positions compare numerically either way,
-            // and ULID/UUIDv7 positions compare lexicographically-by-time.
-            $applied = $state->last_event_id ? Id::from($state->last_event_id) : 0;
-
-            if ($max > $applied) {
-                return true;
-            }
-        }
-
-        return false;
+        return $this->events->hasEventsBeyondPositions(
+            $states->map(fn (State $state) => new StateIdentity(
+                state_type: $state::class,
+                state_id: $state->id,
+                position: Id::tryFrom($state->last_event_id),
+            )),
+        );
     }
 
     /**

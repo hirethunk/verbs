@@ -26,6 +26,9 @@ class VerifyCommand extends Command
 
     public function handle(): int
     {
+        // Enumerating every snapshot (lazily, or as a random sample) isn't part
+        // of the StoresSnapshots contract, so verbs:verify requires the default
+        // Eloquent snapshot storage. The rebuild itself goes through the stores.
         $query = VerbSnapshot::query()
             ->when($this->option('type'), fn ($query, $type) => $query->where('type', $type))
             ->when($this->option('id'), fn ($query, $id) => $query->where('state_id', $id));

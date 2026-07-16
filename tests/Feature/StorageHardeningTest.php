@@ -2,6 +2,7 @@
 
 use Glhd\Bits\Bits;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Ramsey\Uuid\UuidInterface;
@@ -292,6 +293,11 @@ class ExplodingSnapshotStore implements StoresSnapshots
         return null;
     }
 
+    public function positions(iterable $states): Collection
+    {
+        return new Collection;
+    }
+
     public function write(array $states): bool
     {
         if ($this->explode) {
@@ -328,6 +334,11 @@ class SnapshotStoreSpy implements StoresSnapshots
     public function loadSingleton(string $type): ?State
     {
         return $this->inner->loadSingleton($type);
+    }
+
+    public function positions(iterable $states): Collection
+    {
+        return $this->inner->positions($states);
     }
 
     public function write(array $states): bool

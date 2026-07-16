@@ -5,6 +5,10 @@ namespace Thunk\Verbs\State;
 use InvalidArgumentException;
 use Thunk\Verbs\State;
 
+/**
+ * A (type, id) reference to a state, optionally carrying the position
+ * (last applied event id) the state is known to have advanced to.
+ */
 class StateIdentity
 {
     public static function from(object $source): static
@@ -34,5 +38,6 @@ class StateIdentity
     public function __construct(
         public string $state_type,
         public int|string $state_id,
+        public int|string|null $position = null,
     ) {}
 }

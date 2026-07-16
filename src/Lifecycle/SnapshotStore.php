@@ -15,11 +15,21 @@ use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Models\VerbSnapshot;
 use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\State;
+use Thunk\Verbs\State\StateIdentity;
 use Thunk\Verbs\Support\Serializer;
 use Thunk\Verbs\Support\StateCollection;
 
 class SnapshotStore implements StoresSnapshots
 {
+    /**
+     * How many states may appear in a single query's WHERE clause (each
+     * contributes a couple of bound parameters), and how many state ids in a
+     * single WHERE IN. Both stay well under every database driver's parameter cap.
+     */
+    const STATE_CHUNK = 100;
+
+    const ID_CHUNK = 500;
+
     public function __construct(
         protected MetadataManager $metadata,
         protected Serializer $serializer,
@@ -44,6 +54,35 @@ class SnapshotStore implements StoresSnapshots
         }
 
         return $snapshots->isEmpty() ? null : $this->stateFromSnapshot($snapshots->first());
+    }
+
+    public function positions(iterable $states): Collection
+    {
+        return collect($states)
+            ->chunk(static::STATE_CHUNK)
+            ->flatMap(function (Collection $chunk) {
+                return VerbSnapshot::query()
+                    ->toBase()
+                    ->select(['type', 'state_id', 'last_event_id'])
+                    ->where(function ($query) use ($chunk) {
+                        foreach ($chunk as $state) {
+                            $query->orWhere(function ($query) use ($state) {
+                                $query->where('type', $state->state_type);
+
+                                if (! is_a($state->state_type, SingletonState::class, true)) {
+                                    $query->where('state_id', $state->state_id);
+                                }
+                            });
+                        }
+                    })
+                    ->get();
+            })
+            ->map(fn ($row) => new StateIdentity(
+                state_type: $row->type,
+                state_id: $row->state_id,
+                position: $this->normalizePosition($row->last_event_id),
+            ))
+            ->values();
     }
 
     public function write(array $states): bool
@@ -100,10 +139,12 @@ class SnapshotStore implements StoresSnapshots
     {
         $ids->ensure([Bits::class, UuidInterface::class, AbstractUid::class, 'int', 'string']);
 
-        $states = VerbSnapshot::query()
-            ->where('type', '=', $type)
-            ->whereIn('state_id', $ids)
-            ->get()
+        $states = $ids
+            ->chunk(static::ID_CHUNK)
+            ->flatMap(fn (Collection $chunk) => VerbSnapshot::query()
+                ->where('type', '=', $type)
+                ->whereIn('state_id', $chunk->values())
+                ->get())
             ->map(fn (VerbSnapshot $snapshot) => $this->stateFromSnapshot($snapshot))
             ->filter();
 
@@ -137,6 +178,20 @@ class SnapshotStore implements StoresSnapshots
 
             return null;
         }
+    }
+
+    /**
+     * Drivers disagree on how they return id columns (MySQL and Postgres often
+     * hand bigints back as strings), so positions normalize before they are
+     * ever compared or used as a floor.
+     */
+    protected function normalizePosition(mixed $value): int|string|null
+    {
+        return match (true) {
+            $value === null => null,
+            is_numeric($value) => (int) $value,
+            default => (string) $value,
+        };
     }
 
     protected function formatForWrite(State $state): array

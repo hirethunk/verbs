@@ -1,6 +1,7 @@
 <?php
 
 use Glhd\Bits\Bits;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
@@ -308,6 +309,11 @@ class TamperingSnapshotStore implements StoresSnapshots
     public function loadSingleton(string $type): ?State
     {
         return $this->inner->loadSingleton($type);
+    }
+
+    public function positions(iterable $states): Collection
+    {
+        return $this->inner->positions($states);
     }
 
     public function write(array $states): bool

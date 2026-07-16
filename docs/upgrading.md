@@ -37,9 +37,44 @@ warning, because an iterable can't pass through the new `string $type` parameter
 sites to `load($type, $ids)` when upgrading. (Calls that go through `YourState::load(...)` are
 unaffected—only direct `StateManager` calls.)
 
-If you've implemented a custom `StoresEvents` or `StoresSnapshots`, note that
-`StoresEvents::read()` must now return a genuinely lazy stream (it is no longer safe to
-materialize everything), and `StoresSnapshots` no longer declares `delete()`.
+### Custom store implementations
+
+Verbs now routes *every* reconstitution read through the storage contracts, so a custom store
+has more surface to implement. Several methods traffic in `Thunk\Verbs\State\StateIdentity`—a
+small `(state_type, state_id, position)` value object, where `position` is the last event id the
+state is known to have applied. A custom `StoresEvents` must implement:
+
+- `read(?State $state = null, $after_id = null): LazyCollection` — must now return a genuinely
+  lazy stream (it is no longer safe to materialize everything)
+- `get(iterable $ids): LazyCollection` — stream the events with the given ids, in id order
+- `hasEventsBeyondPositions(iterable $states): bool` — whether any event exists for any of the
+  given identities *beyond* that identity's `position` (an event it hasn't applied yet)
+- `hasEventsWithinPositions(iterable $states, int|string|null $after = null): bool` — whether any
+  event exists at or below an identity's `position` but after `$after` (an already-absorbed
+  window event)
+- `eventIdsForStates(iterable $states, int|string|null $after = null): Collection` — the distinct
+  ids of every event associated with any of the given identities
+- `statesForEvents(iterable $event_ids): Collection` — the distinct identities of every state
+  associated with any of the given events
+- `write(array $events): bool`
+
+A custom `StoresSnapshots` must implement:
+
+- `load($id, string $type): State|StateCollection|null`
+- `loadSingleton(string $type): ?State`
+- `positions(iterable $states): Collection` — one identity (with `position` filled) per given
+  state that has a snapshot
+- `write(array $states): bool`
+- `reset(): bool` — and note that the contract no longer declares `delete()`
+
+Two invariants apply to all of the new read methods: singletons are identified by *type alone*
+(their events and snapshots may be recorded under incidental `state_id`s, which must aggregate
+to one identity), and implementations must bound their own queries—callers may pass arbitrarily
+long lists, and the default stores chunk internally to stay under driver parameter caps.
+
+One command-line caveat: `php artisan verbs:verify` enumerates the snapshot table directly
+(random sampling and lazy enumeration aren't part of the contract), so it requires the default
+Eloquent snapshot storage.
 
 ### Behavior changes (the ones that matter)
 
