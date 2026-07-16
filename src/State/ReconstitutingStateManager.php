@@ -32,25 +32,12 @@ use Thunk\Verbs\Support\StateCollection;
 class ReconstitutingStateManager extends StateManager
 {
     public function __construct(
+        protected StoresEvents $events,
+        protected StoresSnapshots $snapshots,
         protected EventQueue $queue,
         WritableCache&ReadableCache $cache,
     ) {
         parent::__construct($cache);
-    }
-
-    /**
-     * The stores resolve lazily (never constructor-injected) so late-bound
-     * fakes are honored: Verbs::fake() swaps the store bindings after this
-     * manager may already exist.
-     */
-    protected function events(): StoresEvents
-    {
-        return app(StoresEvents::class);
-    }
-
-    protected function snapshots(): StoresSnapshots
-    {
-        return app(StoresSnapshots::class);
     }
 
     public function load(string $type, Bits|UuidInterface|AbstractUid|iterable|int|string|null $id): StateCollection|State
@@ -168,12 +155,12 @@ class ReconstitutingStateManager extends StateManager
     protected function latestSnapshotFor(State $state): ?State
     {
         if ($state instanceof SingletonState) {
-            return $this->snapshots()->loadSingleton($state::class);
+            return $this->snapshots->loadSingleton($state::class);
         }
 
         return Id::tryFrom($state->id) === null
             ? null
-            : $this->snapshots()->load(Id::from($state->id), $state::class);
+            : $this->snapshots->load(Id::from($state->id), $state::class);
     }
 
     protected function fromCache(string $type, Bits|UuidInterface|AbstractUid|int|string|null $id): ?State
@@ -194,7 +181,7 @@ class ReconstitutingStateManager extends StateManager
             return new Collection;
         }
 
-        return collect($this->snapshots()->load($missing->all(), $type))
+        return collect($this->snapshots->load($missing->all(), $type))
             ->keyBy(fn (State $state) => (string) $state->id);
     }
 
@@ -205,11 +192,11 @@ class ReconstitutingStateManager extends StateManager
         // null key into loadSingleton(). A keyed state with no id falls through
         // to make(), which fails loudly on the missing key.
         if (is_a($type, SingletonState::class, true)) {
-            $snapshot = $this->snapshots()->loadSingleton($type);
+            $snapshot = $this->snapshots->loadSingleton($type);
         } else {
             $snapshot = Id::tryFrom($id) === null
                 ? null
-                : $this->snapshots()->load(Id::from($id), $type);
+                : $this->snapshots->load(Id::from($id), $type);
         }
 
         return $snapshot instanceof State
@@ -226,7 +213,7 @@ class ReconstitutingStateManager extends StateManager
      */
     protected function isStale(Collection $states): bool
     {
-        return $this->events()->hasUnappliedEvents(
+        return $this->events->hasUnappliedEvents(
             $states->map(fn (State $state) => new StateIdentity(
                 state_type: $state::class,
                 state_id: $state->id,

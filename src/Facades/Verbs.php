@@ -6,8 +6,13 @@ use Carbon\CarbonInterface;
 use Closure;
 use Illuminate\Support\Facades\Facade;
 use Thunk\Verbs\Contracts\BrokersEvents;
+use Thunk\Verbs\Contracts\StoresEvents;
+use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Lifecycle\AutoCommitManager;
+use Thunk\Verbs\Lifecycle\Broker;
 use Thunk\Verbs\Lifecycle\Phase;
+use Thunk\Verbs\State\StateManager;
 use Thunk\Verbs\Testing\BrokerFake;
 use Thunk\Verbs\Testing\EventStoreFake;
 use Thunk\Verbs\Testing\SnapshotStoreFake;
@@ -30,16 +35,21 @@ class Verbs extends Facade
 {
     public static function fake()
     {
-        $real_broker = static::isFake()
-            ? static::getFacadeRoot()->broker
-            : static::getFacadeRoot();
+        $app = static::getFacadeApplication();
 
-        $fake_broker = new BrokerFake(
-            static::getFacadeApplication(),
-            static::getFacadeApplication()->make(EventStoreFake::class),
-            static::getFacadeApplication()->make(SnapshotStoreFake::class),
-            $real_broker
-        );
+        $app->instance(StoresEvents::class, $store = $app->make(EventStoreFake::class));
+        $app->instance(StoresSnapshots::class, $snapshots = $app->make(SnapshotStoreFake::class));
+
+        // The scoped broker and state manager were constructed against the
+        // real stores, so entering the fake world rebuilds them—a fresh scope
+        // whose constructor injections pick up the fakes. Everything else
+        // resolves the broker lazily and follows the swap() below, which also
+        // rebinds the container's [BrokersEvents] instance.
+        $app->forgetInstance(StateManager::class);
+        $app->forgetInstance(AutoCommitManager::class);
+        $app->forgetInstance(Broker::class);
+
+        $fake_broker = new BrokerFake($store, $snapshots, $app->make(Broker::class));
 
         static::swap($fake_broker);
 

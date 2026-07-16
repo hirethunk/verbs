@@ -26,6 +26,7 @@ class Broker implements BrokersEvents
         protected MetadataManager $metadata,
         protected EventQueue $queue,
         protected StateManager $states,
+        protected StoresSnapshots $snapshots,
     ) {}
 
     public function fireIfValid(Event $event): ?Event
@@ -132,7 +133,7 @@ class Broker implements BrokersEvents
         try {
             $this->states->reset();
             $this->states->setReplaying(true);
-            app(StoresSnapshots::class)->reset();
+            $this->snapshots->reset();
 
             $iteration = 0;
 
@@ -206,9 +207,7 @@ class Broker implements BrokersEvents
             return true;
         }
 
-        // Resolved lazily (like Queue::flush) so late-bound fakes are honored:
-        // Verbs::fake() swaps the store bindings after this broker exists.
-        if (! app(StoresSnapshots::class)->write(array_values($dirty))) {
+        if (! $this->snapshots->write(array_values($dirty))) {
             return false;
         }
 
