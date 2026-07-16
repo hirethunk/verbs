@@ -151,7 +151,7 @@ test('snapshot last-event-ids match singletons by type and normalize to native i
     insertContractReadsSnapshot(ContractReadsState::class, $a, $keyed_last_event_id);
     insertContractReadsSnapshot(ContractReadsSingletonState::class, 0, $singleton_last_event_id);
 
-    $found = app(StoresSnapshots::class)->lastEventIdsFor([
+    $found = app(StoresSnapshots::class)->hydrateLastEventIds([
         new StateIdentity(ContractReadsState::class, $a),
         new StateIdentity(ContractReadsSingletonState::class, snowflake_id()),
         new StateIdentity(ContractReadsState::class, snowflake_id()),

@@ -60,7 +60,7 @@ class SnapshotStoreFake implements StoresSnapshots
         return Arr::first($this->states[$type]);
     }
 
-    public function lastEventIdsFor(iterable $identities): Collection
+    public function hydrateLastEventIds(iterable $identities): Collection
     {
         return collect($identities)
             ->map(function (StateIdentity $identity) {

@@ -330,7 +330,7 @@ class ExplodingSnapshotStore implements StoresSnapshots
         return null;
     }
 
-    public function lastEventIdsFor(iterable $states): Collection
+    public function hydrateLastEventIds(iterable $states): Collection
     {
         return new Collection;
     }
@@ -373,9 +373,9 @@ class SnapshotStoreSpy implements StoresSnapshots
         return $this->inner->loadSingleton($type);
     }
 
-    public function lastEventIdsFor(iterable $states): Collection
+    public function hydrateLastEventIds(iterable $states): Collection
     {
-        return $this->inner->lastEventIdsFor($states);
+        return $this->inner->hydrateLastEventIds($states);
     }
 
     public function write(array $states): bool

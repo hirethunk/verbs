@@ -62,7 +62,7 @@ A custom `StoresSnapshots` must implement:
 
 - `load($id, string $type): State|StateCollection|null`
 - `loadSingleton(string $type): ?State`
-- `lastEventIdsFor(iterable $identities): Collection` — one identity (with `last_event_id`
+- `hydrateLastEventIds(iterable $identities): Collection` — one identity (with `last_event_id`
   filled) per given identity that has a snapshot
 - `write(array $states): bool`
 - `reset(): bool` — and note that the contract no longer declares `delete()`

@@ -226,7 +226,7 @@ class ReconstitutionPlan
         }
 
         app(StoresSnapshots::class)
-            ->lastEventIdsFor($identities)
+            ->hydrateLastEventIds($identities)
             ->each(function (StateIdentity $found) {
                 $this->last_event_ids[$this->stateKey($found)] = $found->last_event_id;
             });

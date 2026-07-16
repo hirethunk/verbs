@@ -56,7 +56,7 @@ class SnapshotStore implements StoresSnapshots
         return $snapshots->isEmpty() ? null : $this->stateFromSnapshot($snapshots->first());
     }
 
-    public function lastEventIdsFor(iterable $identities): Collection
+    public function hydrateLastEventIds(iterable $identities): Collection
     {
         return collect($identities)
             ->chunk(static::STATE_CHUNK)

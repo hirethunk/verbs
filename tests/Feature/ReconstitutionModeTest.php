@@ -311,9 +311,9 @@ class TamperingSnapshotStore implements StoresSnapshots
         return $this->inner->loadSingleton($type);
     }
 
-    public function lastEventIdsFor(iterable $states): Collection
+    public function hydrateLastEventIds(iterable $states): Collection
     {
-        return $this->inner->lastEventIdsFor($states);
+        return $this->inner->hydrateLastEventIds($states);
     }
 
     public function write(array $states): bool

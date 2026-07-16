@@ -17,14 +17,14 @@ interface StoresSnapshots
     public function loadSingleton(string $type): ?State;
 
     /**
-     * The stored last event id of each of the given identities, returned as
-     * one identity-with-last_event_id per snapshot that exists. Singletons
-     * match on type alone.
+     * Hydrate each given identity's last event id from its snapshot: returns
+     * one *new* identity (with last_event_id filled) per snapshot that exists;
+     * identities without a snapshot drop out. Singletons match on type alone.
      *
      * @param  iterable<int, StateIdentity>  $identities
      * @return Collection<int, StateIdentity>
      */
-    public function lastEventIdsFor(iterable $identities): Collection;
+    public function hydrateLastEventIds(iterable $identities): Collection;
 
     public function write(array $states): bool;
 
