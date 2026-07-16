@@ -36,13 +36,11 @@ CustomerState::factory()->id($id)->create();
 ### Core Concepts
 
 1. **Events**: Immutable records of what happened in the system
-    - Located in `src/Events/`
-    - Must extend `Verbs\Event`
+    - Base class: `src/Event.php` — events extend `Thunk\Verbs\Event`
     - Can implement `boot()`, `authorize()`, `validate()`, `apply()`, and `handle()` methods
 
 2. **States**: Aggregate event data over time
-    - Located in `src/States/`
-    - Must extend `Verbs\State`
+    - Base classes: `src/State.php` and `src/SingletonState.php` — states extend `Thunk\Verbs\State`
     - Use `#[StateId]` attribute to specify which event property contains the state ID
 
 3. **Storage**: Three-table structure
@@ -56,10 +54,11 @@ CustomerState::factory()->id($id)->create();
     - `Attributes/`: PHP 8 attributes for configuration
     - `Commands/`: Artisan commands
     - `Contracts/`: Interfaces
-    - `Events/`: Base event classes and utilities
+    - `Events/`: Framework-dispatched events (e.g. `VerbsStateInitialized`)
     - `Facades/`: Laravel facades
+    - `Lifecycle/`: Broker, dispatcher, queue, and the default event/snapshot stores
     - `Models/`: Eloquent models for storage
-    - `States/`: Base state classes
+    - `State/`: State manager, reconstitution, and cache layers
     - `Support/`: Utilities and helpers
 - `tests/`: Pest tests organized by feature
 - `examples/`: Complete example implementations (Bank, Cart, etc.)
@@ -67,7 +66,7 @@ CustomerState::factory()->id($id)->create();
 ### Important Patterns
 
 1. **Event Lifecycle**: boot -> authorize → validate → apply → handle
-2. **Attribute Usage**: `#[StateId]`, `#[AppliesToState]`, `#[AppliesToSingletonState]`
+2. **Attribute Usage**: `#[StateId]`, `#[AppliesToState]`, `#[AppliesToChildState]`
 3. **Serialization**: Custom normalizers in `src/Support/Normalization/`
 4. **Replay Safety**: Use `#[Once]` annotations and `Verbs::unlessReplaying()` for side effects
 

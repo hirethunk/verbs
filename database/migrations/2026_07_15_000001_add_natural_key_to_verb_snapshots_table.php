@@ -92,8 +92,15 @@ return new class extends Migration
     {
         Schema::connection($this->connectionName())->table($this->tableName(), function (Blueprint $table) {
             $table->dropUnique(['type', 'state_id']);
-            $table->timestamp('expires_at')->nullable()->index();
         });
+
+        // up() leaves the column in place on SQLite < 3.35 (no native DROP
+        // COLUMN there), so only re-add it where it's actually gone.
+        if (! Schema::connection($this->connectionName())->hasColumn($this->tableName(), 'expires_at')) {
+            Schema::connection($this->connectionName())->table($this->tableName(), function (Blueprint $table) {
+                $table->timestamp('expires_at')->nullable()->index();
+            });
+        }
     }
 
     protected function table()
