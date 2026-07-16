@@ -62,6 +62,14 @@ materialize everything), and `StoresSnapshots` no longer declares `delete()`.
 - **Registering a second instance for a live state identity throws.** A `LogicException` here is
   a bug-finder: it means something constructed a state directly instead of loading it. Use
   `YourState::load($id)` (or `::singleton()`), never `new YourState`.
+- **Event metadata actually round-trips now.** Reading stored metadata used to silently return
+  an empty bag; it now returns what was written, and *object* values (like Carbon instances) are
+  stored with a small type envelope so they come back as real objects. Scalars and arrays are
+  stored bare, exactly as before; rows written by 0.8 read back as-is. If anything external
+  parses `verb_events.metadata`, note the new envelope shape for object values.
+- **`#[Once]` works on `handle()` now.** Previously the attribute was silently overridden and
+  the hook re-ran on every replay. Note that `#[Once]` only affects methods Verbs itself invokes—
+  a helper you call manually from `handle()` runs every time regardless.
 - **Memory is bounded and identity is safe.** The state cache evicts least-recently-used states
   past `verbs.state_cache_size`, but any state you still hold a reference to keeps its identity—
   a later load returns the same instance.
