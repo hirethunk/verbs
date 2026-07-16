@@ -254,10 +254,17 @@ class EventStore implements StoresEvents
         $query->where(function (BaseBuilder $query) use ($events, $max_event_ids) {
             foreach ($events as $event) {
                 foreach ($event->states() as $state) {
-                    if (! $max_event_ids->has($key = $state::class.$state->id)) {
+                    if (! $max_event_ids->has($key = $this->guardKey($state::class, $state->id))) {
                         $query->orWhere(function (BaseBuilder $query) use ($state) {
                             $query->where('state_type', $state::class);
-                            $query->where('state_id', $state->id);
+
+                            // A singleton's events may be recorded under several
+                            // incidental state_id rows (see constrainToIdentity),
+                            // and a conflicting writer's rows carry *its* incidental
+                            // id—so the guard must match by type alone.
+                            if (! $state instanceof SingletonState) {
+                                $query->where('state_id', $state->id);
+                            }
                         });
                         $max_event_ids->put($key, Id::normalizeEventId($state->last_event_id));
                     }
@@ -278,12 +285,19 @@ class EventStore implements StoresEvents
             // No int casts: snowflake ids compare numerically either way,
             // and ULID/UUIDv7 ids compare lexicographically-by-time.
             $max_written_id = Id::normalizeEventId(data_get($result, 'max_event_id'));
-            $max_expected_id = $max_event_ids->get($state_type.$state_id, 0);
+            $max_expected_id = $max_event_ids->get($this->guardKey($state_type, $state_id), 0);
 
             if ($max_written_id > $max_expected_id) {
                 throw new ConcurrencyException("An event with ID {$max_written_id} has been written to the database for '{$state_type}' with ID {$state_id}. This is higher than the in-memory value of {$max_expected_id}.");
             }
         });
+    }
+
+    protected function guardKey(string $state_type, mixed $state_id): string
+    {
+        return is_a($state_type, SingletonState::class, true)
+            ? $state_type
+            : $state_type.$state_id;
     }
 
     /** @param  Event[]  $event_objects */

@@ -96,6 +96,56 @@ function seedUlidPivots(ConcurrencyUlidTestState $state): void
     ]);
 }
 
+// A conflicting writer in another process records its pivot rows under *its*
+// singleton instance's incidental id, so the guard must match singletons by
+// type alone or it goes blind to every cross-process singleton conflict.
+it('throws when a singleton conflict was written under a different incidental id', function () {
+    $store = app(EventStore::class);
+    $state = ConcurrencyForeignIdTestState::singleton();
+
+    $state->last_event_id = snowflake_id();
+    $foreign_event_id = snowflake_id();
+
+    VerbStateEvent::insert([
+        'id' => snowflake_id(),
+        'event_id' => $foreign_event_id,
+        'state_id' => snowflake_id(),
+        'state_type' => $state::class,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    $event = new ConcurrencyForeignIdTestEvent;
+    $event->id = snowflake_id();
+
+    $store->write([$event]);
+})->throws(ConcurrencyException::class);
+
+it('does not throw when a singleton has absorbed rows under other incidental ids', function () {
+    $store = app(EventStore::class);
+    $state = ConcurrencyForeignIdTestState::singleton();
+
+    $absorbed_event_id = snowflake_id();
+
+    VerbStateEvent::insert([
+        'id' => snowflake_id(),
+        'event_id' => $absorbed_event_id,
+        'state_id' => snowflake_id(),
+        'state_type' => $state::class,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    $state->last_event_id = $absorbed_event_id;
+
+    $event = new ConcurrencyForeignIdTestEvent;
+    $event->id = snowflake_id();
+
+    $store->write([$event]);
+
+    expect(VerbEvent::count())->toBe(1);
+});
+
 class ConcurrencyTestEvent extends Event
 {
     public function states(): StateCollection
@@ -115,3 +165,13 @@ class ConcurrencyUlidTestEvent extends Event
 }
 
 class ConcurrencyUlidTestState extends SingletonState {}
+
+class ConcurrencyForeignIdTestEvent extends Event
+{
+    public function states(): StateCollection
+    {
+        return StateCollection::make([ConcurrencyForeignIdTestState::singleton()]);
+    }
+}
+
+class ConcurrencyForeignIdTestState extends SingletonState {}
