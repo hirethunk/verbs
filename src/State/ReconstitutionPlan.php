@@ -38,14 +38,20 @@ class ReconstitutionPlan
     /** @var array<string, int|string|null> */
     protected array $last_event_ids = [];
 
-    public static function plan(Collection $states, bool $use_snapshots = true): static
-    {
-        return (new static($states, $use_snapshots))->discover()->probe();
+    public static function plan(
+        Collection $states,
+        StoresEvents $events,
+        StoresSnapshots $snapshots,
+        bool $use_snapshots = true,
+    ): static {
+        return (new static($states, $events, $snapshots, $use_snapshots))->discover()->probe();
     }
 
     /** @param  Collection<int, State>  $states */
     public function __construct(
         Collection $states,
+        protected StoresEvents $events,
+        protected StoresSnapshots $snapshots,
         protected bool $use_snapshots = true,
     ) {
         $this->original_states = $states->values()->collect();
@@ -55,7 +61,7 @@ class ReconstitutionPlan
 
     public function events(): LazyCollection
     {
-        return app(StoresEvents::class)->get($this->window);
+        return $this->events->get($this->window);
     }
 
     /**
@@ -71,18 +77,17 @@ class ReconstitutionPlan
             fn (StateIdentity $member) => $this->last_event_ids[$this->stateKey($member)] !== null,
         );
 
-        $snapshots = app(StoresSnapshots::class);
         $seeds = new Collection;
 
         foreach ($snapshotted->groupBy(fn (StateIdentity $member) => $member->state_type) as $type => $members) {
             if (is_a($type, SingletonState::class, true)) {
-                $seeds->push($snapshots->loadSingleton($type));
+                $seeds->push($this->snapshots->loadSingleton($type));
 
                 continue;
             }
 
             $seeds = $seeds->merge(
-                $snapshots->load($members->map(fn (StateIdentity $member) => $member->state_id)->all(), $type),
+                $this->snapshots->load($members->map(fn (StateIdentity $member) => $member->state_id)->all(), $type),
             );
         }
 
@@ -180,7 +185,7 @@ class ReconstitutionPlan
             return $this;
         }
 
-        $absorbed_window_rows = app(StoresEvents::class)->hasAppliedEventsAfter(
+        $absorbed_window_rows = $this->events->hasAppliedEventsAfter(
             $misaligned->map(fn (StateIdentity $member) => new StateIdentity(
                 state_type: $member->state_type,
                 state_id: $member->state_id,
@@ -225,7 +230,7 @@ class ReconstitutionPlan
             return;
         }
 
-        app(StoresSnapshots::class)
+        $this->snapshots
             ->hydrateLastEventIds($identities)
             ->each(function (StateIdentity $found) {
                 $this->last_event_ids[$this->stateKey($found)] = $found->last_event_id;
@@ -242,13 +247,13 @@ class ReconstitutionPlan
     /** @param  Collection<int, StateIdentity>  $states */
     protected function eventIdsFor(Collection $states): Collection
     {
-        return app(StoresEvents::class)->eventIdsFor($states, after_id: $this->floor);
+        return $this->events->eventIdsFor($states, after_id: $this->floor);
     }
 
     /** @return Collection<int, StateIdentity> */
     protected function statesFor(Collection $event_ids): Collection
     {
-        return app(StoresEvents::class)->stateIdentitiesFor($event_ids);
+        return $this->events->stateIdentitiesFor($event_ids);
     }
 
     protected function markSeen(array &$seen, int|string $key): bool

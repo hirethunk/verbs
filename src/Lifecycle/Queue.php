@@ -13,8 +13,12 @@ class Queue
 {
     public array $event_queue = [];
 
-    /** @var array<string, int> */
+    /** @var array<string, bool> */
     protected array $queued_state_keys = [];
+
+    public function __construct(
+        protected StoresEvents $events,
+    ) {}
 
     public function queue(Event $event)
     {
@@ -30,7 +34,7 @@ class Queue
         // Concurrency is guarded at the storage layer: EventStore::write() runs
         // guardAgainstConcurrentWrites() against the persisted max event id per
         // state before inserting, throwing a ConcurrencyException on a conflict.
-        if (! app(StoresEvents::class)->write($events)) {
+        if (! $this->events->write($events)) {
             throw new UnableToStoreEventsException($events);
         }
 
@@ -62,16 +66,16 @@ class Queue
 
     /**
      * Membership is asked once per live state on every reconstitution, so the
-     * queue keeps a refcounted key index instead of re-scanning every queued
-     * event's states each time. states() is already resolved (and memoized)
-     * by the time an event queues, so the keys are stable.
+     * queue keeps a key set instead of re-scanning every queued event's states
+     * each time. A set suffices because events only ever leave the queue all
+     * at once (flush() clears both together), never one at a time. states() is
+     * already resolved (and memoized) by the time an event queues, so the keys
+     * are stable.
      */
     protected function index(Event $event): void
     {
         foreach ($event->states() as $state) {
-            $key = $this->stateKey($state);
-
-            $this->queued_state_keys[$key] = ($this->queued_state_keys[$key] ?? 0) + 1;
+            $this->queued_state_keys[$this->stateKey($state)] = true;
         }
     }
 

@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\DB;
+use Thunk\Verbs\Contracts\StoresEvents;
+use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\State;
 use Thunk\Verbs\State\ReconstitutionPlan;
 use Thunk\Verbs\State\StateIdentity;
@@ -38,6 +40,16 @@ function planState(string $type, int $id): State
     return $state;
 }
 
+function planFor(array $states, bool $use_snapshots = true): ReconstitutionPlan
+{
+    return ReconstitutionPlan::plan(
+        collect($states),
+        app(StoresEvents::class),
+        app(StoresSnapshots::class),
+        use_snapshots: $use_snapshots,
+    );
+}
+
 test('it finds the correct states and events for one state', function () {
     $matching_state_types = [
         ReconstitutionPlanTestState1::class,
@@ -53,7 +65,7 @@ test('it finds the correct states and events for one state', function () {
         }
     }
 
-    $plan = ReconstitutionPlan::plan(collect([planState(ReconstitutionPlanTestState1::class, 10)]));
+    $plan = planFor([planState(ReconstitutionPlanTestState1::class, 10)]);
 
     expect($plan->members)->toHaveCount(5)
         ->and($plan->window)->toHaveCount(5)
@@ -85,10 +97,10 @@ test('it finds the correct states and events for multiple states', function () {
         }
     }
 
-    $plan = ReconstitutionPlan::plan(collect([
+    $plan = planFor([
         planState(ReconstitutionPlanTestState1::class, 10),
         planState(ReconstitutionPlanTestState2::class, 11),
-    ]));
+    ]);
 
     expect($plan->members)->toHaveCount(5)
         ->and($plan->window)->toHaveCount(5);
@@ -107,7 +119,7 @@ test('aligned snapshots produce a seeded plan windowed after the floor', functio
     insertPlanSnapshot(ReconstitutionPlanTestState1::class, 10, 102);
     insertPlanSnapshot(ReconstitutionPlanTestState2::class, 11, 102);
 
-    $plan = ReconstitutionPlan::plan(collect([planState(ReconstitutionPlanTestState1::class, 10)]));
+    $plan = planFor([planState(ReconstitutionPlanTestState1::class, 10)]);
 
     expect($plan->seeded)->toBeTrue()
         ->and($plan->floor)->toBe(102)
@@ -127,7 +139,7 @@ test('states connected only through pre-floor events stay outside the component'
     insertPlanSnapshot(ReconstitutionPlanTestState1::class, 10, 101);
     insertPlanSnapshot(ReconstitutionPlanTestState2::class, 11, 102);
 
-    $plan = ReconstitutionPlan::plan(collect([planState(ReconstitutionPlanTestState1::class, 10)]));
+    $plan = planFor([planState(ReconstitutionPlanTestState1::class, 10)]);
 
     expect($plan->seeded)->toBeTrue()
         ->and($plan->floor)->toBe(101)
@@ -147,7 +159,7 @@ test('a member ahead of the floor routes the plan to a blank baseline', function
     insertPlanSnapshot(ReconstitutionPlanTestState1::class, 10, 100);
     insertPlanSnapshot(ReconstitutionPlanTestState2::class, 11, 102);
 
-    $plan = ReconstitutionPlan::plan(collect([planState(ReconstitutionPlanTestState1::class, 10)]));
+    $plan = planFor([planState(ReconstitutionPlanTestState1::class, 10)]);
 
     expect($plan->seeded)->toBeFalse()
         ->and($plan->floor)->toBeNull()
@@ -164,7 +176,7 @@ test('a member with no snapshot routes the plan to a blank baseline', function (
 
     insertPlanSnapshot(ReconstitutionPlanTestState1::class, 10, 101);
 
-    $plan = ReconstitutionPlan::plan(collect([planState(ReconstitutionPlanTestState1::class, 10)]));
+    $plan = planFor([planState(ReconstitutionPlanTestState1::class, 10)]);
 
     expect($plan->seeded)->toBeFalse()
         ->and($plan->floor)->toBeNull()
@@ -184,7 +196,7 @@ test('a newly discovered member drags the floor down and expands the window', fu
     insertPlanSnapshot(ReconstitutionPlanTestState1::class, 10, 103);
     insertPlanSnapshot(ReconstitutionPlanTestState2::class, 11, 100);
 
-    $plan = ReconstitutionPlan::plan(collect([planState(ReconstitutionPlanTestState1::class, 10)]));
+    $plan = planFor([planState(ReconstitutionPlanTestState1::class, 10)]);
 
     // Discovery starts at floor 103 (only member: 10), finds event 104, which
     // adds member 11 at last_event_id 100 and drops the floor—re-querying every
@@ -201,7 +213,7 @@ test('disabling snapshots forces a blank full-component plan', function () {
 
     insertPlanSnapshot(ReconstitutionPlanTestState1::class, 10, 100);
 
-    $plan = ReconstitutionPlan::plan(collect([planState(ReconstitutionPlanTestState1::class, 10)]), use_snapshots: false);
+    $plan = planFor([planState(ReconstitutionPlanTestState1::class, 10)], use_snapshots: false);
 
     expect($plan->seeded)->toBeFalse()
         ->and($plan->floor)->toBeNull()

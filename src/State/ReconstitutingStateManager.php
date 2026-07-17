@@ -236,13 +236,18 @@ class ReconstitutingStateManager extends StateManager
     {
         $started_at = microtime(true);
 
-        $plan = ReconstitutionPlan::plan($states, use_snapshots: config('verbs.reconstitution_uses_snapshots', true));
+        $plan = ReconstitutionPlan::plan(
+            $states,
+            $this->events,
+            $this->snapshots,
+            use_snapshots: config('verbs.reconstitution_uses_snapshots', true),
+        );
 
         if (! $this->rebuild($states, $plan)) {
             // The seeded attempt met something unexpected (a seed vanished, or
             // a window event was already absorbed by a seed). Degrade to the
             // always-correct blank baseline rather than ever double-applying.
-            $plan = ReconstitutionPlan::plan($states, use_snapshots: false);
+            $plan = ReconstitutionPlan::plan($states, $this->events, $this->snapshots, use_snapshots: false);
 
             $this->rebuild($states, $plan);
         }

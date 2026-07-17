@@ -26,6 +26,7 @@ class Broker implements BrokersEvents
         protected MetadataManager $metadata,
         protected EventQueue $queue,
         protected StateManager $states,
+        protected StoresEvents $events,
         protected StoresSnapshots $snapshots,
     ) {}
 
@@ -137,7 +138,7 @@ class Broker implements BrokersEvents
 
             $iteration = 0;
 
-            app(StoresEvents::class)->read()
+            $this->events->read()
                 ->each(function (Event $event) use ($beforeEach, $afterEach, &$iteration) {
                     if ($beforeEach) {
                         $beforeEach($event);

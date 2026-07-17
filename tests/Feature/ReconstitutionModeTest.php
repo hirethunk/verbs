@@ -157,7 +157,10 @@ test('a seed that advanced since planning trips the invariant and self-heals', f
     // that advanced between planning and seeding.
     app()->instance(StoresSnapshots::class, new TamperingSnapshotStore(app(SnapshotStore::class), Id::from($e3->id)));
 
+    // The scoped state manager was constructed against the real snapshot
+    // store, so the tampering store only takes effect in a rebuilt scope.
     app(StateManager::class)->reset();
+    app()->forgetInstance(StateManager::class);
     Log::spy();
 
     expect(ReconModeStateB::load(2)->value)->toBe($b_truth);
