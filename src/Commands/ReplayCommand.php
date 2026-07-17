@@ -62,6 +62,7 @@ class ReplayCommand extends Command
         alert('WARNING:');
         warning('Verbs does not reset any model data that might be created in your event handlers.');
         warning('Be sure to either reset that data before replaying, or confirm that all handle() calls are idempotent.');
+        warning('Side effects that must only ever run once (mail, payments, API calls) should be marked with the #[Once] attribute so replays skip them.');
         warning('Replaying events without thinking thru the consequences can have VERY negative side-effects.');
 
         return app()->environment('testing') || confirm(

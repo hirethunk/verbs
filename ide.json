@@ -15,7 +15,8 @@
                 {
                     "methodNames": [
                         "make",
-                        "fire"
+                        "fire",
+                        "commit"
                     ],
                     "parameters": [
                         1
@@ -40,6 +41,10 @@
                     {
                         "name": "fire",
                         "returnType": "$this"
+                    },
+                    {
+                        "name": "commit",
+                        "returnType": "mixed"
                     }
                 ]
             }
