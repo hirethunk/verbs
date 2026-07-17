@@ -5,7 +5,6 @@ namespace Thunk\Verbs\Support;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
-use Carbon\Factory;
 use Carbon\FactoryImmutable;
 use Closure;
 use DateTime;
@@ -52,9 +51,10 @@ class Wormhole
             return $test_now;
         }
 
-        // Carbon 3 exposes its handler for when "test now" is a closure, so if it exists, we'll
-        // defer to that. Otherwise, we'll just call the closure ourselves.
-        if (method_exists(Factory::class, 'handleTestNowClosure')) {
+        // Carbon 3 allows for Closures as "test now" values. If we're using Carbon 3, we'll defer to
+        // the built-in handler (handleTestNowClosure). Otherwise, we'll still call the Closure (just
+        // to be safe), but in practice that shouldn't ever happen, since Carbon 2 didn't support them.
+        if (method_exists(FactoryImmutable::class, 'handleTestNowClosure')) {
             return FactoryImmutable::getDefaultInstance()->handleTestNowClosure($test_now);
         }
 
