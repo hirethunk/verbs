@@ -47,9 +47,9 @@ expect()->extend('toBeMoney', function (Money|string|int|null $amount = null, ?s
     }
 
     if ($amount) {
-        expect($amount->isEqualTo($this->value))->toBeTrue(sprintf(
-            'Expected %s but got %s instead', $amount->formatTo('en_US'), $this->value->formatTo('en_US')
-        ));
+        expect($amount->isEqualTo($this->value))->toBeTrue(
+            "Expected {$amount} but got {$this->value} instead"
+        );
     }
 });
 
