@@ -2,6 +2,7 @@
 
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Date;
 use Thunk\Verbs\Attributes\Autodiscovery\StateId;
 use Thunk\Verbs\Commands\ReplayCommand;
 use Thunk\Verbs\Event;
@@ -66,7 +67,7 @@ it('can replay events', function () {
 });
 
 it('uses the original event times when replaying', function () {
-    \Illuminate\Support\Facades\Date::setTestNow('2024-04-01 12:00:00');
+    Date::setTestNow('2024-04-01 12:00:00');
     $state_id = Id::make();
     ReplayCommandTestWormholeEvent::fire(state_id: $state_id);
 
@@ -78,7 +79,7 @@ it('uses the original event times when replaying', function () {
         ->toBe(CarbonImmutable::parse('2024-04-01 12:00:00')->unix());
 
     $GLOBALS['time'] = [];
-    \Illuminate\Support\Facades\Date::setTestNow('2024-05-15 18:00:00');
+    Date::setTestNow('2024-05-15 18:00:00');
 
     config(['app.env' => 'testing']);
     $this->artisan(ReplayCommand::class);
