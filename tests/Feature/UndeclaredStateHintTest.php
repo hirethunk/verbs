@@ -35,6 +35,18 @@ it('resolves an optional hint for a state the event does not fire on to its defa
         ->and($event->received['nullable'])->toBeNull();
 });
 
+it('prefers the candidate over the default when the event fires on an optionally-hinted state', function () {
+    $id = snowflake_id();
+
+    $event = OptionalDeclaredHintEvent::fire(state_id: $id);
+
+    // The default is only a fallback for events that don't fire on the state:
+    // when a candidate exists, it always wins.
+    expect($event->received['defaulted'])->toBeInstanceOf(UndeclaredHintState::class)
+        ->and($event->received['defaulted']->id)->toBe($id)
+        ->and($event->received['nullable'])->toBe($event->received['defaulted']);
+});
+
 class UndeclaredHintSingleton extends SingletonState
 {
     public int $count = 0;
@@ -70,6 +82,24 @@ class OptionalUndeclaredHintEvent extends Event
 {
     #[StateId(UndeclaredHintOtherState::class)]
     public int $other_id;
+
+    public array $received = [];
+
+    public function applyDefaulted(?UndeclaredHintState $state = null): void
+    {
+        $this->received['defaulted'] = $state;
+    }
+
+    public function applyNullable(?UndeclaredHintState $state): void
+    {
+        $this->received['nullable'] = $state;
+    }
+}
+
+class OptionalDeclaredHintEvent extends Event
+{
+    #[StateId(UndeclaredHintState::class)]
+    public int $state_id;
 
     public array $received = [];
 
