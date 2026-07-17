@@ -38,6 +38,11 @@ trait BrokerConvenienceMethods
         app(MetadataManager::class)->createMetadataUsing($callback);
     }
 
+    public function resolveHandleReturnUsing(?callable $callback = null): void
+    {
+        app(HandleReturnResolver::class)->using($callback);
+    }
+
     public function isAuthorized(Event $event): bool
     {
         try {

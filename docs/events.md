@@ -107,6 +107,23 @@ public function handle()
 }
 ```
 
+> [!warning]
+> The above example will only work consistently, if there are no other lifecycle hooks registered for your event.
+> Additional registered lifecycle hooks will lead to a collection of results being returned, instead of the singular return value of your event's `handle` method.
+> If your application relies on a different return behavior, you can globally define how commit results are resolved (for example, exclusively return the result of your event's `handle` method):
+> 
+> ```php
+> use Illuminate\Support\Collection;
+> use Thunk\Verbs\Event;
+> use Thunk\Verbs\Facades\Verbs;
+> 
+> Verbs::resolveHandleReturnUsing(
+>     fn (Collection $results, Event $event): Collection => $results->take(1)
+> );
+> ```
+>
+> _See [this issue](https://github.com/hirethunk/verbs/issues/213) that discusses the behavior of commit returns._
+
 ## `handle()`
 
 Use the `handle()` method included in your event to update your database / models / UI data.

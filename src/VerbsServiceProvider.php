@@ -29,6 +29,7 @@ use Thunk\Verbs\Lifecycle\AutoCommitManager;
 use Thunk\Verbs\Lifecycle\Broker;
 use Thunk\Verbs\Lifecycle\Dispatcher;
 use Thunk\Verbs\Lifecycle\EventStore;
+use Thunk\Verbs\Lifecycle\HandleReturnResolver;
 use Thunk\Verbs\Lifecycle\MetadataManager;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 use Thunk\Verbs\Lifecycle\SnapshotStore;
@@ -68,6 +69,7 @@ class VerbsServiceProvider extends PackageServiceProvider
         $this->app->scoped(EventQueue::class);
         $this->app->scoped(EventStateRegistry::class);
         $this->app->singleton(MetadataManager::class);
+        $this->app->singleton(HandleReturnResolver::class);
 
         $this->app->scoped(StateManager::class, function (Container $app) {
             return new StateManager(
