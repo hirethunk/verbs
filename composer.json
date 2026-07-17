@@ -41,6 +41,9 @@
         "phpunit/phpunit": "^12.5.30",
         "projektgopher/whisky": "^0.7.4"
     },
+    "suggest": {
+        "phpdocumentor/reflection-docblock": "Enables PhpDoc-based serializer type extraction (for example, `/** @var DTO[] */` collection element inference)."
+    },
     "autoload": {
         "psr-4": {
             "Thunk\\Verbs\\": "src/",

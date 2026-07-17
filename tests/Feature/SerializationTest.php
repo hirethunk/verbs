@@ -12,6 +12,7 @@ use Thunk\Verbs\SerializedByVerbs;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\Normalization\NormalizeToPropertiesAndClassName;
 use Thunk\Verbs\Support\Serializer;
+use Thunk\Verbs\VerbsServiceProvider;
 
 it('supports instantiation via an associative array', function () {
     $snowflake = Snowflake::make();
@@ -165,6 +166,39 @@ it('allows us to store a serializable class(es) as a property', function () {
 
     expect($deserialized_event->dto)->toBeInstanceOf(DTO::class)
         ->and($deserialized_event->dtos[0])->toBeInstanceOf(DTO::class);
+});
+
+it('falls back to reflection type extraction when PhpDoc extraction is unavailable', function () {
+    $provider = new class(app()) extends VerbsServiceProvider
+    {
+        protected function hasPhpDocExtractorDependency(): bool
+        {
+            return false;
+        }
+    };
+
+    $provider->packageRegistered();
+    app()->forgetInstance(Serializer::class);
+    app()->forgetInstance(PropertyNormalizer::class);
+
+    $original_event = new EventWithPhpDocArray;
+    $serialized_data = app(Serializer::class)->serialize($original_event);
+
+    $deserialized_event = app(Serializer::class)->deserialize(EventWithPhpDocArray::class, $serialized_data);
+
+    expect($deserialized_event->dto)
+        ->toBeInstanceOf(DTO::class);
+
+    // NOTE: Type inference via PhpDoc is not available, which breaks the collection type inference.
+    // See also https://github.com/hirethunk/verbs/pull/125#issuecomment-2359638427
+    expect($deserialized_event->dtos)
+        ->toBeArray()
+        ->toBe([
+            [
+                'fqcn' => DTO::class,
+                'foo' => 1,
+            ],
+        ]);
 });
 
 class EventWithConstructorPromotion extends Event
