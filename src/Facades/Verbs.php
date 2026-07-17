@@ -38,6 +38,12 @@ class Verbs extends Facade
 {
     public static function fake()
     {
+        // Faking twice is a no-op: the fake world—and everything already
+        // committed to it—survives repeated calls.
+        if (($faked = static::getFacadeRoot()) instanceof BrokerFake) {
+            return $faked;
+        }
+
         $app = static::getFacadeApplication();
 
         $app->instance(StoresEvents::class, $store = $app->make(EventStoreFake::class));

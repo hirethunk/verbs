@@ -83,6 +83,19 @@ it('starts a fresh world, discarding anything queued or loaded before the fake',
         ->and($fresh->count)->toBe(0);
 });
 
+it('is a no-op when called while already faked', function () {
+    $first = Verbs::fake();
+
+    VerbFakesTestEvent::fire();
+    Verbs::commit();
+
+    // A second fake() must not start another fresh world: the same fake broker
+    // (and everything committed to it) survives.
+    expect(Verbs::fake())->toBe($first);
+
+    Verbs::assertCommitted(VerbFakesTestEvent::class);
+});
+
 class VerbFakesTestEvent extends Event
 {
     public function __construct(?int $id = null)
