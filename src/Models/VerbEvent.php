@@ -40,8 +40,14 @@ class VerbEvent extends Model
 
     public function event(): Event
     {
-        $this->event ??= app(Serializer::class)->deserialize($this->type, $this->data);
-        $this->event->id = $this->id;
+        if ($this->event !== null) {
+            return $this->event;
+        }
+
+        // When serialize_event_id is false (default), stored data lacks id but some event types
+        // require it for deserialization. Always use row id as source of truth.
+        $data = array_merge($this->data ?? [], ['id' => $this->id]);
+        $this->event = app(Serializer::class)->deserialize($this->type, $data);
 
         app(MetadataManager::class)->setEphemeral($this->event, 'created_at', $this->created_at);
 
