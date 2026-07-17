@@ -11,7 +11,9 @@ class VerbStateEvent extends Model
 
     public function getConnectionName()
     {
-        return $this->connection ?? config('verbs.connections.state_events');
+        // State-event mappings always live with the events themselves: they're
+        // read in a single query across both tables.
+        return $this->connection ?? config('verbs.connections.events');
     }
 
     public function getTable()

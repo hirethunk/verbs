@@ -11,7 +11,6 @@ use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\CannotReplayWithQueuedEvents;
 use Thunk\Verbs\Exceptions\EventNotValid;
-use Thunk\Verbs\Exceptions\MismatchedConnectionsException;
 use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 use Thunk\Verbs\State;
@@ -22,6 +21,8 @@ class Broker implements BrokersEvents
     use BrokerConvenienceMethods;
 
     public bool $commit_immediately = false;
+
+    protected bool $warned_about_state_events_connection = false;
 
     public function __construct(
         protected Dispatcher $dispatcher,
@@ -190,23 +191,16 @@ class Broker implements BrokersEvents
      */
     protected function transaction(callable $callback): void
     {
+        $this->warnIfStateEventsConnectionIsConfigured();
+
         // Comparing *resolved* names treats null and the default connection's
         // explicit name as the same connection—one transaction rather than a
-        // savepoint, and no false mismatch. Checked here (not at boot) so
-        // config set at runtime, e.g. in tests, is respected.
+        // savepoint. Checked here (not at boot) so config set at runtime,
+        // e.g. in tests, is respected.
         $connections = collect([
             'events' => config('verbs.connections.events'),
-            'state_events' => config('verbs.connections.state_events'),
             'snapshots' => config('verbs.connections.snapshots'),
         ])->map(fn ($connection) => DB::connection($connection)->getName());
-
-        if ($connections['state_events'] !== $connections['events']) {
-            throw new MismatchedConnectionsException(sprintf(
-                'The [verbs.connections.state_events] connection must match [verbs.connections.events] (got [%s] and [%s]). Verbs reads events and their state mappings in a single query across both tables, so they have to share one database connection.',
-                $connections['state_events'],
-                $connections['events'],
-            ));
-        }
 
         $transaction = $callback;
 
@@ -221,6 +215,29 @@ class Broker implements BrokersEvents
         }
 
         $transaction();
+    }
+
+    /**
+     * The state_events connection option is gone—mappings always share the
+     * events connection—but a stale published config may still try to split them.
+     */
+    protected function warnIfStateEventsConnectionIsConfigured(): void
+    {
+        if ($this->warned_about_state_events_connection) {
+            return;
+        }
+
+        $this->warned_about_state_events_connection = true;
+
+        $state_events = config('verbs.connections.state_events');
+
+        if ($state_events !== null
+            && DB::connection($state_events)->getName() !== DB::connection(config('verbs.connections.events'))->getName()) {
+            trigger_error(
+                'The "verbs.connections.state_events" config option has been removed: state-event mappings always use the "events" connection.',
+                E_USER_DEPRECATED,
+            );
+        }
     }
 
     /**

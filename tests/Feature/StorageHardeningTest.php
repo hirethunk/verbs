@@ -13,7 +13,6 @@ use Thunk\Verbs\Attributes\Autodiscovery\AppliesToState;
 use Thunk\Verbs\Attributes\Autodiscovery\StateId;
 use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Exceptions\MismatchedConnectionsException;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Lifecycle\Broker;
 use Thunk\Verbs\Lifecycle\SnapshotStore;
@@ -285,34 +284,60 @@ test('the events connection commits before the snapshots connection', function (
     expect($committed)->toBe([DB::connection()->getName(), 'verbs_secondary']);
 });
 
-test('a state_events connection that differs from the events connection is rejected', function () {
+test('the removed state_events connection option is ignored with a deprecation warning', function () {
     config()->set('database.connections.verbs_secondary', [
         'driver' => 'sqlite',
         'database' => ':memory:',
         'prefix' => '',
     ]);
-
-    HardeningTestEvent::fire(state_id: snowflake_id());
-
     config()->set('verbs.connections.state_events', 'verbs_secondary');
 
-    expect(fn () => Verbs::commit())->toThrow(
-        MismatchedConnectionsException::class,
-        'verbs.connections.state_events',
-    );
+    $id = snowflake_id();
+    HardeningTestEvent::fire(state_id: $id);
 
-    expect(VerbEvent::query()->count())->toBe(0);
+    $deprecations = [];
+    set_error_handler(function (int $errno, string $errstr) use (&$deprecations) {
+        $deprecations[] = $errstr;
+
+        return true;
+    }, E_USER_DEPRECATED);
+
+    try {
+        Verbs::commit();
+    } finally {
+        restore_error_handler();
+    }
+
+    // The commit succeeds and the mappings land on the events connection—the
+    // stale option changes nothing except emitting the warning.
+    expect($deprecations)->toHaveCount(1)
+        ->and($deprecations[0])->toContain('verbs.connections.state_events')
+        ->and(VerbEvent::query()->count())->toBe(1)
+        ->and(VerbStateEvent::query()->count())->toBe(1)
+        ->and(HardeningTestState::load($id)->count)->toBe(1);
 });
 
-test('an explicit default-connection name for state_events is not a mismatch', function () {
+test('an explicit default-connection name for state_events does not warn', function () {
     config()->set('verbs.connections.state_events', DB::connection()->getName());
 
     $id = snowflake_id();
-
     HardeningTestEvent::fire(state_id: $id);
-    Verbs::commit();
 
-    expect(HardeningTestState::load($id)->count)->toBe(1);
+    $deprecations = [];
+    set_error_handler(function (int $errno, string $errstr) use (&$deprecations) {
+        $deprecations[] = $errstr;
+
+        return true;
+    }, E_USER_DEPRECATED);
+
+    try {
+        Verbs::commit();
+    } finally {
+        restore_error_handler();
+    }
+
+    expect($deprecations)->toBe([])
+        ->and(HardeningTestState::load($id)->count)->toBe(1);
 });
 
 test('shared connections get a single commit transaction, not savepoints', function () {
