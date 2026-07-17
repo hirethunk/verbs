@@ -117,15 +117,10 @@ class DependencyResolver
     {
         $type = $parameter->type()->name();
 
-        // A State type-hint must resolve to one of the states the event fires
-        // on. Falling through to the container would construct a fresh
-        // instance that no event is associated with—never event-sourced, and
-        // an identity collision waiting to happen for singletons.
+        // If we're trying to resolve a State (but didn't have a matching candidate),
+        // don't just make a State from the container. Instead, use the default value
+        // if there is one, or throw an exception.
         if (is_a($type, State::class, true)) {
-            // An optional hint is an explicit "only if this event fires on
-            // it," so it falls back to its declared default (or null when
-            // nullable)—the same convention the container and PendingEvent
-            // follow for optional parameters. Required hints fail loudly.
             if ($parameter->isDefaultValueAvailable()) {
                 return $parameter->getDefaultValue();
             }
