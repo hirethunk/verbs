@@ -122,6 +122,18 @@ class DependencyResolver
         // instance that no event is associated with—never event-sourced, and
         // an identity collision waiting to happen for singletons.
         if (is_a($type, State::class, true)) {
+            // An optional hint is an explicit "only if this event fires on
+            // it," so it falls back to its declared default (or null when
+            // nullable)—the same convention the container and PendingEvent
+            // follow for optional parameters. Required hints fail loudly.
+            if ($parameter->isDefaultValueAvailable()) {
+                return $parameter->getDefaultValue();
+            }
+
+            if ($parameter->allowsNull()) {
+                return null;
+            }
+
             $event = $this->candidates->first(fn ($candidate) => $candidate instanceof Event);
 
             throw new CannotResolveParameter(sprintf(

@@ -27,6 +27,14 @@ it('still resolves states the event fires on', function () {
     expect($event->state(UndeclaredHintState::class)->count)->toBe(1);
 });
 
+it('resolves an optional hint for a state the event does not fire on to its default', function () {
+    $event = OptionalUndeclaredHintEvent::fire(other_id: snowflake_id());
+
+    expect($event->received)->toHaveCount(2)
+        ->and($event->received['defaulted'])->toBeNull()
+        ->and($event->received['nullable'])->toBeNull();
+});
+
 class UndeclaredHintSingleton extends SingletonState
 {
     public int $count = 0;
@@ -55,6 +63,24 @@ class UndeclaredKeyedHintEvent extends Event
     public function apply(UndeclaredHintState $state): void
     {
         $state->count++;
+    }
+}
+
+class OptionalUndeclaredHintEvent extends Event
+{
+    #[StateId(UndeclaredHintOtherState::class)]
+    public int $other_id;
+
+    public array $received = [];
+
+    public function applyDefaulted(?UndeclaredHintState $state = null): void
+    {
+        $this->received['defaulted'] = $state;
+    }
+
+    public function applyNullable(?UndeclaredHintState $state): void
+    {
+        $this->received['nullable'] = $state;
     }
 }
 
