@@ -14,9 +14,9 @@ use Thunk\Verbs\NoWormhole;
 
 class Wormhole
 {
-    protected ?CarbonImmutable $immutable_now = null;
+    protected Closure|CarbonInterface|null $immutable_test_now = null;
 
-    protected ?Carbon $mutable_now = null;
+    protected Closure|CarbonInterface|null $mutable_test_now = null;
 
     protected int $warp_depth = 0;
 
@@ -35,12 +35,25 @@ class Wormhole
 
     public function realMutableNow(): Carbon
     {
-        return $this->mutable_now?->copy() ?? Carbon::instance(new DateTime);
+        return Carbon::instance($this->resolveTestNow($this->mutable_test_now, Carbon::class) ?? new DateTime);
     }
 
     public function realImmutableNow(): CarbonImmutable
     {
-        return $this->immutable_now ?? CarbonImmutable::instance(new DateTime);
+        return CarbonImmutable::instance($this->resolveTestNow($this->immutable_test_now, CarbonImmutable::class) ?? new DateTime);
+    }
+
+    /**
+     * Mirrors Carbon's closure-mock resolution (hand-rolled because Carbon 2
+     * has no public equivalent of Carbon 3's handleTestNowClosure()).
+     */
+    protected function resolveTestNow(Closure|CarbonInterface|null $test_now, string $class): ?CarbonInterface
+    {
+        if ($test_now instanceof Closure) {
+            $test_now = $test_now($class::instance(new DateTime));
+        }
+
+        return $test_now;
     }
 
     public function warp(Event $event, Closure $callback)
@@ -51,29 +64,20 @@ class Wormhole
 
         $created_at = $this->metadata->getEphemeral($event, 'created_at', $this->factory->now());
 
-        // Capture userland's "test now" so it can be restored after time
-        // travel. A null capture restores to flowing real time, so no
-        // has-check is needed—and it must be captured per class, because
-        // Carbon 2 keeps separate test-now statics for Carbon and
-        // CarbonImmutable (Carbon 3 shares one).
+        // Captured per class: Carbon 2 keeps separate test-now statics for
+        // Carbon and CarbonImmutable. A null capture restores to real time.
         $immutable_reset = CarbonImmutable::getTestNow();
         $mutable_reset = Carbon::getTestNow();
 
-        // realNow() should reflect userland time: if userland had a mock (the
-        // reset we just captured), snapshot what it resolves to; otherwise
-        // stay null, so realNow() keeps returning *flowing* wall-clock time—
-        // an unconditional capture here would freeze it for the whole warp.
-        // Warps can nest (reconstituting a state mid-apply replays other
-        // events), so only the outermost warp captures userland's now—an
-        // inner warp would otherwise mistake the outer warp's time for
-        // userland's—and each warp restores whatever it displaced rather
-        // than resetting to null.
-        $previous_immutable_now = $this->immutable_now;
-        $previous_mutable_now = $this->mutable_now;
+        // Only the outermost warp captures userland's mock (an inner warp
+        // would mistake the outer warp's time for userland's), and realNow()
+        // resolves it per call so unmocked time keeps flowing during a warp.
+        $previous_immutable_now = $this->immutable_test_now;
+        $previous_mutable_now = $this->mutable_test_now;
 
         if ($this->warp_depth === 0) {
-            $this->immutable_now = $immutable_reset === null ? null : CarbonImmutable::now();
-            $this->mutable_now = $mutable_reset === null ? null : Carbon::now();
+            $this->immutable_test_now = $immutable_reset;
+            $this->mutable_test_now = $mutable_reset;
         }
 
         $this->warp_depth++;
@@ -89,8 +93,8 @@ class Wormhole
 
             $this->warp_depth--;
 
-            $this->immutable_now = $previous_immutable_now;
-            $this->mutable_now = $previous_mutable_now;
+            $this->immutable_test_now = $previous_immutable_now;
+            $this->mutable_test_now = $previous_mutable_now;
         }
     }
 

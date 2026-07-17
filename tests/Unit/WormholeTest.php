@@ -53,6 +53,21 @@ test('realNow keeps flowing inside a warp when userland time is not mocked', fun
         ->and(CarbonImmutable::hasTestNow())->toBeFalse();
 });
 
+test('realNow stops reflecting a userland mock once it is cleared after a warp', function () {
+    Date::setTestNow('2023-06-02 00:00:00');
+
+    $event = new class extends Event {};
+    app(MetadataManager::class)->setEphemeral($event, 'created_at', Date::parse('2023-01-02 00:00:00'));
+
+    app(Wormhole::class)->warp($event, fn () => null);
+
+    // The warp must not hold on to the captured mock: once userland clears
+    // its test now, realNow() is flowing wall-clock time again.
+    Date::setTestNow();
+
+    expect(app(Wormhole::class)->realNow()->format('Y'))->toBe((new DateTime)->format('Y'));
+});
+
 test('a userland test now survives past the end of a warp', function () {
     Date::setTestNow('2023-06-02 00:00:00');
 
@@ -83,6 +98,25 @@ test('a closure test now round-trips through a warp', function () {
     // The mock is restored by identity, not re-resolved into a frozen instant.
     expect(Carbon::getTestNow())->toBe($mock)
         ->and(Carbon::now()->format('Y-m-d'))->toBe('2023-06-02');
+});
+
+test('a dynamic closure test now keeps realNow flowing inside a warp', function () {
+    Carbon::setTestNow(fn ($now) => $now->subYear());
+    CarbonImmutable::setTestNow(fn ($now) => $now->subYear());
+
+    $event = new class extends Event {};
+    app(MetadataManager::class)->setEphemeral($event, 'created_at', Date::parse('2023-01-02 00:00:00'));
+
+    app(Wormhole::class)->warp($event, function () {
+        $first = app(Wormhole::class)->realNow();
+        usleep(1_000);
+        $second = app(Wormhole::class)->realNow();
+
+        // The mock computes from the real now, so realNow() must keep flowing
+        // through it rather than freezing at whatever it resolved to at entry.
+        expect($second->greaterThan($first))->toBeTrue()
+            ->and($first->year)->toBe(((int) (new DateTime)->format('Y')) - 1);
+    });
 });
 
 test('nested warps preserve the outer realNow and restore it afterward', function () {
