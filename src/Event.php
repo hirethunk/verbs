@@ -6,6 +6,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use LogicException;
 use Throwable;
+use Thunk\Verbs\Exceptions\EventMapViolationException;
 use Thunk\Verbs\Exceptions\EventNotAuthorized;
 use Thunk\Verbs\Exceptions\EventNotValid;
 use Thunk\Verbs\Exceptions\EventNotValidForCurrentState;
@@ -22,6 +23,18 @@ use WeakMap;
 abstract class Event
 {
     public int $id;
+
+    /**
+     * An array to map event names to their class names in the database.
+     *
+     * @var array<string, class-string<Event>>
+     */
+    public static array $eventMap = [];
+
+    /**
+     * Prevents storing events without an entry in the event map.
+     */
+    protected static bool $requireEventMap = false;
 
     public static function __callStatic(string $name, array $arguments)
     {
@@ -101,5 +114,68 @@ abstract class Event
         }
 
         throw new $exception($message);
+    }
+
+    /**
+     * Prevents storing events without an entry in the event map.
+     */
+    public static function requireEventMap(bool $requireEventMap = true)
+    {
+        static::$requireEventMap = $requireEventMap;
+    }
+
+    /**
+     * Determine if the event map is required.
+     */
+    public static function requiresEventMap(): bool
+    {
+        return static::$requireEventMap;
+    }
+
+    /**
+     * Set or get the event map.
+     *
+     * @param  array<string, class-string<Event>>|null  $map
+     * @return array<string, class-string<Event>>
+     */
+    public static function eventMap(?array $map = null, bool $merge = true): array
+    {
+        if (is_array($map)) {
+            static::$eventMap = $merge && static::$eventMap
+                ? $map + static::$eventMap
+                : $map;
+        }
+
+        return static::$eventMap;
+    }
+
+    /**
+     * Get the event associated with a custom event name.
+     *
+     * @return class-string<Event>|null
+     */
+    public static function getMappedEvent(string $alias): ?string
+    {
+        return static::$eventMap[$alias] ?? null;
+    }
+
+    /**
+     * Get the alias associated with an event class.
+     *
+     * @param  class-string<Event>  $className
+     */
+    public static function getAlias(string $className): string
+    {
+        $alias = array_search($className, static::$eventMap, strict: true);
+
+        if ($alias !== false) {
+            return $alias;
+        }
+
+        if (self::requiresEventMap()) {
+            throw new EventMapViolationException($className);
+        }
+
+        return $className;
     }
 }

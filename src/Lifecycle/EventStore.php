@@ -125,7 +125,7 @@ class EventStore implements StoresEvents
     {
         return array_map(fn (Event $event) => [
             'id' => Id::from($event->id),
-            'type' => $event::class,
+            'type' => Event::getAlias($event::class),
             'data' => app(Serializer::class)->serialize($event),
             'metadata' => app(Serializer::class)->serialize($this->metadata->get($event)),
             'created_at' => app(MetadataManager::class)->getEphemeral($event, 'created_at', now()),
