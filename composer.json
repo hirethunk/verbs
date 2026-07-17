@@ -29,17 +29,17 @@
     "require-dev": {
         "brick/money": ">=0.8.1",
         "internachi/modular": "^2.3.0|^3.0.2",
-        "laravel/pint": "^1.13",
-        "laravel/serializable-closure": "^2.0",
-        "mockery/mockery": "^1.6",
-        "nunomaduro/collision": "^7.10|^8.1",
+        "laravel/pint": "^1.29.3",
+        "laravel/serializable-closure": "^2.0.13",
+        "mockery/mockery": "^1.6.12",
+        "nunomaduro/collision": "^7.12.0|^8.9.5",
         "orchestra/testbench": "^9.17.0|^10.11.0|^11.1.0",
         "orchestra/testbench-core": "^9.22.1|^10.14.1|^11.3.5",
-        "pestphp/pest": "^4.4",
-        "pestphp/pest-plugin-arch": "^v4.0",
-        "pestphp/pest-plugin-laravel": "^4.1",
-        "phpunit/phpunit": "^12.5",
-        "projektgopher/whisky": "^0.5.1|^0.7"
+        "pestphp/pest": "^4.7.5",
+        "pestphp/pest-plugin-arch": "^4.0.2",
+        "pestphp/pest-plugin-laravel": "^4.1.0",
+        "phpunit/phpunit": "^12.5.30",
+        "projektgopher/whisky": "^0.7.4"
     },
     "autoload": {
         "psr-4": {
