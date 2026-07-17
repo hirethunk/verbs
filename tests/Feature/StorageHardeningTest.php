@@ -1,9 +1,11 @@
 <?php
 
 use Glhd\Bits\Bits;
+use Illuminate\Database\Events\TransactionCommitted;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event as EventFacade;
 use Illuminate\Support\Facades\Schema;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
@@ -11,6 +13,7 @@ use Thunk\Verbs\Attributes\Autodiscovery\AppliesToState;
 use Thunk\Verbs\Attributes\Autodiscovery\StateId;
 use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Exceptions\MismatchedConnectionsException;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Lifecycle\Broker;
 use Thunk\Verbs\Lifecycle\SnapshotStore;
@@ -240,7 +243,7 @@ test('the commit transaction spans every configured verbs connection', function 
         'database' => ':memory:',
         'prefix' => '',
     ]);
-    config()->set('verbs.connections.state_events', 'verbs_secondary');
+    config()->set('verbs.connections.snapshots', 'verbs_secondary');
 
     $levels = [];
 
@@ -249,13 +252,67 @@ test('the commit transaction spans every configured verbs connection', function 
     (function () use (&$levels) {
         $this->transaction(function () use (&$levels) {
             $levels['events'] = DB::connection(config('verbs.connections.events'))->transactionLevel();
-            $levels['state_events'] = DB::connection('verbs_secondary')->transactionLevel();
+            $levels['snapshots'] = DB::connection('verbs_secondary')->transactionLevel();
         });
     })->call(app(Broker::class));
 
-    expect($levels)->toBe(['events' => 1, 'state_events' => 1])
+    expect($levels)->toBe(['events' => 1, 'snapshots' => 1])
         ->and(DB::connection(config('verbs.connections.events'))->transactionLevel())->toBe(0)
         ->and(DB::connection('verbs_secondary')->transactionLevel())->toBe(0);
+});
+
+test('the events connection commits before the snapshots connection', function () {
+    config()->set('database.connections.verbs_secondary', [
+        'driver' => 'sqlite',
+        'database' => ':memory:',
+        'prefix' => '',
+    ]);
+    config()->set('verbs.connections.snapshots', 'verbs_secondary');
+
+    $committed = [];
+
+    EventFacade::listen(TransactionCommitted::class, function (TransactionCommitted $event) use (&$committed) {
+        $committed[] = $event->connectionName;
+    });
+
+    (function () {
+        $this->transaction(fn () => null);
+    })->call(app(Broker::class));
+
+    // A crash between cross-connection commits must degrade to events-without-
+    // snapshots (stale, and self-healing on the next load)—never to a snapshot
+    // referencing an event that was never persisted.
+    expect($committed)->toBe([DB::connection()->getName(), 'verbs_secondary']);
+});
+
+test('a state_events connection that differs from the events connection is rejected', function () {
+    config()->set('database.connections.verbs_secondary', [
+        'driver' => 'sqlite',
+        'database' => ':memory:',
+        'prefix' => '',
+    ]);
+
+    HardeningTestEvent::fire(state_id: snowflake_id());
+
+    config()->set('verbs.connections.state_events', 'verbs_secondary');
+
+    expect(fn () => Verbs::commit())->toThrow(
+        MismatchedConnectionsException::class,
+        'verbs.connections.state_events',
+    );
+
+    expect(VerbEvent::query()->count())->toBe(0);
+});
+
+test('an explicit default-connection name for state_events is not a mismatch', function () {
+    config()->set('verbs.connections.state_events', DB::connection()->getName());
+
+    $id = snowflake_id();
+
+    HardeningTestEvent::fire(state_id: $id);
+    Verbs::commit();
+
+    expect(HardeningTestState::load($id)->count)->toBe(1);
 });
 
 test('shared connections get a single commit transaction, not savepoints', function () {

@@ -98,9 +98,10 @@ Eloquent snapshot storage.
   together, and handlers run only after the transaction commits. Wrapping `fire()` +
   `Verbs::commit()` in your own `DB::transaction()` now rolls back the stores together. If you've
   pointed `verbs.connections.*` at more than one connection, each distinct connection gets its own
-  transaction (best-effort—cross-connection atomicity needs a shared connection), and note that
-  `state_events` must share the `events` connection regardless: the event read path queries across
-  both tables on one connection.
+  transaction, with the events connection committing first (best-effort—cross-connection atomicity
+  needs a shared connection). Verbs enforces that `state_events` shares the `events` connection:
+  committing with mismatched connections throws a `MismatchedConnectionsException`, because the
+  event read path queries across both tables on one connection.
 - **Registering a second instance for a live state identity throws.** A `LogicException` here is
   a bug-finder: it means something constructed a state directly instead of loading it. Use
   `YourState::load($id)` (or `::singleton()`), never `new YourState`.

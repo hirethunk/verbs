@@ -10,6 +10,7 @@ use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\EventNotValid;
+use Thunk\Verbs\Exceptions\MismatchedConnectionsException;
 use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 use Thunk\Verbs\State;
@@ -165,22 +166,41 @@ class Broker implements BrokersEvents
     }
 
     /**
-     * When all three Verbs stores share a database connection (the default),
-     * the callback runs in a single atomic transaction. When they don't, each
-     * distinct connection gets its own nested transaction—best-effort, since
-     * true cross-connection atomicity isn't possible without two-phase commit.
+     * When all of the Verbs stores share a database connection (the default),
+     * the callback runs in a single atomic transaction. When snapshots live
+     * elsewhere, each distinct connection gets its own nested transaction—
+     * best-effort, since true cross-connection atomicity isn't possible
+     * without two-phase commit.
      */
     protected function transaction(callable $callback): void
     {
-        $connections = array_unique([
-            config('verbs.connections.events'),
-            config('verbs.connections.state_events'),
-            config('verbs.connections.snapshots'),
-        ]);
+        // Comparing *resolved* names treats null and the default connection's
+        // explicit name as the same connection—one transaction rather than a
+        // savepoint, and no false mismatch. Checked here (not at boot) so
+        // config set at runtime, e.g. in tests, is respected.
+        $connections = collect([
+            'events' => config('verbs.connections.events'),
+            'state_events' => config('verbs.connections.state_events'),
+            'snapshots' => config('verbs.connections.snapshots'),
+        ])->map(fn ($connection) => DB::connection($connection)->getName());
+
+        if ($connections['state_events'] !== $connections['events']) {
+            throw new MismatchedConnectionsException(sprintf(
+                'The [verbs.connections.state_events] connection must match [verbs.connections.events] (got [%s] and [%s]). Verbs reads events and their state mappings in a single query across both tables, so they have to share one database connection.',
+                $connections['state_events'],
+                $connections['events'],
+            ));
+        }
 
         $transaction = $callback;
 
-        foreach (array_reverse($connections) as $connection) {
+        // The events connection comes first, which makes it *innermost*—the
+        // first to commit. A crash between cross-connection commits then
+        // degrades to events-without-snapshots, which self-heals on the next
+        // load. The reverse order could persist a snapshot referencing an
+        // event that was never stored: permanently wrong, and invisible to
+        // staleness checks.
+        foreach ($connections->unique() as $connection) {
             $transaction = fn () => DB::connection($connection)->transaction($transaction);
         }
 
