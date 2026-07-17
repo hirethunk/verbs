@@ -60,8 +60,18 @@ class StateIdentity
      */
     public function key(): string
     {
-        return is_a($this->state_type, SingletonState::class, true)
-            ? $this->state_type
-            : $this->state_type.':'.$this->state_id;
+        return static::keyFor($this->state_type, $this->state_id);
+    }
+
+    /**
+     * The same rule for callers holding a bare (type, id) pair instead of an
+     * identity—a null id is a lookup shape (identities always carry one) and
+     * can never match a keyed entry.
+     */
+    public static function keyFor(string $state_type, int|string|null $state_id): string
+    {
+        return is_a($state_type, SingletonState::class, true)
+            ? $state_type
+            : $state_type.':'.$state_id;
     }
 }

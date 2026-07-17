@@ -3,10 +3,10 @@
 namespace Thunk\Verbs\State\Cache;
 
 use LogicException;
-use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\State;
 use Thunk\Verbs\State\Cache\Contracts\ReadableCache;
 use Thunk\Verbs\State\Cache\Contracts\WritableCache;
+use Thunk\Verbs\State\StateIdentity;
 use WeakReference;
 
 /**
@@ -176,9 +176,6 @@ class InMemoryCache implements ReadableCache, WritableCache
         $this->strong[$key] = $value;
     }
 
-    // StateIdentity::key() owns the canonical identity-key rule; this stays
-    // hand-rolled because cache lookups may carry a null id (e.g. singleton
-    // lookups by type), which StateIdentity can't represent.
     protected function key(State|string $type, int|string|null $id = null): string
     {
         // Allow passing in state objects.
@@ -186,12 +183,6 @@ class InMemoryCache implements ReadableCache, WritableCache
             [$type, $id] = [$type::class, $type->id];
         }
 
-        // A singleton is keyed by type alone: its in-memory id is incidental,
-        // so an id passed with a singleton type must never fork the key space.
-        if (is_a($type, SingletonState::class, true)) {
-            $id = null;
-        }
-
-        return "{$type}:{$id}";
+        return StateIdentity::keyFor($type, $id);
     }
 }
