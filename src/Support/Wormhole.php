@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Carbon\Factory;
+use Carbon\FactoryImmutable;
 use Closure;
 use DateTime;
 use Illuminate\Support\DateFactory;
@@ -47,15 +48,17 @@ class Wormhole
     /** @param  class-string<CarbonInterface>  $class */
     protected function resolveTestNow(Closure|CarbonInterface|null $test_now, string $class): ?CarbonInterface
     {
+        if (! $test_now instanceof Closure) {
+            return $test_now;
+        }
+
+        // Carbon 3 exposes its handler for when "test now" is a closure, so if it exists, we'll
+        // defer to that. Otherwise, we'll just call the closure ourselves.
         if (method_exists(Factory::class, 'handleTestNowClosure')) {
-            // TODO: Use that instead, but we need to figure out the correct Factory instance to use
+            return FactoryImmutable::getDefaultInstance()->handleTestNowClosure($test_now);
         }
 
-        if ($test_now instanceof Closure) {
-            $test_now = $test_now($class::instance(new DateTime));
-        }
-
-        return $test_now;
+        return $test_now($class::instance(new DateTime));
     }
 
     public function warp(Event $event, Closure $callback)
@@ -66,21 +69,18 @@ class Wormhole
 
         $created_at = $this->metadata->getEphemeral($event, 'created_at', $this->factory->now());
 
-        // Captured per class: Carbon 2 keeps separate test-now statics for
-        // Carbon and CarbonImmutable. A null capture restores to real time.
         $immutable_reset = CarbonImmutable::getTestNow();
         $mutable_reset = Carbon::getTestNow();
 
-        // Only the outermost warp captures userland's mock (an inner warp
-        // would mistake the outer warp's time for userland's), and realNow()
-        // resolves it per call so unmocked time keeps flowing during a warp.
-        $previous_immutable_now = $this->immutable_test_now;
-        $previous_mutable_now = $this->mutable_test_now;
-
-        if ($this->warp_depth++ === 0) {
+        // It's possible to warp inside an existing wormhole, so we only want to track the
+        // "real now" value if we're on the outermost layer (calling `realNow()` should always
+        // resolve the time outside all active wormholes).
+        if ($this->warp_depth === 0) {
             $this->immutable_test_now = $immutable_reset;
             $this->mutable_test_now = $mutable_reset;
         }
+
+        $this->warp_depth++;
 
         try {
             CarbonImmutable::setTestNow($created_at);
@@ -93,8 +93,10 @@ class Wormhole
 
             $this->warp_depth--;
 
-            $this->immutable_test_now = $previous_immutable_now;
-            $this->mutable_test_now = $previous_mutable_now;
+            if ($this->warp_depth === 0) {
+                $this->immutable_test_now = null;
+                $this->mutable_test_now = null;
+            }
         }
     }
 
