@@ -51,25 +51,29 @@ class Wormhole
 
         $created_at = $this->metadata->getEphemeral($event, 'created_at', $this->factory->now());
 
-        // We need to store the true "test now" values so that we can restore them after time travel.
-        // This ensures that if the user-land code is calling Carbon::setTestNow(), that will be restored
-        // after our wormhole closure executes.
+        // Capture userland's "test now" so it can be restored after time
+        // travel. A null capture restores to flowing real time, so no
+        // has-check is needed—and it must be captured per class, because
+        // Carbon 2 keeps separate test-now statics for Carbon and
+        // CarbonImmutable (Carbon 3 shares one).
         $immutable_reset = CarbonImmutable::getTestNow();
         $mutable_reset = Carbon::getTestNow();
 
-        // If a "test now" is set, we also need to get the current value of Carbon::now() to use
-        // when Wormhole::realNow() is called (this ensures that any user-land Carbon::setTestNow()
-        // is honored when accessing the "real" now -- inception-level nonsense here).
-        // Warps can nest (reconstituting a state mid-apply replays other events),
-        // so only the outermost warp captures the "real" now—an inner warp would
-        // otherwise mistake the outer warp's time for userland's—and each warp
-        // restores whatever it displaced rather than resetting to null.
+        // realNow() should reflect userland time: if userland had a mock (the
+        // reset we just captured), snapshot what it resolves to; otherwise
+        // stay null, so realNow() keeps returning *flowing* wall-clock time—
+        // an unconditional capture here would freeze it for the whole warp.
+        // Warps can nest (reconstituting a state mid-apply replays other
+        // events), so only the outermost warp captures userland's now—an
+        // inner warp would otherwise mistake the outer warp's time for
+        // userland's—and each warp restores whatever it displaced rather
+        // than resetting to null.
         $previous_immutable_now = $this->immutable_now;
         $previous_mutable_now = $this->mutable_now;
 
         if ($this->warp_depth === 0) {
-            $this->immutable_now = CarbonImmutable::hasTestNow() ? CarbonImmutable::now() : null;
-            $this->mutable_now = Carbon::hasTestNow() ? Carbon::now() : null;
+            $this->immutable_now = $immutable_reset === null ? null : CarbonImmutable::now();
+            $this->mutable_now = $mutable_reset === null ? null : Carbon::now();
         }
 
         $this->warp_depth++;

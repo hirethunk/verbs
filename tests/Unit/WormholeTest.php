@@ -34,6 +34,57 @@ test('a callback can be run for a past timestamp with "test now" set', function 
     });
 });
 
+test('realNow keeps flowing inside a warp when userland time is not mocked', function () {
+    $event = new class extends Event {};
+    app(MetadataManager::class)->setEphemeral($event, 'created_at', Date::parse('2023-01-02 00:00:00'));
+
+    app(Wormhole::class)->warp($event, function () {
+        $first = app(Wormhole::class)->realNow();
+        usleep(1_000);
+        $second = app(Wormhole::class)->realNow();
+
+        // A frozen capture at warp entry would return the same instant twice.
+        expect($second->greaterThan($first))->toBeTrue();
+    });
+
+    // The warp's own test-now must clear completely—restoring a *real* now as
+    // a test-now here would silently freeze time for the rest of the process.
+    expect(Carbon::hasTestNow())->toBeFalse()
+        ->and(CarbonImmutable::hasTestNow())->toBeFalse();
+});
+
+test('a userland test now survives past the end of a warp', function () {
+    Date::setTestNow('2023-06-02 00:00:00');
+
+    $event = new class extends Event {};
+    app(MetadataManager::class)->setEphemeral($event, 'created_at', Date::parse('2023-01-02 00:00:00'));
+
+    app(Wormhole::class)->warp($event, fn () => null);
+
+    expect(now()->format('Y-m-d H:i:s'))->toBe('2023-06-02 00:00:00')
+        ->and(Carbon::now()->format('Y-m-d H:i:s'))->toBe('2023-06-02 00:00:00')
+        ->and(CarbonImmutable::now()->format('Y-m-d H:i:s'))->toBe('2023-06-02 00:00:00');
+});
+
+test('a closure test now round-trips through a warp', function () {
+    $mock = fn () => Carbon::parse('2023-06-02 00:00:00');
+
+    Carbon::setTestNow($mock);
+    CarbonImmutable::setTestNow($mock);
+
+    $event = new class extends Event {};
+    app(MetadataManager::class)->setEphemeral($event, 'created_at', Date::parse('2023-01-02 00:00:00'));
+
+    app(Wormhole::class)->warp($event, function () {
+        expect(now()->format('Y-m-d'))->toBe('2023-01-02')
+            ->and(app(Wormhole::class)->realNow()->format('Y-m-d'))->toBe('2023-06-02');
+    });
+
+    // The mock is restored by identity, not re-resolved into a frozen instant.
+    expect(Carbon::getTestNow())->toBe($mock)
+        ->and(Carbon::now()->format('Y-m-d'))->toBe('2023-06-02');
+});
+
 test('nested warps preserve the outer realNow and restore it afterward', function () {
     Date::setTestNow('2023-06-02 00:00:00');
 
