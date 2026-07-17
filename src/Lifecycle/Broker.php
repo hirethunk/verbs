@@ -9,6 +9,7 @@ use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Exceptions\CannotReplayWithQueuedEvents;
 use Thunk\Verbs\Exceptions\EventNotValid;
 use Thunk\Verbs\Exceptions\MismatchedConnectionsException;
 use Thunk\Verbs\Facades\Id;
@@ -130,6 +131,17 @@ class Broker implements BrokersEvents
 
     public function replay(?callable $beforeEach = null, ?callable $afterEach = null): void
     {
+        // A queued event has already applied to in-memory state but isn't
+        // part of stored history yet: the replay would reset that state out
+        // from under it, and a later commit would splice the event in on top
+        // of the rebuilt world. Fail loudly rather than lose or double-apply.
+        if ($queued = count($this->queue->getEvents())) {
+            throw new CannotReplayWithQueuedEvents(sprintf(
+                'Cannot replay while %s queued but uncommitted—commit or discard them before replaying.',
+                $queued === 1 ? '1 event is' : "{$queued} events are",
+            ));
+        }
+
         $this->is_replaying = true;
 
         try {
