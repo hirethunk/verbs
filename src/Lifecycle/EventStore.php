@@ -127,7 +127,7 @@ class EventStore implements StoresEvents
             'id' => Id::from($event->id),
             'type' => $event::class,
             'data' => app(Serializer::class)->serialize($event),
-            'metadata' => app(Serializer::class)->serialize($this->metadata->get($event)),
+            'metadata' => app(Serializer::class)->serializeMetadata($this->metadata->get($event)),
             'created_at' => app(MetadataManager::class)->getEphemeral($event, 'created_at', now()),
             'updated_at' => now(),
         ], $event_objects);

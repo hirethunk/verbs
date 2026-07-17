@@ -7,10 +7,13 @@ use ReflectionClass;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\Serializer as SymfonySerializer;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Metadata;
 use Thunk\Verbs\State;
 
 class Serializer
 {
+    const TYPE_KEY = '__verbs_type';
+
     public $active_normalization_target = null;
 
     public function __construct(
@@ -72,6 +75,63 @@ class Serializer
             format: 'json',
             context: $context,
         );
+    }
+
+    /**
+     * Metadata is an untyped bag, so plain JSON can't round-trip object values
+     * (a Carbon would come back as its ISO string). On write, each object
+     * value is wrapped in a small type envelope with its class name; on read,
+     * envelopes are revived through the configured normalizers, so a Carbon
+     * comes back as a Carbon. Scalars and arrays are stored bare, and rows
+     * written before envelopes existed read back as-is.
+     */
+    public function serializeMetadata(Metadata $metadata): string
+    {
+        return json_encode((object) $this->normalizeUntypedValue($metadata->all()));
+    }
+
+    public function deserializeMetadata(array $data): Metadata
+    {
+        return new Metadata(array_map($this->denormalizeUntypedValue(...), $data));
+    }
+
+    // The untyped-value codec deliberately uses the raw Symfony serializer:
+    // routing through serialize()/deserialize() would leak the user-editable
+    // serializer context into stored values and set the active normalization
+    // target to the value itself, breaking State-in-metadata id-reduction.
+    protected function normalizeUntypedValue(mixed $value): mixed
+    {
+        if (is_array($value)) {
+            return array_map($this->normalizeUntypedValue(...), $value);
+        }
+
+        if (is_object($value)) {
+            return [
+                static::TYPE_KEY => $value::class,
+                'value' => $this->serializer->normalize($value, 'json'),
+            ];
+        }
+
+        return $value;
+    }
+
+    protected function denormalizeUntypedValue(mixed $value): mixed
+    {
+        if (! is_array($value)) {
+            return $value;
+        }
+
+        $type = $value[static::TYPE_KEY] ?? null;
+
+        if (is_string($type) && array_key_exists('value', $value) && count($value) === 2) {
+            // An envelope whose class no longer exists still surfaces its
+            // stored value—the data outlives the type.
+            return class_exists($type)
+                ? $this->serializer->denormalize($value['value'], $type, 'json')
+                : $value['value'];
+        }
+
+        return array_map($this->denormalizeUntypedValue(...), $value);
     }
 
     protected function serializationContext(object $target): array

@@ -50,7 +50,7 @@ class VerbEvent extends Model
 
     public function metadata(): Metadata
     {
-        $this->meta ??= app(Serializer::class)->deserialize(Metadata::class, $this->metadata);
+        $this->meta ??= app(Serializer::class)->deserializeMetadata((array) $this->metadata);
 
         return $this->meta;
     }

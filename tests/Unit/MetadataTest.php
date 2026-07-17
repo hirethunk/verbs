@@ -1,9 +1,14 @@
 <?php
 
+use Carbon\CarbonImmutable;
+use Thunk\Verbs\Attributes\Autodiscovery\StateId;
+use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Metadata;
 use Thunk\Verbs\Models\VerbEvent;
+use Thunk\Verbs\State;
+use Thunk\Verbs\Support\Serializer;
 
 it('creates metadata for events', function () {
     // Test both the `Metadata` class API
@@ -80,6 +85,89 @@ it('exposes metadata via multiple apis', function () {
         ->and($meta['virtual'])->toBe('also set via put function');
 });
 
+it('round-trips metadata through the event store, reviving object values', function () {
+    $now = now();
+
+    Verbs::createMetadataUsing(fn () => [
+        'int' => 1337,
+        'string' => 'Hello world',
+        'array' => ['one', 'two'],
+        'carbon' => $now,
+        'nested' => ['when' => $now->toImmutable()],
+    ]);
+
+    MetadataTestEvent::fire(name: 'Verbs');
+    Verbs::commit();
+
+    // Drop the callbacks so nothing can regenerate metadata in-process:
+    // whatever we read back must have come from the database.
+    Verbs::createMetadataUsing(null);
+
+    $event = app(StoresEvents::class)->read()->first();
+
+    expect($event->metadata('int'))->toBe(1337)
+        ->and($event->metadata('string'))->toBe('Hello world')
+        ->and($event->metadata('array'))->toBe(['one', 'two'])
+        ->and($event->metadata('carbon'))->toBeInstanceOf($now::class)
+        ->and($event->metadata('carbon')->equalTo($now))->toBeTrue()
+        ->and($event->metadata('nested')['when'])->toBeInstanceOf(CarbonImmutable::class)
+        ->and($event->metadata('nested')['when']->equalTo($now))->toBeTrue();
+});
+
+it('reads metadata rows written before type envelopes existed', function () {
+    MetadataTestEvent::fire(name: 'Verbs');
+    Verbs::commit();
+
+    // Simulate a pre-envelope row: bare values only.
+    VerbEvent::query()->update(['metadata' => '{"legacy":"value","when":"2024-01-01T00:00:00Z"}']);
+
+    Verbs::createMetadataUsing(null);
+
+    $event = app(StoresEvents::class)->read()->first();
+
+    expect($event->metadata('legacy'))->toBe('value')
+        ->and($event->metadata('when'))->toBe('2024-01-01T00:00:00Z');
+});
+
+it('surfaces the stored value when an envelope type no longer exists', function () {
+    MetadataTestEvent::fire(name: 'Verbs');
+    Verbs::commit();
+
+    VerbEvent::query()->update([
+        'metadata' => '{"gone":{"__verbs_type":"App\\\\LongGoneClass","value":"still here"}}',
+    ]);
+
+    Verbs::createMetadataUsing(null);
+
+    expect(app(StoresEvents::class)->read()->first()->metadata('gone'))->toBe('still here');
+});
+
+it('round-trips state values in metadata via id reduction', function () {
+    $id = snowflake_id();
+
+    MetadataStateTestEvent::fire(state_id: $id);
+    Verbs::commit();
+
+    $state = MetadataStateTestState::load($id);
+
+    Verbs::createMetadataUsing(fn () => ['actor' => $state]);
+    MetadataTestEvent::fire(name: 'with-state');
+    Verbs::commit();
+
+    Verbs::createMetadataUsing(null);
+
+    // States in metadata store as their id (StateNormalizer's reduction), so
+    // reading them back resolves through the identity map to the live instance.
+    $stored = VerbEvent::query()->latest('id')->first();
+
+    expect($stored->metadata['actor']['value'])->toBe((string) $id)
+        ->and($stored->metadata()->actor)->toBe($state);
+});
+
+it('serializes an empty metadata bag to an empty JSON object', function () {
+    expect(app(Serializer::class)->serializeMetadata(new Metadata))->toBe('{}');
+});
+
 it('lets you set metadata on an event', function () {
     $event = new MetadataTestEvent('demo');
     $event->metadata()->put('foo', 'bar')->put('baz', 'foo');
@@ -104,6 +192,22 @@ class MetadataTestEvent extends Event
 class HandleChecker
 {
     public static bool $handled = false;
+}
+
+class MetadataStateTestState extends State
+{
+    public int $count = 0;
+}
+
+class MetadataStateTestEvent extends Event
+{
+    #[StateId(MetadataStateTestState::class)]
+    public int $state_id;
+
+    public function apply(MetadataStateTestState $state): void
+    {
+        $state->count++;
+    }
 }
 
 class MetadataTestMetadata extends Metadata
