@@ -10,6 +10,8 @@ use ReflectionFunctionAbstract;
 use ReflectionParameter;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\AmbiguousDependencyException;
+use Thunk\Verbs\Exceptions\CannotResolveParameter;
+use Thunk\Verbs\State;
 use Thunk\Verbs\Support\Reflection\Parameter;
 use WeakMap;
 
@@ -99,7 +101,7 @@ class DependencyResolver
         $candidates = $this->candidates->filter($parameter->accepts(...));
 
         $resolved = match ($candidates->count()) {
-            0 => $this->container->make($parameter->type()->name()),
+            0 => $this->resolveFromContainer($parameter),
             1 => $candidates->first(),
             default => $this->resolveAmbiguousParameter($parameter, $candidates),
         };
@@ -109,6 +111,34 @@ class DependencyResolver
         }
 
         return $resolved;
+    }
+
+    protected function resolveFromContainer(Parameter $parameter): mixed
+    {
+        $type = $parameter->type()->name();
+
+        // If we're trying to resolve a State (but didn't have a matching candidate),
+        // don't just make a State from the container. Instead, use the default value
+        // if there is one, or throw an exception.
+        if (is_a($type, State::class, true)) {
+            if ($parameter->isDefaultValueAvailable()) {
+                return $parameter->getDefaultValue();
+            }
+
+            if ($parameter->allowsNull()) {
+                return null;
+            }
+
+            $event = $this->candidates->first(fn ($candidate) => $candidate instanceof Event);
+
+            throw new CannotResolveParameter(sprintf(
+                '%s type-hints [%s], but does not fire on that state. Add a #[StateId] or #[AppliesToState] attribute (or a state-typed property) so Verbs knows which state to pass.',
+                $event ? 'The ['.$event::class.'] event' : 'A hook',
+                $type,
+            ));
+        }
+
+        return $this->container->make($type);
     }
 
     protected function resolveAmbiguousParameter(Parameter $parameter, Collection $candidates): mixed
