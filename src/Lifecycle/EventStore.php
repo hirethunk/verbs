@@ -20,7 +20,6 @@ use Thunk\Verbs\Models\VerbStateEvent;
 use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\State;
 use Thunk\Verbs\State\StateIdentity;
-use Thunk\Verbs\Support\MetadataSerializer;
 use Thunk\Verbs\Support\Serializer;
 
 class EventStore implements StoresEvents
@@ -305,7 +304,7 @@ class EventStore implements StoresEvents
             'id' => Id::from($event->id),
             'type' => $event::class,
             'data' => app(Serializer::class)->serialize($event),
-            'metadata' => app(MetadataSerializer::class)->serialize($this->metadata->get($event)),
+            'metadata' => app(Serializer::class)->serializeMetadata($this->metadata->get($event)),
             'created_at' => app(MetadataManager::class)->getEphemeral($event, 'created_at', now()),
             'updated_at' => now(),
         ], $event_objects);

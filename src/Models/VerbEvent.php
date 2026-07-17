@@ -8,7 +8,6 @@ use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\MetadataManager;
 use Thunk\Verbs\Metadata;
 use Thunk\Verbs\State;
-use Thunk\Verbs\Support\MetadataSerializer;
 use Thunk\Verbs\Support\Serializer;
 
 class VerbEvent extends Model
@@ -51,7 +50,7 @@ class VerbEvent extends Model
 
     public function metadata(): Metadata
     {
-        $this->meta ??= app(MetadataSerializer::class)->deserialize((array) $this->metadata);
+        $this->meta ??= app(Serializer::class)->deserializeMetadata((array) $this->metadata);
 
         return $this->meta;
     }

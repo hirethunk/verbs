@@ -1,11 +1,14 @@
 <?php
 
 use Carbon\CarbonImmutable;
+use Thunk\Verbs\Attributes\Autodiscovery\StateId;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Metadata;
 use Thunk\Verbs\Models\VerbEvent;
+use Thunk\Verbs\State;
+use Thunk\Verbs\Support\Serializer;
 
 it('creates metadata for events', function () {
     // Test both the `Metadata` class API
@@ -139,6 +142,32 @@ it('surfaces the stored value when an envelope type no longer exists', function 
     expect(app(StoresEvents::class)->read()->first()->metadata('gone'))->toBe('still here');
 });
 
+it('round-trips state values in metadata via id reduction', function () {
+    $id = snowflake_id();
+
+    MetadataStateTestEvent::fire(state_id: $id);
+    Verbs::commit();
+
+    $state = MetadataStateTestState::load($id);
+
+    Verbs::createMetadataUsing(fn () => ['actor' => $state]);
+    MetadataTestEvent::fire(name: 'with-state');
+    Verbs::commit();
+
+    Verbs::createMetadataUsing(null);
+
+    // States in metadata store as their id (StateNormalizer's reduction), so
+    // reading them back resolves through the identity map to the live instance.
+    $stored = VerbEvent::query()->latest('id')->first();
+
+    expect($stored->metadata['actor']['value'])->toBe((string) $id)
+        ->and($stored->metadata()->actor)->toBe($state);
+});
+
+it('serializes an empty metadata bag to an empty JSON object', function () {
+    expect(app(Serializer::class)->serializeMetadata(new Metadata))->toBe('{}');
+});
+
 it('lets you set metadata on an event', function () {
     $event = new MetadataTestEvent('demo');
     $event->metadata()->put('foo', 'bar')->put('baz', 'foo');
@@ -163,6 +192,22 @@ class MetadataTestEvent extends Event
 class HandleChecker
 {
     public static bool $handled = false;
+}
+
+class MetadataStateTestState extends State
+{
+    public int $count = 0;
+}
+
+class MetadataStateTestEvent extends Event
+{
+    #[StateId(MetadataStateTestState::class)]
+    public int $state_id;
+
+    public function apply(MetadataStateTestState $state): void
+    {
+        $state->count++;
+    }
 }
 
 class MetadataTestMetadata extends Metadata
