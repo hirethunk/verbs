@@ -58,7 +58,8 @@ class Serializer
             $context[AbstractNormalizer::OBJECT_TO_POPULATE] = $target;
         }
 
-        // FIXME: Symfony's serializer is a little wonky. May need to re-think things.
+        // Symfony's denormalizer expects backed enums as their scalar value, so
+        // when we're populating from an array we unwrap any enum instances first.
         if (is_array($data)) {
             $data = array_map(fn ($value) => $value instanceof BackedEnum
                 ? $value->value
