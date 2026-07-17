@@ -28,6 +28,10 @@ class SelfSerializingNormalizer implements DenormalizerInterface, NormalizerInte
             return $data;
         }
 
+        if (isset($data['fqcn']) && is_a($data['fqcn'], SerializedByVerbs::class, true)) {
+            $type = $data['fqcn'];
+        }
+
         return $type::deserializeForVerbs($data, $this->serializer);
     }
 
