@@ -56,15 +56,21 @@ class Hook
         public ?ReflectionFunctionAbstract $reflection = null,
     ) {}
 
-    public function forcePhases(Phase ...$phases): static
+    public function defaultPhases(Phase ...$phases): static
     {
         foreach ($phases as $phase) {
-            // These are the dispatcher's defaults: hook attributes were already
-            // applied when the hook was built, and an explicit decision there
-            // (e.g. #[Once] opting out of Replay) must win over a default.
             if (! isset($this->phases[$phase])) {
                 $this->phases[$phase] = true;
             }
+        }
+
+        return $this;
+    }
+
+    public function forcePhases(Phase ...$phases): static
+    {
+        foreach ($phases as $phase) {
+            $this->phases[$phase] = true;
         }
 
         return $this;
