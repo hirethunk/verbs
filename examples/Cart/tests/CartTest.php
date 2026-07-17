@@ -65,7 +65,7 @@ it('enforces item limits', function () {
 
 it('reserves items for a configured number of seconds', function () {
     ItemAddedToCart::$hold_seconds = 10;
-    Date::setTestNow();
+    Date::setTestNow('2024-01-01 12:00:00');
 
     $item = ItemState::load(snowflake_id());
     $cart1 = CartState::load(snowflake_id());
@@ -126,7 +126,7 @@ it('allows checking out', function () {
 
 it('allows checking out after a hold expires if there is enough stock', function () {
     ItemAddedToCart::$hold_seconds = 10;
-    Date::setTestNow();
+    Date::setTestNow('2024-01-01 12:00:00');
 
     $cart = CartState::load(snowflake_id());
     $item1 = ItemState::load(snowflake_id());
@@ -153,7 +153,7 @@ it('allows checking out after a hold expires if there is enough stock', function
 
 it('does not allow checking out if there is no stock', function () {
     ItemAddedToCart::$hold_seconds = 10;
-    Date::setTestNow();
+    Date::setTestNow('2024-01-01 12:00:00');
 
     $cart1 = CartState::load(snowflake_id());
     $cart2 = CartState::load(snowflake_id());
