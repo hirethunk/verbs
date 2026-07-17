@@ -5,6 +5,7 @@ namespace Thunk\Verbs\Support;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
+use Carbon\Factory;
 use Closure;
 use DateTime;
 use Illuminate\Support\DateFactory;
@@ -43,12 +44,13 @@ class Wormhole
         return CarbonImmutable::instance($this->resolveTestNow($this->immutable_test_now, CarbonImmutable::class) ?? new DateTime);
     }
 
-    /**
-     * Mirrors Carbon's closure-mock resolution (hand-rolled because Carbon 2
-     * has no public equivalent of Carbon 3's handleTestNowClosure()).
-     */
+    /** @param  class-string<CarbonInterface>  $class */
     protected function resolveTestNow(Closure|CarbonInterface|null $test_now, string $class): ?CarbonInterface
     {
+        if (method_exists(Factory::class, 'handleTestNowClosure')) {
+            // TODO: Use that instead, but we need to figure out the correct Factory instance to use
+        }
+
         if ($test_now instanceof Closure) {
             $test_now = $test_now($class::instance(new DateTime));
         }
@@ -75,12 +77,10 @@ class Wormhole
         $previous_immutable_now = $this->immutable_test_now;
         $previous_mutable_now = $this->mutable_test_now;
 
-        if ($this->warp_depth === 0) {
+        if ($this->warp_depth++ === 0) {
             $this->immutable_test_now = $immutable_reset;
             $this->mutable_test_now = $mutable_reset;
         }
-
-        $this->warp_depth++;
 
         try {
             CarbonImmutable::setTestNow($created_at);
