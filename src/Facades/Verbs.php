@@ -12,7 +12,9 @@ use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\AutoCommitManager;
 use Thunk\Verbs\Lifecycle\Broker;
 use Thunk\Verbs\Lifecycle\Phase;
+use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 use Thunk\Verbs\State\StateManager;
+use Thunk\Verbs\Support\EventStateRegistry;
 use Thunk\Verbs\Testing\BrokerFake;
 use Thunk\Verbs\Testing\EventStoreFake;
 use Thunk\Verbs\Testing\SnapshotStoreFake;
@@ -40,14 +42,21 @@ class Verbs extends Facade
         $app->instance(StoresEvents::class, $store = $app->make(EventStoreFake::class));
         $app->instance(StoresSnapshots::class, $snapshots = $app->make(SnapshotStoreFake::class));
 
-        // The scoped broker and state manager were constructed against the
-        // real stores, so entering the fake world rebuilds them—a fresh scope
-        // whose constructor injections pick up the fakes. Everything else
+        // fake() starts a fresh Verbs world. The scoped services were
+        // constructed against the real stores, so entering the fake world
+        // rebuilds them—fresh scopes whose constructor injections pick up the
+        // fakes—which deliberately discards anything in flight: queued-but-
+        // uncommitted events never reach the fake stores, and state references
+        // loaded before the fake are no longer canonical. The registry reset
+        // drops the state instances it resolved against the old scope (its
+        // reflection metadata is scope-independent and kept). Everything else
         // resolves the broker lazily and follows the swap() below, which also
         // rebinds the container's [BrokersEvents] instance.
         $app->forgetInstance(StateManager::class);
         $app->forgetInstance(AutoCommitManager::class);
+        $app->forgetInstance(EventQueue::class);
         $app->forgetInstance(Broker::class);
+        $app->make(EventStateRegistry::class)->reset();
 
         $fake_broker = new BrokerFake($store, $snapshots, $app->make(Broker::class));
 

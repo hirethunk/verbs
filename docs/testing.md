@@ -23,6 +23,9 @@ The following Test `assert()` methods are available to thoroughly check your com
 Before using these methods, add `Verbs::fake()` to your test so Verbs can set up a fake event store to isolate the
 testing environment.
 
+Calling `Verbs::fake()` starts a fresh Verbs world: events that were fired but not yet committed are discarded, and
+any state you loaded before the fake is no longer the canonical instance—load it again after calling `fake()`.
+
 ```php
 Verbs::assertNothingCommitted();
 Verbs::assertCommitted(...);
