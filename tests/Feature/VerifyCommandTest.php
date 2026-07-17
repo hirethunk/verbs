@@ -73,6 +73,19 @@ it('reports when there is nothing to verify', function () {
         ->assertExitCode(0);
 });
 
+it('does not run unlessReplaying side effects while verifying', function () {
+    $GLOBALS['verify_guard_side_effects'] = 0;
+
+    VerifyGuardEvent::fire(state_id: snowflake_id());
+    Verbs::commit();
+
+    expect($GLOBALS['verify_guard_side_effects'])->toBe(1);
+
+    $this->artisan('verbs:verify')->assertExitCode(0);
+
+    expect($GLOBALS['verify_guard_side_effects'])->toBe(1);
+});
+
 class VerifyCommandTestState extends State
 {
     public int $total = 0;
@@ -102,5 +115,23 @@ class VerifyCommandTestSingletonEvent extends Event
     public function apply(VerifyCommandTestSingleton $singleton): void
     {
         $singleton->count++;
+    }
+}
+
+class VerifyGuardState extends State
+{
+    public int $count = 0;
+}
+
+class VerifyGuardEvent extends Event
+{
+    #[StateId(VerifyGuardState::class)]
+    public int $state_id;
+
+    public function apply(VerifyGuardState $state): void
+    {
+        $state->count++;
+
+        Verbs::unlessReplaying(fn () => $GLOBALS['verify_guard_side_effects']++);
     }
 }

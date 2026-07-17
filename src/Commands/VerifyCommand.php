@@ -10,6 +10,7 @@ use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Lifecycle\Lifecycle;
 use Thunk\Verbs\Lifecycle\Phase;
 use Thunk\Verbs\Lifecycle\Phases;
+use Thunk\Verbs\Lifecycle\ReplayMode;
 use Thunk\Verbs\Models\VerbSnapshot;
 use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\State\Cache\InMemoryCache;
@@ -120,7 +121,9 @@ class VerifyCommand extends Command
         $rebuilt = new StateManager(new InMemoryCache(capacity: null));
         $ceiling = Id::from($snapshot->last_event_id);
 
-        $rebuilt->run(function () use ($plan, $ceiling) {
+        // Verification re-applies history, so userland unlessReplaying()
+        // guards inside apply() must not re-fire their side effects here.
+        app(ReplayMode::class)->whileRebuilding(fn () => $rebuilt->run(function () use ($plan, $ceiling) {
             foreach ($plan->events() as $event) {
                 if (Id::from($event->id) > $ceiling) {
                     break;
@@ -128,7 +131,7 @@ class VerifyCommand extends Command
 
                 Lifecycle::run($event, new Phases(Phase::Apply));
             }
-        });
+        }));
 
         $state = $rebuilt->cache->get(
             $snapshot->type,

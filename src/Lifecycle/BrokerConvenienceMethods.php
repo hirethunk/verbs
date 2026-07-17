@@ -16,8 +16,6 @@ use Thunk\Verbs\Support\Wormhole;
 
 trait BrokerConvenienceMethods
 {
-    public bool $is_replaying = false;
-
     /**
      * @deprecated
      * @see IdManager
@@ -64,12 +62,12 @@ trait BrokerConvenienceMethods
 
     public function isReplaying(): bool
     {
-        return $this->is_replaying;
+        return $this->replay_mode->active();
     }
 
     public function unlessReplaying(callable $callback)
     {
-        if (! $this->is_replaying) {
+        if (! $this->replay_mode->active()) {
             $callback();
         }
     }

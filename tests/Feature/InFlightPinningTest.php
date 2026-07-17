@@ -6,6 +6,7 @@ use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Lifecycle\Queue;
+use Thunk\Verbs\Lifecycle\ReplayMode;
 use Thunk\Verbs\State;
 use Thunk\Verbs\State\Cache\InMemoryCache;
 use Thunk\Verbs\State\ReconstitutingStateManager;
@@ -23,6 +24,7 @@ it('keeps queued-but-uncommitted states pinned through a prune', function () {
         events: app(StoresEvents::class),
         snapshots: app(StoresSnapshots::class),
         queue: app(Queue::class),
+        replay_mode: app(ReplayMode::class),
         cache: new InMemoryCache(capacity: 2),
     ));
 
@@ -63,6 +65,7 @@ it('keeps a state consistent through a nested commit batch under cache pressure'
         events: app(StoresEvents::class),
         snapshots: app(StoresSnapshots::class),
         queue: app(Queue::class),
+        replay_mode: app(ReplayMode::class),
         cache: new InMemoryCache(capacity: 1),
     ));
 

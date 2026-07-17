@@ -30,6 +30,7 @@ class Broker implements BrokersEvents
         protected StateManager $states,
         protected StoresEvents $events,
         protected StoresSnapshots $snapshots,
+        protected ReplayMode $replay_mode,
     ) {}
 
     public function fireIfValid(Event $event): ?Event
@@ -43,10 +44,13 @@ class Broker implements BrokersEvents
 
     public function fire(Event $event): ?Event
     {
-        // Events fired from within a handler while we're replaying are ignored:
-        // the originals are already in the stream being replayed, so re-firing
-        // them would duplicate. (See Counter's FireOnReplayTest.)
-        if ($this->is_replaying) {
+        // Events fired while history is being re-applied are ignored. During a
+        // replay, the originals are already in the stream being replayed, so
+        // re-firing them would duplicate (see Counter's FireOnReplayTest).
+        // During a rebuild, only apply() hooks run—and apply() must be a pure
+        // function of event and state—so a fire() here is a bug this protects
+        // against rather than a path to support.
+        if ($this->replay_mode->active()) {
             return null;
         }
 
@@ -142,7 +146,7 @@ class Broker implements BrokersEvents
             ));
         }
 
-        $this->is_replaying = true;
+        $this->replay_mode->replaying = true;
 
         try {
             $this->states->reset();
@@ -173,7 +177,7 @@ class Broker implements BrokersEvents
             $this->writeSnapshots();
             $this->states->prune();
             $this->states->setReplaying(false);
-            $this->is_replaying = false;
+            $this->replay_mode->replaying = false;
         }
     }
 

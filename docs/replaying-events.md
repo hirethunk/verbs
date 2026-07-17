@@ -59,9 +59,10 @@ Verbs::unlessReplaying(function () {
 });
 ```
 
-Note that `unlessReplaying()` only detects explicit replays (`verbs:replay`). When Verbs rebuilds a
-stale state by re-applying its events during a normal request, `isReplaying()` is `false`—another
-reason side effects belong in `handle()`, never in `apply()`.
+`unlessReplaying()` covers every way Verbs re-applies events that already happened: explicit
+replays (`verbs:replay`), stale-state rebuilds during a normal request, and `verbs:verify`.
+Whenever any of those are running, `isReplaying()` is `true`. Side effects still belong in
+`handle()`, never in `apply()`—the guard is a safety net, not a license.
 
 Side effects that need stronger delivery guarantees than "runs once per fire" belong in queued
 jobs: `dispatch()` from `handle()`, and Laravel's queue gives you retries, backoff, and failure

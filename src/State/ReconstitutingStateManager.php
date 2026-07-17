@@ -16,6 +16,7 @@ use Thunk\Verbs\Lifecycle\Lifecycle;
 use Thunk\Verbs\Lifecycle\Phase;
 use Thunk\Verbs\Lifecycle\Phases;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
+use Thunk\Verbs\Lifecycle\ReplayMode;
 use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\State;
 use Thunk\Verbs\State\Cache\Contracts\ReadableCache;
@@ -35,6 +36,7 @@ class ReconstitutingStateManager extends StateManager
         protected StoresEvents $events,
         protected StoresSnapshots $snapshots,
         protected EventQueue $queue,
+        protected ReplayMode $replay_mode,
         WritableCache&ReadableCache $cache,
     ) {
         parent::__construct($cache);
@@ -277,7 +279,10 @@ class ReconstitutingStateManager extends StateManager
         }
 
         try {
-            $rebuilt->run(function () use ($plan) {
+            // Re-applying history counts as replaying for userland guards:
+            // an unlessReplaying() side effect inside apply() must not
+            // re-fire every time a stale state rebuilds.
+            $this->replay_mode->whileRebuilding(fn () => $rebuilt->run(function () use ($plan) {
                 foreach ($plan->events() as $event) {
                     if ($plan->seeded) {
                         $this->guardSeedInvariant($event);
@@ -285,7 +290,7 @@ class ReconstitutingStateManager extends StateManager
 
                     Lifecycle::run($event, new Phases(Phase::Apply));
                 }
-            });
+            }));
         } catch (SeedInvariantViolation $violation) {
             // Belt and braces: a probe bug (or a snapshot that advanced under
             // us) must degrade to slow-and-correct, never to double-apply.

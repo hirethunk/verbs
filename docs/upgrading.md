@@ -85,6 +85,11 @@ Eloquent snapshot storage.
   Verbs replays the state's connected component—seeded from snapshots when that's provably exact,
   from a blank baseline otherwise. Latency is typically proportional to the new events since your
   snapshots. Watch the `Verbs: reconstituted state component` debug logs to observe it.
+- **`unlessReplaying()` covers rebuilds now.** `Verbs::isReplaying()` is `true` whenever Verbs
+  re-applies stored events—explicit replays, stale-load rebuilds, and `verbs:verify`—so a guarded
+  side effect inside `apply()` no longer re-fires on every rebuild. If you were relying on rebuilds
+  *not* counting as replaying, move that logic to `handle()`. The broker's public `$is_replaying`
+  property is gone; read `Verbs::isReplaying()` instead.
 - **`refresh()` replaces `fresh()`—and it actually refreshes now.** On 0.8, `fresh()` was
   effectively a no-op on cache hits. The working behavior lives on `refresh()`, named to match
   Eloquent's in-place semantics: the *same instance* is brought up to date, even across a replay.
