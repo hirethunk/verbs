@@ -6,7 +6,7 @@ We do this because an event-sourcing system needs globablly-unique IDs to run we
 Unique IDs help us both minimize collisions, so that each event is executed with fidelity, and maximize interoperability.
 
 We recommend Snowflakes because they are sortable, time-based, and are integers.
-You may also use ULIDs or UUIDs instead; this can be configured in `config/verbs.php`. However, they each introduce some complexity. Both are strings, and UUIDs are not sortable.
+You may also use ULIDs or UUIDs instead; this can be configured in `config/verbs.php`. However, they each introduce some complexity: both are strings, which are larger and slower to index than integers—though both stay time-sortable, since Verbs generates ULIDs and *ordered* UUIDs.
 
 ## Snowflakes in Verbs
 

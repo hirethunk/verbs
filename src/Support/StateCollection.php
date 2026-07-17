@@ -4,6 +4,7 @@ namespace Thunk\Verbs\Support;
 
 use Glhd\Bits\Bits;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Enumerable;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\State;
@@ -13,7 +14,7 @@ use Thunk\Verbs\State;
  * @template TKey of array-key
  *
  * @implements \ArrayAccess<TKey, TStateType>
- * @implements \Illuminate\Support\Enumerable<TKey, TStateType>
+ * @implements Enumerable<TKey, TStateType>
  */
 class StateCollection extends Collection
 {

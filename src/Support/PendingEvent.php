@@ -26,6 +26,9 @@ class PendingEvent
 {
     use Conditionable, Macroable;
 
+    /** @var array<class-string, ReflectionParameter[]> */
+    protected static array $constructor_parameters = [];
+
     protected Closure $exception_mapper;
 
     /**
@@ -59,8 +62,9 @@ class PendingEvent
             throw new InvalidArgumentException('You cannot pass positional arguments to '.class_basename($class_name));
         }
 
-        // TODO: Cache this
-        return collect((new ReflectionMethod($class_name, '__construct'))->getParameters())
+        $parameters = static::$constructor_parameters[$class_name] ??= (new ReflectionMethod($class_name, '__construct'))->getParameters();
+
+        return collect($parameters)
             ->mapWithKeys(function (ReflectionParameter $parameter, $index) use ($args) {
                 return [
                     $parameter->getName() => match (true) {
