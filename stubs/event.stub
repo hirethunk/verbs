@@ -6,6 +6,8 @@ use Thunk\Verbs\Event;
 
 class {{ class }} extends Event
 {
+    // handle() re-runs during replays. Mark side effects that must only ever
+    // run once (mail, payments, API calls) with the #[Once] attribute.
     public function handle()
     {
         // {{ lyric }} - Lil Wayne

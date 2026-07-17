@@ -2,6 +2,7 @@
 .vscode/
 .phpunit.cache
 .DS_Store
+.clave.local.json
 build
 composer.lock
 coverage

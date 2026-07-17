@@ -15,14 +15,11 @@ jobs:
       fail-fast: true
       matrix:
         os: [ ubuntu, windows ]
-        php: [ 8.2, 8.3, 8.4 ]
-        laravel: [ 13.*, 12.*, 11.*, 10.* ]
+        php: [ 8.3, 8.4, 8.5 ]
+        laravel: [ 13.*, 12.*, 11.* ]
         stability: [ stable, lowest ]
         exclude:
-          - { laravel: 13.*, php: 8.2 }
           - { laravel: 11.*, php: 8.5 }
-          - { laravel: 10.*, php: 8.5 }
-          - { laravel: 10.*, php: 8.4 }
 
     runs-on: ${{ matrix.os }}-latest
 
@@ -60,14 +57,11 @@ jobs:
       fail-fast: true
       matrix:
         os: [ ubuntu ]
-        php: [ 8.2, 8.3, 8.4 ]
-        laravel: [ 13.*, 12.*, 11.*, 10.* ]
+        php: [ 8.3, 8.4, 8.5 ]
+        laravel: [ 13.*, 12.*, 11.* ]
         stability: [ stable, lowest ]
         exclude:
-          - { laravel: 13.*, php: 8.2 }
           - { laravel: 11.*, php: 8.5 }
-          - { laravel: 10.*, php: 8.5 }
-          - { laravel: 10.*, php: 8.4 }
 
     runs-on: ${{ matrix.os }}-latest
 
@@ -118,14 +112,11 @@ jobs:
       fail-fast: true
       matrix:
         os: [ ubuntu ]
-        php: [ 8.2, 8.3, 8.4 ]
-        laravel: [ 13.*, 12.*, 11.*, 10.* ]
+        php: [ 8.3, 8.4, 8.5 ]
+        laravel: [ 13.*, 12.*, 11.* ]
         stability: [ stable, lowest ]
         exclude:
-          - { laravel: 13.*, php: 8.2 }
           - { laravel: 11.*, php: 8.5 }
-          - { laravel: 10.*, php: 8.5 }
-          - { laravel: 10.*, php: 8.4 }
 
     runs-on: ${{ matrix.os }}-latest
 
