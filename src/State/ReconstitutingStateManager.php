@@ -216,8 +216,8 @@ class ReconstitutingStateManager extends StateManager
         return $this->events->hasUnappliedEvents(
             $states->map(fn (State $state) => new StateIdentity(
                 state_type: $state::class,
-                state_id: $state->id,
-                last_event_id: Id::tryFrom($state->last_event_id),
+                state_id: Id::from($state->id),
+                last_event_id: $state->last_event_id,
             )),
         );
     }
@@ -373,13 +373,13 @@ class ReconstitutingStateManager extends StateManager
     }
 
     /**
-     * A singleton is identified by type, not id (its in-memory id is incidental
-     * and differs between the live scope and a blank rebuild scope), so we key it
-     * the same way the cache does—otherwise a rebuilt singleton would never match
-     * the live one and would clobber it under a divergent id.
+     * A rebuilt singleton carries a different incidental id than the live one,
+     * so harvest matching must go through the canonical identity key—otherwise
+     * a rebuilt singleton would never match the live one and would clobber it
+     * under a divergent id.
      */
     protected function identityKey(State $state): string
     {
-        return $state::class.':'.$this->cacheId($state);
+        return StateIdentity::from($state)->key();
     }
 }

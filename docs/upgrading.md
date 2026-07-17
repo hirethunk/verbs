@@ -42,7 +42,10 @@ unaffected—only direct `StateManager` calls.)
 Verbs now routes *every* reconstitution read through the storage contracts, so a custom store
 has more surface to implement. Several methods traffic in `Thunk\Verbs\State\StateIdentity`—a
 small `(state_type, state_id, last_event_id)` value object, where `last_event_id` is the id of
-the last event the state is known to have applied. A custom `StoresEvents` must implement:
+the last event the state is known to have applied. `StateIdentity` normalizes `last_event_id`
+at construction, so implementations never need to pre-normalize driver-returned values, and
+its `key()` method is the canonical key identities dedupe by (a singleton collapses to its
+type; keyed states are `type:id`). A custom `StoresEvents` must implement:
 
 - `read(?State $state = null, $after_id = null): LazyCollection` — must now return a genuinely
   lazy stream (it is no longer safe to materialize everything)

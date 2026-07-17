@@ -176,6 +176,9 @@ class InMemoryCache implements ReadableCache, WritableCache
         $this->strong[$key] = $value;
     }
 
+    // StateIdentity::key() owns the canonical identity-key rule; this stays
+    // hand-rolled because cache lookups may carry a null id (e.g. singleton
+    // lookups by type), which StateIdentity can't represent.
     protected function key(State|string $type, int|string|null $id = null): string
     {
         // Allow passing in state objects.

@@ -132,7 +132,7 @@ class EventStore implements StoresEvents
                     ->get()
                     ->map(StateIdentity::from(...));
             })
-            ->unique(fn (StateIdentity $identity) => $identity->state_type.':'.$identity->state_id)
+            ->unique(fn (StateIdentity $identity) => $identity->key())
             ->values();
     }
 
@@ -186,7 +186,7 @@ class EventStore implements StoresEvents
 
             // No int casts: snowflake ids compare numerically either way,
             // and ULID/UUIDv7 ids compare lexicographically-by-time.
-            $applied = $identity->last_event_id ? Id::from($identity->last_event_id) : 0;
+            $applied = $identity->last_event_id ?? 0;
 
             if ($max > $applied) {
                 return true;
@@ -295,9 +295,7 @@ class EventStore implements StoresEvents
 
     protected function guardKey(string $state_type, mixed $state_id): string
     {
-        return is_a($state_type, SingletonState::class, true)
-            ? $state_type
-            : $state_type.$state_id;
+        return (new StateIdentity($state_type, Id::from($state_id)))->key();
     }
 
     /** @param  Event[]  $event_objects */

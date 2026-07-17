@@ -5,9 +5,8 @@ namespace Thunk\Verbs\Lifecycle;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\UnableToStoreEventsException;
-use Thunk\Verbs\Facades\Id;
-use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\State;
+use Thunk\Verbs\State\StateIdentity;
 
 class Queue
 {
@@ -79,15 +78,8 @@ class Queue
         }
     }
 
-    /**
-     * Singletons key by type alone (their in-memory ids are incidental), and
-     * ids normalize to strings so int/string driver drift can't miss—mirroring
-     * how the state cache keys identities.
-     */
     protected function stateKey(State $state): string
     {
-        return $state instanceof SingletonState
-            ? $state::class
-            : $state::class.':'.Id::tryFrom($state->id);
+        return StateIdentity::from($state)->key();
     }
 }

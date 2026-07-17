@@ -80,7 +80,7 @@ class SnapshotStore implements StoresSnapshots
             ->map(fn ($row) => new StateIdentity(
                 state_type: $row->type,
                 state_id: $row->state_id,
-                last_event_id: Id::normalizeEventId($row->last_event_id),
+                last_event_id: $row->last_event_id,
             ))
             ->values();
     }

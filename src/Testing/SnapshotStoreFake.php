@@ -73,7 +73,7 @@ class SnapshotStoreFake implements StoresSnapshots
                 return $snapshot ? new StateIdentity(
                     state_type: $snapshot::class,
                     state_id: $snapshot instanceof SingletonState ? Id::nil() : Id::from($snapshot->id),
-                    last_event_id: Id::tryFrom($snapshot->last_event_id),
+                    last_event_id: $snapshot->last_event_id,
                 ) : null;
             })
             ->filter()

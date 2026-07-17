@@ -80,7 +80,7 @@ class EventStoreFake implements StoresEvents
                 return false;
             }
 
-            return $max > ($identity->last_event_id ? Id::from($identity->last_event_id) : 0);
+            return $max > ($identity->last_event_id ?? 0);
         });
     }
 
@@ -116,7 +116,7 @@ class EventStoreFake implements StoresEvents
             ->flatten()
             ->filter(fn (Event $event) => $ids->has($event->id))
             ->flatMap(fn (Event $event) => $event->states()->map(StateIdentity::from(...)))
-            ->unique(fn (StateIdentity $identity) => $identity->state_type.':'.$identity->state_id)
+            ->unique(fn (StateIdentity $identity) => $identity->key())
             ->values();
     }
 

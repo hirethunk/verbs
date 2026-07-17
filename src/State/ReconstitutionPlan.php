@@ -74,7 +74,7 @@ class ReconstitutionPlan
     public function seeds(): ?Collection
     {
         $snapshotted = $this->members->filter(
-            fn (StateIdentity $member) => $this->last_event_ids[$this->stateKey($member)] !== null,
+            fn (StateIdentity $member) => $this->last_event_ids[$member->key()] !== null,
         );
 
         $seeds = new Collection;
@@ -113,7 +113,7 @@ class ReconstitutionPlan
         $frontier = $this->original_states
             ->map(StateIdentity::from(...))
             ->filter(function (StateIdentity $state) use (&$seen_states) {
-                return $this->markSeen($seen_states, $this->stateKey($state));
+                return $this->markSeen($seen_states, $state->key());
             })
             ->values();
 
@@ -140,7 +140,7 @@ class ReconstitutionPlan
             $found = $this
                 ->statesFor($new_event_ids)
                 ->filter(function (StateIdentity $state) use (&$seen_states) {
-                    return $this->markSeen($seen_states, $this->stateKey($state));
+                    return $this->markSeen($seen_states, $state->key());
                 })
                 ->values();
 
@@ -176,7 +176,7 @@ class ReconstitutionPlan
         }
 
         $misaligned = $this->members->filter(
-            fn (StateIdentity $member) => $this->last_event_ids[$this->stateKey($member)] !== $this->floor,
+            fn (StateIdentity $member) => $this->last_event_ids[$member->key()] !== $this->floor,
         );
 
         if ($misaligned->isEmpty()) {
@@ -189,7 +189,7 @@ class ReconstitutionPlan
             $misaligned->map(fn (StateIdentity $member) => new StateIdentity(
                 state_type: $member->state_type,
                 state_id: $member->state_id,
-                last_event_id: $this->last_event_ids[$this->stateKey($member)],
+                last_event_id: $this->last_event_ids[$member->key()],
             )),
             after_id: $this->floor,
         );
@@ -223,7 +223,7 @@ class ReconstitutionPlan
     protected function rememberLastEventIds(Collection $identities): void
     {
         foreach ($identities as $identity) {
-            $this->last_event_ids[$this->stateKey($identity)] = null;
+            $this->last_event_ids[$identity->key()] = null;
         }
 
         if (! $this->use_snapshots || $identities->isEmpty()) {
@@ -233,7 +233,7 @@ class ReconstitutionPlan
         $this->snapshots
             ->hydrateLastEventIds($identities)
             ->each(function (StateIdentity $found) {
-                $this->last_event_ids[$this->stateKey($found)] = $found->last_event_id;
+                $this->last_event_ids[$found->key()] = $found->last_event_id;
             });
     }
 
@@ -265,17 +265,5 @@ class ReconstitutionPlan
         $seen[$key] = true;
 
         return true;
-    }
-
-    /**
-     * A singleton's identity is its type—its events are stored under whatever
-     * incidental id the in-memory instance happened to have at write time—so
-     * two rows for the same singleton type must collapse to one identity here.
-     */
-    protected function stateKey(StateIdentity $state): string
-    {
-        return is_a($state->state_type, SingletonState::class, true)
-            ? $state->state_type
-            : $state->state_type.':'.$state->state_id;
     }
 }
