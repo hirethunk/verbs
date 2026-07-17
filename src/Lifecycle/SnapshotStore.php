@@ -26,9 +26,15 @@ class SnapshotStore implements StoresSnapshots
      * contributes a couple of bound parameters), and how many state ids in a
      * single WHERE IN. Both stay well under every database driver's parameter cap.
      */
-    const STATE_CHUNK = 100;
+    protected const STATE_CHUNK = 100;
 
-    const ID_CHUNK = 500;
+    protected const ID_CHUNK = 500;
+
+    /**
+     * Upserts bind every column of every row, so their chunks stay much
+     * smaller than the read chunks to bound the payload per query.
+     */
+    protected const UPSERT_CHUNK = 20;
 
     public function __construct(
         protected MetadataManager $metadata,
@@ -91,7 +97,7 @@ class SnapshotStore implements StoresSnapshots
             return true;
         }
 
-        foreach (array_chunk($states, 20) as $chunk) {
+        foreach (array_chunk($states, static::UPSERT_CHUNK) as $chunk) {
             $upserted = VerbSnapshot::upsert(
                 values: collect($chunk)
                     ->map($this->formatForWrite(...))

@@ -30,9 +30,9 @@ class EventStore implements StoresEvents
      * contributes a few bound parameters), and how many event ids in a single
      * WHERE IN. Both stay well under every database driver's parameter cap.
      */
-    const STATE_CHUNK = 100;
+    protected const STATE_CHUNK = 100;
 
-    const EVENT_CHUNK = 500;
+    protected const EVENT_CHUNK = 500;
 
     public function __construct(
         protected MetadataManager $metadata,

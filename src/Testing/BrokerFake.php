@@ -27,7 +27,7 @@ class BrokerFake implements BrokersEvents
     public function __construct(
         public EventStoreFake $store,
         public SnapshotStoreFake $snapshots,
-        public BrokersEvents $broker,
+        protected BrokersEvents $broker,
         protected ReplayMode $replay_mode,
     ) {}
 

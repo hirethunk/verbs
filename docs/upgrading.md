@@ -111,9 +111,9 @@ Eloquent snapshot storage.
   a bug-finder: it means something constructed a state directly instead of loading it. Use
   `YourState::load($id)` (or `::singleton()`), never `new YourState`.
 - **Loading a keyed state with a `null` id fails loudly.** `YourState::load(null)` used to fail
-  with an opaque `TypeError`; it now throws `InvalidArgumentException` ("Cannot load a [YourState]
-  state without an id."), so a missing route parameter or null foreign key surfaces clearly. Only
-  singletons load without an id.
+  with an opaque `TypeError`; it now throws an `InvalidArgumentException` naming the state class,
+  so a missing route parameter or null foreign key surfaces clearly. Only singletons load without
+  an id.
 - **Hooks may only type-hint states the event fires on.** An `apply()`/`handle()` that type-hints
   a state the event doesn't declare (no `#[StateId]`/`#[AppliesToState]` attribute, no state-typed
   property) now throws `CannotResolveParameter` with instructions. Previously Verbs silently
@@ -130,6 +130,9 @@ Eloquent snapshot storage.
 - **Memory is bounded and identity is safe.** The state cache evicts least-recently-used states
   past `verbs.state_cache_size`, but any state you still hold a reference to keeps its identity—
   a later load returns the same instance.
+- **`Verbs::fake()` starts a fresh Verbs world.** Events fired but not yet committed before the
+  fake are discarded, and any state loaded before the fake is no longer the canonical instance—
+  load it again after calling `fake()`.
 
 ### New config keys
 
