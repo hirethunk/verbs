@@ -95,7 +95,7 @@ class Dispatcher
         $hooks = $this->hooksFor($event, Phase::Boot);
 
         if (method_exists($event, 'boot')) {
-            $hooks->prepend(Hook::fromClassMethod($event, 'boot')->forcePhases(Phase::Boot));
+            $hooks->prepend(Hook::fromClassMethod($event, 'boot')->defaultPhases(Phase::Boot));
         }
 
         return $hooks;
@@ -107,7 +107,7 @@ class Dispatcher
         $hooks = $this->hooksFor($event, Phase::Fired);
 
         if (method_exists($event, 'fired')) {
-            $hooks->prepend(Hook::fromClassMethod($event, 'fired')->forcePhases(Phase::Fired));
+            $hooks->prepend(Hook::fromClassMethod($event, 'fired')->defaultPhases(Phase::Fired));
         }
 
         return $hooks;
@@ -119,7 +119,7 @@ class Dispatcher
         $hooks = $this->hooksFor($event, Phase::Handle);
 
         if (method_exists($event, 'handle')) {
-            $hooks->prepend(Hook::fromClassMethod($event, 'handle')->forcePhases(Phase::Handle, Phase::Replay));
+            $hooks->prepend(Hook::fromClassMethod($event, 'handle')->defaultPhases(Phase::Handle, Phase::Replay));
         }
 
         return $hooks;
@@ -131,7 +131,7 @@ class Dispatcher
         $hooks = $this->hooksFor($event, Phase::Replay);
 
         if (method_exists($event, 'handle')) {
-            $hooks->prepend(Hook::fromClassMethod($event, 'handle')->forcePhases(Phase::Handle, Phase::Replay));
+            $hooks->prepend(Hook::fromClassMethod($event, 'handle')->defaultPhases(Phase::Handle, Phase::Replay));
         }
 
         return $hooks;
@@ -176,7 +176,7 @@ class Dispatcher
             $finder->expecting($expecting);
         }
 
-        return $finder->map(fn (ReflectionMethod $name) => Hook::fromClassMethod($target, $name)->forcePhases($phase));
+        return $finder->map(fn (ReflectionMethod $name) => Hook::fromClassMethod($target, $name)->defaultPhases($phase));
     }
 
     /** @return Collection<int, Hook> */

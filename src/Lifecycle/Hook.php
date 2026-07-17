@@ -56,6 +56,17 @@ class Hook
         public ?ReflectionFunctionAbstract $reflection = null,
     ) {}
 
+    public function defaultPhases(Phase ...$phases): static
+    {
+        foreach ($phases as $phase) {
+            if (! isset($this->phases[$phase])) {
+                $this->phases[$phase] = true;
+            }
+        }
+
+        return $this;
+    }
+
     public function forcePhases(Phase ...$phases): static
     {
         foreach ($phases as $phase) {

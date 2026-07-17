@@ -8,6 +8,13 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   sqlite:
 
@@ -15,22 +22,21 @@ jobs:
       fail-fast: true
       matrix:
         os: [ ubuntu, windows ]
-        php: [ 8.2, 8.3, 8.4 ]
-        laravel: [ 13.*, 12.*, 11.*, 10.* ]
+        php: [ 8.3, 8.4, 8.5 ]
+        laravel: [ 13.*, 12.*, 11.* ]
         stability: [ stable, lowest ]
         exclude:
-          - { laravel: 13.*, php: 8.2 }
           - { laravel: 11.*, php: 8.5 }
-          - { laravel: 10.*, php: 8.5 }
-          - { laravel: 10.*, php: 8.4 }
 
     runs-on: ${{ matrix.os }}-latest
+
+    timeout-minutes: 15
 
     name: ${{ matrix.os }}/sqlite P${{ matrix.php }}:L${{ matrix.laravel }} (${{ matrix.stability }})
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -50,7 +56,7 @@ jobs:
           composer update --prefer-${{ matrix.stability }} --prefer-dist --no-interaction
 
       - name: Execute tests
-        run: vendor/bin/pest
+        run: vendor/bin/pest --ci
         env:
           DB_CONNECTION: sqlite
 
@@ -60,16 +66,15 @@ jobs:
       fail-fast: true
       matrix:
         os: [ ubuntu ]
-        php: [ 8.2, 8.3, 8.4 ]
-        laravel: [ 13.*, 12.*, 11.*, 10.* ]
+        php: [ 8.3, 8.4, 8.5 ]
+        laravel: [ 13.*, 12.*, 11.* ]
         stability: [ stable, lowest ]
         exclude:
-          - { laravel: 13.*, php: 8.2 }
           - { laravel: 11.*, php: 8.5 }
-          - { laravel: 10.*, php: 8.5 }
-          - { laravel: 10.*, php: 8.4 }
 
     runs-on: ${{ matrix.os }}-latest
+
+    timeout-minutes: 15
 
     name: ${{ matrix.os }}/mysql P${{ matrix.php }}:L${{ matrix.laravel }} (${{ matrix.stability }})
 
@@ -85,7 +90,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -105,7 +110,7 @@ jobs:
           composer update --prefer-${{ matrix.stability }} --prefer-dist --no-interaction
 
       - name: Execute tests
-        run: vendor/bin/pest
+        run: vendor/bin/pest --ci
         env:
           DB_CONNECTION: mysql
           DB_DATABASE: forge
@@ -118,16 +123,15 @@ jobs:
       fail-fast: true
       matrix:
         os: [ ubuntu ]
-        php: [ 8.2, 8.3, 8.4 ]
-        laravel: [ 13.*, 12.*, 11.*, 10.* ]
+        php: [ 8.3, 8.4, 8.5 ]
+        laravel: [ 13.*, 12.*, 11.* ]
         stability: [ stable, lowest ]
         exclude:
-          - { laravel: 13.*, php: 8.2 }
           - { laravel: 11.*, php: 8.5 }
-          - { laravel: 10.*, php: 8.5 }
-          - { laravel: 10.*, php: 8.4 }
 
     runs-on: ${{ matrix.os }}-latest
+
+    timeout-minutes: 15
 
     name: ${{ matrix.os }}/pgsql P${{ matrix.php }}:L${{ matrix.laravel }} (${{ matrix.stability }})
 
@@ -144,7 +148,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
 
       - name: Setup PHP
         uses: shivammathur/setup-php@v2
@@ -164,7 +168,7 @@ jobs:
           composer update --prefer-${{ matrix.stability }} --prefer-dist --no-interaction
 
       - name: Execute tests
-        run: vendor/bin/pest
+        run: vendor/bin/pest --ci
         env:
           DB_CONNECTION: pgsql
           DB_DATABASE: forge
