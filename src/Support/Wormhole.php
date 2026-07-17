@@ -69,12 +69,16 @@ class Wormhole
 
         $created_at = $this->metadata->getEphemeral($event, 'created_at', $this->factory->now());
 
+        // We need to store the true "test now" values so that we can restore them after time travel.
+        // This ensures that if the user-land code is calling Carbon::setTestNow(), that will be restored
+        // after our wormhole closure executes.
         $immutable_reset = CarbonImmutable::getTestNow();
         $mutable_reset = Carbon::getTestNow();
 
-        // It's possible to warp inside an existing wormhole, so we only want to track the
-        // "real now" value if we're on the outermost layer (calling `realNow()` should always
-        // resolve the time outside all active wormholes).
+        // It's possible to warp inside an existing wormhole, so we want to track the "real now" value if
+        // we're on the outermost layer (calling `realNow()` should always resolve the time outside all
+        // active wormholes). This ensures that if userland code calls Carbon::setTestNow() before executing
+        // Verbs code, that value is returned for `realNow()` (inception-level nonsense here).
         if ($this->warp_depth === 0) {
             $this->immutable_test_now = $immutable_reset;
             $this->mutable_test_now = $mutable_reset;
