@@ -1,8 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\DB;
-use Thunk\Verbs\Contracts\StoresEvents;
-use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\State;
 use Thunk\Verbs\State\ReconstitutionPlan;
 use Thunk\Verbs\State\StateIdentity;
@@ -42,12 +40,7 @@ function planState(string $type, int $id): State
 
 function planFor(array $states, bool $use_snapshots = true): ReconstitutionPlan
 {
-    return ReconstitutionPlan::plan(
-        collect($states),
-        app(StoresEvents::class),
-        app(StoresSnapshots::class),
-        use_snapshots: $use_snapshots,
-    );
+    return ReconstitutionPlan::plan(collect($states), use_snapshots: $use_snapshots);
 }
 
 test('it finds the correct states and events for one state', function () {

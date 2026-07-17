@@ -4,7 +4,6 @@ namespace Thunk\Verbs\Commands;
 
 use Illuminate\Console\Command;
 use ReflectionClass;
-use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Lifecycle\Lifecycle;
@@ -111,12 +110,7 @@ class VerifyCommand extends Command
         $shell = (new ReflectionClass($snapshot->type))->newInstanceWithoutConstructor();
         $shell->id = $snapshot->state_id;
 
-        $plan = ReconstitutionPlan::plan(
-            collect([$shell]),
-            app(StoresEvents::class),
-            app(StoresSnapshots::class),
-            use_snapshots: false,
-        );
+        $plan = ReconstitutionPlan::plan(collect([$shell]), use_snapshots: false);
 
         $rebuilt = new StateManager(new InMemoryCache(capacity: null));
         $ceiling = Id::from($snapshot->last_event_id);

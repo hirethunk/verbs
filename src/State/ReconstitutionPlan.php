@@ -38,13 +38,13 @@ class ReconstitutionPlan
     /** @var array<string, int|string|null> */
     protected array $last_event_ids = [];
 
-    public static function plan(
-        Collection $states,
-        StoresEvents $events,
-        StoresSnapshots $snapshots,
-        bool $use_snapshots = true,
-    ): static {
-        return (new static($states, $events, $snapshots, $use_snapshots))->discover()->probe();
+    public static function plan(Collection $states, bool $use_snapshots = true): static
+    {
+        // The static factory is the plan's composition point—resolving the
+        // stores here keeps the constructor honestly injectable for tests.
+        return (new static($states, app(StoresEvents::class), app(StoresSnapshots::class), $use_snapshots))
+            ->discover()
+            ->probe();
     }
 
     /** @param  Collection<int, State>  $states */
