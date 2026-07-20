@@ -12,7 +12,7 @@ use Thunk\Verbs\State\StateManager;
  * A singleton's identity is its *type*, not its id—its in-memory id is an
  * incidental snowflake. Reconstitution must therefore discover and harvest
  * singletons by type, mirroring how their events are stored/read everywhere
- * else (see EventStore::readEvents and ReconstitutingStateManager::isStale). These
+ * else (see EventStore::readEvents and ReconstitutingResolver::isStale). These
  * tests pin the three ways the reconstitution path used to forget that.
  */
 

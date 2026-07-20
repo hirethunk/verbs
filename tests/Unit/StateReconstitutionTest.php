@@ -37,7 +37,7 @@ use Thunk\Verbs\State\StateManager;
  *
  * Both problems are solved structurally: reconstitution replays the entire
  * connected component of events from a blank baseline (see
- * ReconstitutingStateManager), so related states always advance in lockstep and
+ * ReconstitutingResolver), so related states always advance in lockstep and
  * are never seen "ahead" of the event being applied. The "partially up-to-date"
  * and "out of sync" snapshot cases below pin that this holds regardless of where
  * each snapshot happened to be left.
