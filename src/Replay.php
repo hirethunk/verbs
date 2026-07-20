@@ -15,11 +15,9 @@ use Thunk\Verbs\Exceptions\CannotReplayWithQueuedEvents;
 use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Lifecycle\Dispatcher;
 use Thunk\Verbs\Lifecycle\Lifecycle;
-use Thunk\Verbs\Lifecycle\MetadataManager;
 use Thunk\Verbs\Lifecycle\Phase;
 use Thunk\Verbs\Lifecycle\Phases;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
-use Thunk\Verbs\Lifecycle\SnapshotWriter;
 use Thunk\Verbs\State\ReconstitutionPlan;
 use Thunk\Verbs\State\ReplayResolver;
 use Thunk\Verbs\State\StateManager;
@@ -90,7 +88,6 @@ class Replay
         $snapshots = app(StoresSnapshots::class);
         $queue = app(EventQueue::class);
         $dispatcher = app(Dispatcher::class);
-        $writer = new SnapshotWriter($snapshots, app(MetadataManager::class));
 
         $replay = new static(
             scope: $scope,
@@ -121,15 +118,15 @@ class Replay
 
         // Bound memory: the same 500-event cadence Broker::replay() used, gated
         // on willPrune() so a small replay never churns snapshots mid-stream.
-        $replay->checkpoint = function (int $iteration) use ($scope, $writer) {
+        $replay->checkpoint = function (int $iteration) use ($scope, $snapshots) {
             if ($iteration % 500 === 0 && $scope->willPrune()) {
-                $writer->write($scope->all());
+                $scope->persistSnapshots($snapshots);
                 $scope->prune();
             }
         };
 
-        $replay->tear_down = function () use ($scope, $writer) {
-            $writer->write($scope->all());
+        $replay->tear_down = function () use ($scope, $snapshots) {
+            $scope->persistSnapshots($snapshots);
             $scope->prune();
         };
 

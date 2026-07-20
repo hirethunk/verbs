@@ -4,8 +4,6 @@ namespace Thunk\Verbs\Models;
 
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
-use Thunk\Verbs\Facades\Id;
-use Thunk\Verbs\Lifecycle\MetadataManager;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\Serializer;
 
@@ -39,11 +37,8 @@ class VerbSnapshot extends Model
         $this->state->id = $this->state_id;
         $this->state->last_event_id = $this->last_event_id;
 
-        // Record the last event id this state was persisted at, so commit can skip
-        // re-writing snapshots for states that haven't advanced past it. This
-        // primes the same ephemeral key SnapshotWriter dirty-tracks on write—a
-        // hydrated state starts "clean" until an event advances it.
-        app(MetadataManager::class)->setEphemeral($this->state, 'last_written_event_id', Id::tryFrom($this->last_event_id));
+        // A snapshot-hydrated state is marked persisted (clean) by StateManager
+        // when it adopts the state from storage—see StateManager::markPersisted.
 
         return $this->state;
     }

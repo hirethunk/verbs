@@ -30,7 +30,6 @@ class Broker implements BrokersEvents
         protected StateManager $states,
         protected StoresEvents $events,
         protected StoresSnapshots $snapshots,
-        protected SnapshotWriter $snapshot_writer,
     ) {}
 
     public function fireIfValid(Event $event): ?Event
@@ -99,7 +98,7 @@ class Broker implements BrokersEvents
         try {
             $this->transaction(function () {
                 $this->queue->flush();
-                $this->snapshot_writer->write($this->states->all());
+                $this->states->persistSnapshots($this->snapshots);
             });
         } catch (Throwable $exception) {
             // flush() empties the queue once the event write succeeds, so if
