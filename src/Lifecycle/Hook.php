@@ -70,12 +70,7 @@ class Hook
     public function forcePhases(Phase ...$phases): static
     {
         foreach ($phases as $phase) {
-            // These are the dispatcher's defaults: hook attributes were already
-            // applied when the hook was built, and an explicit decision there
-            // (e.g. #[Once] opting out of Replay) must win over a default.
-            if (! isset($this->phases[$phase])) {
-                $this->phases[$phase] = true;
-            }
+            $this->phases[$phase] = true;
         }
 
         return $this;
