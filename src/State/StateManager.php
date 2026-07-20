@@ -19,8 +19,6 @@ use Thunk\Verbs\Support\StateCollection;
 
 class StateManager
 {
-    public bool $replaying = false;
-
     public function __construct(
         public ReadableCache&WritableCache $cache,
         public StateResolver $resolver,
@@ -167,22 +165,13 @@ class StateManager
             $canonical = $this->cache->put($state);
         }
 
-        if (! $this->replaying) {
-            $this->resolver->reconcile($this, collect([$canonical]));
-        }
+        $this->resolver->reconcile($this, collect([$canonical]));
 
         if ($canonical !== $state) {
             $this->resolver->sync($this, $canonical, $state);
         }
 
         return $state;
-    }
-
-    public function setReplaying(bool $replaying): static
-    {
-        $this->replaying = $replaying;
-
-        return $this;
     }
 
     /** @return State[] */
@@ -224,7 +213,6 @@ class StateManager
     public function reset(bool $include_storage = false): static
     {
         $this->cache->reset();
-        $this->replaying = false;
 
         // The registry caches the state instances it resolved for each event;
         // once we've cleared the cache those instances belong to a scope that no
@@ -296,9 +284,7 @@ class StateManager
 
         $state = $this->resolver->resolve($this, $type, $id);
 
-        if (! $this->replaying) {
-            $this->resolver->reconcile($this, collect([$state]));
-        }
+        $this->resolver->reconcile($this, collect([$state]));
 
         return $state;
     }
@@ -316,7 +302,7 @@ class StateManager
 
         $states = $ids->map(fn ($id) => $this->cache->get($type, $this->cacheId($type, $id)) ?? $this->make($type, $id));
 
-        if ($any_miss && ! $this->replaying) {
+        if ($any_miss) {
             $this->resolver->reconcile($this, $states);
         }
 

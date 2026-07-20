@@ -32,7 +32,6 @@ use Thunk\Verbs\Lifecycle\Dispatcher;
 use Thunk\Verbs\Lifecycle\EventStore;
 use Thunk\Verbs\Lifecycle\MetadataManager;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
-use Thunk\Verbs\Lifecycle\ReplayMode;
 use Thunk\Verbs\Lifecycle\SnapshotStore;
 use Thunk\Verbs\Livewire\SupportVerbs;
 use Thunk\Verbs\State\Cache\InMemoryCache;
@@ -71,7 +70,6 @@ class VerbsServiceProvider extends PackageServiceProvider
         $this->app->singleton(SnapshotStore::class);
         $this->app->scoped(EventQueue::class);
         $this->app->scoped(EventStateRegistry::class);
-        $this->app->scoped(ReplayMode::class);
         $this->app->singleton(MetadataManager::class);
 
         $this->app->scoped(StateManager::class, function (Container $app) {
@@ -79,7 +77,6 @@ class VerbsServiceProvider extends PackageServiceProvider
                 events: $app->make(StoresEvents::class),
                 snapshots: $app->make(StoresSnapshots::class),
                 queue: $app->make(EventQueue::class),
-                replay_mode: $app->make(ReplayMode::class),
                 cache: new InMemoryCache(
                     capacity: $app->make(Repository::class)->get('verbs.state_cache_size', 100),
                 ),

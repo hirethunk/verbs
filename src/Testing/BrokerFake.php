@@ -8,7 +8,6 @@ use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\BrokerConvenienceMethods;
 use Thunk\Verbs\Lifecycle\Dispatcher;
-use Thunk\Verbs\Lifecycle\ReplayMode;
 
 class BrokerFake implements BrokersEvents
 {
@@ -28,7 +27,6 @@ class BrokerFake implements BrokersEvents
         public EventStoreFake $store,
         public SnapshotStoreFake $snapshots,
         protected BrokersEvents $broker,
-        protected ReplayMode $replay_mode,
     ) {}
 
     public function assertCommitted(string|Closure $event, Closure|int|null $callback = null): EventStoreFake

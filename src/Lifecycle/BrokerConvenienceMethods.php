@@ -11,6 +11,7 @@ use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\EventNotAuthorized;
 use Thunk\Verbs\Exceptions\EventNotValid;
 use Thunk\Verbs\Facades\Id;
+use Thunk\Verbs\State\StateManager;
 use Thunk\Verbs\Support\IdManager;
 use Thunk\Verbs\Support\Wormhole;
 
@@ -60,14 +61,20 @@ trait BrokerConvenienceMethods
         }
     }
 
+    /**
+     * True while history is being re-applied—either by an explicit replay or
+     * inside a reconstitution/verification rebuild scope. Userland side-effect
+     * guards must treat both the same way, and both are now the same signal:
+     * the currently bound scope's resolver re-applies history.
+     */
     public function isReplaying(): bool
     {
-        return $this->replay_mode->active();
+        return app(StateManager::class)->isReapplyingHistory();
     }
 
     public function unlessReplaying(callable $callback)
     {
-        if (! $this->replay_mode->active()) {
+        if (! $this->isReplaying()) {
             $callback();
         }
     }

@@ -13,7 +13,6 @@ use Thunk\Verbs\Lifecycle\AutoCommitManager;
 use Thunk\Verbs\Lifecycle\Broker;
 use Thunk\Verbs\Lifecycle\Phase;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
-use Thunk\Verbs\Lifecycle\ReplayMode;
 use Thunk\Verbs\State\StateManager;
 use Thunk\Verbs\Support\EventStateRegistry;
 use Thunk\Verbs\Testing\BrokerFake;
@@ -62,11 +61,10 @@ class Verbs extends Facade
         $app->forgetInstance(StateManager::class);
         $app->forgetInstance(AutoCommitManager::class);
         $app->forgetInstance(EventQueue::class);
-        $app->forgetInstance(ReplayMode::class);
         $app->forgetInstance(Broker::class);
         $app->make(EventStateRegistry::class)->reset();
 
-        $fake_broker = new BrokerFake($store, $snapshots, $app->make(Broker::class), $app->make(ReplayMode::class));
+        $fake_broker = new BrokerFake($store, $snapshots, $app->make(Broker::class));
 
         static::swap($fake_broker);
 

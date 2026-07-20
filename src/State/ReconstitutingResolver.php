@@ -13,7 +13,6 @@ use Thunk\Verbs\Lifecycle\Lifecycle;
 use Thunk\Verbs\Lifecycle\Phase;
 use Thunk\Verbs\Lifecycle\Phases;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
-use Thunk\Verbs\Lifecycle\ReplayMode;
 use Thunk\Verbs\State;
 
 /**
@@ -146,7 +145,7 @@ class ReconstitutingResolver implements StateResolver
         }
 
         try {
-            app(ReplayMode::class)->whileRebuilding(fn () => $this->reapply($rebuilt, $plan));
+            $this->reapply($rebuilt, $plan);
         } catch (SeedInvariantViolation $violation) {
             // Belt and braces: a probe bug (or a snapshot that advanced under
             // us) must degrade to slow-and-correct, never to double-apply.
@@ -164,10 +163,14 @@ class ReconstitutingResolver implements StateResolver
     }
 
     /**
-     * Drive the plan's window through the rebuild scope. This inlined
-     * select→scope→apply loop is a deliberate way station: Broker::replay()
-     * and VerifyCommand::rebuild() are the same shape, and when a first-class
-     * Replay unit is extracted, this loop migrates into it.
+     * Drive the plan's window through the rebuild scope. While that scope is
+     * bound, userland unlessReplaying() guards suppress structurally—its
+     * resolver re-applies history—so a side effect inside apply() can't
+     * re-fire every time a stale state rebuilds.
+     *
+     * This inlined select→scope→apply loop is a deliberate way station:
+     * Broker::replay() and VerifyCommand::rebuild() are the same shape, and
+     * when a first-class Replay unit is extracted, this loop migrates into it.
      */
     protected function reapply(StateManager $rebuilt, ReconstitutionPlan $plan): void
     {

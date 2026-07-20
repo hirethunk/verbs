@@ -6,10 +6,9 @@ use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Lifecycle\Queue;
-use Thunk\Verbs\Lifecycle\ReplayMode;
 use Thunk\Verbs\State;
 use Thunk\Verbs\State\Cache\InMemoryCache;
-use Thunk\Verbs\State\ReconstitutingStateManager;
+use Thunk\Verbs\State\ReconstitutingResolver;
 use Thunk\Verbs\State\StateManager;
 
 /*
@@ -20,12 +19,13 @@ use Thunk\Verbs\State\StateManager;
  */
 it('keeps queued-but-uncommitted states pinned through a prune', function () {
     // Rebind the scope with a tiny capacity so a prune would otherwise evict.
-    app()->instance(StateManager::class, new ReconstitutingStateManager(
-        events: app(StoresEvents::class),
-        snapshots: app(StoresSnapshots::class),
-        queue: app(Queue::class),
-        replay_mode: app(ReplayMode::class),
+    app()->instance(StateManager::class, new StateManager(
         cache: new InMemoryCache(capacity: 2),
+        resolver: new ReconstitutingResolver(
+            events: app(StoresEvents::class),
+            snapshots: app(StoresSnapshots::class),
+            queue: app(Queue::class),
+        ),
     ));
 
     $ids = [snowflake_id(), snowflake_id(), snowflake_id()];
@@ -61,12 +61,13 @@ it('keeps queued-but-uncommitted states pinned through a prune', function () {
  * not expose the still-in-flight inner batch to eviction.
  */
 it('keeps a state consistent through a nested commit batch under cache pressure', function () {
-    app()->instance(StateManager::class, new ReconstitutingStateManager(
-        events: app(StoresEvents::class),
-        snapshots: app(StoresSnapshots::class),
-        queue: app(Queue::class),
-        replay_mode: app(ReplayMode::class),
+    app()->instance(StateManager::class, new StateManager(
         cache: new InMemoryCache(capacity: 1),
+        resolver: new ReconstitutingResolver(
+            events: app(StoresEvents::class),
+            snapshots: app(StoresSnapshots::class),
+            queue: app(Queue::class),
+        ),
     ));
 
     $id = snowflake_id();
