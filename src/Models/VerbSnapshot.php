@@ -40,7 +40,9 @@ class VerbSnapshot extends Model
         $this->state->last_event_id = $this->last_event_id;
 
         // Record the last event id this state was persisted at, so commit can skip
-        // re-writing snapshots for states that haven't advanced past it.
+        // re-writing snapshots for states that haven't advanced past it. This
+        // primes the same ephemeral key SnapshotWriter dirty-tracks on write—a
+        // hydrated state starts "clean" until an event advances it.
         app(MetadataManager::class)->setEphemeral($this->state, 'last_written_event_id', Id::tryFrom($this->last_event_id));
 
         return $this->state;

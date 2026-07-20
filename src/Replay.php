@@ -5,6 +5,7 @@ namespace Thunk\Verbs;
 use Closure;
 use Glhd\Bits\Bits;
 use Illuminate\Support\Enumerable;
+use InvalidArgumentException;
 use Ramsey\Uuid\UuidInterface;
 use ReflectionClass;
 use Symfony\Component\Uid\AbstractUid;
@@ -150,11 +151,21 @@ class Replay
             [$state, $id] = [$state::class, $state->id];
         }
 
+        $resolved_id = Id::tryFrom($id);
+
+        // Mirror StateManager::make(): a null id is only meaningful for a
+        // singleton (there is exactly one). A keyed rebuild without an id fails
+        // loudly rather than rebuilding nothing under a random key.
+        if ($resolved_id === null && ! is_a($state, SingletonState::class, true)) {
+            throw new InvalidArgumentException("Cannot rebuild a [{$state}] state without an id.");
+        }
+
         // A blank shell built without the constructor never auto-registers in
         // the live scope (State::__construct() would). It seeds the plan's
-        // component discovery and doubles as the eventless return value.
+        // component discovery and doubles as the eventless return value. A
+        // singleton's incidental id is irrelevant—its component is by type.
         $shell = (new ReflectionClass($state))->newInstanceWithoutConstructor();
-        $shell->id = $id;
+        $shell->id = $resolved_id ?? snowflake_id();
 
         $plan = ReconstitutionPlan::plan(collect([$shell]), use_snapshots: false);
 
