@@ -37,7 +37,6 @@ class SnapshotStore implements StoresSnapshots
     protected const UPSERT_CHUNK = 20;
 
     public function __construct(
-        protected MetadataManager $metadata,
         protected Serializer $serializer,
     ) {}
 

@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\DB;
 use Throwable;
 use Thunk\Verbs\CommitsImmediately;
 use Thunk\Verbs\Contracts\BrokersEvents;
-use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\EventNotValid;
@@ -28,7 +27,6 @@ class Broker implements BrokersEvents
         protected MetadataManager $metadata,
         protected EventQueue $queue,
         protected StateManager $states,
-        protected StoresEvents $events,
         protected StoresSnapshots $snapshots,
     ) {}
 
