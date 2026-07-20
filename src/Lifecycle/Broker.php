@@ -11,7 +11,6 @@ use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\CannotReplayWithQueuedEvents;
 use Thunk\Verbs\Exceptions\EventNotValid;
-use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 use Thunk\Verbs\State;
 use Thunk\Verbs\State\ReplayResolver;
@@ -32,6 +31,7 @@ class Broker implements BrokersEvents
         protected StateManager $states,
         protected StoresEvents $events,
         protected StoresSnapshots $snapshots,
+        protected SnapshotWriter $snapshot_writer,
     ) {}
 
     public function fireIfValid(Event $event): ?Event
@@ -100,7 +100,7 @@ class Broker implements BrokersEvents
         try {
             $this->transaction(function () {
                 $this->queue->flush();
-                $this->writeSnapshots();
+                $this->snapshot_writer->write($this->states->all());
             });
         } catch (Throwable $exception) {
             // flush() empties the queue once the event write succeeds, so if
@@ -175,13 +175,13 @@ class Broker implements BrokersEvents
                         }
 
                         if ($iteration++ % 500 === 0 && $this->states->willPrune()) {
-                            $this->writeSnapshots();
+                            $this->snapshot_writer->write($this->states->all());
                             $this->states->prune();
                         }
                     });
             }));
         } finally {
-            $this->writeSnapshots();
+            $this->snapshot_writer->write($this->states->all());
             $this->states->prune();
         }
     }
@@ -242,38 +242,6 @@ class Broker implements BrokersEvents
                 E_USER_DEPRECATED,
             );
         }
-    }
-
-    /**
-     * Only dirty states are written: a state is dirty when its last event id has
-     * advanced past whatever was last persisted for it, and a state that never
-     * saw an event at all (a blank load) never creates a snapshot row.
-     */
-    protected function writeSnapshots(): bool
-    {
-        $dirty = array_filter(
-            $this->states->all(),
-            function (State $state) {
-                $last_event_id = Id::tryFrom($state->last_event_id);
-
-                return $last_event_id !== null
-                    && $last_event_id !== $this->metadata->getEphemeral($state, 'last_written_event_id');
-            },
-        );
-
-        if (empty($dirty)) {
-            return true;
-        }
-
-        if (! $this->snapshots->write(array_values($dirty))) {
-            return false;
-        }
-
-        foreach ($dirty as $state) {
-            $this->metadata->setEphemeral($state, 'last_written_event_id', Id::tryFrom($state->last_event_id));
-        }
-
-        return true;
     }
 
     public function listen(object|string $listener)
