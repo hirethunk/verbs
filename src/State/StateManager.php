@@ -13,6 +13,7 @@ use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\State;
 use Thunk\Verbs\State\Cache\Contracts\ReadableCache;
 use Thunk\Verbs\State\Cache\Contracts\WritableCache;
+use Thunk\Verbs\State\Cache\InMemoryCache;
 use Thunk\Verbs\Support\EventStateRegistry;
 use Thunk\Verbs\Support\StateCollection;
 
@@ -22,7 +23,44 @@ class StateManager
 
     public function __construct(
         public ReadableCache&WritableCache $cache,
+        public StateResolver $resolver,
     ) {}
+
+    /**
+     * The isolated scope a rebuild replays into: blank-on-miss, and never
+     * pruned (evicting a state mid-rebuild would reload it blank and corrupt
+     * the replay)—its real memory bound is the size of the window being
+     * replayed. Built with no container involvement, which is what keeps the
+     * old Broker↔StateManager circular dependency from coming back.
+     */
+    public static function rebuilding(): static
+    {
+        return new static(new InMemoryCache(capacity: null), new RebuildResolver);
+    }
+
+    public function isReapplyingHistory(): bool
+    {
+        return $this->resolver instanceof ReappliesHistory;
+    }
+
+    /**
+     * Run the given callback with this scope's resolver temporarily swapped
+     * (e.g. Broker::replay() entering a ReplayResolver), with the same
+     * save/restore discipline as run(), so nested swaps and mid-callback
+     * throws always restore the previous policy.
+     */
+    public function withResolver(StateResolver $resolver, callable $callback): mixed
+    {
+        $previous = $this->resolver;
+
+        try {
+            $this->resolver = $resolver;
+
+            return $callback();
+        } finally {
+            $this->resolver = $previous;
+        }
+    }
 
     /**
      * Run the given callback with this scope bound as the "current" scope, so
@@ -62,7 +100,7 @@ class StateManager
         [$type, $id] = $this->normalizeLoadArguments($type, $id);
 
         return is_iterable($id)
-            ? $this->loadMany($id, $type)
+            ? $this->loadMany($type, $id)
             : $this->loadOne($type, $id);
     }
 
@@ -111,21 +149,30 @@ class StateManager
     }
 
     /**
-     * Bring a state up to date and return the *same instance*. In this base
-     * scope there is no storage to consult, so refreshing only re-adopts the
-     * instance as canonical if the cache lost track of it (or syncs it from
-     * whichever instance is canonical, if the two ever diverged).
+     * Bring a state up to date and return the *same instance*. Cache hits are
+     * request-stable by design—within a request you compute against one
+     * consistent view of each state—so refresh() is the explicit "ask
+     * otherwise": it always runs the resolver's staleness check, re-adopts the
+     * instance as canonical if the cache lost track of it (seeded from
+     * storage, when the resolver has any), and syncs it from whichever
+     * instance is canonical if the two ever diverged.
      */
     public function refresh(State $state): State
     {
-        $cached = $this->cache->get($state::class, $this->cacheId($state));
+        $canonical = $this->cache->get($state::class, $this->cacheId($state));
 
-        if ($cached === null) {
-            return $this->cache->put($state);
+        if ($canonical === null) {
+            $this->resolver->reseed($this, $state);
+
+            $canonical = $this->cache->put($state);
         }
 
-        if ($cached !== $state) {
-            $this->merge($cached, $state);
+        if (! $this->replaying) {
+            $this->resolver->reconcile($this, collect([$canonical]));
+        }
+
+        if ($canonical !== $state) {
+            $this->resolver->sync($this, $canonical, $state);
         }
 
         return $state;
@@ -222,7 +269,7 @@ class StateManager
      * incidental (and serialized event data may carry one), so lookups must
      * force it to null or they'd never match the one live instance.
      */
-    protected function cacheId(State|string $type, Bits|UuidInterface|AbstractUid|int|string|null $id = null): int|string|null
+    public function cacheId(State|string $type, Bits|UuidInterface|AbstractUid|int|string|null $id = null): int|string|null
     {
         if ($type instanceof State) {
             [$type, $id] = [$type::class, $type->id];
@@ -231,7 +278,7 @@ class StateManager
         return is_a($type, SingletonState::class, true) ? null : Id::tryFrom($id);
     }
 
-    protected function merge(State $from, State $into): void
+    public function merge(State $from, State $into): void
     {
         foreach (get_object_vars($from) as $property => $value) {
             if ($property !== 'id') {
@@ -247,17 +294,32 @@ class StateManager
             return $state;
         }
 
-        return $this->make($type, $id);
+        $state = $this->resolver->resolve($this, $type, $id);
+
+        if (! $this->replaying) {
+            $this->resolver->reconcile($this, collect([$state]));
+        }
+
+        return $state;
     }
 
     /** @param  class-string<State>  $type */
-    protected function loadMany(iterable $ids, string $type): StateCollection
+    protected function loadMany(string $type, iterable $ids): StateCollection
     {
-        $ids = collect($ids)->map(Id::from(...));
+        $ids = collect($ids);
 
-        return StateCollection::make(
-            // @todo - add support for getMany() in caches for perf
-            $ids->map(fn ($id) => $this->loadOne($type, $id)),
-        );
+        $any_miss = $ids->contains(fn ($id) => ! $this->cache->has($type, $this->cacheId($type, $id)));
+
+        if ($any_miss) {
+            $this->resolver->resolveMany($this, $type, $ids);
+        }
+
+        $states = $ids->map(fn ($id) => $this->cache->get($type, $this->cacheId($type, $id)) ?? $this->make($type, $id));
+
+        if ($any_miss && ! $this->replaying) {
+            $this->resolver->reconcile($this, $states);
+        }
+
+        return StateCollection::make($states);
     }
 }

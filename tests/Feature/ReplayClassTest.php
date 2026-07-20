@@ -5,6 +5,7 @@ use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\Phases;
 use Thunk\Verbs\State;
 use Thunk\Verbs\State\Cache\InMemoryCache;
+use Thunk\Verbs\State\RebuildResolver;
 use Thunk\Verbs\State\StateManager;
 use Thunk\Verbs\Support\Replay;
 
@@ -12,7 +13,8 @@ it('can rebuild state from events', function () {
     $events = collect(array_fill(0, 10, ReplayClassTestEvent::make(state: 1)->event));
     $replay = new Replay(
         states: new StateManager(
-            cache: new InMemoryCache
+            cache: new InMemoryCache,
+            resolver: new RebuildResolver,
         ),
         events: $events,
         phases: Phases::all()
@@ -28,7 +30,7 @@ it('can rebuild state from events', function () {
 });
 
 it('can cache and retrieve state across events', function () {
-    $states = new StateManager(cache: new InMemoryCache);
+    $states = new StateManager(cache: new InMemoryCache, resolver: new RebuildResolver);
     $events = collect(array_fill(0, 10, ReplayClassTestEvent::make(state: 1)->event));
 
     (new Replay(states: $states, events: $events, phases: Phases::all()))->handle();

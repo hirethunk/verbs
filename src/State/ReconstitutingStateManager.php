@@ -21,7 +21,6 @@ use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\State;
 use Thunk\Verbs\State\Cache\Contracts\ReadableCache;
 use Thunk\Verbs\State\Cache\Contracts\WritableCache;
-use Thunk\Verbs\State\Cache\InMemoryCache;
 use Thunk\Verbs\Support\StateCollection;
 
 /**
@@ -39,7 +38,9 @@ class ReconstitutingStateManager extends StateManager
         protected ReplayMode $replay_mode,
         WritableCache&ReadableCache $cache,
     ) {
-        parent::__construct($cache);
+        // Placeholder until the ReconstitutingResolver extraction: this
+        // subclass still overrides every path that would consult the resolver.
+        parent::__construct($cache, new RebuildResolver);
     }
 
     public function load(string $type, Bits|UuidInterface|AbstractUid|iterable|int|string|null $id): StateCollection|State
@@ -267,10 +268,7 @@ class ReconstitutingStateManager extends StateManager
             return false;
         }
 
-        // The rebuild scope is never pruned (capacity: null): evicting a state
-        // mid-rebuild would reload it blank and corrupt the replay. Its real
-        // memory bound is the size of the window being replayed.
-        $rebuilt = new StateManager(new InMemoryCache(capacity: null));
+        $rebuilt = StateManager::rebuilding();
 
         foreach ($seeds as $seed) {
             $rebuilt->cache->put($seed);

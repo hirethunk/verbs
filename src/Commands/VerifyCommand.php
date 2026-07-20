@@ -12,7 +12,6 @@ use Thunk\Verbs\Lifecycle\Phases;
 use Thunk\Verbs\Lifecycle\ReplayMode;
 use Thunk\Verbs\Models\VerbSnapshot;
 use Thunk\Verbs\SingletonState;
-use Thunk\Verbs\State\Cache\InMemoryCache;
 use Thunk\Verbs\State\ReconstitutionPlan;
 use Thunk\Verbs\State\StateManager;
 use Thunk\Verbs\Support\Serializer;
@@ -112,7 +111,7 @@ class VerifyCommand extends Command
 
         $plan = ReconstitutionPlan::plan(collect([$shell]), use_snapshots: false);
 
-        $rebuilt = new StateManager(new InMemoryCache(capacity: null));
+        $rebuilt = StateManager::rebuilding();
         $ceiling = Id::from($snapshot->last_event_id);
 
         // Verification re-applies history, so userland unlessReplaying()
