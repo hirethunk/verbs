@@ -3,16 +3,8 @@
 namespace Thunk\Verbs\Commands;
 
 use Illuminate\Console\Command;
-use ReflectionClass;
-use Thunk\Verbs\Contracts\StoresSnapshots;
-use Thunk\Verbs\Facades\Id;
-use Thunk\Verbs\Lifecycle\Lifecycle;
-use Thunk\Verbs\Lifecycle\Phase;
-use Thunk\Verbs\Lifecycle\Phases;
 use Thunk\Verbs\Models\VerbSnapshot;
-use Thunk\Verbs\SingletonState;
-use Thunk\Verbs\State\ReconstitutionPlan;
-use Thunk\Verbs\State\StateManager;
+use Thunk\Verbs\Replay;
 use Thunk\Verbs\Support\Serializer;
 
 class VerifyCommand extends Command
@@ -101,37 +93,19 @@ class VerifyCommand extends Command
     /**
      * Rebuild the state from a blank baseline—the exactness reference—by
      * replaying its connected component up to the snapshot's own last_event_id,
-     * so a snapshot is verified against what it *claims* to represent.
+     * so a snapshot is verified against what it *claims* to represent. A fresh
+     * rebuild re-applies history, so userland unlessReplaying() guards inside
+     * apply() suppress their side effects during the run.
      */
     protected function rebuild(VerbSnapshot $snapshot): ?array
     {
-        $shell = (new ReflectionClass($snapshot->type))->newInstanceWithoutConstructor();
-        $shell->id = $snapshot->state_id;
+        $state = Replay::fresh($snapshot->type, $snapshot->state_id)
+            ->upTo($snapshot->last_event_id)
+            ->run();
 
-        $plan = ReconstitutionPlan::plan(collect([$shell]), use_snapshots: false);
-
-        $rebuilt = StateManager::rebuilding();
-        $ceiling = Id::from($snapshot->last_event_id);
-
-        // Verification re-applies history: while the rebuilding scope is
-        // bound, userland unlessReplaying() guards inside apply() suppress
-        // their side effects (its resolver is a ReappliesHistory one).
-        $rebuilt->run(function () use ($plan, $ceiling) {
-            foreach ($plan->events() as $event) {
-                if (Id::from($event->id) > $ceiling) {
-                    break;
-                }
-
-                Lifecycle::run($event, new Phases(Phase::Apply));
-            }
-        });
-
-        $state = $rebuilt->cache->get(
-            $snapshot->type,
-            is_a($snapshot->type, SingletonState::class, true) ? null : $snapshot->state_id,
-        );
-
-        if ($state === null) {
+        // No events reached the state up to the ceiling it claims: the events
+        // that snapshot represents are gone, which is itself drift.
+        if ($state->last_event_id === null) {
             return null;
         }
 

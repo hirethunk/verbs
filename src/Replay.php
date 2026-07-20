@@ -3,14 +3,23 @@
 namespace Thunk\Verbs;
 
 use Closure;
+use Glhd\Bits\Bits;
 use Illuminate\Support\Enumerable;
+use Ramsey\Uuid\UuidInterface;
+use ReflectionClass;
+use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Exceptions\CannotReplayWithQueuedEvents;
+use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Lifecycle\Dispatcher;
+use Thunk\Verbs\Lifecycle\Lifecycle;
 use Thunk\Verbs\Lifecycle\MetadataManager;
+use Thunk\Verbs\Lifecycle\Phase;
+use Thunk\Verbs\Lifecycle\Phases;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 use Thunk\Verbs\Lifecycle\SnapshotWriter;
+use Thunk\Verbs\State\ReconstitutionPlan;
 use Thunk\Verbs\State\ReplayResolver;
 use Thunk\Verbs\State\StateManager;
 use Thunk\Verbs\State\StateResolver;
@@ -124,6 +133,59 @@ class Replay
         };
 
         return $replay;
+    }
+
+    /**
+     * Fresh rebuild: reconstruct a single state from a blank baseline by
+     * replaying its connected component (optionally up to a ceiling via upTo())
+     * inside a throwaway scope. Read-only—nothing is written and the live scope
+     * is never touched—so run() returns the rebuilt State: an eventless rebuild
+     * comes back as a blank shell with last_event_id === null.
+     *
+     * @experimental
+     */
+    public static function fresh(State|string $state, Bits|UuidInterface|AbstractUid|int|string|null $id = null): static
+    {
+        if ($state instanceof State) {
+            [$state, $id] = [$state::class, $state->id];
+        }
+
+        // A blank shell built without the constructor never auto-registers in
+        // the live scope (State::__construct() would). It seeds the plan's
+        // component discovery and doubles as the eventless return value.
+        $shell = (new ReflectionClass($state))->newInstanceWithoutConstructor();
+        $shell->id = $id;
+
+        $plan = ReconstitutionPlan::plan(collect([$shell]), use_snapshots: false);
+
+        $scope = StateManager::rebuilding();
+
+        $replay = new static(
+            scope: $scope,
+            events: $plan->events(),
+            drive: fn (Event $event) => Lifecycle::run($event, new Phases(Phase::Apply)),
+        );
+
+        $replay->result = fn (StateManager $scope) => $scope->cache->get($state, $scope->cacheId($state, $id)) ?? $shell;
+
+        return $replay;
+    }
+
+    /**
+     * Cap a fresh rebuild at an inclusive event-id ceiling (default: head), so a
+     * state can be reconstructed as of a specific point in its history.
+     *
+     * @experimental
+     */
+    public function upTo(Event|Bits|UuidInterface|AbstractUid|int|string $ceiling): static
+    {
+        $ceiling = Id::from($ceiling instanceof Event ? $ceiling->id : $ceiling);
+
+        // takeUntil stops before the first event past the ceiling—the lazy
+        // equivalent of "break once id > ceiling", keeping the ceiling inclusive.
+        $this->events = $this->events->takeUntil(fn (Event $event) => Id::from($event->id) > $ceiling);
+
+        return $this;
     }
 
     /** @experimental */
