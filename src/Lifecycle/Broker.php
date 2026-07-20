@@ -9,11 +9,10 @@ use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Exceptions\CannotReplayWithQueuedEvents;
 use Thunk\Verbs\Exceptions\EventNotValid;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
+use Thunk\Verbs\Replay;
 use Thunk\Verbs\State;
-use Thunk\Verbs\State\ReplayResolver;
 use Thunk\Verbs\State\StateManager;
 
 class Broker implements BrokersEvents
@@ -138,52 +137,10 @@ class Broker implements BrokersEvents
 
     public function replay(?callable $beforeEach = null, ?callable $afterEach = null): void
     {
-        // A queued event has already applied to in-memory state but isn't
-        // part of stored history yet: the replay would reset that state out
-        // from under it, and a later commit would splice the event in on top
-        // of the rebuilt world. Fail loudly rather than lose or double-apply.
-        if ($queued = count($this->queue->getEvents())) {
-            throw new CannotReplayWithQueuedEvents(sprintf(
-                'Cannot replay while %s queued but uncommitted—commit or discard them before replaying.',
-                $queued === 1 ? '1 event is' : "{$queued} events are",
-            ));
-        }
-
-        try {
-            $this->states->reset();
-            $this->snapshots->reset();
-
-            // run() binds the captured scope as the *current* scope for the
-            // duration, so the readers of the re-applying signal (fire(),
-            // unlessReplaying()) and every state load agree with the resolver
-            // swap by construction—even if the container binding was swapped
-            // out from under this broker.
-            $this->states->run(fn () => $this->states->withResolver(new ReplayResolver($this->snapshots), function () use ($beforeEach, $afterEach) {
-                $iteration = 0;
-
-                $this->events->read()
-                    ->each(function (Event $event) use ($beforeEach, $afterEach, &$iteration) {
-                        if ($beforeEach) {
-                            $beforeEach($event);
-                        }
-
-                        $this->dispatcher->apply($event);
-                        $this->dispatcher->replay($event);
-
-                        if ($afterEach) {
-                            $afterEach($event);
-                        }
-
-                        if ($iteration++ % 500 === 0 && $this->states->willPrune()) {
-                            $this->snapshot_writer->write($this->states->all());
-                            $this->states->prune();
-                        }
-                    });
-            }));
-        } finally {
-            $this->snapshot_writer->write($this->states->all());
-            $this->states->prune();
-        }
+        Replay::full()
+            ->beforeEach($beforeEach)
+            ->afterEach($afterEach)
+            ->run();
     }
 
     /**
