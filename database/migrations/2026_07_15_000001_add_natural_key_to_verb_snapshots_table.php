@@ -84,7 +84,7 @@ return new class extends Migration
 
             if ($sqlite_version === null || version_compare($sqlite_version, '3.35.0', '>=')) {
                 $connection->statement(sprintf(
-                    'alter table `%s` drop column %s',
+                    'alter table %s drop column %s',
                     $grammar->wrapTable($this->tableName()),
                     $grammar->wrap('expires_at'),
                 ));
