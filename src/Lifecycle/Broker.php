@@ -153,7 +153,12 @@ class Broker implements BrokersEvents
             $this->states->reset();
             $this->snapshots->reset();
 
-            $this->states->withResolver(new ReplayResolver($this->snapshots), function () use ($beforeEach, $afterEach) {
+            // run() binds the captured scope as the *current* scope for the
+            // duration, so the readers of the re-applying signal (fire(),
+            // unlessReplaying()) and every state load agree with the resolver
+            // swap by construction—even if the container binding was swapped
+            // out from under this broker.
+            $this->states->run(fn () => $this->states->withResolver(new ReplayResolver($this->snapshots), function () use ($beforeEach, $afterEach) {
                 $iteration = 0;
 
                 $this->events->read()
@@ -174,7 +179,7 @@ class Broker implements BrokersEvents
                             $this->states->prune();
                         }
                     });
-            });
+            }));
         } finally {
             $this->writeSnapshots();
             $this->states->prune();
