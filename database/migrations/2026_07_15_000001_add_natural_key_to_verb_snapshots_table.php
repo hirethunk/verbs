@@ -36,26 +36,30 @@ return new class extends Migration
             });
 
         // Dedupe before adding the unique index: keep the most advanced row
-        // for each (type, state_id).
-        $this->table()
-            ->select(['type', 'state_id'])
-            ->groupBy('type', 'state_id')
-            ->havingRaw('count(*) > 1')
-            ->get()
-            ->each(function ($duplicated) {
-                $keeper = $this->table()
-                    ->where('type', $duplicated->type)
-                    ->where('state_id', $duplicated->state_id)
-                    ->orderByDesc('last_event_id')
-                    ->orderByDesc('id')
-                    ->value('id');
+        // for each (type, state_id), i.e. delete any row that has a "better"
+        // sibling (higher last_event_id, or equal last_event_id and higher
+        // id). Collecting loser ids in a SELECT—rather than a self-referencing
+        // DELETE, which MySQL forbids—keeps this portable and does it in a
+        // single scan instead of two queries per duplicate group.
+        $loser_ids = $this->table()
+            ->from($this->tableName(), 'loser')
+            ->whereExists(function ($query) {
+                $query->from($this->tableName(), 'keeper')
+                    ->whereColumn('keeper.type', 'loser.type')
+                    ->whereColumn('keeper.state_id', 'loser.state_id')
+                    ->where(function ($q) {
+                        $q->whereColumn('keeper.last_event_id', '>', 'loser.last_event_id')
+                            ->orWhere(function ($q) {
+                                $q->whereColumn('keeper.last_event_id', 'loser.last_event_id')
+                                    ->whereColumn('keeper.id', '>', 'loser.id');
+                            });
+                    });
+            })
+            ->pluck('loser.id');
 
-                $this->table()
-                    ->where('type', $duplicated->type)
-                    ->where('state_id', $duplicated->state_id)
-                    ->where('id', '!=', $keeper)
-                    ->delete();
-            });
+        $loser_ids->chunk(1000)->each(function ($ids) {
+            $this->table()->whereIn('id', $ids)->delete();
+        });
 
         Schema::connection($this->connectionName())->table($this->tableName(), function (Blueprint $table) {
             $table->unique(['type', 'state_id']);
@@ -80,7 +84,7 @@ return new class extends Migration
 
             if ($sqlite_version === null || version_compare($sqlite_version, '3.35.0', '>=')) {
                 $connection->statement(sprintf(
-                    'alter table %s drop column %s',
+                    'alter table `%s` drop column %s',
                     $grammar->wrapTable($this->tableName()),
                     $grammar->wrap('expires_at'),
                 ));
