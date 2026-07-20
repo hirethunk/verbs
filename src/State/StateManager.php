@@ -18,13 +18,25 @@ use Thunk\Verbs\State\Cache\Contracts\WritableCache;
 use Thunk\Verbs\State\Cache\InMemoryCache;
 use Thunk\Verbs\Support\EventStateRegistry;
 use Thunk\Verbs\Support\StateCollection;
+use WeakMap;
 
 class StateManager
 {
+    /**
+     * How far each resident state's snapshot is durable: a state is dirty when
+     * its applied last_event_id has advanced past the id recorded here. Kept as
+     * a WeakMap so eviction/GC never leaks and a revived instance keeps its mark.
+     *
+     * @var WeakMap<State, mixed> state instance => id of its last persisted event
+     */
+    protected WeakMap $state_last_persisted_event_ids;
+
     public function __construct(
         public ReadableCache&WritableCache $cache,
         public StateResolver $resolver,
-    ) {}
+    ) {
+        $this->state_last_persisted_event_ids = new WeakMap;
+    }
 
     /**
      * The isolated scope a rebuild replays into: blank-on-miss, and never
@@ -167,6 +179,9 @@ class StateManager
             // silently revert applies still on their way to storage.
             if (! $this->resolver->hasUncommittedEvents($state) && ($seed = $this->resolver->seedFor($state))) {
                 $this->merge($seed, $state);
+
+                // Re-adopted from its snapshot: durable as of the seed's id.
+                $this->markPersisted([$state]);
             }
 
             $canonical = $this->cache->put($state);
@@ -203,6 +218,62 @@ class StateManager
     public function all(): array
     {
         return array_values($this->cache->values());
+    }
+
+    /**
+     * Persist the dirty states' snapshots into the given store, advancing each
+     * one's watermark only on a successful write. The store is a parameter, not
+     * a dependency: the identity map owns *what* has changed and *what* is
+     * already durable; the store owns *how* to persist.
+     */
+    public function persistSnapshots(StoresSnapshots $snapshots): bool
+    {
+        $dirty = $this->dirty();
+
+        if (! $snapshots->write($dirty)) {
+            return false;
+        }
+
+        $this->markPersisted($dirty);
+
+        return true;
+    }
+
+    /**
+     * The resident states whose applied last_event_id has advanced past the
+     * snapshot we last persisted for them. A state that never saw an event (a
+     * blank load) is never dirty, so it never creates a snapshot row.
+     *
+     * @return State[]
+     */
+    protected function dirty(): array
+    {
+        return array_values(array_filter($this->all(), $this->isDirty(...)));
+    }
+
+    protected function isDirty(State $state): bool
+    {
+        $last_event_id = Id::tryFrom($state->last_event_id);
+
+        return $last_event_id !== null
+            && $last_event_id !== ($this->state_last_persisted_event_ids[$state] ?? null);
+    }
+
+    /**
+     * Record that each state is durable as of its current last_event_id, so a
+     * later dirty() skips re-writing an unchanged snapshot. Called after a
+     * successful write, and when a state is adopted from storage (a hydrated or
+     * re-seeded state is already durable at the id it was loaded with).
+     *
+     * @param  iterable<int, State>  $states
+     */
+    protected function markPersisted(iterable $states): static
+    {
+        foreach ($states as $state) {
+            $this->state_last_persisted_event_ids[$state] = Id::tryFrom($state->last_event_id);
+        }
+
+        return $this;
     }
 
     public function willPrune(): bool
@@ -340,9 +411,14 @@ class StateManager
     {
         $hydrated = $this->resolver->hydrate($type, $id);
 
-        return $hydrated === null
-            ? $this->make($type, $id)
-            : $this->cache->put($hydrated);
+        if ($hydrated === null) {
+            return $this->make($type, $id);
+        }
+
+        $this->cache->put($hydrated);
+        $this->markPersisted([$hydrated]);
+
+        return $hydrated;
     }
 
     /**
@@ -373,6 +449,7 @@ class StateManager
 
         foreach ($this->resolver->hydrateMany($type, $resolvable) as $snapshot) {
             $this->cache->put($snapshot);
+            $this->markPersisted([$snapshot]);
         }
     }
 }
