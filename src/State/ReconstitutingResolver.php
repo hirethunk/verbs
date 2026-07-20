@@ -13,6 +13,7 @@ use Thunk\Verbs\Lifecycle\Lifecycle;
 use Thunk\Verbs\Lifecycle\Phase;
 use Thunk\Verbs\Lifecycle\Phases;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
+use Thunk\Verbs\Replay;
 use Thunk\Verbs\State;
 
 /**
@@ -135,26 +136,28 @@ class ReconstitutingResolver implements StateResolver
     }
 
     /**
-     * Drive the plan's window through the rebuild scope. While that scope is
-     * bound, userland unlessReplaying() guards suppress structurally—its
-     * resolver re-applies history—so a side effect inside apply() can't
-     * re-fire every time a stale state rebuilds.
+     * Drive the plan's window through the rebuild scope via the shared Replay
+     * unit. While that scope is bound, userland unlessReplaying() guards suppress
+     * structurally—its resolver re-applies history—so a side effect inside
+     * apply() can't re-fire every time a stale state rebuilds.
      *
-     * This inlined select→scope→apply loop is a deliberate way station:
-     * Broker::replay() and VerifyCommand::rebuild() are the same shape, and
-     * when a first-class Replay unit is extracted, this loop migrates into it.
+     * A seeded window guards each event against its seed having already absorbed
+     * it; a SeedInvariantViolation propagates out of the drive for rebuild() to
+     * catch, so harvest() only ever runs on a clean rebuild.
      */
     protected function reapply(StateManager $rebuilt, ReconstitutionPlan $plan): void
     {
-        $rebuilt->run(function () use ($plan) {
-            foreach ($plan->events() as $event) {
+        (new Replay(
+            scope: $rebuilt,
+            events: $plan->events(),
+            drive: function (Event $event) use ($plan) {
                 if ($plan->seeded) {
                     $this->guardSeedInvariant($event);
                 }
 
                 Lifecycle::run($event, new Phases(Phase::Apply));
-            }
-        });
+            },
+        ))->run();
     }
 
     /**

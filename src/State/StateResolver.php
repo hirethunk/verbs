@@ -19,8 +19,9 @@ use Thunk\Verbs\State;
  * effectful: reconstitution rebuilds a whole connected component and must
  * write its results through the outer scope's identity map (in-place merges,
  * insert-if-absent), which no return value can express without inventing a
- * command object. When a first-class Replay unit is extracted, that effectful
- * half migrates into it.
+ * command object. The drive loop that produces those results is now the shared
+ * Replay unit; the write-through half stays here, with the identity map it
+ * reconciles.
  */
 interface StateResolver
 {
