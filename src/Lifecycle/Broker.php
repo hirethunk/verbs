@@ -14,6 +14,7 @@ use Thunk\Verbs\Exceptions\EventNotValid;
 use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 use Thunk\Verbs\State;
+use Thunk\Verbs\State\ReplayResolver;
 use Thunk\Verbs\State\StateManager;
 
 class Broker implements BrokersEvents
@@ -154,26 +155,28 @@ class Broker implements BrokersEvents
             $this->states->setReplaying(true);
             $this->snapshots->reset();
 
-            $iteration = 0;
+            $this->states->withResolver(new ReplayResolver($this->snapshots), function () use ($beforeEach, $afterEach) {
+                $iteration = 0;
 
-            $this->events->read()
-                ->each(function (Event $event) use ($beforeEach, $afterEach, &$iteration) {
-                    if ($beforeEach) {
-                        $beforeEach($event);
-                    }
+                $this->events->read()
+                    ->each(function (Event $event) use ($beforeEach, $afterEach, &$iteration) {
+                        if ($beforeEach) {
+                            $beforeEach($event);
+                        }
 
-                    $this->dispatcher->apply($event);
-                    $this->dispatcher->replay($event);
+                        $this->dispatcher->apply($event);
+                        $this->dispatcher->replay($event);
 
-                    if ($afterEach) {
-                        $afterEach($event);
-                    }
+                        if ($afterEach) {
+                            $afterEach($event);
+                        }
 
-                    if ($iteration++ % 500 === 0 && $this->states->willPrune()) {
-                        $this->writeSnapshots();
-                        $this->states->prune();
-                    }
-                });
+                        if ($iteration++ % 500 === 0 && $this->states->willPrune()) {
+                            $this->writeSnapshots();
+                            $this->states->prune();
+                        }
+                    });
+            });
         } finally {
             $this->writeSnapshots();
             $this->states->prune();

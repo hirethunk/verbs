@@ -1,17 +1,19 @@
 <?php
 
 use Thunk\Verbs\Attributes\Autodiscovery\StateId;
+use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\State;
+use Thunk\Verbs\State\ReplayResolver;
 use Thunk\Verbs\State\StateManager;
 
 /*
  * During a long replay the cache is pruned to bound memory. A state that was
  * evicted (after its snapshot was written) must reload from that snapshot when a
  * later event touches it again—reloading it as a blank state would silently
- * discard everything applied before the prune. This pins that the "replaying"
- * load path still hydrates from snapshots even though it skips reconstitution.
+ * discard everything applied before the prune. This pins that the replay-policy
+ * load path still hydrates from snapshots even though it never reconstitutes.
  */
 it('reloads an evicted state from its snapshot during replay', function () {
     $id = snowflake_id();
@@ -20,17 +22,16 @@ it('reloads an evicted state from its snapshot during replay', function () {
     Verbs::commit();                              // snapshot written
 
     $scope = app(StateManager::class);
-    $scope->reset();            // simulate the state being evicted from the cache
-    $scope->setReplaying(true); // simulate being mid-replay
+    $scope->reset(); // simulate the state being evicted from the cache
 
-    try {
-        $state = ReplayEvictionTestState::load($id);
+    // Enter the replay policy the same way Broker::replay() does.
+    $state = $scope->withResolver(
+        new ReplayResolver(app(StoresSnapshots::class)),
+        fn () => ReplayEvictionTestState::load($id),
+    );
 
-        // Without snapshot hydration on the replay path this would be a blank state.
-        expect($state->count)->toBe(1);
-    } finally {
-        $scope->setReplaying(false);
-    }
+    // Without snapshot hydration on the replay path this would be a blank state.
+    expect($state->count)->toBe(1);
 });
 
 class ReplayEvictionTestState extends State
