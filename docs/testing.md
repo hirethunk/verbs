@@ -13,8 +13,8 @@ beforeEach(function () {
 });
 ```
 
-You may also implement the `CommitsImmediately` interface directly on an Event.
-(more about this in [`VerbsStatesInitialized`](testing#content-verbsstateinitialized))
+You may also implement the `CommitsImmediately` interface directly on an Event. (more about this in [
+`VerbsStatesInitialized`](testing#content-verbsstateinitialized))
 
 ### Assertions
 
@@ -23,8 +23,9 @@ The following Test `assert()` methods are available to thoroughly check your com
 Before using these methods, add `Verbs::fake()` to your test so Verbs can set up a fake event store to isolate the
 testing environment.
 
-Calling `Verbs::fake()` starts a fresh Verbs world: events that were fired but not yet committed are discarded, and
-any state you loaded before the fake is no longer the canonical instance—load it again after calling `fake()`.
+The first call to `Verbs::fake()` starts a fresh Verbs world. It is meant to be called at the beginning of a test, and
+not mixed with real Verbs code. When you fake, events that were fired but not yet committed are discarded, and any state
+you loaded before the fake is no longer the canonical instance.
 
 ```php
 Verbs::assertNothingCommitted();
@@ -174,8 +175,8 @@ If you'd like to chain behavior after your Factory `create()` executes, do so in
 
 #### `configure()`
 
-The configure method in your custom factory allows you to set `afterMaking` and `afterCreating` effects (
-see [laravel docs](https://laravel.com/docs/11.x/eloquent-factories#factory-callbacks)).
+The configure method in your custom factory allows you to set `afterMaking` and `afterCreating` effects
+(see [laravel docs](https://laravel.com/docs/11.x/eloquent-factories#factory-callbacks)).
 
 ##### `afterMaking()` & `afterCreating()`
 
