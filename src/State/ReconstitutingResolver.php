@@ -44,37 +44,9 @@ class ReconstitutingResolver implements StateResolver
         $this->reconstitute($memory, $states);
     }
 
-    public function reseed(StateManager $memory, State $state): void
+    public function hasUncommittedEvents(State $state): bool
     {
-        // A state with queued-but-uncommitted events keeps its in-memory view:
-        // seeding it from the (necessarily older) snapshot would silently
-        // revert applies that are still on their way to storage.
-        if (! $this->queue->hasEventsFor($state) && ($snapshot = $this->latestSnapshotFor($state))) {
-            $memory->merge($snapshot, $state);
-        }
-    }
-
-    public function sync(StateManager $memory, State $canonical, State $into): void
-    {
-        if ($this->queue->hasEventsFor($into)) {
-            // The caller's instance carries queued-but-uncommitted applies
-            // that the canonical instance doesn't—syncing would silently
-            // revert them (same rule as harvest()).
-            Log::debug('Verbs: skipped syncing a state with uncommitted events from its canonical instance.', [
-                'state_type' => $into::class,
-                'state_id' => $into->id,
-            ]);
-        } else {
-            // Another instance owns this identity (the cache was reset and
-            // the identity reloaded behind this reference). Sync the
-            // caller's instance from it rather than ever throwing.
-            $memory->merge($canonical, $into);
-
-            Log::debug('Verbs: refreshed a state whose identity is now owned by a different instance.', [
-                'state_type' => $into::class,
-                'state_id' => $into->id,
-            ]);
-        }
+        return $this->queue->hasEventsFor($state);
     }
 
     /**

@@ -19,30 +19,28 @@ use Thunk\Verbs\State;
  */
 class RebuildResolver implements ReappliesHistory, StateResolver
 {
-    public function resolve(StateManager $memory, string $type, Bits|UuidInterface|AbstractUid|int|string|null $id): State
+    public function hydrate(string $type, Bits|UuidInterface|AbstractUid|int|string|null $id): ?State
     {
-        return $memory->make($type, $id);
+        return null;
     }
 
-    public function resolveMany(StateManager $memory, string $type, iterable $ids): void
+    public function hydrateMany(string $type, Collection $ids): Collection
     {
-        foreach ($ids as $id) {
-            $memory->make($type, $id);
-        }
+        return new Collection;
+    }
+
+    public function seedFor(State $state): ?State
+    {
+        return null;
+    }
+
+    public function hasUncommittedEvents(State $state): bool
+    {
+        return false;
     }
 
     public function reconcile(StateManager $memory, Collection $states): void
     {
         //
-    }
-
-    public function reseed(StateManager $memory, State $state): void
-    {
-        //
-    }
-
-    public function sync(StateManager $memory, State $canonical, State $into): void
-    {
-        $memory->merge($canonical, $into);
     }
 }

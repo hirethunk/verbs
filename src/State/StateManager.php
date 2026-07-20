@@ -3,6 +3,8 @@
 namespace Thunk\Verbs\State;
 
 use Glhd\Bits\Bits;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 use Ramsey\Uuid\UuidInterface;
 use ReflectionClass;
@@ -160,7 +162,12 @@ class StateManager
         $canonical = $this->cache->get($state::class, $this->cacheId($state));
 
         if ($canonical === null) {
-            $this->resolver->reseed($this, $state);
+            // A state with queued-but-uncommitted events keeps its in-memory
+            // view: seeding it from the (necessarily older) snapshot would
+            // silently revert applies still on their way to storage.
+            if (! $this->resolver->hasUncommittedEvents($state) && ($seed = $this->resolver->seedFor($state))) {
+                $this->merge($seed, $state);
+            }
 
             $canonical = $this->cache->put($state);
         }
@@ -168,7 +175,25 @@ class StateManager
         $this->resolver->reconcile($this, collect([$canonical]));
 
         if ($canonical !== $state) {
-            $this->resolver->sync($this, $canonical, $state);
+            if ($this->resolver->hasUncommittedEvents($state)) {
+                // The caller's instance carries queued-but-uncommitted applies
+                // that the canonical instance doesn't—syncing would silently
+                // revert them (same rule as reconcile's harvest).
+                Log::debug('Verbs: skipped syncing a state with uncommitted events from its canonical instance.', [
+                    'state_type' => $state::class,
+                    'state_id' => $state->id,
+                ]);
+            } else {
+                // Another instance owns this identity (the cache was reset and
+                // the identity reloaded behind this reference). Sync the
+                // caller's instance from it rather than ever throwing.
+                $this->merge($canonical, $state);
+
+                Log::debug('Verbs: refreshed a state whose identity is now owned by a different instance.', [
+                    'state_type' => $state::class,
+                    'state_id' => $state->id,
+                ]);
+            }
         }
 
         return $state;
@@ -282,7 +307,7 @@ class StateManager
             return $state;
         }
 
-        $state = $this->resolver->resolve($this, $type, $id);
+        $state = $this->hydrateOne($type, $id);
 
         $this->resolver->reconcile($this, collect([$state]));
 
@@ -294,18 +319,60 @@ class StateManager
     {
         $ids = collect($ids);
 
-        $any_miss = $ids->contains(fn ($id) => ! $this->cache->has($type, $this->cacheId($type, $id)));
+        $missing = $ids
+            ->filter(fn ($id) => ! $this->cache->has($type, $this->cacheId($type, $id)))
+            ->values();
 
-        if ($any_miss) {
-            $this->resolver->resolveMany($this, $type, $ids);
+        if ($missing->isNotEmpty()) {
+            $this->hydrateMisses($type, $missing);
         }
 
         $states = $ids->map(fn ($id) => $this->cache->get($type, $this->cacheId($type, $id)) ?? $this->make($type, $id));
 
-        if ($any_miss) {
+        if ($missing->isNotEmpty()) {
             $this->resolver->reconcile($this, $states);
         }
 
         return StateCollection::make($states);
+    }
+
+    protected function hydrateOne(string $type, Bits|UuidInterface|AbstractUid|int|string|null $id): State
+    {
+        $hydrated = $this->resolver->hydrate($type, $id);
+
+        return $hydrated === null
+            ? $this->make($type, $id)
+            : $this->cache->put($hydrated);
+    }
+
+    /**
+     * Batch-hydrate a many-load's cache misses. Singletons never take the
+     * batch path—their snapshot is keyed by type, not id—and ids that resolve
+     * to nothing stay uncached, so the caller's make() fallback fails loudly
+     * on an invalid key exactly as a single load would.
+     *
+     * @param  Collection<int, mixed>  $ids
+     */
+    protected function hydrateMisses(string $type, Collection $ids): void
+    {
+        if (is_a($type, SingletonState::class, true)) {
+            foreach ($ids as $id) {
+                if (! $this->cache->has($type, $this->cacheId($type, $id))) {
+                    $this->hydrateOne($type, $id);
+                }
+            }
+
+            return;
+        }
+
+        $resolvable = $ids
+            ->map(fn ($id) => Id::tryFrom($id))
+            ->filter(fn ($id) => $id !== null)
+            ->unique()
+            ->values();
+
+        foreach ($this->resolver->hydrateMany($type, $resolvable) as $snapshot) {
+            $this->cache->put($snapshot);
+        }
     }
 }

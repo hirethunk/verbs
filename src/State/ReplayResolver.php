@@ -15,9 +15,8 @@ use Thunk\Verbs\State;
  * written) must reload from that snapshot, not as a blank, or everything
  * applied before the prune would be silently discarded.
  *
- * Replay forbids queued events (see Broker::replay()), so unlike the
- * reconstituting policy, no uncommitted-work gate can ever fire here: reseed
- * and sync act unconditionally.
+ * Replay forbids queued events (see Broker::replay()), so the uncommitted-
+ * work answer is constant here: nothing ever needs protecting.
  */
 class ReplayResolver implements ReappliesHistory, StateResolver
 {
@@ -27,20 +26,13 @@ class ReplayResolver implements ReappliesHistory, StateResolver
         protected StoresSnapshots $snapshots,
     ) {}
 
+    public function hasUncommittedEvents(State $state): bool
+    {
+        return false;
+    }
+
     public function reconcile(StateManager $memory, Collection $states): void
     {
         //
-    }
-
-    public function reseed(StateManager $memory, State $state): void
-    {
-        if ($snapshot = $this->latestSnapshotFor($state)) {
-            $memory->merge($snapshot, $state);
-        }
-    }
-
-    public function sync(StateManager $memory, State $canonical, State $into): void
-    {
-        $memory->merge($canonical, $into);
     }
 }
