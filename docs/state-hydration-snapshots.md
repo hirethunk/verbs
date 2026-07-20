@@ -38,10 +38,14 @@ When you `load()` a State
 
 ## Identity and freshness
 
-Holding a state works like holding an Eloquent model:
+The state API is deliberately inspired by Eloquent—`load()`, `refresh()`, and reading attributes should all feel
+familiar. But states aren't Eloquent models, and the most important difference is one Eloquent doesn't make: a state
+is **identity-mapped to a single live instance per request.** Where `Account::find(1)` twice hands you two
+independent models, loading the same state twice always gives you back the very same object.
 
 - **One instance per state, per request.** Every `load()` of the same state returns the same object, for as long as
-  you hold a reference to it anywhere in your code. Two parts of your request can never see two divergent copies.
+  you hold a reference to it anywhere in your code. Two parts of your request can never see two divergent copies—this
+  is the guarantee Eloquent doesn't offer, and it's the whole point.
 - **Loads are cache-first, and co-loads advance in lockstep.** Once a state is in memory, loading it again on its own
   returns it as-is—Verbs doesn't re-check the database on every access. The one exception is a multi-state `load()`
   that has to hit storage for *some* of the requested states: everything a single `load()` returns reflects the same
@@ -51,10 +55,10 @@ Holding a state works like holding an Eloquent model:
   always keeps its in-memory view—no co-load or `refresh()` will ever overwrite it, because the database can't yet
   know about those applies. `refresh()` on such an in-flight state is a no-op for that state, and a conflicting
   *newer* write by someone else surfaces at commit as a `ConcurrencyException`.
-- **`refresh()` is how you ask for the latest.** Just like an Eloquent model doesn't self-update, a loaded state
+- **`refresh()` is how you ask for the latest.** Just as an Eloquent model doesn't self-update, a loaded state
   doesn't either. Calling `$state->refresh()` checks for newer events and brings the state up to date if there are
-  any—and, exactly like Eloquent's `refresh()`, it updates the *same instance* in place, so every reference you're
-  holding sees the update.
+  any—and, like Eloquent's `refresh()`, it updates the state in place. Because that state is the request's one
+  instance, *every* reference you're holding sees the update.
 
 ```php
 $account = AccountState::load($account_id);
