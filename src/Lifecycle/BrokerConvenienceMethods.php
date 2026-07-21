@@ -24,6 +24,11 @@ trait BrokerConvenienceMethods
      */
     public function toId(Bits|UuidInterface|AbstractUid|int|string|null $id): int|string|null
     {
+        trigger_error(
+            'Verbs::toId() is deprecated. Use the Thunk\Verbs\Facades\Id facade instead.',
+            E_USER_DEPRECATED,
+        );
+
         return match (true) {
             $id instanceof Bits => $id->id(),
             $id instanceof UuidInterface => $id->toString(),
@@ -61,18 +66,12 @@ trait BrokerConvenienceMethods
         }
     }
 
-    /**
-     * True while history is being re-applied—either by an explicit replay or
-     * inside a reconstitution/verification rebuild scope. Userland side-effect
-     * guards must treat both the same way, and both are now the same signal:
-     * the currently bound scope's resolver re-applies history.
-     */
     public function isReplaying(): bool
     {
         return app(StateManager::class)->isReapplyingHistory();
     }
 
-    public function unlessReplaying(callable $callback)
+    public function unlessReplaying(callable $callback): void
     {
         if (! $this->isReplaying()) {
             $callback();

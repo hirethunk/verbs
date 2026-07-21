@@ -89,7 +89,8 @@ class Broker implements BrokersEvents
             throw $exception;
         }
 
-        // Our handlers may need to load new state/etc, so we'll free memory before running them
+        // Our handlers may need to load new state/etc, so we'll allow pruning un-pinned states before
+        // running them (we need to keep pinned states until after handlers run)
         $this->states->prune();
 
         try {
@@ -124,6 +125,9 @@ class Broker implements BrokersEvents
     {
         $this->warnIfStateEventsConnectionIsConfigured();
 
+        // Event must come first so that it's the innermost closure. If events and
+        // snapshots are on different connections, events succeeding and snapshots
+        // failing is recoverable, but the other way around would result in data loss.
         $connections = collect([
             DB::connection(config('verbs.connections.events'))->getName(),
             DB::connection(config('verbs.connections.snapshots'))->getName(),
