@@ -57,6 +57,11 @@ class EventStoreFake implements StoresEvents
         return true;
     }
 
+    public function reattach(array $events): bool
+    {
+        return true;
+    }
+
     /** @return Collection<int, Event> */
     public function committed(string $class_name, ?Closure $filter = null): Collection
     {

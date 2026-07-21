@@ -18,4 +18,7 @@ interface StoresEvents
 
     /** @param  Event[]  $events */
     public function write(array $events): bool;
+
+    /** @param  Event[]  $events */
+    public function reattach(array $events): bool;
 }
