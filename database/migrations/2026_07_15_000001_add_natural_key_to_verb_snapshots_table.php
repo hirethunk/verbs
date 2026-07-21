@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -12,14 +13,10 @@ return new class extends Migration
 {
     public function up()
     {
-        // Rows with data but no last_event_id can't be trusted (and blank loads no
-        // longer create them)—their states rebuild from events on next load.
+        // Delete snapshots that don't have a `last_event_id` recorded (rebuilt on next load)
         $this->table()->whereNull('last_event_id')->delete();
 
-        // A singleton's identity is its type: its rows historically carried
-        // whatever incidental id the in-memory instance had, which is how
-        // duplicate singleton rows happened. Normalize them all to the
-        // sentinel id so the natural key below gives each singleton one row.
+        // Update all singletons to use the NIL sentinel value for state_id
         $this->table()
             ->distinct()
             ->pluck('type')
@@ -35,13 +32,9 @@ return new class extends Migration
                 }
             });
 
-        // Dedupe before adding the unique index: keep the most advanced row
-        // for each (type, state_id), i.e. delete any row that has a "better"
-        // sibling (higher last_event_id, or equal last_event_id and higher
-        // id). Collecting loser ids in a SELECT—rather than a self-referencing
-        // DELETE, which MySQL forbids—keeps this portable and does it in a
-        // single scan instead of two queries per duplicate group.
+        // Deduplicate snapshots
         $loser_ids = $this->table()
+            ->select('loser.id')
             ->from($this->tableName(), 'loser')
             ->whereExists(function ($query) {
                 $query->from($this->tableName(), 'keeper')
@@ -107,7 +100,7 @@ return new class extends Migration
         }
     }
 
-    protected function table()
+    protected function table(): Builder
     {
         return DB::connection($this->connectionName())->table($this->tableName());
     }
