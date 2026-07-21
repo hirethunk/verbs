@@ -24,14 +24,9 @@ use Thunk\Verbs\Support\Serializer;
 
 class EventStore implements StoresEvents
 {
-    /**
-     * How many states may appear in a single query's WHERE clause (each
-     * contributes a few bound parameters), and how many event ids in a single
-     * WHERE IN. Both stay well under every database driver's parameter cap.
-     */
-    protected const STATE_CHUNK = 100;
+    protected const int STATE_CHUNK = 100;
 
-    protected const EVENT_CHUNK = 500;
+    protected const int EVENT_CHUNK = 500;
 
     public function __construct(
         protected MetadataManager $metadata,
@@ -46,9 +41,6 @@ class EventStore implements StoresEvents
 
     public function get(iterable $ids): LazyCollection
     {
-        // Chunking bounds the number of bound parameters per query (SQLite in
-        // particular caps them), no matter how many ids the caller passes. The
-        // ids are sorted first so the concatenated chunks stream in id order.
         $ids = collect($ids)->map(Id::from(...))->unique()->sort()->values();
 
         return $this->toEventsWithMetadata(
@@ -67,18 +59,20 @@ class EventStore implements StoresEvents
         );
     }
 
+    /** @param  iterable<StateIdentity>  $identities */
     public function hasUnappliedEvents(iterable $identities): bool
     {
         return collect($identities)
             ->chunk(static::STATE_CHUNK)
-            ->contains(fn (Collection $chunk) => $this->anyUnappliedEvents($chunk));
+            ->contains($this->chunkHasUnappliedEvents(...));
     }
 
+    /** @param  iterable<StateIdentity>  $identities */
     public function hasAppliedEventsAfter(iterable $identities, int|string|null $after_id = null): bool
     {
         return collect($identities)
             // An identity with no last_event_id has applied nothing, so no row
-            // can ever fall inside its (after_id, last_event_id] window.
+            // can ever fall inside its [after_id, last_event_id] window.
             ->filter(fn (StateIdentity $identity) => $identity->last_event_id !== null)
             ->chunk(static::STATE_CHUNK)
             ->contains(function (Collection $chunk) use ($after_id) {
@@ -97,6 +91,7 @@ class EventStore implements StoresEvents
             });
     }
 
+    /** @param  iterable<StateIdentity>  $identities */
     public function eventIdsFor(iterable $identities, int|string|null $after_id = null): Collection
     {
         return collect($identities)
@@ -148,7 +143,7 @@ class EventStore implements StoresEvents
     }
 
     /** @param  Collection<int, StateIdentity>  $identities */
-    protected function anyUnappliedEvents(Collection $identities): bool
+    protected function chunkHasUnappliedEvents(Collection $identities): bool
     {
         $query = VerbStateEvent::query()->toBase();
 
@@ -199,9 +194,6 @@ class EventStore implements StoresEvents
     {
         $query->where('state_type', '=', $identity->state_type);
 
-        // A singleton's identity is its type—its events are stored and read by
-        // type alone (see readEvents), so constraining by a specific state_id
-        // here would miss rows written under other incidental ids.
         if (! is_a($identity->state_type, SingletonState::class, true)) {
             $query->where('state_id', '=', $identity->state_id);
         }
@@ -257,10 +249,6 @@ class EventStore implements StoresEvents
                         $query->orWhere(function (BaseBuilder $query) use ($state) {
                             $query->where('state_type', $state::class);
 
-                            // A singleton's events may be recorded under several
-                            // incidental state_id rows (see constrainToIdentity),
-                            // and a conflicting writer's rows carry *its* incidental
-                            // id—so the guard must match by type alone.
                             if (! $state instanceof SingletonState) {
                                 $query->where('state_id', $state->id);
                             }
@@ -281,11 +269,10 @@ class EventStore implements StoresEvents
             $state_type = data_get($result, 'state_type');
             $state_id = data_get($result, 'state_id');
 
-            // No int casts: snowflake ids compare numerically either way,
-            // and ULID/UUIDv7 ids compare lexicographically-by-time.
             $max_written_id = Id::normalizeEventId(data_get($result, 'max_event_id'));
             $max_expected_id = $max_event_ids->get($this->guardKey($state_type, $state_id), 0);
 
+            // All supported ID types compare numerically or lexicographically, so no casting is necessary
             if ($max_written_id > $max_expected_id) {
                 throw new ConcurrencyException("An event with ID {$max_written_id} has been written to the database for '{$state_type}' with ID {$state_id}. This is higher than the in-memory value of {$max_expected_id}.");
             }
