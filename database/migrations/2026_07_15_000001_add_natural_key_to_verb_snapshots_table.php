@@ -33,7 +33,7 @@ return new class extends Migration
             });
 
         // Deduplicate snapshots
-        $loser_ids = $this->table()
+        $this->table()
             ->select('loser.id')
             ->from($this->tableName(), 'loser')
             ->whereExists(function ($query) {
@@ -48,41 +48,16 @@ return new class extends Migration
                             });
                     });
             })
-            ->pluck('loser.id');
+            ->lazyById(1000, 'loser.id', 'id')
+            ->chunk(1000)
+            ->each(function ($losers) {
+                $this->table()->whereIn('id', $losers->pluck('id'))->delete();
+            });
 
-        $loser_ids->chunk(1000)->each(function ($ids) {
-            $this->table()->whereIn('id', $ids)->delete();
-        });
-
+        // Now add unique constraint
         Schema::connection($this->connectionName())->table($this->tableName(), function (Blueprint $table) {
             $table->unique(['type', 'state_id']);
         });
-
-        if (Schema::connection($this->connectionName())->hasColumn($this->tableName(), 'expires_at')) {
-            Schema::connection($this->connectionName())->table($this->tableName(), function (Blueprint $table) {
-                $table->dropIndex(['expires_at']);
-            });
-
-            // A raw statement instead of Blueprint::dropColumn(): on Laravel 10,
-            // dropping a SQLite column routes through doctrine/dbal (which apps
-            // may not have installed), while ALTER TABLE ... DROP COLUMN is
-            // native everywhere except SQLite older than 3.35—there we leave
-            // the (nullable, never-read) column behind rather than fail.
-            $connection = Schema::connection($this->connectionName())->getConnection();
-            $grammar = $connection->getQueryGrammar();
-
-            $sqlite_version = $connection->getDriverName() === 'sqlite'
-                ? $connection->getPdo()->getAttribute(PDO::ATTR_SERVER_VERSION)
-                : null;
-
-            if ($sqlite_version === null || version_compare($sqlite_version, '3.35.0', '>=')) {
-                $connection->statement(sprintf(
-                    'alter table %s drop column %s',
-                    $grammar->wrapTable($this->tableName()),
-                    $grammar->wrap('expires_at'),
-                ));
-            }
-        }
     }
 
     public function down()
@@ -90,14 +65,6 @@ return new class extends Migration
         Schema::connection($this->connectionName())->table($this->tableName(), function (Blueprint $table) {
             $table->dropUnique(['type', 'state_id']);
         });
-
-        // up() leaves the column in place on SQLite < 3.35 (no native DROP
-        // COLUMN there), so only re-add it where it's actually gone.
-        if (! Schema::connection($this->connectionName())->hasColumn($this->tableName(), 'expires_at')) {
-            Schema::connection($this->connectionName())->table($this->tableName(), function (Blueprint $table) {
-                $table->timestamp('expires_at')->nullable()->index();
-            });
-        }
     }
 
     protected function table(): Builder
