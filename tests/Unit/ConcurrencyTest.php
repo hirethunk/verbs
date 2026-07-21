@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\DB;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\ConcurrencyException;
 use Thunk\Verbs\Lifecycle\EventStore;
@@ -7,6 +8,13 @@ use Thunk\Verbs\Models\VerbEvent;
 use Thunk\Verbs\Models\VerbStateEvent;
 use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\Support\StateCollection;
+
+// The event_id column is a bigint today (see the state_events migration), so a
+// ULID string only survives a round-trip through it on SQLite, whose loose
+// typing stores it verbatim; MySQL/Postgres truncate-and-reject on write and
+// could never hand a ULID back. Until the column itself becomes a string
+// (the planned UUIDv7 move), the string-id guard can only be exercised there.
+$stringEventIdsUnsupported = fn () => DB::connection()->getDriverName() !== 'sqlite';
 
 it('does not throw on sequential events', function () {
     $store = app(EventStore::class);
@@ -59,7 +67,7 @@ it('does not throw on sequential events with string event ids', function () {
     $store->write([$event]);
 
     expect(VerbEvent::count())->toBe(1);
-});
+})->skip($stringEventIdsUnsupported, 'String event ids only round-trip through the bigint event_id column on SQLite.');
 
 it('throws on non-sequential events with string event ids', function () {
     $store = app(EventStore::class);
@@ -72,7 +80,7 @@ it('throws on non-sequential events with string event ids', function () {
     $event->id = snowflake_id();
 
     $store->write([$event]);
-})->throws(ConcurrencyException::class);
+})->throws(ConcurrencyException::class)->skip($stringEventIdsUnsupported, 'String event ids only round-trip through the bigint event_id column on SQLite.');
 
 function seedUlidPivots(ConcurrencyUlidTestState $state): void
 {

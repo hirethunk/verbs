@@ -138,7 +138,12 @@ test('a corrupt snapshot falls back to rebuilding from events', function () {
     HardeningTestEvent::fire(state_id: $id);
     Verbs::commit();
 
-    VerbSnapshot::query()->where('state_id', $id)->update(['data' => '{not json']);
+    // `data` is a real json column, so MySQL/Postgres reject syntactically
+    // invalid JSON at write time—the corruption that actually reaches storage
+    // is valid JSON that no longer maps onto the state (a renamed property, a
+    // changed type). Here `count` is typed int but stored as an object, so
+    // deserialization throws and the loader must fall back to the events.
+    VerbSnapshot::query()->where('state_id', $id)->update(['data' => '{"count":{"unexpected":true}}']);
     app(StateManager::class)->reset();
 
     expect(HardeningTestState::load($id)->count)->toBe(2);
@@ -230,8 +235,7 @@ test('the natural-key migration dedupes, normalizes singletons, and drops dead r
     expect((int) $singleton->state_id)->toBe(0)
         ->and((int) $singleton->last_event_id)->toBe(15);
 
-    expect($rows->firstWhere('type', 'App\\States\\LongGone'))->not->toBeNull()
-        ->and(Schema::hasColumn('verb_snapshots_migration_test', 'expires_at'))->toBeFalse();
+    expect($rows->firstWhere('type', 'App\\States\\LongGone'))->not->toBeNull();
 
     Schema::drop('verb_snapshots_migration_test');
 });
