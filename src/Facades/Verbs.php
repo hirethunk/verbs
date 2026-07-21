@@ -38,8 +38,6 @@ class Verbs extends Facade
 {
     public static function fake()
     {
-        // Faking twice is a no-op: the fake world—and everything already
-        // committed to it—survives repeated calls.
         if (($faked = static::getFacadeRoot()) instanceof BrokerFake) {
             return $faked;
         }
@@ -49,16 +47,6 @@ class Verbs extends Facade
         $app->instance(StoresEvents::class, $store = $app->make(EventStoreFake::class));
         $app->instance(StoresSnapshots::class, $snapshots = $app->make(SnapshotStoreFake::class));
 
-        // fake() starts a fresh Verbs world. The scoped services were
-        // constructed against the real stores, so entering the fake world
-        // rebuilds them—fresh scopes whose constructor injections pick up the
-        // fakes—which deliberately discards anything in flight: queued-but-
-        // uncommitted events never reach the fake stores, and state references
-        // loaded before the fake are no longer canonical. The registry reset
-        // drops the state instances it resolved against the old scope (its
-        // reflection metadata is scope-independent and kept). Everything else
-        // resolves the broker lazily and follows the swap() below, which also
-        // rebinds the container's [BrokersEvents] instance.
         $app->forgetInstance(StateManager::class);
         $app->forgetInstance(AutoCommitManager::class);
         $app->forgetInstance(EventQueue::class);

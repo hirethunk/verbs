@@ -11,7 +11,6 @@ use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\EventNotValid;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 use Thunk\Verbs\Replay;
-use Thunk\Verbs\State;
 use Thunk\Verbs\State\StateManager;
 
 class Broker implements BrokersEvents
@@ -41,37 +40,25 @@ class Broker implements BrokersEvents
 
     public function fire(Event $event): ?Event
     {
-        // Events fired while history is being re-applied are ignored. During a
-        // replay, the originals are already in the stream being replayed, so
-        // re-firing them would duplicate (see Counter's FireOnReplayTest).
-        // During a rebuild, only apply() hooks run—and apply() must be a pure
-        // function of event and state—so a fire() here is a bug this protects
-        // against rather than a path to support. The check reads the
-        // *currently bound* scope (not the captured $this->states) so a fire
-        // from inside a nested rebuild sub-scope is caught too.
+        // If the user called `fire()` from inside `handle()` that event is already in the stream and
+        // shouldn't be re-fired during replays. This may eventually trigger an exception, but right
+        // now we'll silently discard it. Before we can drop support for handle triggering new events,
+        // we'd need a way to essentially queue up actions from `handle()` that would then happen later
+        // in the lifecycle, so that you could do things like "trigger this event using data from a side
+        // effect triggered in handle" or "trigger this other event after this event commits" [revisit-before-1.0]
         if (app(StateManager::class)->isReapplyingHistory()) {
             return null;
         }
 
-        Lifecycle::run(
-            event: $event,
-            phases: Phases::firing(),
-        );
+        Lifecycle::run($event, Phases::firing());
 
         $this->queue->queue($event);
 
-        // Pin the states this event touches so a prune triggered before we
-        // commit can't evict them and silently reload a divergent instance.
-        $event->states()->each(fn (State $state) => $this->states->pin($state));
+        // Pin states so they're not evicted from cache (will unpin during commit)
+        $event->states()->each($this->states->pin(...));
 
-        // Fired hooks only run once the event is queued and its states are
-        // pinned: a child event fired from a hook then queues (and commits)
-        // behind its parent, and a nested commit's prune can't evict the
-        // parent's states mid-fire.
-        Lifecycle::run(
-            event: $event,
-            phases: Phases::fired(),
-        );
+        // We need to trigger 'fired' AFTER the event has been queued and states pinned
+        Lifecycle::run($event, Phases::fired());
 
         if ($this->commit_immediately || $event instanceof CommitsImmediately) {
             $this->commit();
@@ -88,21 +75,13 @@ class Broker implements BrokersEvents
             return true;
         }
 
-        // Events and snapshots persist (or fail) together: a failed snapshot
-        // write can no longer leave events behind, and vice versa. Handlers
-        // run *after* the transaction commits, so their side effects only ever
-        // observe durably-stored events—and a handler exception can never
-        // un-write them.
         try {
             $this->transaction(function () {
                 $this->queue->flush();
                 $this->states->persistSnapshots($this->snapshots);
             });
         } catch (Throwable $exception) {
-            // flush() empties the queue once the event write succeeds, so if
-            // the transaction failed after that point (e.g. in the snapshot
-            // write), put the batch back—a failed commit must never silently
-            // drop events.
+            // If snapshots failed to persist, we need to restore the already-flushed events
             if (empty($this->queue->getEvents())) {
                 $this->queue->restore($events);
             }
@@ -110,10 +89,7 @@ class Broker implements BrokersEvents
             throw $exception;
         }
 
-        // Bound the working set. The batch's states are still pinned here, so
-        // they survive the prune and stay resident while their handlers run—a
-        // handler that re-loads one gets the same live instance, not a divergent
-        // reload of the snapshot we just wrote.
+        // Our handlers may need to load new state/etc, so we'll free memory before running them
         $this->states->prune();
 
         try {
@@ -121,11 +97,8 @@ class Broker implements BrokersEvents
                 $this->metadata->setLastResults($event, $this->dispatcher->handle($event));
             }
         } finally {
-            // The batch is durably stored by now, so the pins release even if
-            // a handler throws—a leaked refcount would leave these states
-            // unprunable for the rest of the request.
             foreach ($events as $event) {
-                $event->states()->each(fn (State $state) => $this->states->unpin($state));
+                $event->states()->each($this->states->unpin(...));
             }
         }
 
@@ -151,34 +124,18 @@ class Broker implements BrokersEvents
     {
         $this->warnIfStateEventsConnectionIsConfigured();
 
-        // Comparing *resolved* names treats null and the default connection's
-        // explicit name as the same connection—one transaction rather than a
-        // savepoint. Checked here (not at boot) so config set at runtime,
-        // e.g. in tests, is respected.
         $connections = collect([
-            'events' => config('verbs.connections.events'),
-            'snapshots' => config('verbs.connections.snapshots'),
-        ])->map(fn ($connection) => DB::connection($connection)->getName());
+            DB::connection(config('verbs.connections.events'))->getName(),
+            DB::connection(config('verbs.connections.snapshots'))->getName(),
+        ]);
 
-        $transaction = $callback;
-
-        // The events connection comes first, which makes it *innermost*—the
-        // first to commit. A crash between cross-connection commits then
-        // degrades to events-without-snapshots, which self-heals on the next
-        // load. The reverse order could persist a snapshot referencing an
-        // event that was never stored: permanently wrong, and invisible to
-        // staleness checks.
         foreach ($connections->unique() as $connection) {
-            $transaction = fn () => DB::connection($connection)->transaction($transaction);
+            $callback = fn () => DB::connection($connection)->transaction($callback);
         }
 
-        $transaction();
+        $callback();
     }
 
-    /**
-     * The state_events connection option is gone—mappings always share the
-     * events connection—but a stale published config may still try to split them.
-     */
     protected function warnIfStateEventsConnectionIsConfigured(): void
     {
         if ($this->warned_about_state_events_connection) {
@@ -189,8 +146,10 @@ class Broker implements BrokersEvents
 
         $state_events = config('verbs.connections.state_events');
 
-        if ($state_events !== null
-            && DB::connection($state_events)->getName() !== DB::connection(config('verbs.connections.events'))->getName()) {
+        if (
+            $state_events !== null
+            && DB::connection($state_events)->getName() !== DB::connection(config('verbs.connections.events'))->getName()
+        ) {
             trigger_error(
                 'The "verbs.connections.state_events" config option has been removed: state-event mappings always use the "events" connection.',
                 E_USER_DEPRECATED,
@@ -198,7 +157,7 @@ class Broker implements BrokersEvents
         }
     }
 
-    public function listen(object|string $listener)
+    public function listen(object|string $listener): void
     {
         $this->dispatcher->register($listener);
     }
