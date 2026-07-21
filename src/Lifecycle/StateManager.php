@@ -29,7 +29,7 @@ class StateManager
 
     public function register(State $state): State
     {
-        $state->id ??= snowflake_id();
+        $state->id ??= Id::make();
 
         return $this->remember($state);
     }
@@ -62,7 +62,7 @@ class StateManager
         }
 
         $state = $this->snapshots->loadSingleton($type) ?? new $type;
-        $state->id ??= snowflake_id();
+        $state->id ??= Id::make();
 
         // We'll store a reference to it by the type for future singleton access
         $this->states->put($type, $state);

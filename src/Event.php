@@ -2,9 +2,12 @@
 
 namespace Thunk\Verbs;
 
+use Glhd\Bits\Bits;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use LogicException;
+use Ramsey\Uuid\UuidInterface;
+use Symfony\Component\Uid\AbstractUid;
 use Throwable;
 use Thunk\Verbs\Exceptions\EventNotAuthorized;
 use Thunk\Verbs\Exceptions\EventNotValid;
@@ -21,7 +24,7 @@ use WeakMap;
  */
 abstract class Event
 {
-    public int $id;
+    public Bits|UuidInterface|AbstractUid|int|string $id;
 
     public static function __callStatic(string $name, array $arguments)
     {

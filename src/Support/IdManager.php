@@ -3,6 +3,7 @@
 namespace Thunk\Verbs\Support;
 
 use Glhd\Bits\Bits;
+use Glhd\Bits\Contracts\MakesSnowflakes;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Schema\ColumnDefinition;
 use Illuminate\Support\Str;
@@ -19,7 +20,7 @@ class IdManager
     public const TYPE_UUID = 'uuid';
 
     public function __construct(
-        protected string $id_type
+        protected string $id_type,
     ) {
         if (! in_array($this->id_type, [self::TYPE_SNOWFLAKE, self::TYPE_ULID, self::TYPE_UUID])) {
             throw new InvalidArgumentException("'{$this->id_type}' is not a valid verbs.id_type");
@@ -50,9 +51,9 @@ class IdManager
     public function make(): int|string
     {
         return match ($this->id_type) {
-            self::TYPE_SNOWFLAKE => snowflake_id(),
-            self::TYPE_ULID => Str::ulid(),
-            self::TYPE_UUID => Str::orderedUuid(),
+            self::TYPE_SNOWFLAKE => app(MakesSnowflakes::class)->make()->id(),
+            self::TYPE_ULID => (string) Str::ulid(),
+            self::TYPE_UUID => (string) Str::uuid7(),
         };
     }
 
@@ -62,6 +63,14 @@ class IdManager
             self::TYPE_SNOWFLAKE => $table->snowflake($name),
             self::TYPE_ULID => $table->ulid($name),
             self::TYPE_UUID => $table->uuid($name),
+        };
+    }
+
+    public function keyType(): string
+    {
+        return match ($this->id_type) {
+            self::TYPE_SNOWFLAKE => 'int',
+            self::TYPE_ULID, self::TYPE_UUID => 'string',
         };
     }
 }

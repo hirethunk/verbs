@@ -138,7 +138,7 @@ class EventStore implements StoresEvents
     {
         return collect($event_objects)
             ->flatMap(fn (Event $event) => $event->states()->map(fn ($state) => [
-                'id' => snowflake_id(),
+                'id' => Id::make(),
                 'event_id' => Id::from($event->id),
                 'state_id' => Id::from($state->id),
                 'state_type' => $state::class,

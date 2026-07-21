@@ -27,7 +27,7 @@ afterEach(function () {
 });
 
 it('supports using uuids as state ids', function () {
-    $uuid = (string) Str::orderedUuid();
+    $uuid = (string) Str::uuid7();
 
     $state = UuidState::load($uuid);
 
@@ -41,7 +41,7 @@ it('supports using uuids as state ids', function () {
 });
 
 it('loads states correctly using uuids when the snapshots table has been removed', function () {
-    $uuid = (string) Str::orderedUuid();
+    $uuid = (string) Str::uuid7();
 
     $state = UuidState::load($uuid);
 

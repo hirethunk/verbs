@@ -172,7 +172,7 @@ class VerbsServiceProvider extends PackageServiceProvider
     {
         // Allow for firing events with traditional Laravel dispatcher
         if ($event instanceof Event) {
-            $event->id ??= snowflake_id();
+            $event->id ??= $this->app->make(IdManager::class)->make();
             $this->app->make(BrokersEvents::class)->fire($event);
         }
 
