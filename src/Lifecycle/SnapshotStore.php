@@ -21,20 +21,11 @@ use Thunk\Verbs\Support\StateCollection;
 
 class SnapshotStore implements StoresSnapshots
 {
-    /**
-     * How many states may appear in a single query's WHERE clause (each
-     * contributes a couple of bound parameters), and how many state ids in a
-     * single WHERE IN. Both stay well under every database driver's parameter cap.
-     */
-    protected const STATE_CHUNK = 100;
+    protected const int STATE_CHUNK = 100;
 
-    protected const ID_CHUNK = 500;
+    protected const int ID_CHUNK = 500;
 
-    /**
-     * Upserts bind every column of every row, so their chunks stay much
-     * smaller than the read chunks to bound the payload per query.
-     */
-    protected const UPSERT_CHUNK = 20;
+    protected const int UPSERT_CHUNK = 20;
 
     public function __construct(
         protected Serializer $serializer,
@@ -100,7 +91,7 @@ class SnapshotStore implements StoresSnapshots
             $upserted = VerbSnapshot::upsert(
                 values: collect($chunk)
                     ->map($this->formatForWrite(...))
-                    ->unique(fn (array $row) => $row['type'].':'.$row['state_id'])
+                    ->unique(fn (array $row) => $row['type'].':'.$row['state_id']) // formatForWrite has already normalized these
                     ->all(),
                 uniqueBy: ['type', 'state_id'],
                 update: ['data', 'last_event_id', 'updated_at'],

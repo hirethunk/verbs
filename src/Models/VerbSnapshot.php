@@ -37,9 +37,6 @@ class VerbSnapshot extends Model
         $this->state->id = $this->state_id;
         $this->state->last_event_id = $this->last_event_id;
 
-        // A snapshot-hydrated state is marked persisted (clean) by StateManager
-        // when it adopts the state from storage—see StateManager::markPersisted.
-
         return $this->state;
     }
 
