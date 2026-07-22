@@ -106,6 +106,7 @@ class Broker implements BrokersEvents
         return $this->commit();
     }
 
+    /** @deprecated Use the Replay class directly */
     public function replay(?callable $beforeEach = null, ?callable $afterEach = null): void
     {
         Replay::full()

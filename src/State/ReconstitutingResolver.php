@@ -10,7 +10,6 @@ use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\SeedInvariantViolation;
 use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Lifecycle\Lifecycle;
-use Thunk\Verbs\Lifecycle\Phase;
 use Thunk\Verbs\Lifecycle\Phases;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 use Thunk\Verbs\Replay;
@@ -155,7 +154,7 @@ class ReconstitutingResolver implements StateResolver
                     $this->guardSeedInvariant($event);
                 }
 
-                Lifecycle::run($event, new Phases(Phase::Apply));
+                Lifecycle::run($event, Phases::apply());
             },
         ))->run();
     }

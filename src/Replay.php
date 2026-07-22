@@ -15,7 +15,6 @@ use Thunk\Verbs\Exceptions\CannotReplayWithQueuedEvents;
 use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Lifecycle\Dispatcher;
 use Thunk\Verbs\Lifecycle\Lifecycle;
-use Thunk\Verbs\Lifecycle\Phase;
 use Thunk\Verbs\Lifecycle\Phases;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 use Thunk\Verbs\State\ReconstitutionPlan;
@@ -171,7 +170,7 @@ class Replay
         $replay = new static(
             scope: $scope,
             events: $plan->events(),
-            drive: fn (Event $event) => Lifecycle::run($event, new Phases(Phase::Apply)),
+            drive: fn (Event $event) => Lifecycle::run($event, Phases::apply()),
         );
 
         $replay->result = fn (StateManager $scope) => $scope->cache->get($state, $scope->cacheId($state, $id)) ?? $shell;
