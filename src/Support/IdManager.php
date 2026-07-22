@@ -56,6 +56,44 @@ class IdManager
         };
     }
 
+    /**
+     * Event ids must always compare as scalars: snowflakes numerically
+     * (drivers often hand bigints back as strings), ULID/UUIDv7 strings
+     * lexicographically-by-time—and never as objects, where comparison
+     * operators stop meaning "before/after".
+     */
+    public function normalizeEventId(mixed $value): int|string|null
+    {
+        if ($value instanceof Bits || $value instanceof UuidInterface || $value instanceof AbstractUid) {
+            $value = $this->tryFrom($value);
+        }
+
+        return match (true) {
+            $value === null => null,
+            is_int($value) => $value,
+            // Drivers hand bigints back as decimal strings, which must compare
+            // numerically—but only strings that fit in an int are snowflakes
+            // in disguise. A 26-char all-digit ULID (rare, but legal) must stay
+            // a string, or the cast overflows and corrupts ordering.
+            is_string($value) && ctype_digit($value) && strlen($value) <= 19 => (int) $value,
+            default => (string) $value,
+        };
+    }
+
+    /**
+     * The sentinel used where "no id" must still occupy an id-typed column
+     * (e.g. singleton snapshots, whose identity is their type alone). It has
+     * to be a valid value for the column type, so it varies by id_type.
+     */
+    public function nil(): int|string
+    {
+        return match ($this->id_type) {
+            self::TYPE_SNOWFLAKE => 0,
+            self::TYPE_ULID => '00000000000000000000000000',
+            self::TYPE_UUID => '00000000-0000-0000-0000-000000000000',
+        };
+    }
+
     public function createColumnDefinition(Blueprint $table, string $name = 'id'): ColumnDefinition
     {
         return match ($this->id_type) {

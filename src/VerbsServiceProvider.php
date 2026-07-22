@@ -22,6 +22,7 @@ use Symfony\Component\Serializer\Serializer as SymfonySerializer;
 use Thunk\Verbs\Commands\MakeVerbEventCommand;
 use Thunk\Verbs\Commands\MakeVerbStateCommand;
 use Thunk\Verbs\Commands\ReplayCommand;
+use Thunk\Verbs\Commands\VerifyCommand;
 use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Contracts\StoresSnapshots;
@@ -32,12 +33,13 @@ use Thunk\Verbs\Lifecycle\EventStore;
 use Thunk\Verbs\Lifecycle\MetadataManager;
 use Thunk\Verbs\Lifecycle\Queue as EventQueue;
 use Thunk\Verbs\Lifecycle\SnapshotStore;
-use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\Livewire\SupportVerbs;
+use Thunk\Verbs\State\Cache\InMemoryCache;
+use Thunk\Verbs\State\ReconstitutingResolver;
+use Thunk\Verbs\State\StateManager;
 use Thunk\Verbs\Support\EventStateRegistry;
 use Thunk\Verbs\Support\IdManager;
 use Thunk\Verbs\Support\Serializer;
-use Thunk\Verbs\Support\StateInstanceCache;
 use Thunk\Verbs\Support\Wormhole;
 
 class VerbsServiceProvider extends PackageServiceProvider
@@ -51,6 +53,7 @@ class VerbsServiceProvider extends PackageServiceProvider
                 MakeVerbEventCommand::class,
                 MakeVerbStateCommand::class,
                 ReplayCommand::class,
+                VerifyCommand::class,
             );
     }
 
@@ -71,11 +74,13 @@ class VerbsServiceProvider extends PackageServiceProvider
 
         $this->app->scoped(StateManager::class, function (Container $app) {
             return new StateManager(
-                dispatcher: $app->make(Dispatcher::class),
-                snapshots: $app->make(StoresSnapshots::class),
-                events: $app->make(StoresEvents::class),
-                states: new StateInstanceCache(
-                    capacity: $app->make(Repository::class)->get('verbs.state_cache_size', 100)
+                cache: new InMemoryCache(
+                    capacity: $app->make(Repository::class)->get('verbs.state_cache_size', 100),
+                ),
+                resolver: new ReconstitutingResolver(
+                    events: $app->make(StoresEvents::class),
+                    snapshots: $app->make(StoresSnapshots::class),
+                    queue: $app->make(EventQueue::class),
                 ),
             );
         });
@@ -140,6 +145,9 @@ class VerbsServiceProvider extends PackageServiceProvider
         $this->app->alias(Broker::class, BrokersEvents::class);
         $this->app->alias(EventStore::class, StoresEvents::class);
         $this->app->alias(SnapshotStore::class, StoresSnapshots::class);
+
+        // Deprecated: resolves the pre-0.9 class name to the current binding.
+        $this->app->alias(StateManager::class, Lifecycle\StateManager::class);
     }
 
     public function packageBooted()

@@ -36,6 +36,10 @@ test('it calls the state constructor on make', function () {
     expect($state->constructed)->toBeTrue();
 });
 
+test('loading a keyed state with a null id fails loudly instead of fabricating one', function () {
+    StateManagerTestState::load(null);
+})->throws(InvalidArgumentException::class);
+
 class StateManagerTestState extends State
 {
     public bool $constructed = false;

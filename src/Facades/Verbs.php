@@ -6,16 +6,25 @@ use Carbon\CarbonInterface;
 use Closure;
 use Illuminate\Support\Facades\Facade;
 use Thunk\Verbs\Contracts\BrokersEvents;
+use Thunk\Verbs\Contracts\StoresEvents;
+use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Lifecycle\AutoCommitManager;
+use Thunk\Verbs\Lifecycle\Broker;
 use Thunk\Verbs\Lifecycle\Phase;
+use Thunk\Verbs\Lifecycle\Queue as EventQueue;
+use Thunk\Verbs\State\StateManager;
+use Thunk\Verbs\Support\EventStateRegistry;
 use Thunk\Verbs\Testing\BrokerFake;
 use Thunk\Verbs\Testing\EventStoreFake;
+use Thunk\Verbs\Testing\SnapshotStoreFake;
 
 /**
  * @method static bool commit()
  * @method static bool isReplaying()
  * @method static void unlessReplaying(callable $callback)
  * @method static Event fire(Event $event)
+ * @method static void replay(?callable $beforeEach = null, ?callable $afterEach = null)
  * @method static void listen(string|object $listener)
  * @method static void createMetadataUsing(callable $callback)
  * @method static void commitImmediately(bool $commit_immediately = true)
@@ -29,15 +38,22 @@ class Verbs extends Facade
 {
     public static function fake()
     {
-        $real_broker = static::isFake()
-            ? static::getFacadeRoot()->broker
-            : static::getFacadeRoot();
+        if (($faked = static::getFacadeRoot()) instanceof BrokerFake) {
+            return $faked;
+        }
 
-        $fake_broker = new BrokerFake(
-            static::getFacadeApplication(),
-            static::getFacadeApplication()->make(EventStoreFake::class),
-            $real_broker
-        );
+        $app = static::getFacadeApplication();
+
+        $app->instance(StoresEvents::class, $store = $app->make(EventStoreFake::class));
+        $app->instance(StoresSnapshots::class, $snapshots = $app->make(SnapshotStoreFake::class));
+
+        $app->forgetInstance(StateManager::class);
+        $app->forgetInstance(AutoCommitManager::class);
+        $app->forgetInstance(EventQueue::class);
+        $app->forgetInstance(Broker::class);
+        $app->make(EventStateRegistry::class)->reset();
+
+        $fake_broker = new BrokerFake($store, $snapshots, $app->make(Broker::class));
 
         static::swap($fake_broker);
 

@@ -12,7 +12,9 @@ use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Facades\Id;
+use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\State;
+use Thunk\Verbs\State\StateIdentity;
 use Thunk\Verbs\Support\StateCollection;
 
 class SnapshotStoreFake implements StoresSnapshots
@@ -31,7 +33,12 @@ class SnapshotStoreFake implements StoresSnapshots
     {
         foreach ($states as $state) {
             $this->states[$state::class] ??= new Collection;
-            $this->states[$state::class]->put(Id::from($state->id), $state);
+
+            // Mirror the real store: singletons are keyed by type alone, so a
+            // singleton only ever occupies one slot no matter its incidental id.
+            $key = $state instanceof SingletonState ? Id::nil() : Id::from($state->id);
+
+            $this->states[$state::class]->put($key, $state);
         }
 
         return true;
@@ -51,6 +58,26 @@ class SnapshotStoreFake implements StoresSnapshots
     public function loadSingleton(string $type): ?State
     {
         return Arr::first($this->states[$type]);
+    }
+
+    public function hydrateLastEventIds(iterable $identities): Collection
+    {
+        return collect($identities)
+            ->map(function (StateIdentity $identity) {
+                $snapshots = $this->states->get($identity->state_type, new Collection);
+
+                $snapshot = is_a($identity->state_type, SingletonState::class, true)
+                    ? $snapshots->first()
+                    : $snapshots->get(Id::from($identity->state_id));
+
+                return $snapshot ? new StateIdentity(
+                    state_type: $snapshot::class,
+                    state_id: $snapshot instanceof SingletonState ? Id::nil() : Id::from($snapshot->id),
+                    last_event_id: $snapshot->last_event_id,
+                ) : null;
+            })
+            ->filter()
+            ->values();
     }
 
     public function reset(): bool

@@ -1,9 +1,11 @@
 <?php
 
+use Thunk\Verbs\Attributes\Autodiscovery\StateId;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Metadata;
 use Thunk\Verbs\Models\VerbEvent;
+use Thunk\Verbs\State;
 
 it('creates metadata for events', function () {
     // Test both the `Metadata` class API
@@ -104,6 +106,22 @@ class MetadataTestEvent extends Event
 class HandleChecker
 {
     public static bool $handled = false;
+}
+
+class MetadataStateTestState extends State
+{
+    public int $count = 0;
+}
+
+class MetadataStateTestEvent extends Event
+{
+    #[StateId(MetadataStateTestState::class)]
+    public int $state_id;
+
+    public function apply(MetadataStateTestState $state): void
+    {
+        $state->count++;
+    }
 }
 
 class MetadataTestMetadata extends Metadata

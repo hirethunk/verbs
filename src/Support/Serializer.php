@@ -11,7 +11,7 @@ use Thunk\Verbs\State;
 
 class Serializer
 {
-    public $active_normalization_target = null;
+    public mixed $active_normalization_target = null;
 
     public function __construct(
         public SymfonySerializer $serializer,

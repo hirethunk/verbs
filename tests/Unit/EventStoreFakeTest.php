@@ -4,8 +4,9 @@ use Thunk\Verbs\Attributes\Autodiscovery\AppliesToState;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Lifecycle\MetadataManager;
-use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\State;
+use Thunk\Verbs\State\StateIdentity;
+use Thunk\Verbs\State\StateManager;
 use Thunk\Verbs\Testing\EventStoreFake;
 
 it('performs assertions', function () {
@@ -76,13 +77,13 @@ it('reads and writes stateful events normally', function () {
     app()->instance(StoresEvents::class, $store = new EventStoreFake(app(MetadataManager::class)));
 
     $state1 = app(StateManager::class)->load(
-        1001,
         type: EventStoreFakeTestState::class,
+        id: 1001,
     );
 
     $state2 = app(StateManager::class)->load(
-        1002,
         type: EventStoreFakeTestState::class,
+        id: 1002,
     );
 
     // State IDs = 100X, Event IDs = X0Y (X = state, Y = event)
@@ -102,6 +103,54 @@ it('reads and writes stateful events normally', function () {
         ->toBe([201, 202, 203])
         ->and($store->read(state: $state2, after_id: 201)->map(fn (Event $event) => $event->id)->all())
         ->toBe([202, 203]);
+});
+
+it('gets written events by id, in id order', function () {
+    $store = new EventStoreFake(app(MetadataManager::class));
+
+    $store->write([
+        new EventStoreFakeTestEvent(3),
+        new EventStoreFakeTestEvent(1),
+        new EventStoreFakeTestEvent(2),
+    ]);
+
+    expect($store->get([2, 3])->map(fn (Event $event) => $event->id)->all())
+        ->toBe([2, 3])
+        ->and($store->get([3, 1])->map(fn (Event $event) => $event->id)->all())
+        ->toBe([1, 3])
+        ->and($store->get([snowflake_id()])->all())
+        ->toBe([]);
+});
+
+it('answers staleness and discovery queries from in-memory events', function () {
+    app()->instance(StoresEvents::class, $store = new EventStoreFake(app(MetadataManager::class)));
+
+    app(StateManager::class)->load(
+        type: EventStoreFakeTestState::class,
+        id: 1001,
+    );
+
+    $store->write([
+        new EventStoreFakeTestStatefulEvent(state_id: 1001, id: 101),
+        new EventStoreFakeTestStatefulEvent(state_id: 1001, id: 102),
+    ]);
+
+    $blank = new StateIdentity(EventStoreFakeTestState::class, 1001);
+    $behind = new StateIdentity(EventStoreFakeTestState::class, 1001, last_event_id: 101);
+    $current = new StateIdentity(EventStoreFakeTestState::class, 1001, last_event_id: 102);
+    $unrelated = new StateIdentity(EventStoreFakeTestState::class, 2002, last_event_id: 101);
+
+    expect($store->hasUnappliedEvents([$blank]))->toBeTrue()
+        ->and($store->hasUnappliedEvents([$behind]))->toBeTrue()
+        ->and($store->hasUnappliedEvents([$current]))->toBeFalse()
+        ->and($store->hasUnappliedEvents([$unrelated]))->toBeFalse()
+        ->and($store->hasAppliedEventsAfter([$behind], after_id: 100))->toBeTrue()
+        ->and($store->hasAppliedEventsAfter([$behind], after_id: 101))->toBeFalse()
+        ->and($store->hasAppliedEventsAfter([$blank], after_id: 100))->toBeFalse()
+        ->and($store->eventIdsFor([$current])->all())->toBe([101, 102])
+        ->and($store->eventIdsFor([$current], after_id: 101)->all())->toBe([102])
+        ->and($store->stateIdentitiesFor([101])->sole()->state_id)->toBe(1001)
+        ->and($store->stateIdentitiesFor([snowflake_id()])->all())->toBe([]);
 });
 
 class EventStoreFakeTestEvent extends Event

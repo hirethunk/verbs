@@ -4,7 +4,7 @@ namespace Thunk\Verbs;
 
 use BadMethodCallException;
 use RuntimeException;
-use Thunk\Verbs\Lifecycle\StateManager;
+use Thunk\Verbs\State\StateManager;
 use Thunk\Verbs\Support\StateCollection;
 
 abstract class SingletonState extends State

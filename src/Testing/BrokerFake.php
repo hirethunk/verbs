@@ -3,12 +3,9 @@
 namespace Thunk\Verbs\Testing;
 
 use Closure;
-use Illuminate\Contracts\Container\Container;
 use PHPUnit\Framework\Assert;
 use Thunk\Verbs\Contracts\BrokersEvents;
-use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Lifecycle\Broker;
 use Thunk\Verbs\Lifecycle\BrokerConvenienceMethods;
 use Thunk\Verbs\Lifecycle\Dispatcher;
 
@@ -18,22 +15,19 @@ class BrokerFake implements BrokersEvents
 
     protected int $commit_call_count = 0;
 
+    // Eventually this will implement its own versions of fire/commit/replay
+    // against the fakes, but for now it wraps a real broker that Verbs::fake()
+    // rebuilt against the fake stores.
+    //
+    //  - [x] EventStore
+    //  - [ ] EventQueue
+    //  - [x] SnapshotStore
+    //  - [ ] StateManager
     public function __construct(
-        Container $container,
         public EventStoreFake $store,
-        public Broker $broker,
-    ) {
-        // Eventually this will swap out all the necessary fakes and implement
-        // our own versions of fire/commit/replay, but for now this is just a
-        // placeholder class.
-        //
-        //  - [x] EventStore
-        //  - [ ] EventQueue
-        //  - [ ] SnapshotStore
-        //  - [ ] StateManager (might only need to fake this instead of snapshot store)
-
-        $container->instance(StoresEvents::class, $this->store);
-    }
+        public SnapshotStoreFake $snapshots,
+        protected BrokersEvents $broker,
+    ) {}
 
     public function assertCommitted(string|Closure $event, Closure|int|null $callback = null): EventStoreFake
     {

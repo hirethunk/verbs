@@ -56,8 +56,9 @@ CustomerState::factory()->id($id)->create();
     - `Contracts/`: Interfaces
     - `Events/`: Framework-dispatched events (e.g. `VerbsStateInitialized`)
     - `Facades/`: Laravel facades
-    - `Lifecycle/`: Broker, dispatcher, queue, state manager, and the default event/snapshot stores
+    - `Lifecycle/`: Broker, dispatcher, queue, and the default event/snapshot stores
     - `Models/`: Eloquent models for storage
+    - `State/`: State manager, reconstitution, and cache layers
     - `Support/`: Utilities and helpers
 - `tests/`: Pest tests organized by feature
 - `examples/`: Complete example implementations (Bank, Cart, etc.)

@@ -1,9 +1,9 @@
 <?php
 
 use Illuminate\Support\Collection;
-use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\State;
+use Thunk\Verbs\State\StateManager;
 use Thunk\Verbs\StateFactory;
 
 test('a factory can create a state', function () {

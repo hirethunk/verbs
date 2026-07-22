@@ -4,13 +4,14 @@ namespace Thunk\Verbs;
 
 use Glhd\Bits\Bits;
 use Illuminate\Contracts\Routing\UrlRoutable;
+use Illuminate\Support\Collection;
 use InvalidArgumentException;
 use Ramsey\Uuid\UuidInterface;
 use RuntimeException;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Exceptions\StateNotFoundException;
-use Thunk\Verbs\Lifecycle\StateManager;
+use Thunk\Verbs\State\StateManager;
 use Thunk\Verbs\Support\Serializer;
 use Thunk\Verbs\Support\StateCollection;
 
@@ -77,7 +78,7 @@ abstract class State implements UrlRoutable
 
     public static function loadByKey($from): static|StateCollection
     {
-        return app(StateManager::class)->load($from, static::class);
+        return app(StateManager::class)->load(static::class, $from);
     }
 
     protected static function normalizeKey(mixed $from)
@@ -87,6 +88,7 @@ abstract class State implements UrlRoutable
             : $from;
     }
 
+    /** @return Collection<int, Event> */
     public function storedEvents()
     {
         return app(StoresEvents::class)
@@ -94,9 +96,28 @@ abstract class State implements UrlRoutable
             ->collect();
     }
 
+    /**
+     * Bring this instance up to date with the latest events and return it.
+     * Mirrors Eloquent's refresh(): the same instance is updated in place,
+     * so every reference you're holding sees the update. (There's no
+     * Eloquent-style fresh() by design—states are identity-mapped to one
+     * live instance per request, so handing out a second, divergent copy
+     * would fork exactly the identity this package works to protect.)
+     */
+    public function refresh(): static
+    {
+        return app(StateManager::class)->refresh($this);
+    }
+
+    /** @deprecated Use refresh() instead—same behavior, and the name matches Eloquent's in-place semantics. */
     public function fresh(): static
     {
-        return app(StateManager::class)->load($this->id, static::class);
+        trigger_error(
+            'State::fresh() is deprecated — use refresh() instead (it updates the same instance in place, like Eloquent\'s refresh()).',
+            E_USER_DEPRECATED,
+        );
+
+        return $this->refresh();
     }
 
     public function getRouteKey()

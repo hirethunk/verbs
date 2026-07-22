@@ -76,11 +76,14 @@ return [
    | By default, Verbs will use your default database connection, However, you may
    | wish to customize these connection names to better fit your application.
    |
+   | State-event mappings always use the `events` connection: events and
+   | their mappings are read in a single query across both tables, which
+   | requires them to live in the same database.
+   |
    */
     'connections' => [
         'events' => env('VERBS_EVENTS_CONNECTION'),
         'snapshots' => env('VERBS_SNAPSHOT_CONNECTION'),
-        'state_events' => env('VERBS_STATE_EVENTS_CONNECTION'),
     ],
 
     /*
@@ -110,6 +113,38 @@ return [
     |
     */
     'wormhole' => true,
+
+    /*
+    |--------------------------------------------------------------------------
+    | Snapshot-Seeded Reconstitution
+    |--------------------------------------------------------------------------
+    |
+    | When a state is loaded and newer events exist for it, Verbs rebuilds it
+    | (and any related states) by replaying events. By default the rebuild is
+    | seeded from snapshots whenever that is provably exact, so only events
+    | newer than the snapshots replay. Setting this to false forces every
+    | rebuild to start from a blank slate and replay the full history—slower,
+    | but a useful diagnostic if you ever suspect snapshot drift.
+    |
+    | NOTE: This option exists for diagnostics while snapshot seeding is new,
+    |       and will be removed in 1.0. Don't build on it.
+    |
+    */
+    'reconstitution_uses_snapshots' => env('VERBS_RECONSTITUTION_USES_SNAPSHOTS', true),
+
+    /*
+    |--------------------------------------------------------------------------
+    | State Cache Size
+    |--------------------------------------------------------------------------
+    |
+    | Verbs keeps every state it loads in an in-memory identity map so that all
+    | reads within a request see the same instance. Once more than this many
+    | states are resident, the least-recently-used ones become eligible for
+    | eviction (any state you still hold a reference to keeps its identity).
+    | Raise this if your requests or jobs work with many states at once.
+    |
+    */
+    'state_cache_size' => env('VERBS_STATE_CACHE_SIZE', 100),
 
     /*
     |--------------------------------------------------------------------------

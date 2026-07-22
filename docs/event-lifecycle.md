@@ -62,6 +62,11 @@ is considered an apply method, and may be called for each state the event is fir
 Apply hooks happen immediately after the event is fired, and also any time that state needs to be re-built from
 existing events (i.e. if your snapshots are deleted for some reason).
 
+Rebuilds count as replaying: `Verbs::isReplaying()` is `true` while these re-applies run, so an
+`unlessReplaying()` guard won't re-fire its side effects every time a stale state rebuilds. Even
+so, `apply` should stay a pure function of the event and the state—side effects (even guarded
+ones) belong in `handle()`, which only runs on the original fire and during explicit replays.
+
 For example, an event that fires on two States might have two apply methods:
 
 ```php

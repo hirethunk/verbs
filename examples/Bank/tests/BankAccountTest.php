@@ -11,8 +11,8 @@ use Thunk\Verbs\Examples\Bank\Mail\WelcomeEmail;
 use Thunk\Verbs\Examples\Bank\Models\User;
 use Thunk\Verbs\Examples\Bank\States\AccountState;
 use Thunk\Verbs\Facades\Verbs;
-use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\Models\VerbEvent;
+use Thunk\Verbs\State\StateManager;
 
 test('a bank account can be opened and interacted with', function () {
     Mail::fake();
@@ -99,7 +99,7 @@ test('a bank account can be opened and interacted with', function () {
 
     // We'll also confirm that the state is correctly loaded without snapshots
 
-    app(StateManager::class)->reset(include_storage: true);
+    app(StateManager::class)->reset();
 
     $account_state = AccountState::load($account->id);
     expect($account_state->balance_in_cents)->toBe(100_00);

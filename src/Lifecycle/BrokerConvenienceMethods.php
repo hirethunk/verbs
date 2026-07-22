@@ -11,13 +11,12 @@ use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\EventNotAuthorized;
 use Thunk\Verbs\Exceptions\EventNotValid;
 use Thunk\Verbs\Facades\Id;
+use Thunk\Verbs\State\StateManager;
 use Thunk\Verbs\Support\IdManager;
 use Thunk\Verbs\Support\Wormhole;
 
 trait BrokerConvenienceMethods
 {
-    public bool $is_replaying = false;
-
     /**
      * @deprecated
      * @see IdManager
@@ -25,6 +24,11 @@ trait BrokerConvenienceMethods
      */
     public function toId(Bits|UuidInterface|AbstractUid|int|string|null $id): int|string|null
     {
+        trigger_error(
+            'Verbs::toId() is deprecated. Use the Thunk\Verbs\Facades\Id facade instead.',
+            E_USER_DEPRECATED,
+        );
+
         return match (true) {
             $id instanceof Bits => $id->id(),
             $id instanceof UuidInterface => $id->toString(),
@@ -64,12 +68,12 @@ trait BrokerConvenienceMethods
 
     public function isReplaying(): bool
     {
-        return $this->is_replaying;
+        return app(StateManager::class)->isReapplyingHistory();
     }
 
-    public function unlessReplaying(callable $callback)
+    public function unlessReplaying(callable $callback): void
     {
-        if (! $this->is_replaying) {
+        if (! $this->isReplaying()) {
             $callback();
         }
     }
