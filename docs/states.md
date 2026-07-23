@@ -44,7 +44,7 @@ class ExampleState extends State
 
 ## States and Events
 
-Like our examples suggest, we use states for tracking changes across our events.
+Like our [examples](/docs/getting-started/quickstart#content-utilizing-states) suggest, we use states for tracking changes across our events.
 
 [Thunk](http://thunk.dev) state files tend to be lean, focusing only on tracking properties and offloading most logic to
 the events themselves.
@@ -118,19 +118,28 @@ in [event lifecycle](/docs/technical/event-lifecycle).
 
 ## Loading a State
 
-To retrieve the State, simply call load:
+To retrieve one or more States, simply call load:
 
 ```php
-CardState::load($card_id);
+CardState::load($id1); // CardState
+CardState::load([$id1, $id2]); // StateCollection of CardStates
 ```
 
-The state is loaded once and then kept in memory. Even as you `apply()` events, it's the same, in-memory copy that's
+A state is loaded once and then kept in memory. Even as you `apply()` events, it's the same, in-memory copy that's
 being updated, which allows for real-time updates to the state without additional database overhead.
 
 You can also use `loadOrFail()` to trigger a `StateNotFoundException` that will result in a `404` HTTP response if not
 caught.
 
 <!-- For more on this topic, see [State Hydration / Snapshots](/docs/technical/state-hydration-snapshots). -->
+
+### `new()`
+
+You may use the `new()` helper to easily load a new state.
+
+```php
+ExampleState::new() // ExampleState::load(snowflake()->make());
+```
 
 ## Using States in Routes
 
