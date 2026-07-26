@@ -195,6 +195,42 @@ test('reading after an id of zero excludes the event at zero', function () {
         ->toBe([$second_id]);
 });
 
+// A state's events are read through the pivot table, but event id is what
+// orders history—pivot id only tracks it because the concurrency guard keeps
+// per-state writes monotonic, and a direct import with backdated ids doesn't
+// go through that guard.
+test('reads a state history in event id order, not pivot order', function () {
+    $state_id = snowflake_id();
+    $earlier_event_id = snowflake_id();
+    $later_event_id = snowflake_id();
+
+    insertContractReadsEventRow($earlier_event_id);
+    insertContractReadsEventRow($later_event_id);
+
+    // The later event is imported first, so its pivot row sorts ahead.
+    DB::table('verb_state_events')->insert([
+        ['id' => 1, 'event_id' => $later_event_id, 'state_id' => $state_id, 'state_type' => ContractReadsState::class, 'created_at' => now(), 'updated_at' => now()],
+        ['id' => 2, 'event_id' => $earlier_event_id, 'state_id' => $state_id, 'state_type' => ContractReadsState::class, 'created_at' => now(), 'updated_at' => now()],
+    ]);
+
+    $read = app(StoresEvents::class)->read(state: ContractReadsState::load($state_id));
+
+    expect($read->map(fn (Event $event) => $event->id)->all())
+        ->toBe([$earlier_event_id, $later_event_id]);
+});
+
+function insertContractReadsEventRow(int $event_id): void
+{
+    DB::table('verb_events')->insert([
+        'id' => $event_id,
+        'type' => ContractReadsEvent::class,
+        'data' => '{}',
+        'metadata' => '{}',
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+}
+
 function insertContractReadsEventWithId(int $event_id, string $state_type, int $state_id): void
 {
     DB::table('verb_events')->insert([

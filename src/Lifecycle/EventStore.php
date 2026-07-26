@@ -204,7 +204,11 @@ class EventStore implements StoresEvents
                 ->unless($state instanceof SingletonState, fn (Builder $query) => $query->where('state_id', $state->id))
                 ->where('state_type', $state::class)
                 ->when($after_id !== null, fn (Builder $query) => $query->whereRelation('event', 'id', '>', Id::from($after_id)))
-                ->lazyById()
+                // Event id is what orders history. Pivot id usually tracks it,
+                // but only because the concurrency guard keeps per-state writes
+                // monotonic—an import writing backdated ids never passed through
+                // that guard, and its rows would replay out of order.
+                ->lazyById(column: 'event_id')
                 ->map(fn (VerbStateEvent $pivot) => $pivot->event);
         }
 
