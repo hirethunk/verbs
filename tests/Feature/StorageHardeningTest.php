@@ -380,8 +380,9 @@ test('verbs:snapshots:migrate dedupes, normalizes singletons, drops dead rows, a
 
     // The live row is untouched—the stale copy is ignored, not upserted over it.
     $live = $rows->firstWhere('state_id', 8);
+    // Decoded, because MySQL re-serializes JSON columns and won't hand back the exact bytes we wrote.
     expect((int) $live->last_event_id)->toBe(45)
-        ->and($live->data)->toBe('{"count":"live"}');
+        ->and(json_decode($live->data, true))->toBe(['count' => 'live']);
 
     Schema::drop('verb_snapshots_migration_test');
 });
