@@ -87,12 +87,21 @@ class SnapshotStore implements StoresSnapshots
             return true;
         }
 
-        foreach (array_chunk($states, static::UPSERT_CHUNK) as $chunk) {
+        // Dedupe before chunking, not within each chunk: one identity can only
+        // occupy one row, and which of two instances won should not depend on
+        // where a chunk boundary happened to fall. The furthest-ahead snapshot
+        // is the only one that can't lose already-applied events.
+        $rows = collect($states)
+            ->map($this->formatForWrite(...))
+            ->groupBy(fn (array $row) => $row['type'].':'.$row['state_id']) // formatForWrite has already normalized these
+            ->map(fn (Collection $duplicates) => $duplicates
+                ->sortBy(fn (array $row) => Id::normalizeEventId($row['last_event_id']))
+                ->last())
+            ->values();
+
+        foreach ($rows->chunk(static::UPSERT_CHUNK) as $chunk) {
             $upserted = VerbSnapshot::upsert(
-                values: collect($chunk)
-                    ->map($this->formatForWrite(...))
-                    ->unique(fn (array $row) => $row['type'].':'.$row['state_id']) // formatForWrite has already normalized these
-                    ->all(),
+                values: $chunk->values()->all(),
                 uniqueBy: ['type', 'state_id'],
                 update: ['data', 'last_event_id', 'updated_at'],
             );
