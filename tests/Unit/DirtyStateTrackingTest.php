@@ -40,6 +40,23 @@ it('does not rewrite the snapshot of a state that has not advanced', function ()
         ->toBe('2026-07-20 00:00:00');
 });
 
+it('does not rewrite a snapshot when the driver hands the last event id back as a string', function () {
+    Date::setTestNow('2026-07-20 00:00:00');
+    $a = snowflake_id();
+    DirtyTrackingEvent::fire(state_id: $a);
+
+    // Bigint columns come back as decimal strings on some drivers, so the
+    // watermark has to compare the *value*, not the PHP type.
+    $state = DirtyTrackingState::load($a);
+    $state->last_event_id = (string) $state->last_event_id;
+
+    Date::setTestNow('2026-07-20 00:05:00');
+    DirtyTrackingEvent::fire(state_id: snowflake_id());
+
+    expect(VerbSnapshot::query()->where('state_id', $a)->first()->updated_at->format('Y-m-d H:i:s'))
+        ->toBe('2026-07-20 00:00:00');
+});
+
 it('never writes a snapshot for a blank state that saw no events', function () {
     $blank = snowflake_id();
     DirtyTrackingState::load($blank); // resident, last_event_id === null

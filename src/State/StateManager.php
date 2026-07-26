@@ -244,7 +244,7 @@ class StateManager
             return static fn () => null;
         }
 
-        $persisted = array_map(fn (State $state) => [$state, Id::tryFrom($state->last_event_id)], $dirty);
+        $persisted = array_map(fn (State $state) => [$state, Id::normalizeEventId($state->last_event_id)], $dirty);
 
         return fn () => $this->markPersistedAt($persisted);
     }
@@ -261,9 +261,15 @@ class StateManager
         return array_values(array_filter($this->all(), $this->isDirty(...)));
     }
 
+    /**
+     * Both sides normalize, because a state's last_event_id can arrive as an int
+     * (freshly fired) or as a decimal string (a bigint column read back by a
+     * driver that stringifies them). A type-only difference is not a change,
+     * and treating it as one would rewrite an identical snapshot every commit.
+     */
     protected function isDirty(State $state): bool
     {
-        $last_event_id = Id::tryFrom($state->last_event_id);
+        $last_event_id = Id::normalizeEventId($state->last_event_id);
 
         return $last_event_id !== null
             && $last_event_id !== ($this->state_last_persisted_event_ids[$state] ?? null);
@@ -280,7 +286,7 @@ class StateManager
     protected function markPersisted(iterable $states): static
     {
         foreach ($states as $state) {
-            $this->state_last_persisted_event_ids[$state] = Id::tryFrom($state->last_event_id);
+            $this->state_last_persisted_event_ids[$state] = Id::normalizeEventId($state->last_event_id);
         }
 
         return $this;
