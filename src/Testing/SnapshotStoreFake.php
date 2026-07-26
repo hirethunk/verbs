@@ -4,7 +4,6 @@ namespace Thunk\Verbs\Testing;
 
 use Closure;
 use Glhd\Bits\Bits;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Traits\ReflectsClosures;
 use PHPUnit\Framework\Assert as PHPUnit;
@@ -57,7 +56,7 @@ class SnapshotStoreFake implements StoresSnapshots
 
     public function loadSingleton(string $type): ?State
     {
-        return Arr::first($this->states[$type]);
+        return $this->states->get($type)?->first();
     }
 
     public function hydrateLastEventIds(iterable $identities): Collection

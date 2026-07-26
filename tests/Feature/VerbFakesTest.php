@@ -96,12 +96,28 @@ it('is a no-op when called while already faked', function () {
     Verbs::assertCommitted(VerbFakesTestEvent::class);
 });
 
+it('loads a singleton under Verbs::fake() before anything is written', function () {
+    Verbs::fake();
+
+    // A cache miss routes through loadSingleton() on the snapshot fake, which
+    // must return null for an untouched type rather than choking on the missing
+    // slot.
+    expect(VerbFakesSingletonState::singleton())
+        ->toBeInstanceOf(VerbFakesSingletonState::class)
+        ->and(VerbFakesSingletonState::singleton()->count)->toBe(0);
+});
+
 class VerbFakesTestEvent extends Event
 {
     public function __construct(?int $id = null)
     {
         $this->id = $id ?? snowflake_id();
     }
+}
+
+class VerbFakesSingletonState extends \Thunk\Verbs\SingletonState
+{
+    public int $count = 0;
 }
 
 class UncommittedVerbFakesTestEvent extends Event
