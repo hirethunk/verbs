@@ -154,6 +154,29 @@ it('does not throw when a singleton has absorbed rows under other incidental ids
     expect(VerbEvent::count())->toBe(1);
 });
 
+// The guard paginates its grouped aggregate, and offset pagination only visits
+// every row when the ordering is a total one. state_id alone isn't: the same id
+// can appear under several state types, and a tie straddling a page boundary can
+// hide a violation entirely.
+it('orders the concurrency guard by a key that cannot tie', function () {
+    $event = new ConcurrencyTestEvent;
+    $event->id = snowflake_id();
+    ConcurrencyTestState::singleton()->last_event_id = $event->id;
+
+    $queries = collect();
+    DB::listen(fn ($query) => $queries->push($query->sql));
+
+    app(EventStore::class)->write([$event]);
+
+    $guard = $queries->first(fn (string $sql) => str_contains($sql, 'group by'));
+
+    expect($guard)->toContain('order by');
+
+    $order_by = str($guard)->after('order by')->before(' limit')->toString();
+
+    expect($order_by)->toContain('state_id')->toContain('state_type');
+});
+
 class ConcurrencyTestEvent extends Event
 {
     public function states(): StateCollection

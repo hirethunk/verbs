@@ -216,7 +216,12 @@ class EventStore implements StoresEvents
         ]);
 
         $query->groupBy('state_type', 'state_id');
+
+        // The results are paginated, so the ordering has to be total: a state_id
+        // recurring under several state types would tie, and a tie straddling a
+        // page boundary can drop a group—and with it, a real violation.
         $query->orderBy('state_id');
+        $query->orderBy('state_type');
 
         $query->where(function (BaseBuilder $query) use ($events, $max_event_ids) {
             foreach ($events as $event) {
