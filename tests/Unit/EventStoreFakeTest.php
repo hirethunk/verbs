@@ -105,6 +105,20 @@ it('reads and writes stateful events normally', function () {
         ->toBe([202, 203]);
 });
 
+it('reads events in id order across event classes', function () {
+    $store = new EventStoreFake(app(MetadataManager::class));
+
+    // Written class-by-class, but a replay has to see them in the order they
+    // happened—the real store reads one id-ordered stream, not one per class.
+    $store->write([new EventStoreFakeTestEvent(1), new EventStoreFakeTestEvent(3)]);
+    $store->write([new UncommittedEventStoreFakeTestEvent(2)]);
+
+    expect($store->read()->map(fn (Event $event) => $event->id)->all())
+        ->toBe([1, 2, 3])
+        ->and($store->read(after_id: 1)->map(fn (Event $event) => $event->id)->all())
+        ->toBe([2, 3]);
+});
+
 it('gets written events by id, in id order', function () {
     $store = new EventStoreFake(app(MetadataManager::class));
 

@@ -35,8 +35,12 @@ class EventStoreFake implements StoresEvents
         ?State $state = null,
         UuidInterface|string|int|AbstractUid|Bits|null $after_id = null,
     ): LazyCollection {
+        // Events are stored bucketed by class, but callers read a stream: the
+        // real store hands back one id-ordered sequence, and a replay applied
+        // class-by-class would run history out of order.
         return LazyCollection::make($this->events)
             ->flatten()
+            ->sortBy(fn (Event $event) => Id::normalizeEventId($event->id))
             ->when($after_id, function (LazyCollection $events, $after_id) {
                 return $events->filter(fn (Event $event) => $event->id > Id::from($after_id));
             })

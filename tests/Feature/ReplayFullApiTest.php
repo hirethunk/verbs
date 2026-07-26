@@ -70,9 +70,26 @@ it('rebuilds through the full replay under Verbs::fake()', function () {
         ->and(ReplayFullApiState::load($id)->count)->toBe(2);
 });
 
+it('replays interleaved event classes in id order under Verbs::fake()', function () {
+    Verbs::fake();
+    Verbs::commitImmediately();
+
+    $id = snowflake_id();
+    ReplayFullApiEvent::fire(state_id: $id);
+    ReplayFullApiAppendEvent::fire(state_id: $id, letter: 'a');
+    ReplayFullApiEvent::fire(state_id: $id);
+    ReplayFullApiAppendEvent::fire(state_id: $id, letter: 'b');
+
+    Replay::full()->run();
+
+    expect(ReplayFullApiState::load($id)->log)->toBe('1a2b');
+});
+
 class ReplayFullApiState extends State
 {
     public int $count = 0;
+
+    public string $log = '';
 }
 
 class ReplayFullApiEvent extends Event
@@ -83,5 +100,19 @@ class ReplayFullApiEvent extends Event
     public function apply(ReplayFullApiState $state): void
     {
         $state->count++;
+        $state->log .= $state->count;
+    }
+}
+
+class ReplayFullApiAppendEvent extends Event
+{
+    #[StateId(ReplayFullApiState::class)]
+    public int $state_id;
+
+    public string $letter;
+
+    public function apply(ReplayFullApiState $state): void
+    {
+        $state->log .= $this->letter;
     }
 }
