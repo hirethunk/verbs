@@ -2,6 +2,7 @@
 
 use Glhd\Bits\Bits;
 use Illuminate\Database\Events\TransactionCommitted;
+use Illuminate\Database\Events\TransactionCommitting;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -15,6 +16,7 @@ use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Lifecycle\Broker;
+use Thunk\Verbs\Lifecycle\Queue;
 use Thunk\Verbs\Lifecycle\SnapshotStore;
 use Thunk\Verbs\Models\VerbEvent;
 use Thunk\Verbs\Models\VerbSnapshot;
@@ -51,6 +53,78 @@ test('a failed commit keeps the batch queued instead of dropping it', function (
 
     expect(VerbEvent::query()->count())->toBe(1)
         ->and(HardeningTestState::load($id)->count)->toBe(1);
+});
+
+test('events that committed before a snapshot failure are not re-queued', function () {
+    config()->set('database.connections.verbs_secondary', [
+        'driver' => 'sqlite',
+        'database' => ':memory:',
+        'prefix' => '',
+    ]);
+    config()->set('verbs.connections.snapshots', 'verbs_secondary');
+
+    // The store itself succeeds here—it's the snapshots *connection* that fails,
+    // after the events connection (the innermost transaction) already committed.
+    $store = new ExplodingSnapshotStore;
+    $store->explode = false;
+    app()->instance(StoresSnapshots::class, $store);
+
+    EventFacade::listen(TransactionCommitting::class, function (TransactionCommitting $event) {
+        if ($event->connectionName === 'verbs_secondary') {
+            throw new RuntimeException('the snapshots connection failed to commit');
+        }
+    });
+
+    HardeningTestEvent::fire(state_id: snowflake_id());
+
+    expect(fn () => Verbs::commit())->toThrow(RuntimeException::class);
+
+    // The batch is durable, so re-queuing it would collide on the event's
+    // primary key the next time anything commits.
+    expect(VerbEvent::query()->count())->toBe(1)
+        ->and(app(Queue::class)->getEvents())->toBeEmpty();
+});
+
+test('a rolled-back transaction leaves its snapshots pending', function () {
+    $a = snowflake_id();
+
+    try {
+        DB::transaction(function () use ($a) {
+            HardeningTestEvent::fire(state_id: $a);
+            Verbs::commit();
+
+            throw new RuntimeException('user-land rollback');
+        });
+    } catch (RuntimeException) {
+    }
+
+    expect(VerbSnapshot::query()->count())->toBe(0);
+
+    // A is still resident, and its watermark can't have advanced over a write the
+    // rollback took with it—so the next commit writes the snapshot it still owes.
+    HardeningTestEvent::fire(state_id: snowflake_id());
+    Verbs::commit();
+
+    expect(VerbSnapshot::query()->where('state_id', $a)->count())->toBe(1);
+});
+
+test('a committed transaction advances the watermark once it lands', function () {
+    $spy = new SnapshotStoreSpy(app(SnapshotStore::class));
+    app()->instance(StoresSnapshots::class, $spy);
+
+    $a = snowflake_id();
+
+    DB::transaction(function () use ($a) {
+        HardeningTestEvent::fire(state_id: $a);
+        Verbs::commit();
+    });
+
+    // A hasn't advanced since that transaction committed, so an unrelated batch
+    // must not re-write it.
+    HardeningTestEvent::fire(state_id: $b = snowflake_id());
+    Verbs::commit();
+
+    expect($spy->writtenStateIds())->toBe([$a, $b]);
 });
 
 test('a handler exception does not un-write events or snapshots', function () {

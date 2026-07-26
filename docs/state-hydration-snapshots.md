@@ -83,7 +83,8 @@ When `Verbs::commit()` is called, the event queue is processed and every *affect
 the `VerbSnapshot` table in the database—a state is written only when new events actually advanced it past what was
 last persisted, so untouched states never get re-written (and a state that never saw an event at all never creates a
 snapshot row). The event and snapshot writes happen in a single database transaction, so they persist (or fail)
-together.
+together. "Last persisted" tracks the transaction, not the write: if you wrap `Verbs::commit()` in your own transaction
+and it rolls back, the snapshot that rollback took with it is written again on the next commit.
 
 ## Serialization
 

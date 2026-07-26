@@ -98,7 +98,9 @@ enumeration aren't part of the contract), so it requires the default Eloquent sn
   together, and handlers run only after the transaction commits. Wrapping `fire()` +
   `Verbs::commit()` in your own `DB::transaction()` now rolls back the stores together. If you've pointed
   `verbs.connections.*` at more than one connection, each distinct connection gets its own transaction, with the events
-  connection committing first (best-effort—cross-connection atomicity needs a shared connection). The
+  connection committing first (best-effort—cross-connection atomicity needs a shared connection). A snapshot counts as
+  persisted only once the outermost transaction actually commits, so a rollback—yours, or a deadlock at commit
+  time—leaves the state due to be re-written on the next commit rather than silently skipped. The
   `verbs.connections.state_events` option is gone: state-event mappings always use the `events` connection (they're read
   in a single query across both tables), and a leftover config value pointing anywhere else triggers a deprecation
   warning.

@@ -75,19 +75,37 @@ class Broker implements BrokersEvents
             return true;
         }
 
+        $events_are_durable = false;
+        $confirm_snapshots = static fn () => null;
+
         try {
-            $this->transaction(function () {
-                $this->queue->flush();
-                $this->states->persistSnapshots($this->snapshots);
-            });
+            $this->transaction(
+                function () use (&$confirm_snapshots) {
+                    $this->queue->flush();
+                    $confirm_snapshots = $this->states->writeSnapshots($this->snapshots);
+                },
+                function (string $store) use (&$events_are_durable) {
+                    if ($store === 'events') {
+                        $events_are_durable = true;
+                    }
+                },
+            );
         } catch (Throwable $exception) {
-            // If snapshots failed to persist, we need to restore the already-flushed events
-            if (empty($this->queue->getEvents())) {
+            // Re-queue the batch so it can be retried—unless the event write itself
+            // committed. Split connections commit the events first, so a failure
+            // between that commit and the snapshots' leaves durable events behind,
+            // and re-inserting those collides on their primary key.
+            if (! $events_are_durable && empty($this->queue->getEvents())) {
                 $this->queue->restore($events);
             }
 
             throw $exception;
         }
+
+        // Everything Verbs controls has committed, but a caller's transaction can
+        // still roll all of it back—so the watermarks advance only once the write
+        // is durable, or a rolled-back snapshot would look clean forever.
+        $this->afterCommit(config('verbs.connections.snapshots'), $confirm_snapshots);
 
         // Our handlers may need to load new state/etc, so we'll allow pruning un-pinned states before
         // running them (we need to keep pinned states until after handlers run)
@@ -121,8 +139,12 @@ class Broker implements BrokersEvents
      * elsewhere, each distinct connection gets its own nested transaction—
      * best-effort, since true cross-connection atomicity isn't possible
      * without two-phase commit.
+     *
+     * $onCommit is called with each store's key ("events"/"snapshots") as that
+     * store's connection durably commits, which is how a caller tells which
+     * writes survived a failure that happened between two commits.
      */
-    protected function transaction(callable $callback): void
+    protected function transaction(callable $callback, ?callable $onCommit = null): void
     {
         $this->warnIfStateEventsConnectionIsConfigured();
 
@@ -130,15 +152,42 @@ class Broker implements BrokersEvents
         // snapshots are on different connections, events succeeding and snapshots
         // failing is recoverable, but the other way around would result in data loss.
         $connections = collect([
-            DB::connection(config('verbs.connections.events'))->getName(),
-            DB::connection(config('verbs.connections.snapshots'))->getName(),
+            'events' => DB::connection(config('verbs.connections.events'))->getName(),
+            'snapshots' => DB::connection(config('verbs.connections.snapshots'))->getName(),
         ]);
 
-        foreach ($connections->unique() as $connection) {
-            $callback = fn () => DB::connection($connection)->transaction($callback);
+        foreach ($connections->unique() as $store => $connection) {
+            $callback = function () use ($store, $connection, $callback, $onCommit) {
+                DB::connection($connection)->transaction($callback);
+
+                // Releasing a savepoint inside a caller's transaction isn't durable,
+                // so only a return to level 0 counts as committed.
+                if ($onCommit !== null && DB::connection($connection)->transactionLevel() === 0) {
+                    $onCommit($store);
+                }
+            };
         }
 
         $callback();
+    }
+
+    /**
+     * Run the callback once the given connection's outermost transaction has
+     * actually committed—immediately, when we aren't inside one. Laravel drops
+     * the callback if that transaction rolls back instead, which is exactly the
+     * distinction the snapshot watermarks need: "durable", not merely "written".
+     */
+    protected function afterCommit(?string $name, callable $callback): void
+    {
+        $connection = DB::connection($name);
+
+        if ($connection->transactionLevel() === 0) {
+            $callback();
+
+            return;
+        }
+
+        $connection->afterCommit($callback);
     }
 
     protected function warnIfStateEventsConnectionIsConfigured(): void
