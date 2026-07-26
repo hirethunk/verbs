@@ -203,13 +203,13 @@ class EventStore implements StoresEvents
                 ->with('event')
                 ->unless($state instanceof SingletonState, fn (Builder $query) => $query->where('state_id', $state->id))
                 ->where('state_type', $state::class)
-                ->when($after_id, fn (Builder $query) => $query->whereRelation('event', 'id', '>', Id::from($after_id)))
+                ->when($after_id !== null, fn (Builder $query) => $query->whereRelation('event', 'id', '>', Id::from($after_id)))
                 ->lazyById()
                 ->map(fn (VerbStateEvent $pivot) => $pivot->event);
         }
 
         return VerbEvent::query()
-            ->when($after_id, fn (Builder $query) => $query->where('id', '>', Id::from($after_id)))
+            ->when($after_id !== null, fn (Builder $query) => $query->where('id', '>', Id::from($after_id)))
             ->lazyById();
     }
 

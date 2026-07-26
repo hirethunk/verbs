@@ -176,6 +176,39 @@ test('snapshot last-event-ids match singletons by type and normalize to native i
         ->and($found->firstWhere('state_type', ContractReadsSingletonState::class)->last_event_id)->toBe($singleton_last_event_id);
 });
 
+// "After id 0" is a real request—it means "everything above the very first
+// possible id"—so it has to be distinguished from "no ceiling given" rather
+// than lumped in with it by a truthiness check.
+test('reading after an id of zero excludes the event at zero', function () {
+    $state_id = snowflake_id();
+    $second_id = snowflake_id();
+
+    insertContractReadsEventWithId(0, ContractReadsState::class, $state_id);
+    insertContractReadsEventWithId($second_id, ContractReadsState::class, $state_id);
+
+    $events = app(StoresEvents::class);
+    $state = ContractReadsState::load($state_id);
+
+    expect($events->read(after_id: 0)->map(fn (Event $event) => $event->id)->all())
+        ->toBe([$second_id])
+        ->and($events->read(state: $state, after_id: 0)->map(fn (Event $event) => $event->id)->all())
+        ->toBe([$second_id]);
+});
+
+function insertContractReadsEventWithId(int $event_id, string $state_type, int $state_id): void
+{
+    DB::table('verb_events')->insert([
+        'id' => $event_id,
+        'type' => ContractReadsEvent::class,
+        'data' => '{}',
+        'metadata' => '{}',
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    insertContractReadsPivot($event_id, $state_type, $state_id);
+}
+
 class ContractReadsState extends State {}
 
 class ContractReadsSingletonState extends SingletonState {}
