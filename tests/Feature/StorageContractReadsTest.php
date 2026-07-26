@@ -74,11 +74,6 @@ test('singleton last-event-ids aggregate across incidental state_id rows', funct
     expect($events->hasUnappliedEvents([
         new StateIdentity(ContractReadsSingletonState::class, snowflake_id(), last_event_id: $e2),
     ]))->toBeFalse();
-
-    // The absorbed-window probe must see events under every incidental row too.
-    expect($events->hasAppliedEventsAfter([
-        new StateIdentity(ContractReadsSingletonState::class, snowflake_id(), last_event_id: $e2),
-    ], after_id: $e1))->toBeTrue();
 });
 
 test('keyed states never match rows for other ids', function () {
@@ -97,29 +92,6 @@ test('keyed states never match rows for other ids', function () {
     expect($events->hasUnappliedEvents([
         new StateIdentity(ContractReadsState::class, $a),
     ]))->toBeTrue();
-});
-
-test('the window probe only matches events inside (floor, last_event_id]', function () {
-    $a = snowflake_id();
-
-    $e1 = insertContractReadsEvent(ContractReadsState::class, $a);
-    $e2 = insertContractReadsEvent(ContractReadsState::class, $a);
-    insertContractReadsEvent(ContractReadsState::class, $a);
-
-    $events = app(StoresEvents::class);
-
-    expect($events->hasAppliedEventsAfter([
-        new StateIdentity(ContractReadsState::class, $a, last_event_id: $e2),
-    ], after_id: $e1))->toBeTrue();
-
-    expect($events->hasAppliedEventsAfter([
-        new StateIdentity(ContractReadsState::class, $a, last_event_id: $e2),
-    ], after_id: $e2))->toBeFalse();
-
-    // No last_event_id means nothing was absorbed, no matter what rows exist.
-    expect($events->hasAppliedEventsAfter([
-        new StateIdentity(ContractReadsState::class, $a),
-    ], after_id: $e1))->toBeFalse();
 });
 
 test('discovery reads return distinct event ids and state identities', function () {

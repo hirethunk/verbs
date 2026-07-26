@@ -68,30 +68,6 @@ class EventStore implements StoresEvents
     }
 
     /** @param  iterable<StateIdentity>  $identities */
-    public function hasAppliedEventsAfter(iterable $identities, int|string|null $after_id = null): bool
-    {
-        return collect($identities)
-            // An identity with no last_event_id has applied nothing, so no row
-            // can ever fall inside its [after_id, last_event_id] window.
-            ->filter(fn (StateIdentity $identity) => $identity->last_event_id !== null)
-            ->chunk(static::STATE_CHUNK)
-            ->contains(function (Collection $chunk) use ($after_id) {
-                return VerbStateEvent::query()
-                    ->toBase()
-                    ->when($after_id !== null, fn (BaseBuilder $query) => $query->where('event_id', '>', $after_id))
-                    ->where(function (BaseBuilder $query) use ($chunk) {
-                        foreach ($chunk as $identity) {
-                            $query->orWhere(function (BaseBuilder $query) use ($identity) {
-                                $this->constrainToIdentity($query, $identity);
-                                $query->where('event_id', '<=', $identity->last_event_id);
-                            });
-                        }
-                    })
-                    ->exists();
-            });
-    }
-
-    /** @param  iterable<StateIdentity>  $identities */
     public function eventIdsFor(iterable $identities, int|string|null $after_id = null): Collection
     {
         return collect($identities)

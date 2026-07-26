@@ -119,8 +119,8 @@ class ReconstitutingResolver implements StateResolver
         try {
             $this->reapply($rebuilt, $plan);
         } catch (SeedInvariantViolation $violation) {
-            // Belt and braces: a probe bug (or a snapshot that advanced under
-            // us) must degrade to slow-and-correct, never to double-apply.
+            // Belt and braces: a planning bug (or a snapshot that advanced
+            // under us) must degrade to slow-and-correct, never to double-apply.
             Log::warning('Verbs: seeded rebuild met an already-absorbed event; rebuilding from a blank baseline.', [
                 'event_id' => $violation->event->id,
                 'state' => $this->identityKey($violation->state),

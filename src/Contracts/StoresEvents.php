@@ -39,15 +39,6 @@ interface StoresEvents
     public function hasUnappliedEvents(iterable $identities): bool;
 
     /**
-     * Whether any event exists for any of the given identities at or below
-     * that identity's own `last_event_id` but after `$after_id`—i.e. an
-     * already-applied event inside the (after_id, last_event_id] window.
-     *
-     * @param  iterable<int, StateIdentity>  $identities
-     */
-    public function hasAppliedEventsAfter(iterable $identities, int|string|null $after_id = null): bool;
-
-    /**
      * The distinct ids of every event associated with any of the given
      * identities, optionally restricted to events after `$after_id`.
      *

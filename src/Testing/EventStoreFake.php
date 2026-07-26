@@ -84,15 +84,6 @@ class EventStoreFake implements StoresEvents
         });
     }
 
-    public function hasAppliedEventsAfter(iterable $identities, int|string|null $after_id = null): bool
-    {
-        return collect($identities)->contains(function (StateIdentity $identity) use ($after_id) {
-            return $identity->last_event_id !== null && $this->eventsFor($identity)->contains(
-                fn (Event $event) => ($after_id === null || $event->id > $after_id) && $event->id <= $identity->last_event_id,
-            );
-        });
-    }
-
     public function eventIdsFor(iterable $identities, int|string|null $after_id = null): Collection
     {
         $identities = collect($identities);
