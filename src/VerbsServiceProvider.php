@@ -21,6 +21,7 @@ use Symfony\Component\Serializer\Normalizer\PropertyNormalizer;
 use Symfony\Component\Serializer\Serializer as SymfonySerializer;
 use Thunk\Verbs\Commands\MakeVerbEventCommand;
 use Thunk\Verbs\Commands\MakeVerbStateCommand;
+use Thunk\Verbs\Commands\MigrateSnapshotsCommand;
 use Thunk\Verbs\Commands\ReplayCommand;
 use Thunk\Verbs\Commands\VerifyCommand;
 use Thunk\Verbs\Contracts\BrokersEvents;
@@ -52,6 +53,7 @@ class VerbsServiceProvider extends PackageServiceProvider
             ->hasCommands(
                 MakeVerbEventCommand::class,
                 MakeVerbStateCommand::class,
+                MigrateSnapshotsCommand::class,
                 ReplayCommand::class,
                 VerifyCommand::class,
             );

@@ -180,7 +180,7 @@ test('singleton snapshots use the sentinel id and never duplicate', function () 
         ->and(HardeningSingletonState::singleton()->count)->toBe(2);
 });
 
-test('the natural-key migration dedupes, normalizes singletons, and drops dead rows', function () {
+test('the 0.10 migration sets old snapshots aside behind a fresh, constrained table', function () {
     config(['verbs.tables.snapshots' => 'verb_snapshots_migration_test']);
 
     Schema::create('verb_snapshots_migration_test', function (Blueprint $table) {
@@ -194,8 +194,65 @@ test('the natural-key migration dedupes, normalizes singletons, and drops dead r
         $table->index(['state_id', 'type']);
     });
 
-    $insert = function (string $type, int $state_id, ?int $last_event_id, string $data = '{}') {
-        DB::table('verb_snapshots_migration_test')->insert([
+    DB::table('verb_snapshots_migration_test')->insert([
+        'id' => snowflake_id(),
+        'state_id' => 5,
+        'type' => HardeningTestState::class,
+        'data' => '{}',
+        'last_event_id' => 10,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    $migration = require __DIR__.'/../../database/migrations/2026_07_15_000001_add_natural_key_to_verb_snapshots_table.php';
+    $migration->up();
+
+    // Existing rows are moved aside; the live table is fresh and empty...
+    expect(Schema::hasTable('__verbs_snapshots_pre_010'))->toBeTrue()
+        ->and(DB::table('verb_snapshots_migration_test')->count())->toBe(0)
+        ->and(DB::table('__verbs_snapshots_pre_010')->count())->toBe(1);
+
+    // ...and it carries the natural-key unique index the 0.10 store upserts against.
+    DB::table('verb_snapshots_migration_test')->insert([
+        'id' => snowflake_id(),
+        'state_id' => 5,
+        'type' => HardeningTestState::class,
+        'data' => '{}',
+        'last_event_id' => 10,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    expect(fn () => DB::table('verb_snapshots_migration_test')->insert([
+        'id' => snowflake_id(),
+        'state_id' => 5,
+        'type' => HardeningTestState::class,
+        'data' => '{}',
+        'last_event_id' => 11,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]))->toThrow(Exception::class);
+
+    Schema::drop('verb_snapshots_migration_test');
+    Schema::dropIfExists('__verbs_snapshots_pre_010');
+});
+
+test('verbs:snapshots:migrate dedupes, normalizes singletons, drops dead rows, and keeps live rows', function () {
+    config(['verbs.tables.snapshots' => 'verb_snapshots_migration_test']);
+
+    Schema::create('verb_snapshots_migration_test', function (Blueprint $table) {
+        $table->snowflakeId();
+        $table->snowflake('state_id')->index();
+        $table->string('type')->index();
+        $table->json('data');
+        $table->snowflake('last_event_id')->nullable();
+        $table->timestamp('expires_at')->nullable()->index();
+        $table->timestamps();
+        $table->index(['state_id', 'type']);
+    });
+
+    $insert = function (string $table, string $type, int $state_id, ?int $last_event_id, string $data = '{}') {
+        DB::table($table)->insert([
             'id' => snowflake_id(),
             'state_id' => $state_id,
             'type' => $type,
@@ -207,29 +264,39 @@ test('the natural-key migration dedupes, normalizes singletons, and drops dead r
     };
 
     // Duplicate keyed rows: the most advanced one wins.
-    $insert(HardeningTestState::class, 5, 10, '{"count":1}');
-    $insert(HardeningTestState::class, 5, 20, '{"count":2}');
+    $insert('verb_snapshots_migration_test', HardeningTestState::class, 5, 10, '{"count":1}');
+    $insert('verb_snapshots_migration_test', HardeningTestState::class, 5, 20, '{"count":2}');
 
     // Duplicate singleton rows under incidental ids: normalized + deduped.
-    $insert(HardeningSingletonState::class, snowflake_id(), 5, '{"count":1}');
-    $insert(HardeningSingletonState::class, snowflake_id(), 15, '{"count":3}');
+    $insert('verb_snapshots_migration_test', HardeningSingletonState::class, snowflake_id(), 5, '{"count":1}');
+    $insert('verb_snapshots_migration_test', HardeningSingletonState::class, snowflake_id(), 15, '{"count":3}');
 
     // A blank-load row (no last_event_id): deleted.
-    $insert(HardeningTestState::class, 6, null);
+    $insert('verb_snapshots_migration_test', HardeningTestState::class, 6, null);
 
     // A type that no longer exists: left untouched.
-    $insert('App\\States\\LongGone', 7, 30);
+    $insert('verb_snapshots_migration_test', 'App\\States\\LongGone', 7, 30);
+
+    // A state the live app has already rebuilt into the new table: must win.
+    $insert('verb_snapshots_migration_test', HardeningTestState::class, 8, 40, '{"count":"old"}');
 
     $migration = require __DIR__.'/../../database/migrations/2026_07_15_000001_add_natural_key_to_verb_snapshots_table.php';
     $migration->up();
 
+    // Live 0.10 traffic rebuilds state 8 before the backfill runs.
+    $insert('verb_snapshots_migration_test', HardeningTestState::class, 8, 45, '{"count":"live"}');
+
+    $this->artisan('verbs:snapshots:migrate')
+        ->expectsConfirmation('Drop the pre-0.10 snapshot table [__verbs_snapshots_pre_010] now?', 'yes')
+        ->assertExitCode(0);
+
     $rows = DB::table('verb_snapshots_migration_test')->get();
 
-    expect($rows)->toHaveCount(3);
+    expect($rows)->toHaveCount(4)
+        ->and(Schema::hasTable('__verbs_snapshots_pre_010'))->toBeFalse();
 
-    $keyed = $rows->firstWhere('type', HardeningTestState::class);
-    expect((int) $keyed->state_id)->toBe(5)
-        ->and((int) $keyed->last_event_id)->toBe(20);
+    $keyed = $rows->firstWhere('state_id', 5);
+    expect((int) $keyed->last_event_id)->toBe(20);
 
     $singleton = $rows->firstWhere('type', HardeningSingletonState::class);
     expect((int) $singleton->state_id)->toBe(0)
@@ -237,7 +304,18 @@ test('the natural-key migration dedupes, normalizes singletons, and drops dead r
 
     expect($rows->firstWhere('type', 'App\\States\\LongGone'))->not->toBeNull();
 
+    // The live row is untouched—the stale copy is ignored, not upserted over it.
+    $live = $rows->firstWhere('state_id', 8);
+    expect((int) $live->last_event_id)->toBe(45)
+        ->and($live->data)->toBe('{"count":"live"}');
+
     Schema::drop('verb_snapshots_migration_test');
+});
+
+test('verbs:snapshots:migrate is a no-op when there is nothing set aside', function () {
+    Schema::dropIfExists('__verbs_snapshots_pre_010');
+
+    $this->artisan('verbs:snapshots:migrate')->assertExitCode(0);
 });
 
 test('the commit transaction spans every configured verbs connection', function () {

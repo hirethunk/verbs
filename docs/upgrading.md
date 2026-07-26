@@ -5,19 +5,42 @@ new migration—but read the behavior changes below, especially if you've built 
 
 ### Run the migration
 
+The 0.10 snapshot store upserts against a natural key—a unique index on `verb_snapshots (type, state_id)`. Upgrading is
+two steps: a fast, reversible migration that puts the new table in place, then a command that copies your existing
+snapshots into it.
+
 ```sh
 php artisan vendor:publish --tag=verbs-migrations
 php artisan migrate
+php artisan verbs:snapshots:migrate
 ```
 
-The migration adds a unique index on `verb_snapshots (type, state_id)`, dedupes any existing duplicate rows (keeping the
-most advanced one), normalizes singleton snapshot rows to a sentinel `state_id`, deletes rows that had data but no
-`last_event_id`, and drops the never-used `expires_at` column. After migrating, you can confirm your snapshots match
-your events:
+The migration renames your existing `verb_snapshots` table to `__verbs_snapshots_pre_010` and creates a fresh
+`verb_snapshots` with the unique index already on it. This is a rename plus an empty-table create, so it's fast and
+doesn't lock a large table while it dedupes. (On a fresh install, or when the table is empty, there's nothing to set
+aside—the migration just creates the new table.)
+
+`verbs:snapshots:migrate` then copies the old rows into the new table: it deletes rows that had data but no
+`last_event_id`, normalizes singleton rows to a sentinel `state_id`, dedupes each `(type, state_id)` down to its most
+advanced row, and copies what's left. It skips any state the running app has already rebuilt (those rows are
+authoritative). When it's done it asks whether to drop `__verbs_snapshots_pre_010`—say no to keep it as a downgrade
+safety net and drop it by hand later. The command is safe to re-run: if it's interrupted, run it again.
+
+After migrating, confirm your snapshots match your events:
 
 ```sh
 php artisan verbs:verify
 ```
+
+> **Deploy in this order.** The new snapshot store *requires* the unique index; if 0.10 code serves traffic before the
+> migration runs, it will corrupt the snapshot table (duplicate rows on MySQL, write errors on Postgres/SQLite). Stop or
+> drain your queue workers, run `php artisan migrate` with the new code **not yet serving traffic** (a deploy window or
+> maintenance mode), start the new code, then run `php artisan verbs:snapshots:migrate`.
+
+Between the migration and the backfill, `verb_snapshots` starts empty, so any state you load rebuilds from its events on
+first access (see [*Stale loads rebuild connected components*](#behavior-changes-the-ones-that-matter) below—this can be
+expensive for large histories). Running `verbs:snapshots:migrate` promptly after `migrate` keeps that window short and
+warms the table back up.
 
 ### Signature and import changes (mechanical)
 
@@ -101,7 +124,9 @@ enumeration aren't part of the contract), so it requires the default Eloquent sn
   connection committing first (best-effort—cross-connection atomicity needs a shared connection). The
   `verbs.connections.state_events` option is gone: state-event mappings always use the `events` connection (they're read
   in a single query across both tables), and a leftover config value pointing anywhere else triggers a deprecation
-  warning.
+  warning. Almost no one sets this, but if you did point `verb_state_events` at a *different* connection than your
+  events, move that table onto the events connection before upgrading—otherwise reads and writes will hit a
+  table-not-found error.
 - **Registering a second instance for a live state identity throws.** A `LogicException` here is a bug-finder: it means
   something constructed a state directly instead of loading it. Use
   `YourState::load($id)` (or `::singleton()`), never `new YourState`.

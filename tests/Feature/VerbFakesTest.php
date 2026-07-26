@@ -4,6 +4,7 @@ use Thunk\Verbs\Attributes\Autodiscovery\StateId;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Verbs;
+use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\State;
 
 it('performs event store assertions', function () {
@@ -115,7 +116,7 @@ class VerbFakesTestEvent extends Event
     }
 }
 
-class VerbFakesSingletonState extends \Thunk\Verbs\SingletonState
+class VerbFakesSingletonState extends SingletonState
 {
     public int $count = 0;
 }
