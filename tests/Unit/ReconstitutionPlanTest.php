@@ -171,8 +171,12 @@ test('a member with no snapshot routes the plan to a blank baseline', function (
 
     $plan = planFor([planState(ReconstitutionPlanTestState1::class, 10)]);
 
+    // State 11 has no snapshot, so discovery already ran with a null floor and
+    // covered the whole component—the blank fallback must keep exactly the
+    // members and window it found rather than re-deriving them.
     expect($plan->seeded)->toBeFalse()
         ->and($plan->floor)->toBeNull()
+        ->and($plan->members)->toHaveCount(2)
         ->and($plan->window->all())->toBe([100, 101, 102, 103]);
 });
 

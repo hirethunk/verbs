@@ -16,9 +16,12 @@ use Thunk\Verbs\State;
  *
  * Seeding is only used when it is *exactly* equivalent to a blank rebuild:
  * every member's snapshot must sit at the window floor, so that no window
- * event was already absorbed by any seed. That's the common case, because
- * commit writes the snapshots of co-loaded states together. Anything murkier
- * falls back to a blank baseline over the full component—slower, never wrong.
+ * event was already absorbed by any seed. That holds when the component has
+ * one member (the common isolated-tail case), or when a single event touched
+ * every member last. Co-committed snapshots do *not* line up on their own—
+ * each carries the id of the last event that touched *that* state. Anything
+ * else rebuilds from a blank baseline over the full component—slower, never
+ * wrong.
  */
 class ReconstitutionPlan
 {
@@ -40,11 +43,9 @@ class ReconstitutionPlan
 
     public static function plan(Collection $states, bool $use_snapshots = true): static
     {
-        // The static factory is the plan's composition point—resolving the
-        // stores here keeps the constructor honestly injectable for tests.
         return (new static($states, app(StoresEvents::class), app(StoresSnapshots::class), $use_snapshots))
             ->discover()
-            ->probe();
+            ->decideSeeding();
     }
 
     /** @param  Collection<int, State>  $states */
@@ -164,41 +165,30 @@ class ReconstitutionPlan
 
     /**
      * Seeding is exact only if no window event was already absorbed by a
-     * member's snapshot. When every member sits exactly at the floor (the
-     * common case) that's true by construction; otherwise one bounded query
-     * checks for absorbed rows inside the window, and any hit means the whole
-     * plan is recomputed from a blank baseline.
+     * member's snapshot. Every member sitting at the floor guarantees that by
+     * construction. A member *above* the floor never can: it already applied
+     * the event its own last_event_id names, that event is above the floor and
+     * so inside the window, and replaying it over that member's seed would
+     * apply it twice. Any member off the floor therefore rebuilds from a blank
+     * baseline.
      */
-    protected function probe(): static
+    protected function decideSeeding(): static
     {
         if (! $this->use_snapshots) {
             return $this;
         }
 
-        $misaligned = $this->members->filter(
+        $misaligned = $this->members->contains(
             fn (StateIdentity $member) => $this->last_event_ids[$member->key()] !== $this->floor,
         );
 
-        if ($misaligned->isEmpty()) {
-            $this->seeded = $this->floor !== null;
+        if ($misaligned) {
+            $this->rediscoverBlank();
 
             return $this;
         }
 
-        $absorbed_window_rows = $this->events->hasAppliedEventsAfter(
-            $misaligned->map(fn (StateIdentity $member) => new StateIdentity(
-                state_type: $member->state_type,
-                state_id: $member->state_id,
-                last_event_id: $this->last_event_ids[$member->key()],
-            )),
-            after_id: $this->floor,
-        );
-
-        if ($absorbed_window_rows) {
-            $this->rediscoverBlank();
-        } else {
-            $this->seeded = true;
-        }
+        $this->seeded = $this->floor !== null;
 
         return $this;
     }
@@ -206,11 +196,22 @@ class ReconstitutionPlan
     /**
      * A blank-baseline plan is the same fixpoint with no known last_event_ids at all:
      * floor drops away and discovery covers the entire connected component.
+     *
+     * A floor that is already null means discovery ran that way to begin with,
+     * so the members and window it found *are* the blank plan and re-running it
+     * would find exactly the same ones. Only the bookkeeping needs clearing.
      */
     protected function rediscoverBlank(): void
     {
         $this->use_snapshots = false;
         $this->seeded = false;
+
+        if ($this->floor === null) {
+            $this->last_event_ids = array_fill_keys(array_keys($this->last_event_ids), null);
+
+            return;
+        }
+
         $this->members = new Collection;
         $this->window = new Collection;
         $this->last_event_ids = [];
