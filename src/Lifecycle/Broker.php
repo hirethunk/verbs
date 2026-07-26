@@ -75,19 +75,35 @@ class Broker implements BrokersEvents
             return true;
         }
 
+        $events_are_durable = false;
+        $confirm_snapshots = static fn () => null;
+
         try {
-            $this->transaction(function () {
-                $this->queue->flush();
-                $this->states->persistSnapshots($this->snapshots);
-            });
+            $this->transaction(
+                function () use (&$confirm_snapshots) {
+                    $this->queue->flush();
+                    $confirm_snapshots = $this->states->writeSnapshots($this->snapshots);
+                },
+                function (string $store) use (&$events_are_durable) {
+                    if ($store === 'events') {
+                        $events_are_durable = true;
+                    }
+                },
+            );
         } catch (Throwable $exception) {
-            // If snapshots failed to persist, we need to restore the already-flushed events
-            if (empty($this->queue->getEvents())) {
+            // Re-queue the batch so it can be retried—unless the event write itself
+            // committed. Split connections commit the events first, so a failure
+            // between that commit and the snapshots' leaves durable events behind,
+            // and re-inserting those would collide on their primary key.
+            if (! $events_are_durable && empty($this->queue->getEvents())) {
                 $this->queue->restore($events);
             }
 
             throw $exception;
         }
+
+        // Don't confirm snapshots until all outer database transactions are committed
+        $this->afterCommit(config('verbs.connections.snapshots'), $confirm_snapshots);
 
         // Our handlers may need to load new state/etc, so we'll allow pruning un-pinned states before
         // running them (we need to keep pinned states until after handlers run)
@@ -115,14 +131,7 @@ class Broker implements BrokersEvents
             ->run();
     }
 
-    /**
-     * When all of the Verbs stores share a database connection (the default),
-     * the callback runs in a single atomic transaction. When snapshots live
-     * elsewhere, each distinct connection gets its own nested transaction—
-     * best-effort, since true cross-connection atomicity isn't possible
-     * without two-phase commit.
-     */
-    protected function transaction(callable $callback): void
+    protected function transaction(callable $callback, ?callable $onCommit = null): void
     {
         $this->warnIfStateEventsConnectionIsConfigured();
 
@@ -130,15 +139,36 @@ class Broker implements BrokersEvents
         // snapshots are on different connections, events succeeding and snapshots
         // failing is recoverable, but the other way around would result in data loss.
         $connections = collect([
-            DB::connection(config('verbs.connections.events'))->getName(),
-            DB::connection(config('verbs.connections.snapshots'))->getName(),
+            'events' => DB::connection(config('verbs.connections.events'))->getName(),
+            'snapshots' => DB::connection(config('verbs.connections.snapshots'))->getName(),
         ]);
 
-        foreach ($connections->unique() as $connection) {
-            $callback = fn () => DB::connection($connection)->transaction($callback);
+        foreach ($connections->unique() as $store => $connection) {
+            $callback = function () use ($store, $connection, $callback, $onCommit) {
+                DB::connection($connection)->transaction($callback);
+
+                // Releasing a savepoint inside a caller's transaction isn't durable,
+                // so only a return to level 0 counts as committed.
+                if ($onCommit !== null && DB::connection($connection)->transactionLevel() === 0) {
+                    $onCommit($store);
+                }
+            };
         }
 
         $callback();
+    }
+
+    protected function afterCommit(?string $name, callable $callback): void
+    {
+        $connection = DB::connection($name);
+
+        if ($connection->transactionLevel() === 0) {
+            $callback();
+
+            return;
+        }
+
+        $connection->afterCommit($callback);
     }
 
     protected function warnIfStateEventsConnectionIsConfigured(): void

@@ -221,22 +221,32 @@ class StateManager
     }
 
     /**
-     * Persist the dirty states' snapshots into the given store, advancing each
-     * one's watermark only on a successful write. The store is a parameter, not
-     * a dependency: the identity map owns *what* has changed and *what* is
-     * already durable; the store owns *how* to persist.
+     * Write the dirty snapshots and advance their watermarks immediately—only
+     * correct when nothing can still roll the write back. A caller writing
+     * inside a transaction wants writeSnapshots() instead.
      */
-    public function persistSnapshots(StoresSnapshots $snapshots): bool
+    public function persistSnapshots(StoresSnapshots $snapshots): void
+    {
+        ($this->writeSnapshots($snapshots))();
+    }
+
+    /**
+     * Write snapshots and return a closure that MUST be called once the write
+     * is durable (for use inside a DB transaction).
+     *
+     * @return callable(): void
+     */
+    public function writeSnapshots(StoresSnapshots $snapshots): callable
     {
         $dirty = $this->dirty();
 
         if (! $snapshots->write($dirty)) {
-            return false;
+            return static fn () => null;
         }
 
-        $this->markPersisted($dirty);
+        $persisted = array_map(fn (State $state) => [$state, Id::tryFrom($state->last_event_id)], $dirty);
 
-        return true;
+        return fn () => $this->markPersistedAt($persisted);
     }
 
     /**
@@ -271,6 +281,21 @@ class StateManager
     {
         foreach ($states as $state) {
             $this->state_last_persisted_event_ids[$state] = Id::tryFrom($state->last_event_id);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Mark states durable as of ids captured earlier, rather than whatever they
+     * have applied by now (see writeSnapshots()).
+     *
+     * @param  array<int, array{0: State, 1: mixed}>  $persisted
+     */
+    protected function markPersistedAt(array $persisted): static
+    {
+        foreach ($persisted as [$state, $last_event_id]) {
+            $this->state_last_persisted_event_ids[$state] = $last_event_id;
         }
 
         return $this;
