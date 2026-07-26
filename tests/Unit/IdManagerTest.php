@@ -31,6 +31,25 @@ it('keeps an all-digit ULID as a string instead of overflowing the int cast', fu
         ->and(Id::normalizeEventId($all_digit_ulid) < Id::normalizeEventId('01ARZ3NDEKTSV4RRFFQ69G5FAV'))->toBeTrue();
 });
 
+it('keeps digit strings larger than PHP_INT_MAX as strings', function () {
+    // 19 digits, but above PHP_INT_MAX: (int) saturates rather than overflows,
+    // so two distinct ids would both collapse onto PHP_INT_MAX and compare equal.
+    $above_max = '9300000000000000001';
+    $also_above_max = '9300000000000000002';
+
+    expect(Id::normalizeEventId($above_max))->toBe($above_max)
+        ->and(Id::normalizeEventId($also_above_max))->toBe($also_above_max)
+        ->and(Id::normalizeEventId($above_max) === Id::normalizeEventId($also_above_max))->toBeFalse();
+});
+
+it('still casts 19-digit digit strings that fit in an int', function () {
+    $max = (string) PHP_INT_MAX;
+
+    expect(strlen($max))->toBe(19)
+        ->and(Id::normalizeEventId($max))->toBe(PHP_INT_MAX)
+        ->and(Id::normalizeEventId('1000000000000000000'))->toBe(1000000000000000000);
+});
+
 it('normalizes event ids so they compare chronologically', function () {
     $earlier_snowflake = snowflake_id();
     $later_snowflake = snowflake_id();

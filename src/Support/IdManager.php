@@ -74,10 +74,24 @@ class IdManager
             // Drivers hand bigints back as decimal strings, which must compare
             // numerically—but only strings that fit in an int are snowflakes
             // in disguise. A 26-char all-digit ULID (rare, but legal) must stay
-            // a string, or the cast overflows and corrupts ordering.
-            is_string($value) && ctype_digit($value) && strlen($value) <= 19 => (int) $value,
+            // a string, or the cast saturates and corrupts ordering.
+            is_string($value) && ctype_digit($value) && $this->fitsInInt($value) => (int) $value,
             default => (string) $value,
         };
+    }
+
+    /**
+     * (int) on a digit string above PHP_INT_MAX clamps to PHP_INT_MAX rather
+     * than erroring, so every such id would collapse onto the same value. A
+     * digit-count check alone can't decide this: PHP_INT_MAX is itself 19
+     * digits, so 19-digit strings need comparing against it directly.
+     */
+    protected function fitsInInt(string $value): bool
+    {
+        $max = (string) PHP_INT_MAX;
+
+        return strlen($value) < strlen($max)
+            || (strlen($value) === strlen($max) && strcmp($value, $max) <= 0);
     }
 
     /**
