@@ -140,15 +140,9 @@ class EventStore implements StoresEvents
         $latest = $query->get();
 
         foreach ($identities as $identity) {
-            $rows = $latest->where('state_type', $identity->state_type);
-
-            if (! is_a($identity->state_type, SingletonState::class, true)) {
-                $rows = $rows->where('state_id', $identity->state_id);
-            }
-
             // A singleton's events may be recorded under several incidental
             // state_id rows, so its true last event id is the max across all of them.
-            $max = $rows->max('max_event_id');
+            $max = $latest->filter(fn ($row) => $this->rowBelongsTo($row, $identity))->max('max_event_id');
 
             if (! $max) {
                 continue;
@@ -164,6 +158,23 @@ class EventStore implements StoresEvents
         }
 
         return false;
+    }
+
+    /**
+     * Split the chunk's rows back out per identity. The database has already
+     * constrained them, so this filter must never be *stricter* than the
+     * database was: MySQL's default collation matches string ids
+     * case-insensitively, and dropping a row it matched would report a stale
+     * state as up to date. Over-matching only costs a redundant rebuild.
+     */
+    protected function rowBelongsTo(object $row, StateIdentity $identity): bool
+    {
+        if (strcasecmp((string) data_get($row, 'state_type'), $identity->state_type) !== 0) {
+            return false;
+        }
+
+        return is_a($identity->state_type, SingletonState::class, true)
+            || strcasecmp((string) data_get($row, 'state_id'), (string) $identity->state_id) === 0;
     }
 
     protected function constrainToIdentity(BaseBuilder $query, StateIdentity $identity): BaseBuilder

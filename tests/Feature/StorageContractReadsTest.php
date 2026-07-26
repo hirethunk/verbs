@@ -94,6 +94,46 @@ test('keyed states never match rows for other ids', function () {
     ]))->toBeTrue();
 });
 
+// MySQL's default collation matches string ids case-insensitively, so the SQL
+// hands back rows the PHP-side split then has to route to an identity. If that
+// split is stricter than the database was, the row is dropped and a stale state
+// is reported as up to date—the one failure this whole read exists to prevent.
+test('keyed states keep rows the database matched case-insensitively', function () {
+    DB::statement('drop table verb_state_events');
+    DB::statement('create table verb_state_events (
+        id integer primary key,
+        event_id integer not null,
+        state_id text collate nocase not null,
+        state_type varchar not null,
+        created_at datetime,
+        updated_at datetime
+    )');
+
+    $event_id = snowflake_id();
+
+    DB::table('verb_state_events')->insert([
+        'id' => snowflake_id(),
+        'event_id' => $event_id,
+        'state_id' => 'ABC',
+        'state_type' => ContractReadsState::class,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    $events = app(StoresEvents::class);
+
+    expect($events->hasUnappliedEvents([
+        new StateIdentity(ContractReadsState::class, 'abc'),
+    ]))->toBeTrue();
+
+    expect($events->hasUnappliedEvents([
+        new StateIdentity(ContractReadsState::class, 'abc', last_event_id: $event_id),
+    ]))->toBeFalse();
+})->skip(
+    fn () => DB::connection()->getDriverName() !== 'sqlite',
+    'Needs a case-insensitive id column, which only SQLite can be given here.',
+);
+
 test('discovery reads return distinct event ids and state identities', function () {
     $a = snowflake_id();
     $b = snowflake_id();
