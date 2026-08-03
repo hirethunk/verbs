@@ -7,7 +7,6 @@ use Glhd\Bits\Bits;
 use Illuminate\Support\Enumerable;
 use InvalidArgumentException;
 use Ramsey\Uuid\UuidInterface;
-use ReflectionClass;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Contracts\StoresSnapshots;
@@ -21,6 +20,7 @@ use Thunk\Verbs\State\ReconstitutionPlan;
 use Thunk\Verbs\State\ReplayResolver;
 use Thunk\Verbs\State\StateManager;
 use Thunk\Verbs\State\StateResolver;
+use Thunk\Verbs\Support\Reflector;
 
 /**
  * Drives an ordered stream of events through a bound StateManager scope. This is
@@ -160,7 +160,8 @@ class Replay
         // the live scope (State::__construct() would). It seeds the plan's
         // component discovery and doubles as the eventless return value. A
         // singleton's incidental id is irrelevant—its component is by type.
-        $shell = (new ReflectionClass($state))->newInstanceWithoutConstructor();
+        $shell = Reflector::newInstanceWithoutConstructorWithPromotedDefaults($state);
+
         $shell->id = $resolved_id ?? snowflake_id();
 
         $plan = ReconstitutionPlan::plan(collect([$shell]), use_snapshots: false);

@@ -66,9 +66,35 @@ it('supports singletons', function () {
     expect(Replay::fresh(ReplayFreshSingletonState::class)->run()->total)->toBe(2);
 });
 
+test('an eventless rebuild returns a shell with its promoted defaults applied', function () {
+    $rebuilt = Replay::fresh(ReplayFreshPromotedState::class, snowflake_id())->run();
+
+    expect($rebuilt->last_event_id)->toBeNull()
+        ->and($rebuilt->count)->toBe(7)
+        ->and($rebuilt->label)->toBe('unnamed');
+});
+
+test('an eventless rebuild shell is still not registered with the live scope', function () {
+    $id = snowflake_id();
+
+    $rebuilt = Replay::fresh(ReplayFreshPromotedState::class, $id)->run();
+
+    expect($rebuilt)->not->toBe(ReplayFreshPromotedState::load($id));
+});
+
 class ReplayFreshState extends State
 {
     public int $count = 0;
+}
+
+class ReplayFreshPromotedState extends State
+{
+    public function __construct(
+        public int $count = 7,
+        public string $label = 'unnamed',
+    ) {
+        parent::__construct();
+    }
 }
 
 class ReplayFreshEvent extends Event

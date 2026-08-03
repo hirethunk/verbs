@@ -114,6 +114,19 @@ class Reflector extends BaseReflector
         return $class_and_interface_names;
     }
 
+    public static function newInstanceWithoutConstructorWithPromotedDefaults(string|ReflectionClass $target): object
+    {
+        if (is_string($target)) {
+            $target = new ReflectionClass($target);
+        }
+
+        $instance = $target->newInstanceWithoutConstructor();
+
+        static::applyPromotedDefaults($instance, $target);
+
+        return $instance;
+    }
+
     /**
      * A constructor-promoted property keeps its default on the constructor parameter,
      * not on the property, so `ReflectionProperty::hasDefaultValue()` reports false for
@@ -135,7 +148,7 @@ class Reflector extends BaseReflector
     }
 
     /** Apply promoted defaults to any property an instance hasn't had set yet. */
-    public static function applyPromotedDefaults(object $instance, ?ReflectionClass $reflect = null): void
+    protected static function applyPromotedDefaults(object $instance, ?ReflectionClass $reflect = null): void
     {
         $reflect ??= new ReflectionClass($instance);
 

@@ -3,7 +3,6 @@
 namespace Thunk\Verbs\Support;
 
 use BackedEnum;
-use ReflectionClass;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\Serializer as SymfonySerializer;
 use Thunk\Verbs\Event;
@@ -50,13 +49,7 @@ class Serializer
         }
 
         if (! $call_constructor && ! is_object($target)) {
-            $reflect = new ReflectionClass($target);
-            $target = $reflect->newInstanceWithoutConstructor();
-
-            // Calling `newInstanceWithoutConstructor` does not initialize constructor-promoted
-            // properties, so we need to do that manually.
-            Reflector::applyPromotedDefaults($target, $reflect);
-
+            $target = Reflector::newInstanceWithoutConstructorWithPromotedDefaults($target);
             $context[AbstractNormalizer::OBJECT_TO_POPULATE] = $target;
         }
 

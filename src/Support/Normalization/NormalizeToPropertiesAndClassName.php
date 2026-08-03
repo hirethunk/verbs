@@ -56,9 +56,7 @@ trait NormalizeToPropertiesAndClassName
             ));
         }
 
-        $instance = $reflect->newInstanceWithoutConstructor();
-
-        Reflector::applyPromotedDefaults($instance, $reflect);
+        $instance = Reflector::newInstanceWithoutConstructorWithPromotedDefaults($reflect);
 
         foreach (Arr::except($data, ['fqcn']) as $key => $value) {
             $property = $reflect->getProperty($key);
