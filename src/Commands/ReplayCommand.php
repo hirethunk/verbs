@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event as EventFacade;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Models\VerbEvent;
 use Thunk\Verbs\Replay;
 
@@ -34,7 +35,7 @@ class ReplayCommand extends Command
         DB::disableQueryLog();
 
         $started_at = time();
-        // $highest_event_id = Id::nil();
+        $highest_event_id = Id::nil();
 
         if (! $count = VerbEvent::count()) {
             $this->error('No events to replay!');
@@ -47,9 +48,9 @@ class ReplayCommand extends Command
 
         Replay::full()
             ->beforeEach(function (Event $event) use ($progress, $started_at, &$highest_event_id) {
-                // if ($event->id < $highest_event_id) {
-                //     throw new RuntimeException('Processed events out of order.');
-                // }
+                if ($event->id < $highest_event_id) {
+                    throw new \RuntimeException('Processed events out of order.'); // FIXME
+                }
 
                 return $progress->label(sprintf(
                     '[%s] %s::%d',

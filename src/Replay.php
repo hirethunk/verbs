@@ -23,7 +23,7 @@ use Thunk\Verbs\State\StateResolver;
 use Thunk\Verbs\Support\Reflector;
 
 /**
- * Drives an ordered stream of events through a bound StateManager scope. This is
+ * Drives an ordered stream of events through a bound StateManager "scope." This is
  * the single shape the three replay sites share—full replay, reconstitution's
  * window rebuild, and verification's blank rebuild all *select events → bind a
  * scope → apply each event → post-process*. What differs between them is
@@ -37,31 +37,6 @@ use Thunk\Verbs\Support\Reflector;
  */
 class Replay
 {
-    /** @var null|Closure(Event): void */
-    protected ?Closure $before = null;
-
-    /** @var null|Closure(Event): void */
-    protected ?Closure $after = null;
-
-    /** @var null|Closure(int): void */
-    protected ?Closure $checkpoint = null;
-
-    /**
-     * Swapped onto the scope for the duration of the drive (e.g. full replay's
-     * ReplayResolver). Null when the scope already carries the resolver it needs
-     * (the rebuild sub-scopes construct with a RebuildResolver).
-     */
-    protected ?StateResolver $resolver = null;
-
-    /** @var null|Closure(): void one-time, before the loop and outside its try */
-    protected ?Closure $set_up = null;
-
-    /** @var null|Closure(): void one-time, in the finally */
-    protected ?Closure $tear_down = null;
-
-    /** @var null|Closure(StateManager): mixed computes run()'s return value */
-    protected ?Closure $result = null;
-
     /**
      * @param  Enumerable<int, Event>  $events
      * @param  Closure(Event): void  $drive
@@ -70,8 +45,15 @@ class Replay
      */
     public function __construct(
         public StateManager $scope,
-        public Enumerable $events,
-        public Closure $drive,
+        protected Enumerable $events,
+        protected Closure $drive,
+        protected ?StateResolver $state_resolver = null,
+        protected ?Closure $set_up = null,
+        protected ?Closure $tear_down = null,
+        protected ?Closure $before_each = null,
+        protected ?Closure $after_each = null,
+        protected ?Closure $checkpoint = null,
+        protected ?Closure $result_mapper = null,
     ) {}
 
     /**
@@ -88,48 +70,40 @@ class Replay
         $queue = app(EventQueue::class);
         $dispatcher = app(Dispatcher::class);
 
-        $replay = new static(
+        return new static(
             scope: $scope,
             events: app(StoresEvents::class)->read(),
             drive: function (Event $event) use ($dispatcher) {
                 $dispatcher->apply($event);
                 $dispatcher->replay($event);
             },
-        );
+            state_resolver: new ReplayResolver($snapshots),
+            set_up: function () use ($queue, $scope, $snapshots) {
+                // A queued event has already applied to in-memory state but isn't
+                // part of stored history yet: the replay would reset that state out
+                // from under it, and a later commit would splice the event in on top
+                // of the rebuilt world. Fail loudly rather than lose or double-apply.
+                if ($queued = count($queue->getEvents())) {
+                    throw new CannotReplayWithQueuedEvents(sprintf(
+                        'Cannot replay while %s queued but uncommitted—commit or discard them before replaying.',
+                        $queued === 1 ? '1 event is' : "{$queued} events are",
+                    ));
+                }
 
-        $replay->resolver = new ReplayResolver($snapshots);
-
-        $replay->set_up = function () use ($queue, $scope, $snapshots) {
-            // A queued event has already applied to in-memory state but isn't
-            // part of stored history yet: the replay would reset that state out
-            // from under it, and a later commit would splice the event in on top
-            // of the rebuilt world. Fail loudly rather than lose or double-apply.
-            if ($queued = count($queue->getEvents())) {
-                throw new CannotReplayWithQueuedEvents(sprintf(
-                    'Cannot replay while %s queued but uncommitted—commit or discard them before replaying.',
-                    $queued === 1 ? '1 event is' : "{$queued} events are",
-                ));
-            }
-
-            $scope->reset();
-            $snapshots->reset();
-        };
-
-        // Bound memory: the same 500-event cadence Broker::replay() used, gated
-        // on willPrune() so a small replay never churns snapshots mid-stream.
-        $replay->checkpoint = function (int $iteration) use ($scope, $snapshots) {
-            if ($iteration % 500 === 0 && $scope->willPrune()) {
+                $scope->reset();
+                $snapshots->reset();
+            },
+            tear_down: function () use ($scope, $snapshots) {
                 $scope->persistSnapshots($snapshots);
                 $scope->prune();
-            }
-        };
-
-        $replay->tear_down = function () use ($scope, $snapshots) {
-            $scope->persistSnapshots($snapshots);
-            $scope->prune();
-        };
-
-        return $replay;
+            },
+            checkpoint: function (int $iteration) use ($scope, $snapshots) {
+                if ($iteration % 500 === 0 && $scope->willPrune()) {
+                    $scope->persistSnapshots($snapshots);
+                    $scope->prune();
+                }
+            },
+        );
     }
 
     /**
@@ -149,34 +123,23 @@ class Replay
 
         $resolved_id = Id::tryFrom($id);
 
-        // Mirror StateManager::make(): a null id is only meaningful for a
-        // singleton (there is exactly one). A keyed rebuild without an id fails
-        // loudly rather than rebuilding nothing under a random key.
         if ($resolved_id === null && ! is_a($state, SingletonState::class, true)) {
             throw new InvalidArgumentException("Cannot rebuild a [{$state}] state without an id.");
         }
 
-        // A blank shell built without the constructor never auto-registers in
-        // the live scope (State::__construct() would). It seeds the plan's
-        // component discovery and doubles as the eventless return value. A
-        // singleton's incidental id is irrelevant—its component is by type.
+        // We need to instantiate the "shell" of the state without calling the constructor so that it
+        // never auto-registers itself with the current state manager.
         $shell = Reflector::newInstanceWithoutConstructorWithPromotedDefaults($state);
-
         $shell->id = $resolved_id ?? snowflake_id();
-
-        $plan = ReconstitutionPlan::plan(collect([$shell]), use_snapshots: false);
 
         $scope = StateManager::rebuilding();
 
-        $replay = new static(
+        return new static(
             scope: $scope,
-            events: $plan->events(),
+            events: ReconstitutionPlan::plan(collect([$shell]), use_snapshots: false)->events(),
             drive: fn (Event $event) => Lifecycle::run($event, Phases::apply()),
+            result_mapper: fn (StateManager $scope) => $scope->cache->get($state, $scope->cacheId($state, $id)) ?? $shell,
         );
-
-        $replay->result = fn (StateManager $scope) => $scope->cache->get($state, $scope->cacheId($state, $id)) ?? $shell;
-
-        return $replay;
     }
 
     /**
@@ -199,7 +162,7 @@ class Replay
     /** @experimental */
     public function beforeEach(?callable $callback): static
     {
-        $this->before = $callback === null ? null : $callback(...);
+        $this->before_each = $callback === null ? null : $callback(...);
 
         return $this;
     }
@@ -207,7 +170,7 @@ class Replay
     /** @experimental */
     public function afterEach(?callable $callback): static
     {
-        $this->after = $callback === null ? null : $callback(...);
+        $this->after_each = $callback === null ? null : $callback(...);
 
         return $this;
     }
@@ -215,19 +178,18 @@ class Replay
     /** @experimental */
     public function run(): mixed
     {
-        // The guard/reset live outside the try so a bailed run (queued events)
-        // never triggers the tear-down's snapshot write.
+        // Current tear-down implementations assume setup succeeded, so if it fails we want to throw
+        // outside the try/finally. We may want to consider renaming for clarity.
         $this->runCallback($this->set_up);
 
         try {
-            // run() binds this scope as the *current* scope for the duration, so
-            // the readers of the re-applying signal (fire(), unlessReplaying())
-            // and every state load agree with the resolver swap by construction.
-            $count = $this->scope->run(fn () => $this->resolver
-                ? $this->scope->withResolver($this->resolver, fn () => $this->loop())
+            // Run with our replay state manager as the current "scope" and optionally override the
+            // manager's state resolver with the replay's resolver
+            $count = $this->scope->run(fn () => $this->state_resolver
+                ? $this->scope->withResolver($this->state_resolver, fn () => $this->loop())
                 : $this->loop());
 
-            return $this->runCallback($this->result, [$this->scope], $count);
+            return $this->runCallback($this->result_mapper, [$this->scope], $count);
         } finally {
             $this->runCallback($this->tear_down);
         }
@@ -238,9 +200,9 @@ class Replay
         $iteration = 0;
 
         foreach ($this->events as $event) {
-            $this->runCallback($this->before, [$event]);
+            $this->runCallback($this->before_each, [$event]);
             $this->runCallback($this->drive, [$event]);
-            $this->runCallback($this->after, [$event]);
+            $this->runCallback($this->after_each, [$event]);
             $this->runCallback($this->checkpoint, [$iteration]);
 
             $iteration++;
