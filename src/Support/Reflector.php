@@ -114,6 +114,7 @@ class Reflector extends BaseReflector
         return $class_and_interface_names;
     }
 
+    /** @internal this function name may change */
     public static function newInstanceWithoutConstructorWithPromotedDefaults(string|ReflectionClass $target): object
     {
         if (is_string($target)) {
