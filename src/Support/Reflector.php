@@ -114,6 +114,40 @@ class Reflector extends BaseReflector
         return $class_and_interface_names;
     }
 
+    /**
+     * A constructor-promoted property keeps its default on the constructor parameter,
+     * not on the property, so `ReflectionProperty::hasDefaultValue()` reports false for
+     * it and `newInstanceWithoutConstructor()` leaves it uninitialized.
+     *
+     * @return array<string, mixed>
+     */
+    public static function getPromotedDefaults(ReflectionClass $reflect): array
+    {
+        $defaults = [];
+
+        foreach ($reflect->getConstructor()?->getParameters() ?? [] as $parameter) {
+            if ($parameter->isPromoted() && $parameter->isDefaultValueAvailable()) {
+                $defaults[$parameter->getName()] = $parameter->getDefaultValue();
+            }
+        }
+
+        return $defaults;
+    }
+
+    /** Apply promoted defaults to any property an instance hasn't had set yet. */
+    public static function applyPromotedDefaults(object $instance, ?ReflectionClass $reflect = null): void
+    {
+        $reflect ??= new ReflectionClass($instance);
+
+        foreach (static::getPromotedDefaults($reflect) as $name => $default) {
+            $property = $reflect->getProperty($name);
+
+            if (! $property->isInitialized($instance)) {
+                $property->setValue($instance, $default);
+            }
+        }
+    }
+
     protected static function reflectFunction(ReflectionFunctionAbstract|Closure $function): ReflectionFunctionAbstract
     {
         if ($function instanceof Closure) {

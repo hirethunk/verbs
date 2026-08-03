@@ -55,16 +55,7 @@ class Serializer
 
             // Calling `newInstanceWithoutConstructor` does not initialize constructor-promoted
             // properties, so we need to do that manually.
-            foreach ($reflect->getConstructor()?->getParameters() ?? [] as $parameter) {
-                if (! $parameter->isPromoted() || ! $parameter->isDefaultValueAvailable()) {
-                    continue;
-                }
-
-                $property = $reflect->getProperty($parameter->getName());
-                if (! $property->isInitialized($target)) {
-                    $property->setValue($target, $parameter->getDefaultValue());
-                }
-            }
+            Reflector::applyPromotedDefaults($target, $reflect);
 
             $context[AbstractNormalizer::OBJECT_TO_POPULATE] = $target;
         }

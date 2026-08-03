@@ -10,13 +10,21 @@ use ReflectionProperty;
 use RuntimeException;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
+use Thunk\Verbs\Support\Reflector;
 
 trait NormalizeToPropertiesAndClassName
 {
     public static function requiredDataForVerbsDeserialization(): array
     {
-        return Collection::make((new ReflectionClass(static::class))->getProperties())
-            ->reject(fn (ReflectionProperty $property) => $property->hasDefaultValue() || $property->getType()?->allowsNull())
+        $reflect = new ReflectionClass(static::class);
+        $promoted_defaults = Reflector::getPromotedDefaults($reflect);
+
+        return Collection::make($reflect->getProperties())
+            ->reject(function (ReflectionProperty $property) use ($promoted_defaults) {
+                return $property->hasDefaultValue()
+                    || array_key_exists($property->getName(), $promoted_defaults)
+                    || $property->getType()?->allowsNull();
+            })
             ->map(fn (ReflectionProperty $property) => $property->getName())
             ->values()
             ->all();
@@ -49,6 +57,8 @@ trait NormalizeToPropertiesAndClassName
         }
 
         $instance = $reflect->newInstanceWithoutConstructor();
+
+        Reflector::applyPromotedDefaults($instance, $reflect);
 
         foreach (Arr::except($data, ['fqcn']) as $key => $value) {
             $property = $reflect->getProperty($key);

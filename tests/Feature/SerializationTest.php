@@ -225,7 +225,11 @@ test('a nested DTO restores promoted defaults for keys the payload omits', funct
     );
 
     expect($event->dto->label)->toBe('default-label');
-})->skip('NormalizeToPropertiesAndClassName does not handle promoted defaults—see the two spots noted below.');
+});
+
+test('a promoted default is not required data for a nested DTO', function () {
+    expect(DtoWithPromotedDefaults::requiredDataForVerbsDeserialization())->toBe([]);
+});
 
 class EventWithPromotedDefaults extends Event
 {
