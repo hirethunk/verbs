@@ -8,6 +8,7 @@ use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Serializer\Normalizer\PropertyNormalizer;
 use Symfony\Component\Uid\AbstractUid;
 use Thunk\Verbs\Event;
+use Thunk\Verbs\Models\VerbEvent;
 use Thunk\Verbs\SerializedByVerbs;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\Normalization\NormalizeToPropertiesAndClassName;
@@ -166,6 +167,94 @@ it('allows us to store a serializable class(es) as a property', function () {
     expect($deserialized_event->dto)->toBeInstanceOf(DTO::class)
         ->and($deserialized_event->dtos[0])->toBeInstanceOf(DTO::class);
 });
+
+test('deserializing restores promoted defaults for keys the payload omits', function () {
+    // The realistic case: an event stored before `count` and `tags` were added
+    // carries neither key. `newInstanceWithoutConstructor()` skips promoted
+    // properties, so without the defaults both come back uninitialized.
+    $event = app(Serializer::class)->deserialize(EventWithPromotedDefaults::class, ['name' => 'Demo']);
+
+    expect($event->name)->toBe('Demo')
+        ->and($event->count)->toBe(7)
+        ->and($event->tags)->toBe(['a']);
+});
+
+test('deserializing restores promoted defaults from a JSON payload', function () {
+    $event = app(Serializer::class)->deserialize(EventWithPromotedDefaults::class, '{"name":"Demo"}');
+
+    expect($event->count)->toBe(7)
+        ->and($event->tags)->toBe(['a']);
+});
+
+test('a payload value overrides a promoted default', function () {
+    $event = app(Serializer::class)->deserialize(EventWithPromotedDefaults::class, [
+        'name' => 'Demo',
+        'count' => 99,
+    ]);
+
+    expect($event->count)->toBe(99);
+});
+
+test('promoted properties with no default are left uninitialized', function () {
+    $event = app(Serializer::class)->deserialize(EventWithPromotedDefaults::class, ['count' => 1]);
+
+    expect((new ReflectionProperty($event, 'name'))->isInitialized($event))->toBeFalse();
+});
+
+test('snapshot hydration restores promoted defaults', function () {
+    $state = app(Serializer::class)->deserialize(StateWithPromotedDefaults::class, ['name' => 'Demo']);
+
+    expect($state->name)->toBe('Demo')
+        ->and($state->count)->toBe(7);
+});
+
+test('reading a stored event that predates a promoted property uses its default', function () {
+    VerbEvent::create([
+        'id' => snowflake_id(),
+        'type' => EventWithPromotedDefaults::class,
+        'data' => ['name' => 'Demo'],
+    ]);
+
+    expect(VerbEvent::sole()->event()->count)->toBe(7);
+});
+
+test('a nested DTO restores promoted defaults for keys the payload omits', function () {
+    $event = app(Serializer::class)->deserialize(
+        EventWithPromotedDto::class,
+        '{"dto":{"fqcn":"DtoWithPromotedDefaults"}}',
+    );
+
+    expect($event->dto->label)->toBe('default-label');
+})->skip('NormalizeToPropertiesAndClassName does not handle promoted defaults—see the two spots noted below.');
+
+class EventWithPromotedDefaults extends Event
+{
+    public function __construct(
+        public string $name,
+        public int $count = 7,
+        public array $tags = ['a'],
+    ) {}
+}
+
+class StateWithPromotedDefaults extends State
+{
+    public function __construct(
+        public string $name = '',
+        public int $count = 7,
+    ) {}
+}
+
+class DtoWithPromotedDefaults implements SerializedByVerbs
+{
+    use NormalizeToPropertiesAndClassName;
+
+    public function __construct(public string $label = 'default-label') {}
+}
+
+class EventWithPromotedDto extends Event
+{
+    public DtoWithPromotedDefaults $dto;
+}
 
 class EventWithConstructorPromotion extends Event
 {
