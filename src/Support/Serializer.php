@@ -52,6 +52,20 @@ class Serializer
         if (! $call_constructor && ! is_object($target)) {
             $reflect = new ReflectionClass($target);
             $target = $reflect->newInstanceWithoutConstructor();
+
+            // Calling `newInstanceWithoutConstructor` does not initialize constructor-promoted
+            // properties, so we need to do that manually.
+            foreach ($reflect->getConstructor()?->getParameters() ?? [] as $parameter) {
+                if (! $parameter->isPromoted() || ! $parameter->isDefaultValueAvailable()) {
+                    continue;
+                }
+
+                $property = $reflect->getProperty($parameter->getName());
+                if (! $property->isInitialized($target)) {
+                    $property->setValue($target, $parameter->getDefaultValue());
+                }
+            }
+
             $context[AbstractNormalizer::OBJECT_TO_POPULATE] = $target;
         }
 

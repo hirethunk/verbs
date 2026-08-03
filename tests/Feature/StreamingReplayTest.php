@@ -5,6 +5,7 @@ use Thunk\Verbs\Attributes\Autodiscovery\StateId;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Verbs;
+use Thunk\Verbs\Replay;
 use Thunk\Verbs\State;
 
 /*
@@ -93,9 +94,11 @@ test('a large replay stays within a flat memory envelope and produces correct st
     $baseline = memory_get_usage();
     $high_water = 0;
 
-    Verbs::replay(afterEach: function () use (&$high_water, $baseline) {
-        $high_water = max($high_water, memory_get_usage() - $baseline);
-    });
+    Replay::full()
+        ->afterEach(function () use (&$high_water, $baseline) {
+            $high_water = max($high_water, memory_get_usage() - $baseline);
+        })
+        ->run();
 
     expect($high_water)->toBeLessThan(16 * 1024 * 1024)
         ->and(StreamingReplayTestState::load($state_id)->count)->toBe(10_000);

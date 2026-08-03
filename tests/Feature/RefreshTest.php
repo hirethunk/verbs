@@ -5,6 +5,7 @@ use Thunk\Verbs\Attributes\Autodiscovery\AppliesToState;
 use Thunk\Verbs\Attributes\Autodiscovery\StateId;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Verbs;
+use Thunk\Verbs\Replay;
 use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\State;
 use Thunk\Verbs\State\StateManager;
@@ -90,7 +91,7 @@ test('a reference held across a replay recovers via refresh()', function () {
 
     // The replay resets the identity map, so a different instance now owns
     // this state's identity—but the held reference must still recover.
-    Verbs::replay();
+    Replay::full()->run();
 
     expect($state->refresh())->toBe($state)
         ->and($state->count)->toBe(2);

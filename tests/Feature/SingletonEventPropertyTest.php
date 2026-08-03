@@ -3,6 +3,7 @@
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Models\VerbSnapshot;
+use Thunk\Verbs\Replay;
 use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\State\StateManager;
 
@@ -96,7 +97,7 @@ test('replay works when events carry a singleton-typed property', function () {
     SingletonPropertyEvent::fire(singleton: $singleton);
     Verbs::commit();
 
-    Verbs::replay();
+    Replay::full()->run();
 
     expect(SingletonPropertyState::singleton()->count)->toBe(2);
 });

@@ -67,11 +67,6 @@ class BrokerFake implements BrokersEvents
         return $this->broker->commit();
     }
 
-    public function replay(?callable $beforeEach = null, ?callable $afterEach = null)
-    {
-        $this->broker->replay($beforeEach, $afterEach);
-    }
-
     public function listen(object|string $listener)
     {
         app(Dispatcher::class)->register($listener);

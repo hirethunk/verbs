@@ -7,9 +7,9 @@ use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event as EventFacade;
-use Thunk\Verbs\Contracts\BrokersEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Models\VerbEvent;
+use Thunk\Verbs\Replay;
 
 use function Laravel\Prompts\alert;
 use function Laravel\Prompts\confirm;
@@ -22,7 +22,7 @@ class ReplayCommand extends Command
 
     protected $description = 'Replay all Verbs events.';
 
-    public function handle(BrokersEvents $broker): int
+    public function handle(): int
     {
         if (! $this->confirmed() || ! $this->confirmedAgainIfProduction()) {
             return 1;
@@ -34,19 +34,35 @@ class ReplayCommand extends Command
         DB::disableQueryLog();
 
         $started_at = time();
+        // $highest_event_id = Id::nil();
 
-        $progress = progress('Replaying…', VerbEvent::count());
+        if (! $count = VerbEvent::count()) {
+            $this->error('No events to replay!');
+
+            return 1;
+        }
+
+        $progress = progress('Replaying…', $count);
         $progress->start();
 
-        $broker->replay(
-            beforeEach: fn (Event $event) => $progress->label(sprintf(
-                '[%s] %s::%d',
-                date('i:s', time() - $started_at),
-                class_basename($event),
-                $event->id,
-            )),
-            afterEach: fn () => $progress->advance(),
-        );
+        Replay::full()
+            ->beforeEach(function (Event $event) use ($progress, $started_at, &$highest_event_id) {
+                // if ($event->id < $highest_event_id) {
+                //     throw new RuntimeException('Processed events out of order.');
+                // }
+
+                return $progress->label(sprintf(
+                    '[%s] %s::%d',
+                    date('i:s', time() - $started_at),
+                    class_basename($event),
+                    $event->id,
+                ));
+            })
+            ->afterEach(function (Event $event) use ($progress, &$highest_event_id) {
+                $highest_event_id = $event->id;
+                $progress->advance();
+            })
+            ->run();
 
         $progress->finish();
 

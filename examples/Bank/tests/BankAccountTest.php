@@ -10,8 +10,8 @@ use Thunk\Verbs\Examples\Bank\Mail\DepositAvailable;
 use Thunk\Verbs\Examples\Bank\Mail\WelcomeEmail;
 use Thunk\Verbs\Examples\Bank\Models\User;
 use Thunk\Verbs\Examples\Bank\States\AccountState;
-use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Models\VerbEvent;
+use Thunk\Verbs\Replay;
 use Thunk\Verbs\State\StateManager;
 
 test('a bank account can be opened and interacted with', function () {
@@ -86,7 +86,7 @@ test('a bank account can be opened and interacted with', function () {
 
     $account->delete();
 
-    Verbs::replay();
+    Replay::full()->run();
 
     $account = Auth::user()->accounts()->sole();
     $account_state = AccountState::load($account->id);

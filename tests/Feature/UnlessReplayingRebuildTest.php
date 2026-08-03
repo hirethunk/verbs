@@ -4,6 +4,7 @@ use Thunk\Verbs\Attributes\Autodiscovery\StateId;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Models\VerbSnapshot;
+use Thunk\Verbs\Replay;
 use Thunk\Verbs\State;
 use Thunk\Verbs\State\StateManager;
 
@@ -32,7 +33,7 @@ it('does not re-run unlessReplaying side effects during an explicit replay', fun
     RebuildGuardEvent::fire(state_id: $id);
     Verbs::commit();
 
-    Verbs::replay();
+    Replay::full()->run();
 
     expect(RebuildGuardState::load($id)->count)->toBe(1)
         ->and($GLOBALS['rebuild_guard_side_effects'])->toBe(1);

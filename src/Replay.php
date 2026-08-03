@@ -198,7 +198,7 @@ class Replay
     /** @experimental */
     public function beforeEach(?callable $callback): static
     {
-        $this->before = $callback === null ? null : Closure::fromCallable($callback);
+        $this->before = $callback === null ? null : $callback(...);
 
         return $this;
     }
@@ -206,7 +206,7 @@ class Replay
     /** @experimental */
     public function afterEach(?callable $callback): static
     {
-        $this->after = $callback === null ? null : Closure::fromCallable($callback);
+        $this->after = $callback === null ? null : $callback(...);
 
         return $this;
     }
@@ -216,9 +216,7 @@ class Replay
     {
         // The guard/reset live outside the try so a bailed run (queued events)
         // never triggers the tear-down's snapshot write.
-        if ($this->set_up) {
-            ($this->set_up)();
-        }
+        $this->runCallback($this->set_up);
 
         try {
             // run() binds this scope as the *current* scope for the duration, so
@@ -228,11 +226,9 @@ class Replay
                 ? $this->scope->withResolver($this->resolver, fn () => $this->loop())
                 : $this->loop());
 
-            return $this->result ? ($this->result)($this->scope) : $count;
+            return $this->runCallback($this->result, [$this->scope], $count);
         } finally {
-            if ($this->tear_down) {
-                ($this->tear_down)();
-            }
+            $this->runCallback($this->tear_down);
         }
     }
 
@@ -241,23 +237,19 @@ class Replay
         $iteration = 0;
 
         foreach ($this->events as $event) {
-            if ($this->before) {
-                ($this->before)($event);
-            }
-
-            ($this->drive)($event);
-
-            if ($this->after) {
-                ($this->after)($event);
-            }
-
-            if ($this->checkpoint) {
-                ($this->checkpoint)($iteration);
-            }
+            $this->runCallback($this->before, [$event]);
+            $this->runCallback($this->drive, [$event]);
+            $this->runCallback($this->after, [$event]);
+            $this->runCallback($this->checkpoint, [$iteration]);
 
             $iteration++;
         }
 
         return $iteration;
+    }
+
+    protected function runCallback(?Closure $callback, array $args = [], mixed $default = null): mixed
+    {
+        return $callback ? call_user_func_array($callback, $args) : $default;
     }
 }

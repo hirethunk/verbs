@@ -4,6 +4,7 @@ use Thunk\Verbs\Attributes\Autodiscovery\StateId;
 use Thunk\Verbs\Attributes\Hooks\Once;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Verbs;
+use Thunk\Verbs\Replay;
 use Thunk\Verbs\State;
 
 beforeEach(function () {
@@ -19,7 +20,7 @@ it('skips #[Once] handle hooks during replay but re-runs plain handle hooks', fu
     expect(OnceHookCounters::$once)->toBe(1)
         ->and(OnceHookCounters::$every_time)->toBe(1);
 
-    Verbs::replay();
+    Replay::full()->run();
 
     expect(OnceHookCounters::$once)->toBe(1)
         ->and(OnceHookCounters::$every_time)->toBe(2);

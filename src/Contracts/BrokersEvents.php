@@ -13,6 +13,4 @@ interface BrokersEvents
     public function isAuthorized(Event $event): bool;
 
     public function isValid(Event $event): bool;
-
-    public function replay(?callable $beforeEach = null, ?callable $afterEach = null);
 }
