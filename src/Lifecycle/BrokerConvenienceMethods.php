@@ -78,4 +78,14 @@ trait BrokerConvenienceMethods
     {
         return app(Wormhole::class)->realNow();
     }
+
+    /**
+     * Takes a map of new event classes to legacy event classes
+     *
+     * @param  array<string, array<string, string>>|array<string, string>  $map
+     */
+    public function mapLegacyEvents(array $map): void
+    {
+        app(EventStore::class)->mapLegacyEvents($map);
+    }
 }
