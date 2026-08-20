@@ -19,6 +19,7 @@ use Symfony\Component\Serializer\Mapping\Loader\AnnotationLoader;
 use Symfony\Component\Serializer\Mapping\Loader\AttributeLoader;
 use Symfony\Component\Serializer\Normalizer\PropertyNormalizer;
 use Symfony\Component\Serializer\Serializer as SymfonySerializer;
+use Thunk\Verbs\Commands\EncryptCommand;
 use Thunk\Verbs\Commands\MakeVerbEventCommand;
 use Thunk\Verbs\Commands\MakeVerbStateCommand;
 use Thunk\Verbs\Commands\MigrateSnapshotsCommand;
@@ -51,6 +52,7 @@ class VerbsServiceProvider extends PackageServiceProvider
             ->name('verbs')
             ->hasConfigFile()
             ->hasCommands(
+                EncryptCommand::class,
                 MakeVerbEventCommand::class,
                 MakeVerbStateCommand::class,
                 MigrateSnapshotsCommand::class,

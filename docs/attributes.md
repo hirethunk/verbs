@@ -165,3 +165,16 @@ class YourEvent extends Event
 
 (You may also use `Verbs::unlessReplaying`, mentioned
 in [one-time effects](/docs/reference/events/#content-one-time-effects))
+
+### `#[Encrypted]`
+
+Use above any event or state property that should be encrypted at rest. See
+[serialization](/docs/technical/serialization) for details.
+
+```php
+class UserRegistered extends Event
+{
+    #[Encrypted]
+    public string $social_security_number;
+}
+```
