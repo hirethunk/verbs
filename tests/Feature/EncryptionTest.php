@@ -9,6 +9,7 @@ use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Models\VerbEvent;
 use Thunk\Verbs\Models\VerbSnapshot;
 use Thunk\Verbs\State;
+use Thunk\Verbs\Support\Normalization\EncryptedPropertiesNormalizer;
 use Thunk\Verbs\Support\PropertyEncryption;
 
 it('stores #[Encrypted] event properties as ciphertext', function () {
@@ -158,6 +159,24 @@ it('reports without writing on verbs:encrypt --dry-run', function () {
         ->assertExitCode(0);
 
     expect(VerbEvent::sole()->getRawOriginal('data'))->toBe($plaintext);
+});
+
+it('still encrypts when a published config omits the encryption normalizer', function () {
+    config()->set(
+        'verbs.normalizers',
+        array_values(array_filter(
+            config('verbs.normalizers'),
+            fn ($normalizer) => $normalizer !== EncryptedPropertiesNormalizer::class,
+        )),
+    );
+
+    EncryptionTestEvent::fire(state_id: snowflake_id(), ssn: '123-45-6789', name: 'Daniel');
+    Verbs::commit();
+
+    $data = json_decode(VerbEvent::sole()->getRawOriginal('data'), true);
+
+    expect(PropertyEncryption::isEnvelope($data['ssn']))->toBeTrue()
+        ->and(VerbEvent::sole()->event()->ssn)->toBe('123-45-6789');
 });
 
 class EncryptionTestState extends State

@@ -21,7 +21,6 @@ class Serializer
     {
         // Build the context before __sleep, so we still have the original object
         $context = $this->serializationContext($class);
-        $class_name = $class::class;
 
         if (method_exists($class, '__sleep')) {
             $class = $class->__sleep();
@@ -30,17 +29,10 @@ class Serializer
         try {
             $this->active_normalization_target = $class;
 
-            $json = $this->serializer->serialize($class, 'json', $context);
+            return $this->serializer->serialize($class, 'json', $context);
         } finally {
             $this->active_normalization_target = null;
         }
-
-        if (PropertyEncryption::hasEncryptedProperties($class_name)
-            && is_array($data = json_decode($json, true))) {
-            $json = json_encode(PropertyEncryption::encrypt($data, $class_name));
-        }
-
-        return $json;
     }
 
     public function deserialize(
@@ -59,17 +51,6 @@ class Serializer
         if (! $call_constructor && ! is_object($target)) {
             $target = Reflector::newInstanceWithoutConstructorWithPromotedDefaults($target);
             $context[AbstractNormalizer::OBJECT_TO_POPULATE] = $target;
-        }
-
-        // Encrypted properties are stored as ciphertext envelopes that have to
-        // be unwrapped before Symfony sees them. Non-envelope values may be
-        // plaintext from before the property was marked, and pass through.
-        if (is_string($data) && str_contains($data, PropertyEncryption::MARKER)) {
-            $data = json_decode($data, true);
-        }
-
-        if (is_array($data)) {
-            $data = PropertyEncryption::decrypt($data);
         }
 
         // Symfony's denormalizer expects backed enums as their scalar value, so
