@@ -128,6 +128,7 @@ class EventStateRegistry
                 if (
                     $property_type instanceof ReflectionNamedType
                     && $property_type->allowsNull()
+                    && $property->isInitialized($target)
                     && $property->getValue($target) === null
                 ) {
                     return false;
