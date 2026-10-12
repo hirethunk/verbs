@@ -12,6 +12,8 @@ use Thunk\Verbs\Support\Serializer;
 
 class VerbEvent extends Model
 {
+    public const UPDATED_AT = null;
+
     public $guarded = [];
 
     protected $casts = [
