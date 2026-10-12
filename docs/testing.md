@@ -13,8 +13,8 @@ beforeEach(function () {
 });
 ```
 
-You may also implement the `CommitsImmediately` interface directly on an Event  (more about this in [
-`VerbsStatesInitialized`](testing#content-verbsstateinitialized)).
+You may also implement the `CommitsImmediately` interface directly on an Event (more about this in
+[`VerbsStatesInitialized`](testing#content-verbsstateinitialized)).
 
 ### Assertions
 
