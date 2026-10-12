@@ -5,27 +5,37 @@ namespace Thunk\Verbs\Lifecycle;
 use Thunk\Verbs\Contracts\StoresEvents;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Exceptions\UnableToStoreEventsException;
+use Thunk\Verbs\State;
+use Thunk\Verbs\State\StateIdentity;
 
 class Queue
 {
     public array $event_queue = [];
 
+    /** @var array<string, bool> */
+    protected array $queued_state_keys = [];
+
+    public function __construct(
+        protected StoresEvents $events,
+    ) {}
+
     public function queue(Event $event)
     {
         $this->event_queue[] = $event;
+
+        $this->index($event);
     }
 
     public function flush(): array
     {
         $events = $this->event_queue;
 
-        // TODO: Concurrency check
-
-        if (! app(StoresEvents::class)->write($events)) {
+        if (! $this->events->write($events)) {
             throw new UnableToStoreEventsException($events);
         }
 
         $this->event_queue = [];
+        $this->queued_state_keys = [];
 
         return $events;
     }
@@ -33,5 +43,40 @@ class Queue
     public function getEvents(): array
     {
         return $this->event_queue;
+    }
+
+    public function hasEventsFor(State $state): bool
+    {
+        return isset($this->queued_state_keys[$this->stateKey($state)]);
+    }
+
+    /** @param  Event[]  $events */
+    public function restore(array $events): void
+    {
+        $this->event_queue = array_merge($events, $this->event_queue);
+
+        foreach ($events as $event) {
+            $this->index($event);
+        }
+    }
+
+    /**
+     * Membership is asked once per live state on every reconstitution, so the
+     * queue keeps a key set instead of re-scanning every queued event's states
+     * each time. A set suffices because events only ever leave the queue all
+     * at once (flush() clears both together), never one at a time. states() is
+     * already resolved (and memoized) by the time an event queues, so the keys
+     * are stable.
+     */
+    protected function index(Event $event): void
+    {
+        foreach ($event->states() as $state) {
+            $this->queued_state_keys[$this->stateKey($state)] = true;
+        }
+    }
+
+    protected function stateKey(State $state): string
+    {
+        return StateIdentity::from($state)->key();
     }
 }

@@ -1,7 +1,182 @@
+## Upgrading to `v0.10.0`
+
+`v0.10.0` re-architects how states are loaded, cached, and brought up to date. Most applications only need to run the
+new migration—but read the behavior changes below, especially if you've built anything on Verbs internals.
+
+### Run the migration
+
+The 0.10 snapshot store upserts against a natural key—a unique index on `verb_snapshots (type, state_id)`. Upgrading is
+two steps: a fast, reversible migration that puts the new table in place, then a command that copies your existing
+snapshots into it.
+
+```sh
+php artisan vendor:publish --tag=verbs-migrations
+php artisan migrate
+php artisan verbs:snapshots:migrate
+```
+
+The migration renames your existing `verb_snapshots` table to `__verbs_snapshots_pre_010` and creates a fresh
+`verb_snapshots` with the unique index already on it. This is a rename plus an empty-table create, so it's fast and
+doesn't lock a large table while it dedupes. (On a fresh install, or when the table is empty, there's nothing to set
+aside—the migration just creates the new table.)
+
+`verbs:snapshots:migrate` then copies the old rows into the new table: it deletes rows that had data but no
+`last_event_id`, normalizes singleton rows to a sentinel `state_id`, dedupes each `(type, state_id)` down to its most
+advanced row, and copies what's left. It skips any state the running app has already rebuilt (those rows are
+authoritative). When it's done it asks whether to drop `__verbs_snapshots_pre_010`—say no to keep it as a downgrade
+safety net and drop it by hand later. The command is safe to re-run: if it's interrupted, run it again.
+
+Rolling the migration back restores the parked table if it's still there. If it's already been dropped, the rollback
+creates an empty table in the pre-0.10 shape, and states rebuild from their events on first load.
+
+After migrating, confirm your snapshots match your events:
+
+```sh
+php artisan verbs:verify
+```
+
+> **Deploy in this order.** The new snapshot store *requires* the unique index; if 0.10 code serves traffic before the
+> migration runs, it will corrupt the snapshot table (duplicate rows on MySQL, write errors on Postgres/SQLite). Stop or
+> drain your queue workers, run `php artisan migrate` with the new code **not yet serving traffic** (a deploy window or
+> maintenance mode), start the new code, then run `php artisan verbs:snapshots:migrate`.
+
+Between the migration and the backfill, `verb_snapshots` starts empty, so any state you load rebuilds from its events on
+first access (see [*Stale loads rebuild connected components*](#behavior-changes-the-ones-that-matter) below—this can be
+expensive for large histories). Running `verbs:snapshots:migrate` promptly after `migrate` keeps that window short and
+warms the table back up.
+
+### Signature and import changes (mechanical)
+
+| Old                                          | New                                            | Notes                                                      |
+|----------------------------------------------|------------------------------------------------|------------------------------------------------------------|
+| `Thunk\Verbs\Lifecycle\StateManager`         | `Thunk\Verbs\State\StateManager`               | Alias shipped; removed at 1.0                              |
+| `StateManager::load($id, $type)`             | `load($type, $id)`                             | Old order detected + deprecation warning                   |
+| `StateManager::make($id, $type)`             | `make($type, $id)`                             | Old order detected + deprecation warning                   |
+| `StateManager::reset(include_storage: true)` | `app(StoresSnapshots::class)->reset()`         | Old form still works + deprecation warning                 |
+| `Guards::check()`                            | `Guards::for($event)->authorize()->validate()` | Old form still works + deprecation warning                 |
+| `$state->fresh()`                            | `$state->refresh()`                            | Old name still works + deprecation warning; removed at 1.0 |
+| `Verbs::replay()`                            | `Replay::full()->run()`                        | Old form still works; deprecated                           |
+
+One case the argument-order shim *cannot* rescue: passing an **array/collection of ids** in the old first position
+(`load($ids, $type)`) fails with a `TypeError` rather than a deprecation warning, because an iterable can't pass through
+the new `string $type` parameter. Swap those call sites to `load($type, $ids)` when upgrading. (Calls that go through
+`YourState::load(...)` are unaffected—only direct `StateManager` calls.)
+
+### Custom store implementations
+
+Verbs now routes *every* reconstitution read through the storage contracts, so a custom store has more surface to
+implement. Several methods traffic in `Thunk\Verbs\State\StateIdentity`—a small `(state_type, state_id, last_event_id)`
+value object, where `last_event_id` is the id of the last event the state is known to have applied. `StateIdentity`
+normalizes `last_event_id`
+at construction, so implementations never need to pre-normalize driver-returned values, and its `key()` method is the
+canonical key identities dedupe by (a singleton collapses to its type; keyed states are `type:id`). A custom
+`StoresEvents` must implement:
+
+- `read(?State $state = null, $after_id = null): LazyCollection` — must now return a genuinely lazy stream (it is no
+  longer safe to materialize everything)
+- `get(iterable $ids): LazyCollection` — stream the events with the given ids, in id order
+- `hasUnappliedEvents(iterable $identities): bool` — whether any event exists for any of the given identities *beyond*
+  that identity's `last_event_id` (an event it hasn't applied yet)
+- `hasAppliedEventsAfter(iterable $identities, int|string|null $after_id = null): bool` — whether any event exists at or
+  below an identity's `last_event_id` but after `$after_id` (an already-applied window event)
+- `eventIdsFor(iterable $identities, int|string|null $after_id = null): Collection` — the distinct ids of every event
+  associated with any of the given identities
+- `stateIdentitiesFor(iterable $event_ids): Collection` — the distinct identities of every state associated with any of
+  the given events
+- `write(array $events): bool`
+
+A custom `StoresSnapshots` must implement:
+
+- `load($id, string $type): State|StateCollection|null`
+- `loadSingleton(string $type): ?State`
+- `hydrateLastEventIds(iterable $identities): Collection` — one identity (with `last_event_id`
+  filled) per given identity that has a snapshot
+- `write(array $states): bool`
+- `reset(): bool` — and note that the contract no longer declares `delete()`
+
+Two invariants apply to all of the new read methods: singletons are identified by *type alone*
+(their events and snapshots may be recorded under incidental `state_id`s, which must aggregate to one identity), and
+implementations must bound their own queries—callers may pass arbitrarily long lists, and the default stores chunk
+internally to stay under driver parameter caps.
+
+One command-line caveat: `php artisan verbs:verify` enumerates the snapshot table directly (random sampling and lazy
+enumeration aren't part of the contract), so it requires the default Eloquent snapshot storage.
+
+### Behavior changes (the ones that matter)
+
+- **Stale loads rebuild connected components.** When a load finds newer events than the snapshot, Verbs replays the
+  state's connected component—seeded from snapshots when that's provably exact, from a blank baseline otherwise. Latency
+  is typically proportional to the new events since your snapshots. Watch the `Verbs: reconstituted state component`
+  debug logs to observe it.
+- **`unlessReplaying()` covers rebuilds now.** `Verbs::isReplaying()` is `true` whenever Verbs re-applies stored
+  events—explicit replays, stale-load rebuilds, and `verbs:verify`—so a guarded side effect inside `apply()` no longer
+  re-fires on every rebuild. If you were relying on rebuilds *not* counting as replaying, move that logic to `handle()`.
+  The broker's public `$is_replaying`
+  property is gone; read `Verbs::isReplaying()` instead.
+- **`refresh()` replaces `fresh()`—and it actually refreshes now.** On 0.9, `fresh()` was effectively a no-op on cache
+  hits. The working behavior lives on `refresh()`, named to match Eloquent's in-place semantics: the *same instance* is
+  brought up to date, even across a replay. There's deliberately no Eloquent-style `fresh()` returning a second
+  instance—states are identity-mapped to one live instance per request, so a divergent copy would be a footgun.
+  `$state->fresh()` remains as a deprecated alias of `refresh()` and will be removed at 1.0.
+- **Snapshots are written only for changed states.** The snapshot table no longer re-writes untouched rows on every
+  commit—if anything external watched `verb_snapshots.updated_at`, take note. Blank loads no longer create snapshot rows
+  at all.
+- **Commit is transactional.** Events, state-event mappings, and snapshots persist (or roll back)
+  together, and handlers run only after the transaction commits. Wrapping `fire()` +
+  `Verbs::commit()` in your own `DB::transaction()` now rolls back the stores together. If you've pointed
+  `verbs.connections.*` at more than one connection, each distinct connection gets its own transaction, with the events
+  connection committing first (best-effort—cross-connection atomicity needs a shared connection). A snapshot counts as
+  persisted only once the outermost transaction actually commits, so a rollback—yours, or a deadlock at commit
+  time—leaves the state due to be re-written on the next commit rather than silently skipped. The
+  `verbs.connections.state_events` option is gone: state-event mappings always use the `events` connection (they're read
+  in a single query across both tables), and a leftover config value pointing anywhere else triggers a deprecation
+  warning. Almost no one sets this, but if you did point `verb_state_events` at a *different* connection than your
+  events, move that table onto the events connection before upgrading—otherwise reads and writes will hit a
+  table-not-found error.
+- **Registering a second instance for a live state identity throws.** A `LogicException` here is a bug-finder: it means
+  something constructed a state directly instead of loading it. Use
+  `YourState::load($id)` (or `::singleton()`), never `new YourState`.
+- **Loading a keyed state with a `null` id fails loudly.** `YourState::load(null)` used to fail with an opaque
+  `TypeError`; it now throws an `InvalidArgumentException` naming the state class, so a missing route parameter or null
+  foreign key surfaces clearly. Only singletons load without an id.
+- **Hooks may only type-hint states the event fires on.** An `apply()`/`handle()` that type-hints a state the event
+  doesn't declare (no `#[StateId]`/`#[AppliesToState]` attribute, no state-typed property) now throws
+  `CannotResolveParameter` with instructions. Previously Verbs silently constructed a *fresh* instance—mutations landed
+  on a state that was never associated with the event, so they were never actually event-sourced.
+- **Event metadata actually round-trips now.** Reading stored metadata used to silently return an empty bag; it now
+  returns what was written, and *object* values (like Carbon instances) are stored with a small type envelope so they
+  come back as real objects. Scalars and arrays are stored bare, exactly as before; rows written by 0.9 read back as-is.
+  If anything external parses `verb_events.metadata`, note the new envelope shape for object values.
+- **`#[Once]` works on `handle()` now.** Previously the attribute was silently overridden and the hook re-ran on every
+  replay. Note that `#[Once]` only affects methods Verbs itself invokes— a helper you call manually from `handle()` runs
+  every time regardless.
+- **Rebuilds read unlinked states at their live value.** A rebuild replays only the events linked to the state's
+  component. If an `apply()` loads some *other* state that isn't attached to the event (no `#[StateId]` or similar), that
+  state can't be rebuilt from the same window, so the rebuild reads its current value—as a normal `apply()` would. For
+  exact rebuilds, attach every state an `apply()` reads to the event.
+- **Replays refuse to run over uncommitted events.** `Verbs::replay()` and `Replay::full()->run()` throw
+  `CannotReplayWithQueuedEvents` if events have been fired but not committed. Commit (or discard) them first.
+- **`verbs:replay` fails on an empty event table.** It now prints "No events to replay!" and exits with status `1`. If a
+  CI or deploy script runs it against an empty database, guard the call or allow the non-zero exit.
+- **Memory is bounded and identity is safe.** The state cache evicts least-recently-used states past
+  `verbs.state_cache_size`, but any state you still hold a reference to keeps its identity— a later load returns the
+  same instance.
+- **`Verbs::fake()` starts a fresh Verbs world.** Events fired but not yet committed before the fake are discarded, and
+  any state loaded before the fake is no longer the canonical instance— load it again after calling `fake()`.
+
+### New config keys
+
+Republish the config file (or add these by hand) if you want to tune them:
+
+- `state_cache_size` (default `100`) — how many states stay resident before LRU eviction kicks in
+- `reconstitution_uses_snapshots` (default `true`) — set to `false` to force every rebuild to replay from a blank
+  baseline, as a diagnostic lever if you ever suspect snapshot drift. This option is temporary (it exists to de-risk the
+  new snapshot seeding) and will be removed in 1.0— don't build on it.
+
 ## Upgrading to `v0.5.1`
 
-The structure of the `verbs_snapshots` table changed after version `0.4.5` to better account for
-non-Snowflake IDs (like ULIDs/etc). Running migrations should update your tables accordingly:
+The structure of the `verbs_snapshots` table changed after version `0.4.5` to better account for non-Snowflake IDs (like
+ULIDs/etc). Running migrations should update your tables accordingly:
 
 ```
 php artisan vendor:publish --tag=verbs-migrations
@@ -10,22 +185,19 @@ php artisan migrate
 
 ### The `__verbs_snapshots_pre_050` table
 
-Once you migrate, you will find a new table called `__verbs_snapshots_pre_050` which is a copy
-of the `verb_snapshots` table as it existed before the migration. Out of an abundance of caution,
-we are leaving that table as-is for you to delete when you are certain you will not need to
-downgrade or migrate down.
+Once you migrate, you will find a new table called `__verbs_snapshots_pre_050` which is a copy of the `verb_snapshots`
+table as it existed before the migration. Out of an abundance of caution, we are leaving that table as-is for you to
+delete when you are certain you will not need to downgrade or migrate down.
 
 ### What changed
 
 Part of the `v0.5.x` updates includes the following changes to the `verb_snapshots` table:
 
-- Adding a new `id` column that is unique to the **snapshot** (the ID column had previously
-  been mapped to the **state**, which caused issues if the different states of different types
-  had the same ID)
-- Replaced the existing `id` column with a `state_id` that is not a primary index (allowing
-  non-unique state IDs)
-- Changed the `unique` index on `state_id` and `type` to a regular index to allow for future features
-  that may let you store multiple snapshots per state
+- Adding a new `id` column that is unique to the **snapshot** (the ID column had previously been mapped to the
+  **state**, which caused issues if the different states of different types had the same ID)
+- Replaced the existing `id` column with a `state_id` that is not a primary index (allowing non-unique state IDs)
+- Changed the `unique` index on `state_id` and `type` to a regular index to allow for future features that may let you
+  store multiple snapshots per state
 - Added an `expires_at` column to allow for snapshot purging in the future
 
 For more details about the change, please [see the Verbs PR](https://github.com/hirethunk/verbs/pull/144)

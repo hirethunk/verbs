@@ -6,8 +6,8 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use ReflectionProperty;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\State;
+use Thunk\Verbs\State\StateManager;
 
 abstract class StateDiscoveryAttribute
 {

@@ -36,7 +36,7 @@ return new class extends Migration
 
     protected function connectionName(): ?string
     {
-        return config('verbs.connections.state_events');
+        return config('verbs.connections.events');
     }
 
     protected function tableName(): string

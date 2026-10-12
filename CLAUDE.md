@@ -56,8 +56,9 @@ CustomerState::factory()->id($id)->create();
     - `Contracts/`: Interfaces
     - `Events/`: Framework-dispatched events (e.g. `VerbsStateInitialized`)
     - `Facades/`: Laravel facades
-    - `Lifecycle/`: Broker, dispatcher, queue, state manager, and the default event/snapshot stores
+    - `Lifecycle/`: Broker, dispatcher, queue, and the default event/snapshot stores
     - `Models/`: Eloquent models for storage
+    - `State/`: State manager, reconstitution, and cache layers
     - `Support/`: Utilities and helpers
 - `tests/`: Pest tests organized by feature
 - `examples/`: Complete example implementations (Bank, Cart, etc.)
@@ -74,5 +75,5 @@ CustomerState::factory()->id($id)->create();
 - Follow Laravel package conventions
 - Use Pest for all new tests
 - Run `composer format` before committing
-- Ensure compatibility with PHP 8.1+ and Laravel 10.x, 11.x, 12.x
+- Ensure compatibility with PHP 8.3+ and Laravel 11.x, 12.x, 13.x
 - Test against SQLite, MySQL, and PostgreSQL when modifying storage logic

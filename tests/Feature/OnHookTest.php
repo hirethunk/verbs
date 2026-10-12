@@ -5,6 +5,7 @@ use Thunk\Verbs\Attributes\Hooks\On;
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Lifecycle\Phase;
+use Thunk\Verbs\Replay;
 use Thunk\Verbs\State;
 
 beforeEach(function () {
@@ -20,7 +21,7 @@ it('runs #[On] hooks only in the phase they target', function () {
     expect(OnHookCounters::$handle_only)->toBe(1)
         ->and(OnHookCounters::$replay_only)->toBe(0);
 
-    Verbs::replay();
+    Replay::full()->run();
 
     expect(OnHookCounters::$handle_only)->toBe(1)
         ->and(OnHookCounters::$replay_only)->toBe(1);

@@ -4,6 +4,7 @@ use Thunk\Verbs\Examples\Counter\Events\IncrementCount;
 use Thunk\Verbs\Examples\Counter\Events\IncrementCountTwice;
 use Thunk\Verbs\Facades\Verbs;
 use Thunk\Verbs\Models\VerbEvent;
+use Thunk\Verbs\Replay;
 
 beforeEach(function () {
     Verbs::commitImmediately();
@@ -14,7 +15,7 @@ it('firing events from the handle method is ignored while replaying', function (
 
     expect(VerbEvent::where('type', IncrementCount::class)->count())->toBe(2);
 
-    Verbs::replay();
+    Replay::full()->run();
 
     expect(VerbEvent::where('type', IncrementCount::class)->count())->toBe(2);
 });

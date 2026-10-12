@@ -2,6 +2,7 @@
 
 namespace Thunk\Verbs\Support;
 
+use Illuminate\Contracts\Container\Container;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use InvalidArgumentException;
@@ -13,20 +14,38 @@ use ReflectionProperty;
 use ReflectionUnionType;
 use Thunk\Verbs\Attributes\Autodiscovery\StateDiscoveryAttribute;
 use Thunk\Verbs\Event;
-use Thunk\Verbs\Lifecycle\StateManager;
 use Thunk\Verbs\State;
+use Thunk\Verbs\State\StateManager;
+use WeakMap;
 
 class EventStateRegistry
 {
     protected array $discovered_attributes = [];
 
-    protected array $discovered_properties = [];
+    protected WeakMap $discovered_states;
 
     public function __construct(
-        protected StateManager $manager,
-    ) {}
+        protected Container $container,
+    ) {
+        $this->discovered_states = new WeakMap;
+    }
+
+    public function reset(): static
+    {
+        // The state cache holds instances resolved against a particular scope,
+        // so it must be cleared when that scope is reset. The reflection
+        // metadata in $discovered_attributes is scope-independent and is kept.
+        $this->discovered_states = new WeakMap;
+
+        return $this;
+    }
 
     public function getStates(Event $event): StateCollection
+    {
+        return $this->discovered_states[$event] ??= $this->discoverStates($event);
+    }
+
+    protected function discoverStates(Event $event): StateCollection
     {
         $discovered = new StateCollection;
         $deferred = new StateCollection;
@@ -57,7 +76,7 @@ class EventStateRegistry
         $states = Arr::wrap(
             $attribute
                 ->setDiscoveredState($discovered)
-                ->discoverState($target, $this->manager),
+                ->discoverState($target, $this->container->make(StateManager::class)),
         );
 
         $discovered->push(...$states);
@@ -110,10 +129,17 @@ class EventStateRegistry
         return is_a($attribute->getName(), StateDiscoveryAttribute::class, true);
     }
 
-    /** @return Collection<int, State> */
+    /**
+     * Deliberately not memoized by event id: the same stored event can be
+     * deserialized more than once (each rebuild scope gets fresh instances),
+     * and its properties must resolve against whichever scope is current.
+     * Per-instance memoization already happens in getStates()'s WeakMap.
+     *
+     * @return Collection<int, State>
+     */
     protected function getProperties(Event $target): Collection
     {
-        return $this->discovered_properties[$target::class][$target->id] ??= $this->findAllProperties($target);
+        return $this->findAllProperties($target);
     }
 
     /** @return Collection<int, State> */

@@ -4,7 +4,6 @@ namespace Thunk\Verbs\Models;
 
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
-use Thunk\Verbs\Lifecycle\MetadataManager;
 use Thunk\Verbs\State;
 use Thunk\Verbs\Support\Serializer;
 
@@ -37,8 +36,6 @@ class VerbSnapshot extends Model
         $this->state ??= app(Serializer::class)->deserialize($this->type, $this->data);
         $this->state->id = $this->state_id;
         $this->state->last_event_id = $this->last_event_id;
-
-        app(MetadataManager::class)->setEphemeral($this->state, 'snapshot_id', $this->id);
 
         return $this->state;
     }

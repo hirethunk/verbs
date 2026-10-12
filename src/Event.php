@@ -13,7 +13,6 @@ use Thunk\Verbs\Lifecycle\MetadataManager;
 use Thunk\Verbs\Support\EventStateRegistry;
 use Thunk\Verbs\Support\PendingEvent;
 use Thunk\Verbs\Support\StateCollection;
-use WeakMap;
 
 /**
  * @method static static fire(...$args)
@@ -42,11 +41,7 @@ abstract class Event
 
     public function states(): StateCollection
     {
-        // TODO: This is a bit hacky, but is probably OK right now
-
-        static $map = new WeakMap;
-
-        return $map[$this] ??= app(EventStateRegistry::class)->getStates($this);
+        return app(EventStateRegistry::class)->getStates($this);
     }
 
     /**

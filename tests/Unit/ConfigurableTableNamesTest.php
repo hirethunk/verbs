@@ -64,10 +64,10 @@ test('VerbSnapshot table name can be configured with different table name', func
     expect($expected_table_name)->toBe($actual_table_name);
 });
 
-test('VerbStateEvent connection name can be configured', function () {
+test('VerbStateEvent follows the events connection', function () {
     $expected_connection_name = 'events';
 
-    config()->set('verbs.connections.state_events', $expected_connection_name);
+    config()->set('verbs.connections.events', $expected_connection_name);
 
     $verb_model = new VerbStateEvent;
     $actual_connection_name = $verb_model->getConnectionName();

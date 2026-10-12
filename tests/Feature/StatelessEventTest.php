@@ -2,6 +2,7 @@
 
 use Thunk\Verbs\Event;
 use Thunk\Verbs\Facades\Verbs;
+use Thunk\Verbs\Replay;
 
 it('can store and replay events that have no state', function () {
 
@@ -25,7 +26,7 @@ it('can store and replay events that have no state', function () {
 
     $GLOBALS['stateless_test_log'] = [];
 
-    Verbs::replay();
+    Replay::full()->run();
 
     expect($GLOBALS['stateless_test_log'])->toBe([
         '[1] First event',

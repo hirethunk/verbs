@@ -3,7 +3,6 @@
 namespace Thunk\Verbs\Support;
 
 use BackedEnum;
-use ReflectionClass;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\Serializer as SymfonySerializer;
 use Thunk\Verbs\Event;
@@ -11,7 +10,7 @@ use Thunk\Verbs\State;
 
 class Serializer
 {
-    public $active_normalization_target = null;
+    public mixed $active_normalization_target = null;
 
     public function __construct(
         public SymfonySerializer $serializer,
@@ -50,8 +49,7 @@ class Serializer
         }
 
         if (! $call_constructor && ! is_object($target)) {
-            $reflect = new ReflectionClass($target);
-            $target = $reflect->newInstanceWithoutConstructor();
+            $target = Reflector::newInstanceWithoutConstructorWithPromotedDefaults($target);
             $context[AbstractNormalizer::OBJECT_TO_POPULATE] = $target;
         }
 

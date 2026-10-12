@@ -5,20 +5,29 @@ namespace Thunk\Verbs\Lifecycle;
 use Glhd\Bits\Bits;
 use Illuminate\Database\MultipleRecordsFoundException;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\Uid\AbstractUid;
+use Throwable;
 use Thunk\Verbs\Contracts\StoresSnapshots;
 use Thunk\Verbs\Exceptions\StateIsNotSingletonException;
 use Thunk\Verbs\Facades\Id;
 use Thunk\Verbs\Models\VerbSnapshot;
+use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\State;
+use Thunk\Verbs\State\StateIdentity;
 use Thunk\Verbs\Support\Serializer;
 use Thunk\Verbs\Support\StateCollection;
 
 class SnapshotStore implements StoresSnapshots
 {
+    protected const int STATE_CHUNK = 100;
+
+    protected const int ID_CHUNK = 500;
+
+    protected const int UPSERT_CHUNK = 20;
+
     public function __construct(
-        protected MetadataManager $metadata,
         protected Serializer $serializer,
     ) {}
 
@@ -40,7 +49,36 @@ class SnapshotStore implements StoresSnapshots
             throw new StateIsNotSingletonException($type);
         }
 
-        return $snapshots->first()?->state();
+        return $snapshots->isEmpty() ? null : $this->stateFromSnapshot($snapshots->first());
+    }
+
+    public function hydrateLastEventIds(iterable $identities): Collection
+    {
+        return collect($identities)
+            ->chunk(static::STATE_CHUNK)
+            ->flatMap(function (Collection $chunk) {
+                return VerbSnapshot::query()
+                    ->toBase()
+                    ->select(['type', 'state_id', 'last_event_id'])
+                    ->where(function ($query) use ($chunk) {
+                        foreach ($chunk as $identity) {
+                            $query->orWhere(function ($query) use ($identity) {
+                                $query->where('type', $identity->state_type);
+
+                                if (! is_a($identity->state_type, SingletonState::class, true)) {
+                                    $query->where('state_id', $identity->state_id);
+                                }
+                            });
+                        }
+                    })
+                    ->get();
+            })
+            ->map(fn ($row) => new StateIdentity(
+                state_type: $row->type,
+                state_id: $row->state_id,
+                last_event_id: $row->last_event_id,
+            ))
+            ->values();
     }
 
     public function write(array $states): bool
@@ -49,10 +87,22 @@ class SnapshotStore implements StoresSnapshots
             return true;
         }
 
-        foreach (array_chunk($states, 20) as $chunk) {
+        // Dedupe before chunking, not within each chunk: one identity can only
+        // occupy one row, and which of two instances won should not depend on
+        // where a chunk boundary happened to fall. The furthest-ahead snapshot
+        // is the only one that can't lose already-applied events.
+        $rows = collect($states)
+            ->map($this->formatForWrite(...))
+            ->groupBy(fn (array $row) => $row['type'].':'.$row['state_id']) // formatForWrite has already normalized these
+            ->map(fn (Collection $duplicates) => $duplicates
+                ->sortBy(fn (array $row) => Id::normalizeEventId($row['last_event_id']))
+                ->last())
+            ->values();
+
+        foreach ($rows->chunk(static::UPSERT_CHUNK) as $chunk) {
             $upserted = VerbSnapshot::upsert(
-                values: collect($chunk)->map($this->formatForWrite(...))->unique('id')->all(),
-                uniqueBy: ['id'],
+                values: $chunk->values()->all(),
+                uniqueBy: ['type', 'state_id'],
                 update: ['data', 'last_event_id', 'updated_at'],
             );
 
@@ -85,7 +135,7 @@ class SnapshotStore implements StoresSnapshots
 
         return match ($count) {
             0 => null,
-            1 => $snapshots->first()->state(),
+            1 => $this->stateFromSnapshot($snapshots->first()),
             default => throw new MultipleRecordsFoundException($count),
         };
     }
@@ -94,20 +144,54 @@ class SnapshotStore implements StoresSnapshots
     {
         $ids->ensure([Bits::class, UuidInterface::class, AbstractUid::class, 'int', 'string']);
 
-        $states = VerbSnapshot::query()
-            ->where('type', '=', $type)
-            ->whereIn('state_id', $ids)
-            ->get()
-            ->map(fn (VerbSnapshot $snapshot) => $snapshot->state());
+        $states = $ids
+            ->chunk(static::ID_CHUNK)
+            ->flatMap(fn (Collection $chunk) => VerbSnapshot::query()
+                ->where('type', '=', $type)
+                ->whereIn('state_id', $chunk->values())
+                ->get())
+            ->map(fn (VerbSnapshot $snapshot) => $this->stateFromSnapshot($snapshot))
+            ->filter();
 
-        return StateCollection::make($states);
+        return StateCollection::make($states->values());
+    }
+
+    /**
+     * A snapshot that can't be trusted—undeserializable data, or data with no
+     * last_event_id—is treated as absent so the state transparently rebuilds
+     * from its events, rather than wedging every request that touches it.
+     */
+    protected function stateFromSnapshot(VerbSnapshot $snapshot): ?State
+    {
+        if ($snapshot->last_event_id === null) {
+            Log::warning('Verbs: snapshot has data but no last_event_id; rebuilding from events.', [
+                'type' => $snapshot->type,
+                'state_id' => $snapshot->state_id,
+            ]);
+
+            return null;
+        }
+
+        try {
+            return $snapshot->state();
+        } catch (Throwable $exception) {
+            Log::warning('Verbs: failed to deserialize snapshot; rebuilding from events.', [
+                'type' => $snapshot->type,
+                'state_id' => $snapshot->state_id,
+                'exception' => $exception->getMessage(),
+            ]);
+
+            return null;
+        }
     }
 
     protected function formatForWrite(State $state): array
     {
         return [
-            'id' => $this->metadata->getEphemeral($state, 'snapshot_id', snowflake_id()),
-            'state_id' => Id::from($state->id),
+            'id' => snowflake_id(),
+            // A singleton's identity is its type, so its row gets the sentinel
+            // id—giving every singleton exactly one row under the natural key.
+            'state_id' => $state instanceof SingletonState ? Id::nil() : Id::from($state->id),
             'type' => $state::class,
             'data' => $this->serializer->serialize($state),
             'last_event_id' => Id::tryFrom($state->last_event_id),

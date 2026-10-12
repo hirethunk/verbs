@@ -5,6 +5,7 @@ namespace Thunk\Verbs\Lifecycle;
 use Glhd\Bits\Bits;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Builder as BaseBuilder;
+use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\LazyCollection;
@@ -18,10 +19,15 @@ use Thunk\Verbs\Models\VerbEvent;
 use Thunk\Verbs\Models\VerbStateEvent;
 use Thunk\Verbs\SingletonState;
 use Thunk\Verbs\State;
+use Thunk\Verbs\State\StateIdentity;
 use Thunk\Verbs\Support\Serializer;
 
 class EventStore implements StoresEvents
 {
+    protected const int STATE_CHUNK = 100;
+
+    protected const int EVENT_CHUNK = 500;
+
     public function __construct(
         protected MetadataManager $metadata,
     ) {}
@@ -30,9 +36,74 @@ class EventStore implements StoresEvents
         ?State $state = null,
         Bits|UuidInterface|AbstractUid|int|string|null $after_id = null,
     ): LazyCollection {
-        return $this->readEvents($state, $after_id)
-            ->each(fn (VerbEvent $model) => $this->metadata->set($model->event(), $model->metadata()))
-            ->map(fn (VerbEvent $model) => $model->event());
+        return $this->toEventsWithMetadata($this->readEvents($state, $after_id));
+    }
+
+    public function get(iterable $ids): LazyCollection
+    {
+        $ids = collect($ids)->map(Id::from(...))->unique()->sort()->values();
+
+        return $this->toEventsWithMetadata(
+            LazyCollection::make(function () use ($ids) {
+                foreach ($ids->chunk(static::EVENT_CHUNK) as $chunk) {
+                    $models = VerbEvent::query()
+                        ->whereIn('id', $chunk)
+                        ->orderBy('id')
+                        ->get();
+
+                    foreach ($models as $model) {
+                        yield $model;
+                    }
+                }
+            })
+        );
+    }
+
+    /** @param  iterable<StateIdentity>  $identities */
+    public function hasUnappliedEvents(iterable $identities): bool
+    {
+        return collect($identities)
+            ->chunk(static::STATE_CHUNK)
+            ->contains($this->chunkHasUnappliedEvents(...));
+    }
+
+    /** @param  iterable<StateIdentity>  $identities */
+    public function eventIdsFor(iterable $identities, int|string|null $after_id = null): Collection
+    {
+        return collect($identities)
+            ->chunk(static::STATE_CHUNK)
+            ->flatMap(function (Collection $chunk) use ($after_id) {
+                return VerbStateEvent::query()
+                    ->toBase()
+                    ->distinct()
+                    ->select('event_id')
+                    ->when($after_id !== null, fn (BaseBuilder $query) => $query->where('event_id', '>', $after_id))
+                    ->where(function (BaseBuilder $query) use ($chunk) {
+                        foreach ($chunk as $identity) {
+                            $query->orWhere(fn (BaseBuilder $query) => $this->constrainToIdentity($query, $identity));
+                        }
+                    })
+                    ->pluck('event_id');
+            })
+            ->unique()
+            ->values();
+    }
+
+    public function stateIdentitiesFor(iterable $event_ids): Collection
+    {
+        return collect($event_ids)
+            ->chunk(static::EVENT_CHUNK)
+            ->flatMap(function (Collection $chunk) {
+                return VerbStateEvent::query()
+                    ->toBase()
+                    ->distinct()
+                    ->select(['state_id', 'state_type'])
+                    ->whereIn('event_id', $chunk->values()->all())
+                    ->get()
+                    ->map(StateIdentity::from(...));
+            })
+            ->unique(fn (StateIdentity $identity) => $identity->key())
+            ->values();
     }
 
     public function write(array $events): bool
@@ -47,6 +118,82 @@ class EventStore implements StoresEvents
             && VerbStateEvent::insert($this->formatRelationshipsForWrite($events));
     }
 
+    /** @param  Collection<int, StateIdentity>  $identities */
+    protected function chunkHasUnappliedEvents(Collection $identities): bool
+    {
+        $query = VerbStateEvent::query()->toBase();
+
+        $query->select([
+            'state_type',
+            'state_id',
+            $this->aggregateExpression($query, 'event_id', 'max'),
+        ]);
+
+        $query->groupBy('state_type', 'state_id');
+
+        $query->where(function (BaseBuilder $query) use ($identities) {
+            foreach ($identities as $identity) {
+                $query->orWhere(fn (BaseBuilder $query) => $this->constrainToIdentity($query, $identity));
+            }
+        });
+
+        $latest = $query->get();
+
+        foreach ($identities as $identity) {
+            // A singleton's events may be recorded under several incidental
+            // state_id rows, so its true last event id is the max across all of them.
+            $max = $latest->filter(fn ($row) => $this->rowBelongsTo($row, $identity))->max('max_event_id');
+
+            if (! $max) {
+                continue;
+            }
+
+            // No int casts: snowflake ids compare numerically either way,
+            // and ULID/UUIDv7 ids compare lexicographically-by-time.
+            $applied = $identity->last_event_id ?? 0;
+
+            if ($max > $applied) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Split the chunk's rows back out per identity. The database has already
+     * constrained them, so this filter must never be *stricter* than the
+     * database was: MySQL's default collation matches string ids
+     * case-insensitively, and dropping a row it matched would report a stale
+     * state as up to date. Over-matching only costs a redundant rebuild.
+     */
+    protected function rowBelongsTo(object $row, StateIdentity $identity): bool
+    {
+        if (strcasecmp((string) data_get($row, 'state_type'), $identity->state_type) !== 0) {
+            return false;
+        }
+
+        return is_a($identity->state_type, SingletonState::class, true)
+            || strcasecmp((string) data_get($row, 'state_id'), (string) $identity->state_id) === 0;
+    }
+
+    protected function constrainToIdentity(BaseBuilder $query, StateIdentity $identity): BaseBuilder
+    {
+        $query->where('state_type', '=', $identity->state_type);
+
+        if (! is_a($identity->state_type, SingletonState::class, true)) {
+            $query->where('state_id', '=', $identity->state_id);
+        }
+
+        return $query;
+    }
+
+    protected function toEventsWithMetadata(LazyCollection $models): LazyCollection
+    {
+        return $models->tapEach(fn (VerbEvent $model) => $this->metadata->set($model->event(), $model->metadata()))
+            ->map(fn (VerbEvent $model) => $model->event());
+    }
+
     protected function readEvents(
         ?State $state,
         Bits|UuidInterface|AbstractUid|int|string|null $after_id,
@@ -56,16 +203,18 @@ class EventStore implements StoresEvents
                 ->with('event')
                 ->unless($state instanceof SingletonState, fn (Builder $query) => $query->where('state_id', $state->id))
                 ->where('state_type', $state::class)
-                ->when($after_id, fn (Builder $query) => $query->whereRelation('event', 'id', '>', Id::from($after_id)))
-                ->lazyById()
-                ->remember()
+                ->when($after_id !== null, fn (Builder $query) => $query->whereRelation('event', 'id', '>', Id::from($after_id)))
+                // Event id is what orders history. Pivot id usually tracks it,
+                // but only because the concurrency guard keeps per-state writes
+                // monotonic—an import writing backdated ids never passed through
+                // that guard, and its rows would replay out of order.
+                ->lazyById(column: 'event_id')
                 ->map(fn (VerbStateEvent $pivot) => $pivot->event);
         }
 
         return VerbEvent::query()
-            ->when($after_id, fn (Builder $query) => $query->where('id', '>', Id::from($after_id)))
-            ->lazyById()
-            ->remember();
+            ->when($after_id !== null, fn (Builder $query) => $query->where('id', '>', Id::from($after_id)))
+            ->lazyById();
     }
 
     /** @param  Event[]  $events */
@@ -78,25 +227,29 @@ class EventStore implements StoresEvents
         $query->select([
             'state_type',
             'state_id',
-            DB::raw(sprintf(
-                'max(%s) as %s',
-                $query->getGrammar()->wrap('event_id'),
-                $query->getGrammar()->wrapTable('max_event_id')
-            )),
+            $this->aggregateExpression($query, 'event_id', 'max'),
         ]);
 
         $query->groupBy('state_type', 'state_id');
+
+        // The results are paginated, so the ordering has to be total: a state_id
+        // recurring under several state types would tie, and a tie straddling a
+        // page boundary can drop a group—and with it, a real violation.
         $query->orderBy('state_id');
+        $query->orderBy('state_type');
 
         $query->where(function (BaseBuilder $query) use ($events, $max_event_ids) {
             foreach ($events as $event) {
                 foreach ($event->states() as $state) {
-                    if (! $max_event_ids->has($key = $state::class.$state->id)) {
+                    if (! $max_event_ids->has($key = $this->guardKey($state::class, $state->id))) {
                         $query->orWhere(function (BaseBuilder $query) use ($state) {
                             $query->where('state_type', $state::class);
-                            $query->where('state_id', $state->id);
+
+                            if (! $state instanceof SingletonState) {
+                                $query->where('state_id', $state->id);
+                            }
                         });
-                        $max_event_ids->put($key, $state->last_event_id);
+                        $max_event_ids->put($key, Id::normalizeEventId($state->last_event_id));
                     }
                 }
             }
@@ -111,13 +264,20 @@ class EventStore implements StoresEvents
         $query->each(function ($result) use ($max_event_ids) {
             $state_type = data_get($result, 'state_type');
             $state_id = data_get($result, 'state_id');
-            $max_written_id = (int) data_get($result, 'max_event_id');
-            $max_expected_id = $max_event_ids->get($state_type.$state_id, 0);
 
+            $max_written_id = Id::normalizeEventId(data_get($result, 'max_event_id'));
+            $max_expected_id = $max_event_ids->get($this->guardKey($state_type, $state_id), 0);
+
+            // All supported ID types compare numerically or lexicographically, so no casting is necessary
             if ($max_written_id > $max_expected_id) {
                 throw new ConcurrencyException("An event with ID {$max_written_id} has been written to the database for '{$state_type}' with ID {$state_id}. This is higher than the in-memory value of {$max_expected_id}.");
             }
         });
+    }
+
+    protected function guardKey(string $state_type, mixed $state_id): string
+    {
+        return (new StateIdentity($state_type, Id::from($state_id)))->key();
     }
 
     /** @param  Event[]  $event_objects */
@@ -147,5 +307,15 @@ class EventStore implements StoresEvents
             ]))
             ->values()
             ->all();
+    }
+
+    protected function aggregateExpression(BaseBuilder $query, string $column, string $function): Expression
+    {
+        return DB::raw(sprintf(
+            '%s(%s) as %s',
+            $function,
+            $query->getGrammar()->wrap($column),
+            $query->getGrammar()->wrapTable("{$function}_{$column}"),
+        ));
     }
 }

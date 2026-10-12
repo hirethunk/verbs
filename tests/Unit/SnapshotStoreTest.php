@@ -51,6 +51,47 @@ it('loads snapshots based on the state_id', function () {
         ->name->toBe('event one');
 });
 
+// One identity can only occupy one row, so a write carrying two instances of it
+// has to pick a winner. The furthest-ahead snapshot is the only principled
+// choice—and it must not depend on where the upsert chunk boundary happens to
+// fall, which is what decided it before.
+it('keeps the furthest-ahead snapshot when one identity is written twice', function () {
+    $store = app(StoresSnapshots::class);
+
+    $behind = new SnapshotStoreTestStateOne(1, 'behind');
+    $behind->last_event_id = 100;
+
+    $ahead = new SnapshotStoreTestStateOne(1, 'ahead');
+    $ahead->last_event_id = 200;
+
+    $store->write([$behind, $ahead]);
+
+    $snapshot = VerbSnapshot::where(['type' => SnapshotStoreTestStateOne::class, 'state_id' => 1])->sole();
+
+    expect($snapshot->last_event_id)->toEqual(200)
+        ->and($snapshot)->state()->name->toBe('ahead');
+});
+
+it('keeps the furthest-ahead snapshot across upsert chunks', function () {
+    $store = app(StoresSnapshots::class);
+
+    $ahead = new SnapshotStoreTestStateOne(1, 'ahead');
+    $ahead->last_event_id = 200;
+
+    $behind = new SnapshotStoreTestStateOne(1, 'behind');
+    $behind->last_event_id = 100;
+
+    // Enough padding between the two that they'd land in different chunks.
+    $padding = collect(range(2, 40))->map(fn (int $id) => new SnapshotStoreTestStateOne($id, "pad {$id}"))->all();
+
+    $store->write([$ahead, ...$padding, $behind]);
+
+    $snapshot = VerbSnapshot::where(['type' => SnapshotStoreTestStateOne::class, 'state_id' => 1])->sole();
+
+    expect($snapshot->last_event_id)->toEqual(200)
+        ->and($snapshot)->state()->name->toBe('ahead');
+});
+
 class SnapshotStoreTestStateOne extends State
 {
     public function __construct(
