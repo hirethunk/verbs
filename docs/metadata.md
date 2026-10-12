@@ -18,7 +18,16 @@ Verbs::createMetadataUsing(fn () => ['team_id' => current_team_id()]);
 
 This is particularly useful for events where accompanying data is moreso about the events, and doesn't necessarily need to be a param in the event.
 
-- You can use the `$event->metadata()` method to get the metadata from the event.
+## Accessing Metadata
+
+You can use the `metadata()` method to get the metadata from the event. Use `put()` and `get()` for additional fluency:
+
+```php
+$event->metadata()->put('foo', 'bar');
+
+$event->metadata('foo'); // 'bar'
+$event->metadata()->get('foo'); // 'bar'
+```
 
 ## Toggling Metadata
 
