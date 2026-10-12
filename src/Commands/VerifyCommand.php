@@ -3,8 +3,10 @@
 namespace Thunk\Verbs\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Contracts\Encryption\DecryptException;
 use Thunk\Verbs\Models\VerbSnapshot;
 use Thunk\Verbs\Replay;
+use Thunk\Verbs\Support\PropertyEncryption;
 use Thunk\Verbs\Support\Serializer;
 
 class VerifyCommand extends Command
@@ -84,8 +86,13 @@ class VerifyCommand extends Command
 
         // Both sides come from the same serializer (which excludes id and
         // last_event_id), so a decoded comparison is symmetric; == keeps it
-        // insensitive to key order.
-        $actual = json_decode($snapshot->data, true);
+        // insensitive to key order. Encrypted envelopes carry a random IV,
+        // so both sides compare by their decrypted values instead.
+        try {
+            $actual = PropertyEncryption::decrypt(json_decode($snapshot->data, true));
+        } catch (DecryptException) {
+            return 'drift';
+        }
 
         return $actual == $expected ? 'ok' : 'drift';
     }
@@ -109,6 +116,6 @@ class VerifyCommand extends Command
             return null;
         }
 
-        return json_decode(app(Serializer::class)->serialize($state), true);
+        return PropertyEncryption::decrypt(json_decode(app(Serializer::class)->serialize($state), true));
     }
 }

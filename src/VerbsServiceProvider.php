@@ -19,6 +19,7 @@ use Symfony\Component\Serializer\Mapping\Loader\AnnotationLoader;
 use Symfony\Component\Serializer\Mapping\Loader\AttributeLoader;
 use Symfony\Component\Serializer\Normalizer\PropertyNormalizer;
 use Symfony\Component\Serializer\Serializer as SymfonySerializer;
+use Thunk\Verbs\Commands\EncryptCommand;
 use Thunk\Verbs\Commands\MakeVerbEventCommand;
 use Thunk\Verbs\Commands\MakeVerbStateCommand;
 use Thunk\Verbs\Commands\MigrateSnapshotsCommand;
@@ -40,6 +41,7 @@ use Thunk\Verbs\State\ReconstitutingResolver;
 use Thunk\Verbs\State\StateManager;
 use Thunk\Verbs\Support\EventStateRegistry;
 use Thunk\Verbs\Support\IdManager;
+use Thunk\Verbs\Support\Normalization\EncryptedPropertiesNormalizer;
 use Thunk\Verbs\Support\Serializer;
 use Thunk\Verbs\Support\Wormhole;
 
@@ -51,6 +53,7 @@ class VerbsServiceProvider extends PackageServiceProvider
             ->name('verbs')
             ->hasConfigFile()
             ->hasCommands(
+                EncryptCommand::class,
                 MakeVerbEventCommand::class,
                 MakeVerbStateCommand::class,
                 MigrateSnapshotsCommand::class,
@@ -130,6 +133,12 @@ class VerbsServiceProvider extends PackageServiceProvider
 
             return new SymfonySerializer(
                 normalizers: collect($config->get('verbs.normalizers'))
+                    // Published configs from before #[Encrypted] existed won't list the
+                    // encryption normalizer, and without it stored ciphertext is unreadable.
+                    ->when(
+                        fn ($normalizers) => ! $normalizers->contains(EncryptedPropertiesNormalizer::class),
+                        fn ($normalizers) => $normalizers->prepend(EncryptedPropertiesNormalizer::class),
+                    )
                     ->map(fn ($class_name) => app($class_name))
                     ->values()
                     ->all(),
