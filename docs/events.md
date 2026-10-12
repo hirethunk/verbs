@@ -214,7 +214,7 @@ To replay your events, use the built-in artisan command:
 php artisan verbs:replay
 ```
 
-You may also replay from code with `Replay::full()->run()`.
+You may also replay from code with `Thunk\Verbs\Replay::full()->run()`.
 
 <!-- @!todo syntax for replaying "up to a particular point" ? -->
 

@@ -26,6 +26,9 @@ advanced row, and copies what's left. It skips any state the running app has alr
 authoritative). When it's done it asks whether to drop `__verbs_snapshots_pre_010`—say no to keep it as a downgrade
 safety net and drop it by hand later. The command is safe to re-run: if it's interrupted, run it again.
 
+Rolling the migration back restores the parked table if it's still there. If it's already been dropped, the rollback
+creates an empty table in the pre-0.10 shape, and states rebuild from their events on first load.
+
 After migrating, confirm your snapshots match your events:
 
 ```sh
@@ -52,6 +55,7 @@ warms the table back up.
 | `StateManager::reset(include_storage: true)` | `app(StoresSnapshots::class)->reset()`         | Old form still works + deprecation warning                 |
 | `Guards::check()`                            | `Guards::for($event)->authorize()->validate()` | Old form still works + deprecation warning                 |
 | `$state->fresh()`                            | `$state->refresh()`                            | Old name still works + deprecation warning; removed at 1.0 |
+| `Verbs::replay()`                            | `Replay::full()->run()`                        | Old form still works; deprecated                           |
 
 One case the argument-order shim *cannot* rescue: passing an **array/collection of ids** in the old first position
 (`load($ids, $type)`) fails with a `TypeError` rather than a deprecation warning, because an iterable can't pass through
@@ -109,7 +113,7 @@ enumeration aren't part of the contract), so it requires the default Eloquent sn
   re-fires on every rebuild. If you were relying on rebuilds *not* counting as replaying, move that logic to `handle()`.
   The broker's public `$is_replaying`
   property is gone; read `Verbs::isReplaying()` instead.
-- **`refresh()` replaces `fresh()`—and it actually refreshes now.** On 0.8, `fresh()` was effectively a no-op on cache
+- **`refresh()` replaces `fresh()`—and it actually refreshes now.** On 0.9, `fresh()` was effectively a no-op on cache
   hits. The working behavior lives on `refresh()`, named to match Eloquent's in-place semantics: the *same instance* is
   brought up to date, even across a replay. There's deliberately no Eloquent-style `fresh()` returning a second
   instance—states are identity-mapped to one live instance per request, so a divergent copy would be a footgun.
@@ -141,11 +145,19 @@ enumeration aren't part of the contract), so it requires the default Eloquent sn
   on a state that was never associated with the event, so they were never actually event-sourced.
 - **Event metadata actually round-trips now.** Reading stored metadata used to silently return an empty bag; it now
   returns what was written, and *object* values (like Carbon instances) are stored with a small type envelope so they
-  come back as real objects. Scalars and arrays are stored bare, exactly as before; rows written by 0.8 read back as-is.
+  come back as real objects. Scalars and arrays are stored bare, exactly as before; rows written by 0.9 read back as-is.
   If anything external parses `verb_events.metadata`, note the new envelope shape for object values.
 - **`#[Once]` works on `handle()` now.** Previously the attribute was silently overridden and the hook re-ran on every
   replay. Note that `#[Once]` only affects methods Verbs itself invokes— a helper you call manually from `handle()` runs
   every time regardless.
+- **Rebuilds read unlinked states at their live value.** A rebuild replays only the events linked to the state's
+  component. If an `apply()` loads some *other* state that isn't attached to the event (no `#[StateId]` or similar), that
+  state can't be rebuilt from the same window, so the rebuild reads its current value—as a normal `apply()` would. For
+  exact rebuilds, attach every state an `apply()` reads to the event.
+- **Replays refuse to run over uncommitted events.** `Verbs::replay()` and `Replay::full()->run()` throw
+  `CannotReplayWithQueuedEvents` if events have been fired but not committed. Commit (or discard) them first.
+- **`verbs:replay` fails on an empty event table.** It now prints "No events to replay!" and exits with status `1`. If a
+  CI or deploy script runs it against an empty database, guard the call or allow the non-zero exit.
 - **Memory is bounded and identity is safe.** The state cache evicts least-recently-used states past
   `verbs.state_cache_size`, but any state you still hold a reference to keeps its identity— a later load returns the
   same instance.

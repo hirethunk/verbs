@@ -72,7 +72,23 @@ return new class extends Migration
 
         if ($schema->hasTable(self::OLD_TABLE)) {
             $schema->rename(self::OLD_TABLE, $this->tableName());
+
+            return;
         }
+
+        // Nothing is parked (a fresh install, or the backfill already dropped
+        // it), so recreate an empty pre-0.10 table rather than leaving the app
+        // without one. Snapshots are derived data and rebuild from events.
+        $schema->create($this->tableName(), function (Blueprint $table) {
+            $table->snowflakeId();
+            Id::createColumnDefinition($table, 'state_id');
+            $table->string('type')->index();
+            $table->json('data');
+            $table->snowflake('last_event_id')->nullable();
+            $table->timestamp('expires_at')->nullable()->index();
+            $table->timestamps();
+            $table->index(['state_id', 'type']);
+        });
     }
 
     protected function stagingTableName(): string

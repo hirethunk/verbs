@@ -75,5 +75,5 @@ CustomerState::factory()->id($id)->create();
 - Follow Laravel package conventions
 - Use Pest for all new tests
 - Run `composer format` before committing
-- Ensure compatibility with PHP 8.1+ and Laravel 10.x, 11.x, 12.x
+- Ensure compatibility with PHP 8.3+ and Laravel 11.x, 12.x, 13.x
 - Test against SQLite, MySQL, and PostgreSQL when modifying storage logic

@@ -2,6 +2,7 @@
 
 namespace Thunk\Verbs\State;
 
+use Closure;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Thunk\Verbs\Contracts\StoresEvents;
@@ -110,7 +111,7 @@ class ReconstitutingResolver implements StateResolver
             return false;
         }
 
-        $rebuilt = StateManager::rebuilding();
+        $rebuilt = StateManager::rebuilding($this->outsideComponent($memory, $plan));
 
         foreach ($seeds as $seed) {
             $rebuilt->cache->put($seed);
@@ -129,9 +130,29 @@ class ReconstitutingResolver implements StateResolver
             return false;
         }
 
-        $this->harvest($memory, $states, $rebuilt);
+        $this->harvest($memory, $states, $rebuilt, $plan);
 
         return true;
+    }
+
+    /**
+     * Members of the component start blank (or from their seed). A state that
+     * apply() reads but that isn't linked to any event in the component can't
+     * be rebuilt from this window, so it resolves to a copy of its live value
+     * instead—never to a blank shell. The copy keeps rebuild-time writes out
+     * of the live scope.
+     */
+    protected function outsideComponent(StateManager $memory, ReconstitutionPlan $plan): Closure
+    {
+        $members = $plan->members->keyBy(fn (StateIdentity $member) => $member->key());
+
+        return function (string $type, $id) use ($memory, $members): ?State {
+            if ($members->has(StateIdentity::keyFor($type, $memory->cacheId($type, $id)))) {
+                return null;
+            }
+
+            return clone $memory->run(fn () => $memory->load($type, $id));
+        };
     }
 
     /**
@@ -183,11 +204,18 @@ class ReconstitutingResolver implements StateResolver
      *
      * @param  Collection<int, State>  $states
      */
-    protected function harvest(StateManager $memory, Collection $states, StateManager $rebuilt): void
+    protected function harvest(StateManager $memory, Collection $states, StateManager $rebuilt, ReconstitutionPlan $plan): void
     {
         $requested = $states->keyBy($this->identityKey(...));
+        $members = $plan->members->keyBy(fn (StateIdentity $member) => $member->key());
 
         foreach ($rebuilt->all() as $state) {
+            // Only component members were rebuilt from their events; anything
+            // else in the scope is a copy (or a blank) and must not leak out.
+            if (! $members->has($this->identityKey($state))) {
+                continue;
+            }
+
             if ($live = $requested->get($this->identityKey($state))) {
                 // A rebuild only sees committed events, so a live state with
                 // queued-but-uncommitted events already reflects applies the

@@ -2,6 +2,7 @@
 
 namespace Thunk\Verbs\State;
 
+use Closure;
 use Glhd\Bits\Bits;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
@@ -39,15 +40,16 @@ class StateManager
     }
 
     /**
-     * The isolated scope a rebuild replays into: blank-on-miss, and never
-     * pruned (evicting a state mid-rebuild would reload it blank and corrupt
-     * the replay)—its real memory bound is the size of the window being
-     * replayed. Built with no container involvement, which is what keeps the
-     * old Broker↔StateManager circular dependency from coming back.
+     * The isolated scope a rebuild replays into: blank-on-miss (unless given a
+     * fallback for states outside the rebuild), and never pruned (evicting a
+     * state mid-rebuild would reload it blank and corrupt the replay)—its real
+     * memory bound is the size of the window being replayed. Built with no
+     * container involvement, which is what keeps the old Broker↔StateManager
+     * circular dependency from coming back.
      */
-    public static function rebuilding(): static
+    public static function rebuilding(?Closure $fallback = null): static
     {
-        return new static(new InMemoryCache(capacity: null), new RebuildResolver);
+        return new static(new InMemoryCache(capacity: null), new RebuildResolver($fallback));
     }
 
     public function isReapplyingHistory(): bool
