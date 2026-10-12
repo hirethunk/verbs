@@ -27,7 +27,7 @@ authoritative). When it's done it asks whether to drop `__verbs_snapshots_pre_01
 safety net and drop it by hand later. The command is safe to re-run: if it's interrupted, run it again.
 
 Rolling the migration back restores the parked table if it's still there. If it's already been dropped, the rollback
-rebuilds the pre-0.10 table shape and copies the current snapshots into it.
+creates an empty table in the pre-0.10 shape, and states rebuild from their events on first load.
 
 After migrating, confirm your snapshots match your events:
 
