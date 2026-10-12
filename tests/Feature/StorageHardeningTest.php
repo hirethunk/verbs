@@ -311,6 +311,52 @@ test('the 0.10 migration sets old snapshots aside behind a fresh, constrained ta
     Schema::dropIfExists('__verbs_snapshots_pre_010');
 });
 
+test('rolling back the 0.10 migration keeps a snapshots table when nothing is parked', function () {
+    config(['verbs.tables.snapshots' => 'verb_snapshots_migration_test']);
+
+    $migration = require __DIR__.'/../../database/migrations/2026_07_15_000001_add_natural_key_to_verb_snapshots_table.php';
+    $migration->up();
+
+    // A fresh install parks nothing (and the backfill command may drop it).
+    expect(Schema::hasTable('__verbs_snapshots_pre_010'))->toBeFalse();
+
+    DB::table('verb_snapshots_migration_test')->insert([
+        'id' => snowflake_id(),
+        'state_id' => 5,
+        'type' => HardeningTestState::class,
+        'data' => '{"count":1}',
+        'last_event_id' => 10,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    $migration->down();
+
+    // The table survives with its rows, and the natural-key constraint is gone.
+    expect(Schema::hasTable('verb_snapshots_migration_test'))->toBeTrue()
+        ->and(DB::table('verb_snapshots_migration_test')->count())->toBe(1);
+
+    DB::table('verb_snapshots_migration_test')->insert([
+        'id' => snowflake_id(),
+        'state_id' => 5,
+        'type' => HardeningTestState::class,
+        'data' => '{"count":2}',
+        'last_event_id' => 11,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    expect(DB::table('verb_snapshots_migration_test')->count())->toBe(2);
+
+    // And the migration can run forward again afterwards.
+    $migration->up();
+
+    expect(Schema::hasTable('__verbs_snapshots_pre_010'))->toBeTrue();
+
+    Schema::drop('verb_snapshots_migration_test');
+    Schema::dropIfExists('__verbs_snapshots_pre_010');
+});
+
 test('verbs:snapshots:migrate dedupes, normalizes singletons, drops dead rows, and keeps live rows', function () {
     config(['verbs.tables.snapshots' => 'verb_snapshots_migration_test']);
 

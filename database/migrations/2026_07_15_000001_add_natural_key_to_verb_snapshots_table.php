@@ -67,17 +67,53 @@ return new class extends Migration
     {
         $schema = Schema::connection($this->connectionName());
 
-        $schema->dropIfExists($this->tableName());
         $schema->dropIfExists($this->stagingTableName());
 
         if ($schema->hasTable(self::OLD_TABLE)) {
+            $schema->dropIfExists($this->tableName());
             $schema->rename(self::OLD_TABLE, $this->tableName());
+
+            return;
         }
+
+        // Nothing is parked (a fresh install, or the backfill already dropped
+        // it), so rebuild the pre-0.10 schema and carry the current rows over
+        // rather than leaving the app without a snapshots table.
+        $legacy = $this->legacyTableName();
+
+        $schema->dropIfExists($legacy);
+
+        $schema->create($legacy, function (Blueprint $table) {
+            $table->snowflakeId();
+            Id::createColumnDefinition($table, 'state_id');
+            $table->string('type')->index();
+            $table->json('data');
+            $table->snowflake('last_event_id')->nullable();
+            $table->timestamp('expires_at')->nullable()->index();
+            $table->timestamps();
+            $table->index(['state_id', 'type']);
+        });
+
+        if ($schema->hasTable($this->tableName())) {
+            $columns = ['id', 'state_id', 'type', 'data', 'last_event_id', 'expires_at', 'created_at', 'updated_at'];
+            $connection = DB::connection($this->connectionName());
+
+            $connection->table($legacy)->insertUsing($columns, $connection->table($this->tableName())->select($columns));
+
+            $schema->drop($this->tableName());
+        }
+
+        $schema->rename($legacy, $this->tableName());
     }
 
     protected function stagingTableName(): string
     {
         return $this->tableName().'_new010';
+    }
+
+    protected function legacyTableName(): string
+    {
+        return $this->tableName().'_old010';
     }
 
     protected function connectionName(): ?string
